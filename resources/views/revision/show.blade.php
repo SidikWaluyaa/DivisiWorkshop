@@ -84,6 +84,27 @@
 
                     {{-- Metadata Card --}}
                     <div class="bg-white dark:bg-gray-800 shadow-xl rounded-[2rem] p-8 border border-gray-100 dark:border-gray-700 space-y-8">
+                        {{-- Sumber / Origin Status --}}
+                        <div>
+                            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Sumber Revisi</h4>
+                            @php
+                                $origin = strtoupper($revision->origin_status ?: 'SELESAI');
+                                $badgeClass = match($origin) {
+                                    'QC' => 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 border-amber-100 dark:border-amber-900/30',
+                                    'PRODUCTION' => 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-900/30',
+                                    default => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30'
+                                };
+                                $label = match($origin) {
+                                    'QC' => 'QC',
+                                    'PRODUCTION' => 'PRODUCTION',
+                                    default => 'SELESAI'
+                                };
+                            @endphp
+                            <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-black border uppercase tracking-widest {{ $badgeClass }}">
+                                {{ $label }}
+                            </span>
+                        </div>
+
                         {{-- Customer --}}
                         <div>
                             <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Customer</h4>

@@ -304,20 +304,40 @@ class ProductionController extends Controller
     {
         $request->validate([
             'reason' => 'required|string',
-            'target_status' => 'required|string',
-            'target_stations' => 'nullable|array'
+            'target_status' => 'nullable|string',
+            'target_stations' => 'nullable|array',
+            'evidence_photos' => 'nullable|array',
+            'evidence_photos.*' => 'image'
         ]);
 
         $order = WorkOrder::findOrFail($id);
         
         try {
-            $targetStatus = WorkOrderStatus::from($request->target_status);
+            $targetStatusValue = $request->input('target_status') ?: 'REVISI';
+            $targetStatus = WorkOrderStatus::from($targetStatusValue);
             $stations = $request->input('target_stations', []);
 
             // SECURITY: Only authorized users can reject
             $this->authorize('rejectProduction', $order);
 
-            $this->workflow->revise($order, $targetStatus, $request->reason, $stations);
+            // Handle Multiple Evidence Photos
+            $photoPaths = [];
+            if ($request->hasFile('evidence_photos')) {
+                foreach ($request->file('evidence_photos') as $index => $file) {
+                    $filename = 'PROD_REJECT_' . $order->spk_number . '_' . time() . '_' . $index;
+                    $path = \App\Utils\ImageHelper::convertToJpg($file, 'photos/qc_reject', $filename);
+
+                    \App\Models\WorkOrderPhoto::create([
+                        'work_order_id' => $order->id,
+                        'step' => 'QC_REJECT_EVIDENCE', // use same step for rejection photos
+                        'file_path' => $path,
+                        'is_public' => true, 
+                    ]);
+                    $photoPaths[] = $path;
+                }
+            }
+
+            $this->workflow->revise($order, $targetStatus, $request->reason, $stations, $photoPaths);
 
             return redirect()->route('production.index')->with('warning', "Order direvisi ke status " . $targetStatus->label() . ".");
         } catch (\Exception $e) {

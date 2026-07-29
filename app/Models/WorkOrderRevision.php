@@ -13,6 +13,7 @@ class WorkOrderRevision extends Model
         'photo_path',
         'photo_paths',
         'status',
+        'origin_status',
         'created_by',
         'resolved_by',
         'finished_at',
@@ -40,20 +41,37 @@ class WorkOrderRevision extends Model
 
     public function getPhotoUrlAttribute(): ?string
     {
-        return $this->photo_path ? asset('storage/' . $this->photo_path) : null;
+        if (!$this->photo_path) return null;
+        
+        $path = $this->photo_path;
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, 8); // remove 'storage/'
+        }
+        return asset('storage/' . $path);
     }
 
     public function getPhotoUrlsAttribute(): array
     {
         $urls = [];
+        $paths = [];
+        
         if ($this->photo_path) {
-            $urls[] = asset('storage/' . $this->photo_path);
+            $paths[] = $this->photo_path;
         }
         
         if ($this->photo_paths && is_array($this->photo_paths)) {
             foreach ($this->photo_paths as $path) {
-                $urls[] = asset('storage/' . $path);
+                $paths[] = $path;
             }
+        }
+        
+        $paths = array_unique($paths);
+        
+        foreach ($paths as $path) {
+            if (str_starts_with($path, 'storage/')) {
+                $path = substr($path, 8); // remove 'storage/'
+            }
+            $urls[] = asset('storage/' . $path);
         }
         
         return $urls;

@@ -37,3 +37,27 @@ Berikut adalah daftar pekerjaan yang dikerjakan hari ini:
 * **Dampak:**
   - Menghilangkan error `InvalidArgumentException` secara total.
   - Memastikan proses ekspor PDF untuk kategori "Batal Fast Track" dan semua kategori laporan Fast Track lainnya berjalan dengan lancar dan aman di server production.
+
+### 5. 🛠️ Integrasi Modal Revisi Workshop dengan Sistem `WorkOrderRevision` Terpusat
+* **Masalah:** Alur penolakan (reject/revisi) pada stasiun kerja QC dan Production sebelumnya bersifat lokal dan tidak tercatat di tabel `work_order_revisions` maupun halaman riwayat revisi `/revision`. Pengguna juga harus memilih stasiun target reset secara manual di modal yang kurang efisien secara UX.
+* **Solusi:**
+  - Menambahkan kolom `origin_status` di tabel `work_order_revisions` via file migrasi baru untuk mencatat stasiun asal revisi.
+  - Memperbarui `WorkflowService::revise` agar otomatis membuat record `WorkOrderRevision` dengan status `'OPEN'`, serta mendukung penyimpanan data multiple photo (`photo_paths`).
+  - Memperbarui komponen `revision-modal.blade.php` agar menyembunyikan input stasiun/tahap dan stasiun reset jika aktif pada stasiun QC atau Production (SPK langsung dipindahkan ke status `REVISI`).
+  - Menghilangkan template alasan bawaan (seperti `Upper:`, `Sol:`) agar textarea kosong secara default sesuai permintaan user.
+  - Mengimplementasikan sistem **Multiple File Upload** dengan **Image Preview Grid** menggunakan AlpineJS (`FileReader` loop) di modal revisi sehingga pengguna bisa mengunggah lebih dari 1 foto bukti dan melihat pratinjaunya secara interaktif.
+  - Menambahkan **Kompresi Gambar Sisi Klien (Client-side Compression)** pada modal revisi menggunakan HTML5 Canvas API untuk mengecilkan resolusi gambar (maks 1000px) dan mengompres kualitas foto (JPEG 70%) di browser sebelum diunggah guna menghemat kuota internet dan mempercepat proses kirim revisi.
+  - Memperbarui `QCController::reject`, `ProductionController::reject`, dan `RevisionController::request` untuk memproses seluruh file foto bukti secara iteratif, mengompresnya di sisi server via GD Intervention Image, dan menyimpannya ke tabel database terkait.
+  - Memperbarui `RevisionController::complete` agar saat revisi selesai, SPK secara otomatis dikembalikan ke stasiun asalnya (`origin_status`) dan record revisi ditandai `'FINISHED'`.
+  - Menampilkan kolom **"Sumber"** pada tabel halaman `/revision` (`index.blade.php`) dan panel detail metadata (`show.blade.php`) dengan desain badge status yang informatif.
+  - Membuat 4 **Info Cards (Metric Cards)** di bagian atas halaman `/revision` yang menghitung secara dinamis total revisi aktif berdasarkan stasiun asalnya (`Revisi QC`, `Revisi Production`, `Revisi Selesai`, dan `Total Revisi Aktif`).
+  - Memperbaiki isu gambar rusak (*broken images*) dengan menormalkan pembacaan path (menghilangkan prefiks ganda `storage/` secara otomatis menggunakan regex/substring pada getter model `WorkOrderRevision.php`).
+  - Memperbaiki rendering foto revisi pada timeline **Workshop Activity Timeline** di halaman detail order admin ([show.blade.php](file:///c:/laragon/www/SistemWorkshop/resources/views/admin/orders/show.blade.php)) agar menggunakan helper `$event['raw_model']->photo_urls` terformat untuk menghindari duplikasi prefiks `/storage/storage/...`.
+* **Dampak:**
+  - Semua riwayat revisi internal workshop (QC Reject / Prod Reject) kini tercatat secara terpusat di database dan muncul pada menu Riwayat Revisi `/revision`.
+  - UX modal revisi menjadi jauh lebih bersih, interaktif, dan modern berkat upload beberapa gambar sekaligus beserta tampilan preview.
+  - Proses unggah foto bukti menjadi sangat cepat dan hemat kuota karena file foto berukuran besar dari kamera HP otomatis dikompres menjadi berukuran kecil sebelum dikirim ke server.
+  - Pengguna kini dapat dengan jelas melihat asal stasiun pengaju revisi (`QC`, `PRODUCTION`, atau `SELESAI`) di halaman `/revision`.
+  - Dashboard `/revision` dilengkapi dengan metrik ringkasan (*Summary Cards*) yang memberikan overview cepat total revisi dari tiap stasiun asal secara real-time.
+  - Masalah gambar rusak (broken image) pada halaman riwayat revisi dan timeline detail order admin teratasi sepenuhnya.
+  - Alur balik (Boomerang) berjalan otomatis begitu revisi diselesaikan.

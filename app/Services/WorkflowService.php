@@ -96,10 +96,17 @@ class WorkflowService
     /**
      * Move the order back to a previous stage for revision.
      */
-    public function revise(WorkOrder $workOrder, WorkOrderStatus $targetStatus, string $reason, array $stationsToReset = []): void
+    public function revise(WorkOrder $workOrder, WorkOrderStatus $targetStatus, string $reason, array $stationsToReset = [], $photoPaths = null): void
     {
-        DB::transaction(function () use ($workOrder, $targetStatus, $reason, $stationsToReset) {
+        DB::transaction(function () use ($workOrder, $targetStatus, $reason, $stationsToReset, $photoPaths) {
             $oldStatus = $workOrder->status;
+            
+            // Normalize photoPaths to array
+            if (is_string($photoPaths)) {
+                $photoPaths = [$photoPaths];
+            } elseif (is_null($photoPaths)) {
+                $photoPaths = [];
+            }
             
             // 1. Update Status
             $workOrder->previous_status = $workOrder->status;
@@ -115,8 +122,19 @@ class WorkflowService
 
             $workOrder->save();
 
-            // 3. Log the Revision Detail
+            // 3. Create WorkOrderRevision
             $oldStatusValue = $oldStatus instanceof WorkOrderStatus ? $oldStatus->value : $oldStatus;
+            \App\Models\WorkOrderRevision::create([
+                'work_order_id' => $workOrder->id,
+                'description' => $reason,
+                'photo_path' => $photoPaths[0] ?? null,
+                'photo_paths' => $photoPaths,
+                'status' => 'OPEN',
+                'origin_status' => $oldStatusValue,
+                'created_by' => Auth::id() ?? 1,
+            ]);
+
+            // 4. Log the Revision Detail
             WorkOrderLog::create([
                 'work_order_id' => $workOrder->id,
                 'user_id' => Auth::id(),
@@ -126,7 +144,7 @@ class WorkflowService
                 'step' => $targetStatus->value
             ]);
 
-            // 4. Create CX Issue Record for Workshop Revisions (DISABLED - Revisions shouldn't trigger active CX followup)
+            // 5. Create CX Issue Record for Workshop Revisions (DISABLED - Revisions shouldn't trigger active CX followup)
             /*
             $source = $this->deriveWorkshopSource($oldStatus);
             if ($source) {
@@ -253,12 +271,14 @@ class WorkflowService
                 WorkOrderStatus::QC,
                 WorkOrderStatus::SELESAI, // Allow direct finish from Prod (e.g. during revision/gate)
                 WorkOrderStatus::PREPARATION, // Backtrack
+                WorkOrderStatus::REVISI,
                 WorkOrderStatus::BATAL
             ],
             WorkOrderStatus::QC->value => [
                 WorkOrderStatus::SELESAI,
                 WorkOrderStatus::PRODUCTION, // Revisi (Return to Prod)
                 WorkOrderStatus::PREPARATION, // Revisi (Return to Prep)
+                WorkOrderStatus::REVISI,
                 WorkOrderStatus::BATAL
             ],
             WorkOrderStatus::SELESAI->value => [

@@ -81,6 +81,53 @@
                 </div>
             </div>
 
+            {{-- SUMMARY METRIC CARDS --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Card 1: QC Revisions -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-xl flex items-center gap-4 transition-all hover:scale-[1.02]">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-2xl">
+                        🔍
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Revisi QC</p>
+                        <p class="text-2xl font-black text-gray-800 dark:text-gray-100 tracking-tight">{{ $qcCount }}</p>
+                    </div>
+                </div>
+
+                <!-- Card 2: Production Revisions -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-xl flex items-center gap-4 transition-all hover:scale-[1.02]">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center text-2xl">
+                        ⚙️
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Revisi Production</p>
+                        <p class="text-2xl font-black text-gray-800 dark:text-gray-100 tracking-tight">{{ $prodCount }}</p>
+                    </div>
+                </div>
+
+                <!-- Card 3: Selesai Revisions -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-xl flex items-center gap-4 transition-all hover:scale-[1.02]">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-2xl">
+                        ✅
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Revisi Selesai</p>
+                        <p class="text-2xl font-black text-gray-800 dark:text-gray-100 tracking-tight">{{ $selesaiCount }}</p>
+                    </div>
+                </div>
+
+                <!-- Card 4: Total Revisions -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-xl flex items-center gap-4 transition-all hover:scale-[1.02]">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center text-2xl">
+                        📊
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total Revisi Aktif</p>
+                        <p class="text-2xl font-black text-gray-800 dark:text-gray-100 tracking-tight">{{ $totalActiveCount }}</p>
+                    </div>
+                </div>
+            </div>
+
             {{-- TAB NAVIGATION --}}
             <div class="flex items-center gap-2 mb-8 bg-gray-100/50 dark:bg-gray-900/50 p-1.5 rounded-2xl w-fit border border-gray-100 dark:border-gray-800 backdrop-blur-sm">
                 <button @click="tab = 'active'" 
@@ -113,6 +160,7 @@
                                 <th class="px-8 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] w-12">No</th>
                                 <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">SPK & Customer</th>
                                 <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Unit Details</th>
+                                <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Sumber</th>
                                 <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Masalah / Revisi</th>
                                 <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Pelapor</th>
                                 <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Waktu</th>
@@ -130,7 +178,7 @@
                                     {{-- SPK & Customer --}}
                                     <td class="px-6 py-6">
                                         <div class="flex flex-col">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 border border-red-100 dark:border-red-900/30 w-fit mb-1 mb-2 uppercase tracking-widest">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 border border-red-100 dark:border-red-900/30 w-fit mb-2 uppercase tracking-widest">
                                                 {{ $rev->workOrder->spk_number }}
                                             </span>
                                             <span class="text-base font-black text-gray-800 dark:text-gray-200 tracking-tight">
@@ -152,6 +200,26 @@
                                         </div>
                                     </td>
 
+                                    {{-- Sumber --}}
+                                    <td class="px-6 py-6">
+                                        @php
+                                            $origin = strtoupper($rev->origin_status ?: 'SELESAI');
+                                            $badgeClass = match($origin) {
+                                                'QC' => 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 border-amber-100 dark:border-amber-900/30',
+                                                'PRODUCTION' => 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-900/30',
+                                                default => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30'
+                                            };
+                                            $label = match($origin) {
+                                                'QC' => 'QC',
+                                                'PRODUCTION' => 'PRODUCTION',
+                                                default => 'SELESAI'
+                                            };
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black border uppercase tracking-widest {{ $badgeClass }}">
+                                            {{ $label }}
+                                        </span>
+                                    </td>
+
                                     {{-- Masalah / Revisi --}}
                                     <td class="px-6 py-6 max-w-xs">
                                         <div class="flex flex-col gap-2">
@@ -159,7 +227,7 @@
                                                 <p class="text-xs text-gray-600 dark:text-gray-400 italic line-clamp-2">"{{ $rev->description }}"</p>
                                             </div>
                                             @if($rev->photo_path)
-                                                <a href="{{ asset('storage/' . $rev->photo_path) }}" target="_blank" class="flex items-center gap-1.5 text-[10px] font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-600 transition-colors">
+                                                <a href="{{ $rev->photo_url }}" target="_blank" class="flex items-center gap-1.5 text-[10px] font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-600 transition-colors">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                                     Lampiran Foto
                                                 </a>
@@ -248,6 +316,7 @@
                             <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-50 dark:border-gray-700">
                                 <th class="px-8 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] w-12">No</th>
                                 <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">SPK & Unit</th>
+                                <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Sumber</th>
                                 <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Masalah</th>
                                 <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Waktu Ajuan</th>
                                 <th class="px-6 py-6 text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Waktu Selesai</th>
@@ -267,8 +336,28 @@
                                         <p class="text-sm font-black text-gray-700 dark:text-gray-300 tracking-tight">{{ $rev->workOrder->shoe_brand }}</p>
                                     </td>
 
+                                    {{-- Sumber --}}
+                                    <td class="px-6 py-6">
+                                        @php
+                                            $origin = strtoupper($rev->origin_status ?: 'SELESAI');
+                                            $badgeClass = match($origin) {
+                                                'QC' => 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 border-amber-100 dark:border-amber-900/30',
+                                                'PRODUCTION' => 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-900/30',
+                                                default => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30'
+                                            };
+                                            $label = match($origin) {
+                                                'QC' => 'QC',
+                                                'PRODUCTION' => 'PRODUCTION',
+                                                default => 'SELESAI'
+                                            };
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black border uppercase tracking-widest {{ $badgeClass }}">
+                                            {{ $label }}
+                                        </span>
+                                    </td>
+
                                     <td class="px-6 py-6 max-w-xs">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 italic line-clamp-1 italic">"{{ $rev->description }}"</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 italic line-clamp-1">"{{ $rev->description }}"</p>
                                     </td>
 
                                     <td class="px-6 py-6">

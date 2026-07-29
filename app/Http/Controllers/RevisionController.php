@@ -71,7 +71,24 @@ class RevisionController extends Controller
             ->filter()
             ->values();
 
-        return view('revision.index', compact('active', 'history', 'reporters', 'brands'));
+        // Count metrics for open revisions
+        $qcCount = WorkOrderRevision::where('status', 'OPEN')->where('origin_status', 'QC')->count();
+        $prodCount = WorkOrderRevision::where('status', 'OPEN')->where('origin_status', 'PRODUCTION')->count();
+        $selesaiCount = WorkOrderRevision::where('status', 'OPEN')->where(function($q) {
+            $q->whereNull('origin_status')->orWhere('origin_status', 'SELESAI');
+        })->count();
+        $totalActiveCount = WorkOrderRevision::where('status', 'OPEN')->count();
+
+        return view('revision.index', compact(
+            'active', 
+            'history', 
+            'reporters', 
+            'brands',
+            'qcCount',
+            'prodCount',
+            'selesaiCount',
+            'totalActiveCount'
+        ));
     }
 
     /**
@@ -91,7 +108,7 @@ class RevisionController extends Controller
         $request->validate([
             'description' => 'required|string',
             'photos' => 'nullable|array',
-            'photos.*' => 'image|max:5120', // Max 5MB per image
+            'photos.*' => 'image',
         ]);
 
         try {
@@ -106,8 +123,9 @@ class RevisionController extends Controller
                 // 2. Handle Multiple Photo Uploads
                 $photoPaths = [];
                 if ($request->hasFile('photos')) {
-                    foreach ($request->file('photos') as $photo) {
-                        $photoPaths[] = $photo->store('workshop/revisions', 'public');
+                    foreach ($request->file('photos') as $index => $photo) {
+                        $filename = 'REV_REQ_' . $workOrder->spk_number . '_' . time() . '_' . $index;
+                        $photoPaths[] = \App\Utils\ImageHelper::convertToJpg($photo, 'photos/qc_reject', $filename);
                     }
                 }
 
@@ -144,12 +162,20 @@ class RevisionController extends Controller
                     'finished_at' => now(),
                 ]);
 
-                // 2. Move WorkOrder back to SELESAI
+                // 2. Move WorkOrder back to origin status (or default to SELESAI)
+                $targetStatusValue = $revision->origin_status ?: 'SELESAI';
+                $targetStatus = WorkOrderStatus::tryFrom($targetStatusValue) ?: WorkOrderStatus::SELESAI;
+
                 $this->workflowService->updateStatus(
                     $workOrder,
-                    WorkOrderStatus::SELESAI,
-                    'Revisi selesai dikerjakan.'
+                    $targetStatus,
+                    'Revisi selesai dikerjakan. Kembali ke tahap ' . $targetStatus->label()
                 );
+
+                // Clear revision flags
+                $workOrder->is_revising = false;
+                $workOrder->previous_status = null;
+                $workOrder->save();
             });
 
             return redirect()->route('revision.index')->with('success', 'Revisi telah diselesaikan.');

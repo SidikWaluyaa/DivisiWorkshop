@@ -263,32 +263,37 @@ class QCController extends Controller
     {
         $request->validate([
             'reason' => 'required|string',
-            'target_status' => 'required|string',
+            'target_status' => 'nullable|string',
             'target_stations' => 'nullable|array',
-            'evidence_photo' => 'nullable|image|max:2048'
+            'evidence_photos' => 'nullable|array',
+            'evidence_photos.*' => 'image'
         ]);
 
         $order = WorkOrder::findOrFail($id);
 
         try {
-            $targetStatus = WorkOrderStatus::from($request->target_status);
+            $targetStatusValue = $request->input('target_status') ?: 'REVISI';
+            $targetStatus = WorkOrderStatus::from($targetStatusValue);
             $stations = $request->input('target_stations', []);
 
-            // Handle Evidence Photo
-            if ($request->hasFile('evidence_photo')) {
-                $file = $request->file('evidence_photo');
-                $filename = 'QC_REJECT_' . $order->spk_number . '_' . time();
-                $path = \App\Utils\ImageHelper::convertToJpg($file, 'photos/qc_reject', $filename);
+            // Handle Multiple Evidence Photos
+            $photoPaths = [];
+            if ($request->hasFile('evidence_photos')) {
+                foreach ($request->file('evidence_photos') as $index => $file) {
+                    $filename = 'QC_REJECT_' . $order->spk_number . '_' . time() . '_' . $index;
+                    $path = \App\Utils\ImageHelper::convertToJpg($file, 'photos/qc_reject', $filename);
 
-                WorkOrderPhoto::create([
-                    'work_order_id' => $order->id,
-                    'step' => 'QC_REJECT_EVIDENCE',
-                    'file_path' => $path,
-                    'is_public' => true, 
-                ]);
+                    WorkOrderPhoto::create([
+                        'work_order_id' => $order->id,
+                        'step' => 'QC_REJECT_EVIDENCE',
+                        'file_path' => $path,
+                        'is_public' => true, 
+                    ]);
+                    $photoPaths[] = $path;
+                }
             }
             
-            $this->workflow->revise($order, $targetStatus, $request->reason, $stations);
+            $this->workflow->revise($order, $targetStatus, $request->reason, $stations, $photoPaths);
 
             return redirect()->route('qc.index')->with('warning', 'Order dikembalikan ke ' . $targetStatus->label() . '.');
 

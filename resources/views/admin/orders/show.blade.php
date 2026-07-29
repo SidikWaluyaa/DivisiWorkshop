@@ -2516,25 +2516,16 @@
                                                             </div>
                                                             
                                                             {{-- Revision Photos --}}
-                                                            @if($event['raw_model']->photo_paths && is_array($event['raw_model']->photo_paths))
+                                                            @if($event['raw_model']->photo_urls && count($event['raw_model']->photo_urls) > 0)
                                                                 <div class="flex gap-2.5 mt-3 flex-wrap">
-                                                                    @foreach($event['raw_model']->photo_paths as $path)
-                                                                        <a href="{{ asset('storage/' . $path) }}" target="_blank" class="block relative group/img overflow-hidden rounded-xl border border-gray-100 shadow-sm hover:shadow transition-all duration-300">
-                                                                            <img src="{{ asset('storage/' . $path) }}" class="w-16 h-16 object-cover group-hover/img:scale-110 transition-transform duration-300 rounded-xl">
+                                                                    @foreach($event['raw_model']->photo_urls as $url)
+                                                                        <a href="{{ $url }}" target="_blank" class="block relative group/img overflow-hidden rounded-xl border border-gray-100 shadow-sm hover:shadow transition-all duration-300">
+                                                                            <img src="{{ $url }}" class="w-16 h-16 object-cover group-hover/img:scale-110 transition-transform duration-300 rounded-xl">
                                                                             <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
                                                                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                                                             </div>
                                                                         </a>
                                                                     @endforeach
-                                                                </div>
-                                                            @elseif($event['raw_model']->photo_path)
-                                                                <div class="flex gap-2.5 mt-3 flex-wrap">
-                                                                    <a href="{{ asset('storage/' . $event['raw_model']->photo_path) }}" target="_blank" class="block relative group/img overflow-hidden rounded-xl border border-gray-100 shadow-sm hover:shadow transition-all duration-300">
-                                                                        <img src="{{ asset('storage/' . $event['raw_model']->photo_path) }}" class="w-16 h-16 object-cover group-hover/img:scale-110 transition-transform duration-300 rounded-xl">
-                                                                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
-                                                                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                                                        </div>
-                                                                    </a>
                                                                 </div>
                                                             @endif
                                                         @endif

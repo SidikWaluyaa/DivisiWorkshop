@@ -10,10 +10,11 @@
                 showRevisionModal: false, 
                 orderId: null,
                 orderNumber: '',
-                targetStatus: 'PREPARATION',
-                reason: "Upper : \nSol : \nKondisi Bawaan : ",
+                targetStatus: '{{ in_array(strtoupper($currentStage), ["QC", "PRODUCTION"]) ? "REVISI" : "PREPARATION" }}',
+                reason: '',
                 targetStations: [],
                 formAction: '',
+                previews: [],
                 
                 stations: {
                     'PREPARATION': [
@@ -47,33 +48,95 @@
 
                 closeModal() {
                     this.showRevisionModal = false;
-                    this.reason = "Upper : \nSol : \nKondisi Bawaan : ";
+                    this.reason = '';
                     this.targetStations = [];
+                    this.previews = [];
+                    const fileInput = document.getElementById('evidence_photos_input');
+                    if (fileInput) fileInput.value = '';
                 },
 
-                handleReasonInput() {
-                    const prefixes = ["Upper :", "Sol :", "Kondisi Bawaan :"];
-                    let lines = this.reason.split('\n');
-                    let modified = false;
-
-                    prefixes.forEach((prefix, i) => {
-                        if (!lines[i] || !lines[i].startsWith(prefix)) {
-                            const content = lines[i] ? lines[i].replace(/^(Upper|Sol|Kondisi Bawaan)\s*:\s*/i, '') : '';
-                            lines[i] = prefix + (content ? ' ' + content : '');
-                            modified = true;
+                async handleFiles(event) {
+                    const files = event.target.files;
+                    this.previews = [];
+                    
+                    const dataTransfer = new DataTransfer();
+                    
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        try {
+                            if (file.type.startsWith('image/')) {
+                                const compressedFile = await this.compressImage(file);
+                                dataTransfer.items.add(compressedFile);
+                                
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    this.previews.push({
+                                        url: e.target.result,
+                                        name: compressedFile.name
+                                    });
+                                };
+                                reader.readAsDataURL(compressedFile);
+                            } else {
+                                dataTransfer.items.add(file);
+                            }
+                        } catch (error) {
+                            console.error('Image compression error:', error);
+                            dataTransfer.items.add(file);
                         }
+                    }
+                    
+                    event.target.files = dataTransfer.files;
+                },
+
+                compressImage(file) {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = (event) => {
+                            const img = new Image();
+                            img.src = event.target.result;
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                
+                                const maxW = 1000;
+                                const maxH = 1000;
+                                let w = img.width;
+                                let h = img.height;
+                                
+                                if (w > h) {
+                                    if (w > maxW) {
+                                        h = Math.round((h * maxW) / w);
+                                        w = maxW;
+                                    }
+                                } else {
+                                    if (h > maxH) {
+                                        w = Math.round((w * maxH) / h);
+                                        h = maxH;
+                                    }
+                                }
+                                
+                                canvas.width = w;
+                                canvas.height = h;
+                                ctx.drawImage(img, 0, 0, w, h);
+                                
+                                canvas.toBlob((blob) => {
+                                    if (blob) {
+                                        const name = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                                        const compressedFile = new File([blob], name, {
+                                            type: 'image/jpeg',
+                                            lastModified: Date.now()
+                                        });
+                                        resolve(compressedFile);
+                                    } else {
+                                        reject(new Error('Canvas toBlob failed'));
+                                    }
+                                }, 'image/jpeg', 0.7);
+                            };
+                            img.onerror = (err) => reject(err);
+                        };
+                        reader.onerror = (err) => reject(err);
                     });
-
-                    if (lines.length < 3) {
-                        for (let i = lines.length; i < 3; i++) {
-                            lines.push(prefixes[i]);
-                        }
-                        modified = true;
-                    }
-
-                    if (modified) {
-                        this.reason = lines.join('\n');
-                    }
                 }
             };
         }
@@ -108,42 +171,71 @@
                     <form :action="formAction" method="POST" enctype="multipart/form-data">
                         @csrf
                         
-                        <!-- Target Stage -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Pindah ke Kolam / Tahap:</label>
-                            <select name="target_status" x-model="targetStatus" class="w-full rounded-xl border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85]">
-                                <option value="PREPARATION">PREPARATION (Pencucian/Bongkar)</option>
-                                <option value="SORTIR">SORTIR (Pengecekan Material)</option>
-                                <option value="PRODUCTION">PRODUCTION (Proses Produksi)</option>
-                            </select>
-                        </div>
-
-                        <!-- Target Stations -->
-                        <div class="mb-4" x-show="activeStations.length > 0">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Reset Progress Station (Bisa pilih banyak):</label>
-                            <div class="grid grid-cols-1 gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
-                                <template x-for="station in activeStations" :key="station.id">
-                                    <label class="flex items-center space-x-3 cursor-pointer p-1 hover:bg-gray-100 rounded">
-                                        <input type="checkbox" name="target_stations[]" :value="station.id" class="rounded text-[#22AF85] focus:ring-[#22AF85]">
-                                        <span class="text-sm text-gray-700" x-text="station.label"></span>
-                                    </label>
-                                </template>
+                        @if(in_array(strtoupper($currentStage), ['QC', 'PRODUCTION']))
+                            <!-- Sembunyikan Pilihan Tahap & Reset Station untuk QC & Production -->
+                            <input type="hidden" name="target_status" value="REVISI">
+                        @else
+                            <!-- Target Stage -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Pindah ke Kolam / Tahap:</label>
+                                <select name="target_status" x-model="targetStatus" class="w-full rounded-xl border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85]">
+                                    <option value="PREPARATION">PREPARATION (Pencucian/Bongkar)</option>
+                                    <option value="SORTIR">SORTIR (Pengecekan Material)</option>
+                                    <option value="PRODUCTION">PRODUCTION (Proses Produksi)</option>
+                                </select>
                             </div>
-                        </div>
+
+                            <!-- Target Stations -->
+                            <div class="mb-4" x-show="activeStations.length > 0">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Reset Progress Station (Bisa pilih banyak):</label>
+                                <div class="grid grid-cols-1 gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                                    <template x-for="station in activeStations" :key="station.id">
+                                        <label class="flex items-center space-x-3 cursor-pointer p-1 hover:bg-gray-100 rounded">
+                                            <input type="checkbox" name="target_stations[]" :value="station.id" class="rounded text-[#22AF85] focus:ring-[#22AF85]">
+                                            <span class="text-sm text-gray-700" x-text="station.label"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                        @endif
 
                         <!-- Reason -->
                         <div class="mb-4">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Alasan Revisi:</label>
                             <textarea name="reason" x-model="reason" required 
-                                      @input="handleReasonInput"
                                       placeholder="Jelaskan kondisi barang kenapa ditolak..."
                                       class="w-full rounded-xl border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85] h-32"></textarea>
                         </div>
 
-                        <!-- Evidence Photo -->
+                        <!-- Evidence Photos (Multiple with Previews) -->
                         <div class="mb-6">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Foto Bukti (Opsi):</label>
-                            <input type="file" name="evidence_photo" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-[#22AF85] hover:file:bg-green-100">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Foto Bukti (Opsi, Bisa pilih banyak):</label>
+                            
+                            <div class="flex items-center justify-center w-full mb-3">
+                                <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <svg class="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        </svg>
+                                        <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">PILIH BEBERAPA FOTO BUKTI</p>
+                                    </div>
+                                    <input type="file" id="evidence_photos_input" name="evidence_photos[]" multiple accept="image/*" class="hidden" @change="handleFiles($event)">
+                                </label>
+                            </div>
+
+                            <!-- Preview Grid -->
+                            <template x-if="previews.length > 0">
+                                <div class="grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <template x-for="(preview, index) in previews" :key="index">
+                                        <div class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-white">
+                                            <img :src="preview.url" class="object-cover w-full h-full">
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                <span class="text-[9px] text-white font-bold truncate max-w-full px-1" x-text="preview.name"></span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </div>
 
                         <!-- Actions sticky at bottom of body -->
