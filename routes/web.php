@@ -556,6 +556,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('access:finance')->group(function () {
         Route::get('finance/dashboard', \App\Livewire\Finance\Dashboard::class)->name('finance.dashboard');
         Route::get('finance/dashboard/export-pdf', [App\Http\Controllers\FinanceReportController::class, 'exportPdf'])->name('finance.dashboard.export-pdf');
+        Route::get('finance/dashboard/export-excel', [App\Http\Controllers\FinanceReportController::class, 'exportExcel'])->name('finance.dashboard.export-excel');
         // Grouped Invoices Routes
         Route::get('finance/invoices', [App\Http\Controllers\FinanceController::class, 'indexInvoices'])->name('finance.invoices.index');
         Route::get('finance/invoices/create', [App\Http\Controllers\FinanceController::class, 'createInvoice'])->name('finance.invoices.create');

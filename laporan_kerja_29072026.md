@@ -116,12 +116,29 @@ Tim gudang kini dapat mengunduh laporan Piutang Before dan Piutang After dalam f
 
 ---
 
+### 7. 💳 Fitur Ekspor Excel untuk Dashboard Keuangan (Finance Dashboard)
+
+**Kenapa dikerjakan?**  
+Memfasilitasi tim keuangan dalam mengunduh seluruh metrik utama, distribusi status tagihan, dan distribusi tipe pembayaran dari dashboard keuangan ke spreadsheet Excel.
+
+**Apa yang dilakukan?**  
+- Mendaftarkan route baru `/finance/dashboard/export-excel` di `routes/web.php`.
+- Membuat class export `FinanceDashboardExport.php` untuk merender metrik, status pembayaran, dan tipe pembayaran ke Excel.
+- Menambahkan method `exportExcel` di `FinanceReportController.php` untuk menyinkronkan data dengan filter tanggal aktif.
+- Menambahkan helper `getExportExcelUrl()` di `app/Livewire/Finance/Dashboard.php` untuk memfasilitasi integrasi livewire.
+- Memasang tombol **Export Excel** di view `dashboard.blade.php` milik modul finance.
+
+**Hasilnya?**  
+Tim keuangan kini memiliki akses penuh untuk mengekspor data dashboard analitik keuangan ke Excel secara real-time.
+
+---
+
 ## 📂 File yang Dibuat/Diubah Hari Ini
 
 | File | Jenis | Keterangan Singkat |
 |------|-------|--------------------|
 | `manual-book_finance.md` | Markdown | Buku panduan lengkap modul Divisi Finance (baru dibuat hari ini) |
-| `routes/web.php` | PHP | Mendaftarkan route ekspor PDF/Excel untuk CS & Gudang (termasuk Piutang After) |
+| `routes/web.php` | PHP | Mendaftarkan route ekspor PDF/Excel untuk CS, Gudang, dan Keuangan |
 | `CsDashboardController.php` | PHP | Method ekspor PDF & Excel pada analitik CS |
 | `pdf.blade.php` | Blade | Template halaman cetak PDF analitik CS (A4 Portrait) |
 | `index.blade.php` | Blade | Menambahkan tombol "Cetak PDF" & "Ekspor Excel" pada filter dashboard CS |
@@ -133,9 +150,13 @@ Tim gudang kini dapat mengunduh laporan Piutang Before dan Piutang After dalam f
 | `WarehouseProductionExport.php` | PHP | Class generator Excel laporan produksi gudang |
 | `WarehouseQcExport.php` | PHP | Class generator Excel laporan QC gudang |
 | `PiutangBeforeExport.php` | PHP | Class generator Excel laporan Piutang Before (layout premium diperbarui) |
-| `PiutangAfterExport.php` | PHP | Class generator Excel laporan Piutang After (baru) |
+| `PiutangAfterExport.php` | PHP | Class generator Excel laporan Piutang After |
 | `piutang-after-report.blade.php`| Blade | Template halaman cetak PDF Piutang After |
-| `dashboard.blade.php` | Blade | Menambahkan tombol ekspor dinamis & tombol cetak/ekspor di tab Piutang After |
+| `FinanceReportController.php` | PHP | Method `exportExcel` untuk memproses & mengunduh Excel dashboard keuangan |
+| `FinanceDashboardExport.php` | PHP | Class generator Excel laporan ringkasan keuangan |
+| `Dashboard.php` (Finance) | PHP | Method `getExportExcelUrl` untuk integrasi tombol ekspor Excel |
+| `dashboard.blade.php` (Gudang) | Blade | Menambahkan tombol ekspor dinamis & tombol cetak/ekspor di tab Piutang After |
+| `dashboard.blade.php` (Keuangan)| Blade | Menambahkan tombol "Export Excel" pada toolbar dashboard keuangan |
 
 ### File yang di-push ke GitHub sebelumnya (Commit `e4a3f38`):
 

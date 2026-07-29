@@ -163,4 +163,59 @@ class FinanceReportController extends Controller
         $fileName = 'Laporan-Payments-' . now()->format('Y-m-d_His') . '.pdf';
         return $pdf->stream($fileName);
     }
+
+    /**
+     * Export dashboard summary data as Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->startOfMonth()->startOfDay();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+
+        $apiService = app(\App\Services\FinanceDashboardApiService::class);
+        $summary = $apiService->getFinanceSummary($startDate, $endDate);
+
+        // Calculate Payment Type Breakdown (verified payments)
+        $query = InvoicePayment::where('verified', true)
+            ->whereBetween('payment_date', [
+                $startDate->toDateString(),
+                $endDate->toDateString(),
+            ]);
+
+        $types = ['BEFORE', 'AFTER', 'TAMBAH_JASA', 'LUNAS_AWAL', 'ONGKIR', 'OTO'];
+        $breakdown = [];
+
+        foreach ($types as $type) {
+            $clone = clone $query;
+            $result = $clone->where('type', $type)
+                ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total_amount')
+                ->first();
+
+            $breakdown[$type] = [
+                'count' => $result->count ?? 0,
+                'total_amount' => $result->total_amount ?? 0,
+            ];
+        }
+
+        // Add 'LAINNYA' category
+        $clone = clone $query;
+        $result = $clone->where(function($q) use ($types) {
+                $q->whereNull('type')
+                  ->orWhereNotIn('type', $types);
+            })
+            ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total_amount')
+            ->first();
+
+        $breakdown['LAINNYA'] = [
+            'count' => $result->count ?? 0,
+            'total_amount' => $result->total_amount ?? 0,
+        ];
+
+        $filename = 'Laporan_Keuangan_' . now()->format('Ymd_His') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\FinanceDashboardExport($summary, $breakdown, $startDate, $endDate),
+            $filename
+        );
+    }
 }

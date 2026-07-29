@@ -147,6 +147,17 @@ class Dashboard extends Component
     }
 
     /**
+     * Build export Excel URL with current filters.
+     */
+    public function getExportExcelUrl()
+    {
+        return route('finance.dashboard.export-excel', [
+            'start_date' => $this->startDate,
+            'end_date' => $this->endDate,
+        ]);
+    }
+
+    /**
      * Get breakdown of invoice_payments by type for the current date range.
      */
     public function getPaymentTypeBreakdown()
