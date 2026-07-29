@@ -202,6 +202,15 @@ class CxDashboardService
             if (empty($price)) return 0;
             return (float) str_replace(['Rp. ', 'Rp.', '.', ','], '', $price);
         });
+
+        // 3. OTO DEAL (Accepted only)
+        $otosDeal = $otosInPeriod->where('status', 'ACCEPTED');
+        $otoDealVolume = $otosDeal->unique('work_order_id')->count();
+        $otoDealNominal = $otosDeal->sum(function($oto) {
+            $price = $oto->total_oto_price;
+            if (empty($price)) return 0;
+            return (float) str_replace(['Rp. ', 'Rp.', '.', ','], '', $price);
+        });
         
         $otoItems = $otosInPeriod->map(function($oto) {
             $statusLabel = $oto->status;
@@ -222,10 +231,18 @@ class CxDashboardService
             'total_nominal' => (float)$totalNominal,
             'tambah_jasa_items' => $tambahJasaItems,
             'arpu_tambah_jasa' => $totalSpk > 0 ? $totalNominal / $totalSpk : 0,
+            
+            // OTO Metrics - Prospect
             'oto_nominal' => (float)$totalOtoNominal,
             'oto_volume' => (int)$totalSpkOto,
+            'arpu_oto' => $totalSpkOto > 0 ? $totalOtoNominal / $totalSpkOto : 0,
+            
+            // OTO Metrics - Deal
+            'oto_deal_nominal' => (float)$otoDealNominal,
+            'oto_deal_volume' => (int)$otoDealVolume,
+            'arpu_oto_deal' => $otoDealVolume > 0 ? $otoDealNominal / $otoDealVolume : 0,
+            
             'oto_items' => $otoItems,
-            'arpu_oto' => $totalSpkOto > 0 ? $totalOtoNominal / $totalSpkOto : 0
         ];
     }
 

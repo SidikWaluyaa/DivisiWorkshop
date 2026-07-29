@@ -56,6 +56,9 @@ class CxDashboardController extends Controller
             'totalOtoNominal' => $upsell['oto_nominal'],
             'totalSpkOto' => $upsell['oto_volume'],
             'arpuOto' => $upsell['arpu_oto'],
+            'totalOtoDealNominal' => $upsell['oto_deal_nominal'] ?? 0,
+            'totalSpkOtoDeal' => $upsell['oto_deal_volume'] ?? 0,
+            'arpuOtoDeal' => $upsell['arpu_oto_deal'] ?? 0,
             'otoItems' => $upsell['oto_items'],
             
             // Trend Data

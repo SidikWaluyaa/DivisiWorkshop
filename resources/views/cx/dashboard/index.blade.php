@@ -432,23 +432,36 @@
                         <span class="text-[9px] font-black text-orange-100 uppercase tracking-widest bg-white/10 px-2 py-1 rounded-lg border border-white/10">Upsell Growth</span>
                     </div>
                     <div class="p-6">
-                        <div class="flex items-end justify-between mb-8 gap-4">
-                            <div class="flex-1">
-                                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 font-inter">Total OTO Prospect</div>
-                                <div id="cx-nominal-oto" class="text-4xl font-black text-gray-800 tracking-tighter font-inter whitespace-nowrap">Rp{{ number_format($totalOtoNominal, 0, ',', '.') }}</div>
-                            </div>
-                            <div class="flex gap-2">
-                                <div class="text-right">
-                                    <div class="text-[9px] font-black text-orange-500 uppercase tracking-widest mb-1">Volume</div>
-                                    <div id="cx-vol-oto" class="px-2 py-1 bg-orange-50 text-orange-600 rounded-lg text-[11px] font-black border border-orange-100 whitespace-nowrap">
-                                        {{ $totalSpkOto }} SPK
-                                    </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-100">
+                            <!-- Deal (Accepted) OTO -->
+                            <div class="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50">
+                                <div class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Total OTO DEAL (Accepted)</div>
+                                <div class="text-2xl font-black text-emerald-800 tracking-tight mb-2">
+                                    Rp{{ number_format($totalOtoDealNominal ?? 0, 0, ',', '.') }}
                                 </div>
-                                <div class="text-right">
-                                    <div class="text-[9px] font-black text-orange-600 uppercase tracking-widest mb-1">ARPU</div>
-                                    <div id="cx-arpu-oto" class="px-2 py-1 bg-orange-600 text-white rounded-lg text-[11px] font-black shadow-sm whitespace-nowrap">
-                                        Rp{{ number_format($arpuOto, 0, ',', '.') }}
-                                    </div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[9px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded-md">
+                                        {{ $totalSpkOtoDeal ?? 0 }} SPK
+                                    </span>
+                                    <span class="text-[9px] font-bold text-gray-500">
+                                        ARPU: Rp{{ number_format($arpuOtoDeal ?? 0, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Prospect (All) OTO -->
+                            <div class="bg-orange-50/30 rounded-2xl p-4 border border-orange-100/30">
+                                <div class="text-[9px] font-black text-orange-600 uppercase tracking-widest mb-1">Total OTO PROSPECT (All)</div>
+                                <div class="text-2xl font-black text-orange-800 tracking-tight mb-2">
+                                    Rp{{ number_format($totalOtoNominal, 0, ',', '.') }}
+                                </div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[9px] font-bold text-orange-700 bg-orange-100/80 px-1.5 py-0.5 rounded-md">
+                                        {{ $totalSpkOto }} SPK
+                                    </span>
+                                    <span class="text-[9px] font-bold text-gray-500">
+                                        ARPU: Rp{{ number_format($arpuOto, 0, ',', '.') }}
+                                    </span>
                                 </div>
                             </div>
                         </div>

@@ -131,21 +131,22 @@ Memfasilitasi tim keuangan dalam mengunduh seluruh metrik utama, distribusi stat
 **Hasilnya?**  
 Tim keuangan kini memiliki akses penuh untuk mengekspor data dashboard analitik keuangan ke Excel secara real-time.
 
-### 8. 🎯 Fitur Ekspor Excel untuk Financial Analytics (Tambah Jasa & OTO) pada CX Dashboard
+### 8. 🎯 Fitur Ekspor Excel & Pemisahan Metrik OTO (DEAL vs PROSPECT) pada CX Dashboard
 
 **Kenapa dikerjakan?**  
-Memfasilitasi tim Customer Experience (CX) dalam mengunduh data laporan ringkasan nominal, volume, dan rincian transaksi Tambah Jasa & OTO (One-Time Offer) ke dalam satu workbook Excel multi-sheet.
+Memfasilitasi tim Customer Experience (CX) dalam membedakan metrik OTO yang berstatus **DEAL (Accepted)** dengan **PROSPECT (All)**, baik pada tampilan visual dashboard maupun saat diunduh ke workbook Excel.
 
 **Apa yang dilakukan?**  
 - Mendaftarkan route baru `/cx/dashboard/export-excel` di `routes/web.php` di dalam middleware dashboard CX.
 - Membuat class export `CxUpsellExport.php` (utama) beserta sheet exporter:
   1. `Sheets/CxTambahJasaSheet.php` (lembar kerja `Tambah Jasa Revenue`)
-  2. `Sheets/CxOtoSheet.php` (lembar kerja `OTO Revenue`)
+  2. `Sheets/CxOtoSheet.php` (lembar kerja `OTO Revenue`, memuat detail OTO DEAL & PROSPECT terpisah)
 - Menambahkan method `exportExcel` di `CxDashboardController.php` untuk memproses data summary upsell dan memicu pengunduhan berkas Excel.
 - Memasang tombol **Ekspor Excel** di view `index.blade.php` milik dashboard CX pada section header Financial Analytics.
+- Membagi tampilan kartu OTO di dashboard menjadi 2 sub-card berdampingan (warna hijau untuk **OTO DEAL** dan warna oranye untuk **OTO PROSPECT**).
 
 **Hasilnya?**  
-Tim CX kini dapat mengekspor laporan kinerja finansial (Tambah Jasa & OTO) secara real-time ke dalam file Excel yang terstruktur dan rapi.
+Tim CX kini dapat melihat performa deal dan potensi prospek OTO secara presisi di dashboard dan mengekspornya ke Excel secara real-time.
 
 ---
 
