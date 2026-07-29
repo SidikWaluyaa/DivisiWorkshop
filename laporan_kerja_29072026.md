@@ -131,6 +131,22 @@ Memfasilitasi tim keuangan dalam mengunduh seluruh metrik utama, distribusi stat
 **Hasilnya?**  
 Tim keuangan kini memiliki akses penuh untuk mengekspor data dashboard analitik keuangan ke Excel secara real-time.
 
+### 8. 🎯 Fitur Ekspor Excel untuk Financial Analytics (Tambah Jasa & OTO) pada CX Dashboard
+
+**Kenapa dikerjakan?**  
+Memfasilitasi tim Customer Experience (CX) dalam mengunduh data laporan ringkasan nominal, volume, dan rincian transaksi Tambah Jasa & OTO (One-Time Offer) ke dalam satu workbook Excel multi-sheet.
+
+**Apa yang dilakukan?**  
+- Mendaftarkan route baru `/cx/dashboard/export-excel` di `routes/web.php` di dalam middleware dashboard CX.
+- Membuat class export `CxUpsellExport.php` (utama) beserta sheet exporter:
+  1. `Sheets/CxTambahJasaSheet.php` (lembar kerja `Tambah Jasa Revenue`)
+  2. `Sheets/CxOtoSheet.php` (lembar kerja `OTO Revenue`)
+- Menambahkan method `exportExcel` di `CxDashboardController.php` untuk memproses data summary upsell dan memicu pengunduhan berkas Excel.
+- Memasang tombol **Ekspor Excel** di view `index.blade.php` milik dashboard CX pada section header Financial Analytics.
+
+**Hasilnya?**  
+Tim CX kini dapat mengekspor laporan kinerja finansial (Tambah Jasa & OTO) secara real-time ke dalam file Excel yang terstruktur dan rapi.
+
 ---
 
 ## 📂 File yang Dibuat/Diubah Hari Ini
@@ -138,7 +154,7 @@ Tim keuangan kini memiliki akses penuh untuk mengekspor data dashboard analitik 
 | File | Jenis | Keterangan Singkat |
 |------|-------|--------------------|
 | `manual-book_finance.md` | Markdown | Buku panduan lengkap modul Divisi Finance (baru dibuat hari ini) |
-| `routes/web.php` | PHP | Mendaftarkan route ekspor PDF/Excel untuk CS, Gudang, dan Keuangan |
+| `routes/web.php` | PHP | Mendaftarkan route ekspor PDF/Excel untuk CS, Gudang, Keuangan, dan CX |
 | `CsDashboardController.php` | PHP | Method ekspor PDF & Excel pada analitik CS |
 | `pdf.blade.php` | Blade | Template halaman cetak PDF analitik CS (A4 Portrait) |
 | `index.blade.php` | Blade | Menambahkan tombol "Cetak PDF" & "Ekspor Excel" pada filter dashboard CS |
@@ -157,6 +173,11 @@ Tim keuangan kini memiliki akses penuh untuk mengekspor data dashboard analitik 
 | `Dashboard.php` (Finance) | PHP | Method `getExportExcelUrl` untuk integrasi tombol ekspor Excel |
 | `dashboard.blade.php` (Gudang) | Blade | Menambahkan tombol ekspor dinamis & tombol cetak/ekspor di tab Piutang After |
 | `dashboard.blade.php` (Keuangan)| Blade | Menambahkan tombol "Export Excel" pada toolbar dashboard keuangan |
+| `CxDashboardController.php` | PHP | Method `exportExcel` untuk memproses & mengunduh Excel Financial Analytics CX |
+| `CxUpsellExport.php` | PHP | Class utama generator Excel multi-sheet CX |
+| `CxTambahJasaSheet.php` | PHP | Class generator sheet Excel Tambah Jasa Revenue |
+| `CxOtoSheet.php` | PHP | Class generator sheet Excel OTO Revenue |
+| `index.blade.php` (CX) | Blade | Menambahkan tombol "Ekspor Excel" pada Financial Analytics di dashboard CX |
 
 ### File yang di-push ke GitHub sebelumnya (Commit `e4a3f38`):
 

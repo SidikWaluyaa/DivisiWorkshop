@@ -296,12 +296,20 @@
             </section>
 
             {{-- Section Header: Financial --}}
-            <div class="flex items-center gap-3 px-2">
-                <div class="w-1.5 h-8 bg-teal-600 rounded-full"></div>
-                <div>
-                    <h2 class="text-xl font-black text-gray-800 tracking-tight">Financial Analytics</h2>
-                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Revenue & Upsell Performance</p>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-1.5 h-8 bg-teal-600 rounded-full"></div>
+                    <div>
+                        <h2 class="text-xl font-black text-gray-800 tracking-tight">Financial Analytics</h2>
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Revenue & Upsell Performance</p>
+                    </div>
                 </div>
+                
+                <a href="{{ route('cx.dashboard.export-excel', ['start_date' => $filterStartDate, 'end_date' => $filterEndDate]) }}" 
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider italic rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-300">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Ekspor Excel
+                </a>
             </div>
 
             {{-- Financial Overview Section --}}

@@ -305,4 +305,26 @@ class CxDashboardController extends Controller
         
         return $pdf->stream($filename);
     }
+
+    /**
+     * Export CX Financial Analytics (Tambah Jasa & OTO) to Excel
+     */
+    public function exportExcel(Request $request)
+    {
+        $startDate = $request->input('start_date', Carbon::now()->format('Y-m-d'));
+        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        
+        $start = Carbon::parse($startDate)->startOfDay();
+        $end = Carbon::parse($endDate)->endOfDay();
+
+        $summary = $this->cxService->getSummary($start, $end, false);
+        $upsell = $summary['upsell'] ?? [];
+
+        $filename = 'Laporan_Financial_Analytics_CX_' . date('Ymd_His') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\CxUpsellExport($upsell, $start, $end),
+            $filename
+        );
+    }
 }

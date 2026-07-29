@@ -417,6 +417,7 @@ Route::middleware('auth')->group(function () {
         Route::middleware('access:cx.dashboard')->group(function () {
             Route::get('/dashboard', [App\Http\Controllers\CxDashboardController::class, 'index'])->name('dashboard');
             Route::get('/dashboard/api-stats', [App\Http\Controllers\CxDashboardController::class, 'apiStats'])->name('dashboard.api-stats');
+            Route::get('/dashboard/export-excel', [App\Http\Controllers\CxDashboardController::class, 'exportExcel'])->name('dashboard.export-excel');
         });
         
         // Follow Up Worklist
