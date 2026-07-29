@@ -543,18 +543,64 @@ class WarehouseDashboardController extends Controller
 
     public function exportExcel(Request $request)
     {
+        $activeTab = $request->get('active_tab', 'summary');
         $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->subDays(6)->startOfDay();
         $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+        $search = $request->search;
 
         $apiService = app(WarehouseDashboardApiService::class);
-        $stats = $apiService->getHeroMetrics($startDate, $endDate);
 
-        $filename = 'Laporan_Kinerja_Gudang_' . date('Ymd_His') . '.xlsx';
+        switch ($activeTab) {
+            case 'manifest_dashboard':
+                $summary = $apiService->getManifestSummary($startDate, $endDate, $search);
+                $export = new \App\Exports\WarehouseManifestExport($summary, $startDate, $endDate);
+                $filename = 'Laporan_Manifest_' . date('Ymd_His') . '.xlsx';
+                break;
 
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\WarehouseAnalyticsExport($stats, $startDate, $endDate),
-            $filename
-        );
+            case 'sortir_dashboard':
+                $filter = $request->input('sortir_filter', 'all');
+                $serviceId = $request->input('sortir_service_id') ? (int) $request->input('sortir_service_id') : null;
+                $category = $request->input('sortir_category') ?: null;
+                $estStart = $request->input('sortir_est_start') ?: null;
+                $estEnd = $request->input('sortir_est_end') ?: null;
+                
+                $summary = $apiService->getSortirSummary($startDate, $endDate, $search, $filter, $serviceId, $category, $estStart, $estEnd);
+                $export = new \App\Exports\WarehouseSortirExport($summary, $startDate, $endDate);
+                $filename = 'Laporan_Sortir_' . date('Ymd_His') . '.xlsx';
+                break;
+
+            case 'production_dashboard':
+                $filter = $request->input('production_filter', 'all');
+                $serviceId = $request->input('production_service_id') ? (int) $request->input('production_service_id') : null;
+                $category = $request->input('production_category') ?: null;
+                $estStart = $request->input('production_est_start') ?: null;
+                $estEnd = $request->input('production_est_end') ?: null;
+                $sort = $request->input('production_sort', 'asc');
+                $limit = $request->input('production_limit', '10');
+
+                $summary = $apiService->getProductionSummary($startDate, $endDate, $search, $filter, $serviceId, $category, $estStart, $estEnd, $sort, $limit);
+                $export = new \App\Exports\WarehouseProductionExport($summary, $startDate, $endDate);
+                $filename = 'Laporan_Produksi_' . date('Ymd_His') . '.xlsx';
+                break;
+
+            case 'qc_dashboard':
+                $filter = $request->input('qc_filter', 'all');
+                $qcStart = $request->input('qc_entered_start') ?: null;
+                $qcEnd = $request->input('qc_entered_end') ?: null;
+
+                $summary = $apiService->getQcSummary($startDate, $endDate, $search, $filter, $qcStart, $qcEnd);
+                $export = new \App\Exports\WarehouseQcExport($summary, $startDate, $endDate);
+                $filename = 'Laporan_QC_' . date('Ymd_His') . '.xlsx';
+                break;
+
+            default: // summary
+                $stats = $apiService->getHeroMetrics($startDate, $endDate);
+                $export = new \App\Exports\WarehouseAnalyticsExport($stats, $startDate, $endDate);
+                $filename = 'Laporan_Kinerja_Gudang_' . date('Ymd_His') . '.xlsx';
+                break;
+        }
+
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
     }
 
     /**

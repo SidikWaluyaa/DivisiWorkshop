@@ -78,18 +78,23 @@ File Excel hasil ekspor tersusun rapi dan langsung dapat dibuka di Excel atau Go
 
 ---
 
-### 5. 📦 Fitur Ekspor Excel untuk Dashboard Gudang (Warehouse)
+### 5. 📦 Fitur Ekspor Excel Dinamis untuk Dashboard Gudang (Warehouse)
 
 **Kenapa dikerjakan?**  
-Mempermudah tim gudang dalam mengunduh metrik kinerja (Hero Metrics) dalam format spreadsheet (.xlsx). Sesuai permintaan khusus, **metrik "SPK Tertahan (QC Reject)" dikecualikan** dari laporan ini.
+Mempermudah tim gudang dalam mengunduh metrik kinerja dan data rincian secara dinamis untuk kelima tab aktif yang ada di dashboard gudang: Summary, Manifest, Sortir, Produksi, dan QC. Sesuai instruksi Anda, judul laporan disederhanakan dan disesuaikan.
 
 **Apa yang dilakukan?**  
-- Membuat **tombol "Ekspor Excel"** berwarna hijau emerald di toolbar pencarian & filter tanggal pada halaman `/warehouse/dashboard`.
-- Menambahkan **route** `/warehouse/dashboard/export-excel` dan method controller untuk memproses datanya.
-- Membuat class export `WarehouseAnalyticsExport.php` untuk merender metrik (tanpa SPK Tertahan), merapikan nomor urut metrik agar tetap berurutan (1 sampai 8), dan memformat data Nilai Metrik agar rata tengah (Center-Aligned).
+- Memperbarui **tombol "Ekspor Excel"** pada halaman `/warehouse/dashboard` agar mengirimkan parameter `active_tab` beserta filter pencarian & filter tanggal aktif.
+- Memperbarui method `exportExcel` di `WarehouseDashboardController.php` untuk memproses data dinamis menggunakan `switch ($activeTab)`.
+- Membuat 4 class export baru yang menyajikan metrik ringkasan di bagian atas dan daftar tabel di bagian bawah secara rapi dengan format Rata Tengah (Center-Aligned) pada kolom data metrik:
+  1. `WarehouseManifestExport.php` (judul: `SHOE WORKSHOP - LAPORAN MANIFEST`)
+  2. `WarehouseSortirExport.php` (judul: `SHOE WORKSHOP - LAPORAN SORTIR`)
+  3. `WarehouseProductionExport.php` (judul: `SHOE WORKSHOP - LAPORAN PRODUKSI`)
+  4. `WarehouseQcExport.php` (judul: `SHOE WORKSHOP - LAPORAN QC`)
+  5. `WarehouseAnalyticsExport.php` (laporan utama, metrik SPK Tertahan dikecualikan).
 
 **Hasilnya?**  
-Tim gudang kini bisa mengekspor laporan kinerja gudang dengan data yang akurat dan visual tabel yang rapi ke Excel.
+Tim gudang kini bisa mengekspor laporan kinerja gudang yang relevan dengan tab yang sedang aktif dengan data yang akurat dan visual tabel yang rapi ke Excel.
 
 ---
 
@@ -103,9 +108,13 @@ Tim gudang kini bisa mengekspor laporan kinerja gudang dengan data yang akurat d
 | `pdf.blade.php` | Blade | Template halaman cetak PDF analitik CS (A4 Portrait) |
 | `index.blade.php` | Blade | Menambahkan tombol "Cetak PDF" & "Ekspor Excel" pada filter dashboard CS |
 | `CsAnalyticsExport.php` | PHP | Class generator data Excel analitik CS |
-| `WarehouseDashboardController.php` | PHP | Method `exportExcel` untuk memproses & mendownload Excel gudang |
-| `WarehouseAnalyticsExport.php` | PHP | Class generator data Excel kinerja gudang (SPK Tertahan dikecualikan) |
-| `dashboard.blade.php` | Blade | Menambahkan tombol "Ekspor Excel" pada toolbar dashboard gudang |
+| `WarehouseDashboardController.php` | PHP | Method `exportExcel` dinamis untuk memproses & mendownload Excel gudang sesuai tab |
+| `WarehouseAnalyticsExport.php` | PHP | Class generator Excel kinerja gudang (SPK Tertahan dikecualikan) |
+| `WarehouseManifestExport.php` | PHP | Class generator Excel laporan manifest logistik |
+| `WarehouseSortirExport.php` | PHP | Class generator Excel laporan sortir gudang |
+| `WarehouseProductionExport.php` | PHP | Class generator Excel laporan produksi gudang |
+| `WarehouseQcExport.php` | PHP | Class generator Excel laporan QC gudang |
+| `dashboard.blade.php` | Blade | Tombol "Ekspor Excel" dinamis dengan parameter filter tab pada dashboard gudang |
 
 ### File yang di-push ke GitHub sebelumnya (Commit `e4a3f38`):
 
