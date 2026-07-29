@@ -1314,6 +1314,21 @@
                     </div>
                 </div>
 
+                {{-- Action controls --}}
+                <div class="flex justify-end items-center gap-3 mb-6 bg-white p-4 rounded-[1.5rem] shadow-md border border-gray-100">
+                    <a href="{{ route('storage.dashboard.export-piutang-after-pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'ignore_date' => $ignorePiutangDateFilter ? 1 : 0]) }}" 
+                       target="_blank"
+                       class="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-slate-950/20">
+                        🖨️ CETAK PDF
+                    </a>
+                    
+                    <a href="{{ route('storage.dashboard.export-piutang-after-excel', ['start_date' => $startDate, 'end_date' => $endDate, 'search' => $search, 'ignore_date' => $ignorePiutangDateFilter ? 1 : 0]) }}" 
+                       target="_blank"
+                       class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-emerald-700/20">
+                        📊 EXPORT EXCEL
+                    </a>
+                </div>
+
                 {{-- Piutang Table --}}
                 <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-gray-100 overflow-hidden">
                     <div class="overflow-x-auto">

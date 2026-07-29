@@ -98,23 +98,44 @@ Tim gudang kini bisa mengekspor laporan kinerja gudang yang relevan dengan tab y
 
 ---
 
+### 6. 💰 Fitur Ekspor Excel & PDF untuk Tab Piutang (Before & After)
+
+**Kenapa dikerjakan?**  
+Mempermudah tim gudang dan keuangan dalam mengunduh data outstanding piutang baik sebelum pengerjaan selesai maupun setelah selesai (piutang after). Laporan ini disajikan secara rapi dengan judul yang disederhanakan sesuai permintaan Anda.
+
+**Apa yang dilakukan?**  
+- Mendaftarkan route baru di `routes/web.php` untuk ekspor PDF dan Excel pada tab Piutang After (Selesai).
+- Memperbarui `PiutangBeforeExport.php` dengan layout premium (menyertakan Ringkasan Piutang di atas tabel, warna brand hijau, dan format Rata Tengah) dengan judul: `SHOE WORKSHOP - LAPORAN PIUTANG BEFORE`.
+- Membuat class export baru `PiutangAfterExport.php` khusus untuk data piutang setelah selesai dengan judul: `SHOE WORKSHOP - LAPORAN PIUTANG AFTER`.
+- Menambahkan method `exportPiutangAfterPdf` dan `exportPiutangAfterExcel` di `WarehouseDashboardController.php`, serta memperbarui method dynamic `exportExcel` untuk memetakan tab piutang ini.
+- Membuat template PDF `piutang-after-report.blade.php` khusus untuk Laporan Piutang After.
+- Menyisipkan tombol **Cetak PDF** dan **Export Excel** di tab `piutang` (Piutang After) pada view `dashboard.blade.php` sehingga pengguna dapat mencetak dan mengunduh laporan secara langsung.
+
+**Hasilnya?**  
+Tim gudang kini dapat mengunduh laporan Piutang Before dan Piutang After dalam format Excel maupun PDF secara lengkap dan rapi.
+
+---
+
 ## 📂 File yang Dibuat/Diubah Hari Ini
 
 | File | Jenis | Keterangan Singkat |
 |------|-------|--------------------|
 | `manual-book_finance.md` | Markdown | Buku panduan lengkap modul Divisi Finance (baru dibuat hari ini) |
-| `routes/web.php` | PHP | Mendaftarkan route ekspor PDF/Excel untuk CS & Gudang |
+| `routes/web.php` | PHP | Mendaftarkan route ekspor PDF/Excel untuk CS & Gudang (termasuk Piutang After) |
 | `CsDashboardController.php` | PHP | Method ekspor PDF & Excel pada analitik CS |
 | `pdf.blade.php` | Blade | Template halaman cetak PDF analitik CS (A4 Portrait) |
 | `index.blade.php` | Blade | Menambahkan tombol "Cetak PDF" & "Ekspor Excel" pada filter dashboard CS |
 | `CsAnalyticsExport.php` | PHP | Class generator data Excel analitik CS |
-| `WarehouseDashboardController.php` | PHP | Method `exportExcel` dinamis untuk memproses & mendownload Excel gudang sesuai tab |
+| `WarehouseDashboardController.php` | PHP | Method ekspor dinamis & method cetak/ekspor untuk Piutang Before & After |
 | `WarehouseAnalyticsExport.php` | PHP | Class generator Excel kinerja gudang (SPK Tertahan dikecualikan) |
 | `WarehouseManifestExport.php` | PHP | Class generator Excel laporan manifest logistik |
 | `WarehouseSortirExport.php` | PHP | Class generator Excel laporan sortir gudang |
 | `WarehouseProductionExport.php` | PHP | Class generator Excel laporan produksi gudang |
 | `WarehouseQcExport.php` | PHP | Class generator Excel laporan QC gudang |
-| `dashboard.blade.php` | Blade | Tombol "Ekspor Excel" dinamis dengan parameter filter tab pada dashboard gudang |
+| `PiutangBeforeExport.php` | PHP | Class generator Excel laporan Piutang Before (layout premium diperbarui) |
+| `PiutangAfterExport.php` | PHP | Class generator Excel laporan Piutang After (baru) |
+| `piutang-after-report.blade.php`| Blade | Template halaman cetak PDF Piutang After |
+| `dashboard.blade.php` | Blade | Menambahkan tombol ekspor dinamis & tombol cetak/ekspor di tab Piutang After |
 
 ### File yang di-push ke GitHub sebelumnya (Commit `e4a3f38`):
 

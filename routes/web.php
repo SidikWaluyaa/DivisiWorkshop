@@ -670,6 +670,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard/export-qc-pdf', [App\Http\Controllers\WarehouseDashboardController::class, 'exportQcPdf'])->name('dashboard.export-qc-pdf');
         Route::get('/dashboard/export-piutang-before-pdf', [App\Http\Controllers\WarehouseDashboardController::class, 'exportPiutangBeforePdf'])->name('dashboard.export-piutang-before-pdf');
         Route::get('/dashboard/export-piutang-before-excel', [App\Http\Controllers\WarehouseDashboardController::class, 'exportPiutangBeforeExcel'])->name('dashboard.export-piutang-before-excel');
+        Route::get('/dashboard/export-piutang-after-pdf', [App\Http\Controllers\WarehouseDashboardController::class, 'exportPiutangAfterPdf'])->name('dashboard.export-piutang-after-pdf');
+        Route::get('/dashboard/export-piutang-after-excel', [App\Http\Controllers\WarehouseDashboardController::class, 'exportPiutangAfterExcel'])->name('dashboard.export-piutang-after-excel');
         
         // Master Data: Racks (Must be before {id} wildcard to avoid conflict)
         Route::get('racks/sync', [App\Http\Controllers\StorageRackController::class, 'sync'])->name('racks.sync');

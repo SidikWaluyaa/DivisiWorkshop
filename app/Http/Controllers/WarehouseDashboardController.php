@@ -541,6 +541,81 @@ class WarehouseDashboardController extends Controller
         );
     }
 
+    /**
+     * Export Piutang After (Selesai) report to PDF
+     */
+    public function exportPiutangAfterPdf(Request $request)
+    {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+
+        $ignoreDate = $request->boolean('ignore_date', true);
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->subDays(7)->startOfDay();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
+        $search = $request->search;
+
+        $query = \App\Models\Invoice::with(['customer', 'workOrders.workOrderServices.service'])
+            ->where('status', '!=', 'Lunas')
+            ->where('spk_status', 'SELESAI');
+
+        if (!$ignoreDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_number', 'like', '%' . $search . '%')
+                  ->orWhereHas('customer', function ($sub) use ($search) {
+                      $sub->where('name', 'like', '%' . $search . '%')
+                          ->orWhere('phone', 'like', '%' . $search . '%');
+                  })
+                  ->orWhereHas('workOrders', function ($sub) use ($search) {
+                      $sub->where('spk_number', 'like', '%' . $search . '%')
+                          ->orWhere('customer_name', 'like', '%' . $search . '%')
+                          ->orWhere('customer_phone', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        $items = $query->latest()->get();
+        $totalOutstanding = $items->sum('remaining_balance');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('warehouse.pdf.piutang-after-report', [
+            'items' => $items,
+            'total_outstanding' => $totalOutstanding,
+            'period' => [
+                'start' => $ignoreDate ? 'Semua' : $startDate->format('d M Y'),
+                'end' => $ignoreDate ? 'Waktu' : $endDate->format('d M Y'),
+            ],
+            'filter' => [
+                'search' => $search ?: 'Semua',
+            ],
+            'date' => now()->format('d F Y, H:i')
+        ])->setPaper('a4', 'landscape');
+
+        $filename = 'laporan_piutang_after_' . now()->format('Ymd_His') . '.pdf';
+
+        return $pdf->stream($filename);
+    }
+
+    /**
+     * Export Piutang After (Selesai) report to Excel
+     */
+    public function exportPiutangAfterExcel(Request $request)
+    {
+        $ignoreDate = $request->boolean('ignore_date', true);
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+        $search = $request->search;
+
+        $filename = 'laporan_piutang_after_' . now()->format('Ymd_His') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PiutangAfterExport($startDate, $endDate, $search, $ignoreDate),
+            $filename
+        );
+    }
+
     public function exportExcel(Request $request)
     {
         $activeTab = $request->get('active_tab', 'summary');
@@ -591,6 +666,19 @@ class WarehouseDashboardController extends Controller
                 $summary = $apiService->getQcSummary($startDate, $endDate, $search, $filter, $qcStart, $qcEnd);
                 $export = new \App\Exports\WarehouseQcExport($summary, $startDate, $endDate);
                 $filename = 'Laporan_QC_' . date('Ymd_His') . '.xlsx';
+                break;
+
+            case 'piutang_before':
+                $status = $request->input('status', 'all');
+                $ignoreDate = $request->boolean('ignore_date', true);
+                $export = new \App\Exports\PiutangBeforeExport($startDate, $endDate, $search, $status, $ignoreDate);
+                $filename = 'Laporan_Piutang_Before_' . date('Ymd_His') . '.xlsx';
+                break;
+
+            case 'piutang':
+                $ignoreDate = $request->boolean('ignore_date', true);
+                $export = new \App\Exports\PiutangAfterExport($startDate, $endDate, $search, $ignoreDate);
+                $filename = 'Laporan_Piutang_After_' . date('Ymd_His') . '.xlsx';
                 break;
 
             default: // summary

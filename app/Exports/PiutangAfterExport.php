@@ -11,20 +11,18 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class PiutangBeforeExport implements FromArray, ShouldAutoSize, WithStyles
+class PiutangAfterExport implements FromArray, ShouldAutoSize, WithStyles
 {
     protected $startDate;
     protected $endDate;
     protected $search;
-    protected $status;
     protected $ignoreDate;
 
-    public function __construct($startDate, $endDate, $search = null, $status = 'all', $ignoreDate = true)
+    public function __construct($startDate, $endDate, $search = null, $ignoreDate = true)
     {
         $this->startDate = $startDate ? Carbon::parse($startDate)->startOfDay() : null;
         $this->endDate = $endDate ? Carbon::parse($endDate)->endOfDay() : null;
         $this->search = $search;
-        $this->status = $status;
         $this->ignoreDate = $ignoreDate;
     }
 
@@ -35,22 +33,10 @@ class PiutangBeforeExport implements FromArray, ShouldAutoSize, WithStyles
         // Query data
         $query = Invoice::with(['customer', 'workOrders.workOrderServices.service'])
             ->where('status', '!=', 'Lunas')
-            ->whereHas('workOrders', function ($q) {
-                $q->whereIn('status', [
-                    \App\Enums\WorkOrderStatus::DITERIMA->value,
-                    \App\Enums\WorkOrderStatus::READY_TO_DISPATCH->value,
-                    \App\Enums\WorkOrderStatus::ASSESSMENT->value,
-                    \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value,
-                    \App\Enums\WorkOrderStatus::WAITING_VERIFICATION->value,
-                ]);
-            });
+            ->where('spk_status', 'SELESAI');
 
         if (!$this->ignoreDate && $this->startDate && $this->endDate) {
             $query->whereBetween('created_at', [$this->startDate, $this->endDate]);
-        }
-
-        if ($this->status !== 'all') {
-            $query->where('status', $this->status);
         }
 
         if ($this->search) {
@@ -74,14 +60,14 @@ class PiutangBeforeExport implements FromArray, ShouldAutoSize, WithStyles
 
         $rows = [
             // Row 1: Main Header
-            ['SHOE WORKSHOP - LAPORAN PIUTANG BEFORE'],
+            ['SHOE WORKSHOP - LAPORAN PIUTANG AFTER'],
             // Row 2: Filter Info
             ['Periode Laporan:', $rangeLabel],
             // Row 3: Blank separator
             [''],
             
             // Row 4: Section 1 Header
-            ['RINGKASAN PIUTANG BEFORE (BELUM SELESAI)'],
+            ['RINGKASAN PIUTANG AFTER (SELESAI)'],
             // Row 5: Column Headers
             ['Nama Metrik', 'Nilai Metrik', 'Keterangan'],
             // Row 6 - 7: Metrics
@@ -92,7 +78,7 @@ class PiutangBeforeExport implements FromArray, ShouldAutoSize, WithStyles
             [''],
             
             // Row 9: Section 2 Header
-            ['RINCIAN DATA PIUTANG BEFORE'],
+            ['RINCIAN DATA PIUTANG AFTER'],
             // Row 10: Table Headers
             ['No. Invoice', 'No. SPK', 'Nama Pelanggan', 'No. WhatsApp', 'Detail Sepatu', 'Layanan / Jasa', 'Total Biaya', 'Terbayar', 'Sisa Piutang', 'Status']
         ];
