@@ -45,7 +45,7 @@
     }
 </style>
 
-<div class="container mx-auto px-4 py-8 max-w-7xl" x-data="{ activeTab: 'workshop' }">
+<div class="container mx-auto px-4 py-8 max-w-7xl" x-data="{ activeTab: 'workshop', showApiModal: false }">
     
     {{-- Header Section --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -57,15 +57,27 @@
             <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1 ml-4" x-text="activeTab === 'workshop' ? 'Ringkasan Kinerja & Beban Kerja Divisi Workshop' : 'Ringkasan Kinerja & Logistik Gudang'"></p>
         </div>
         
-        {{-- Export Excel Button --}}
-        <a href="{{ route('admin.kpi.export', request()->all()) }}" 
-           x-show="activeTab === 'workshop'"
-           class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-teal-500/20 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Ekspor Excel
-        </a>
+        <div class="flex gap-2">
+            {{-- API Integration Button --}}
+            <button @click="showApiModal = true" 
+               x-show="activeTab === 'workshop'"
+               class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-2xl text-xs font-black shadow-sm transition-all hover:scale-105 active:scale-95 uppercase tracking-widest border border-gray-200 dark:border-gray-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                API
+            </button>
+
+            {{-- Export Excel Button --}}
+            <a href="{{ route('admin.kpi.export', request()->all()) }}" 
+               x-show="activeTab === 'workshop'"
+               class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-teal-500/20 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Ekspor Excel
+            </a>
+        </div>
     </div>
 
     {{-- Tab Navigation --}}
@@ -364,6 +376,59 @@
             </p>
         </div>
     </div> {{-- End of GUDANG TAB CONTENT --}}
+
+    {{-- API Documentation Modal --}}
+    <div x-show="showApiModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="showApiModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" @click="showApiModal = false" aria-hidden="true"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div x-show="showApiModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-100 dark:border-gray-700">
+                <div class="px-6 pt-5 pb-4 sm:p-8 sm:pb-6">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 dark:bg-teal-900/30 sm:mx-0 sm:h-12 sm:w-12 border border-teal-200 dark:border-teal-800">
+                            <svg class="h-6 w-6 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-5 sm:text-left w-full">
+                            <h3 class="text-xl leading-6 font-black text-gray-900 dark:text-white mb-2" id="modal-title">API Integration (Workshop KPI)</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                                Gunakan *endpoint* ini untuk menarik data perhitungan Net KPI secara terprogram.
+                            </p>
+                            
+                            <div class="mb-5">
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-2">Endpoint URL (GET)</label>
+                                <div class="relative rounded-xl shadow-sm flex">
+                                    <input type="text" readonly value="{{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange) : '' }}" class="flex-1 min-w-0 block w-full px-4 py-3 rounded-l-xl text-sm font-mono bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-green-400 focus:ring-teal-500 focus:border-teal-500" id="apiUrlInput">
+                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('apiUrlInput').value); alert('URL tersalin!')" class="inline-flex items-center px-4 py-3 border border-l-0 border-gray-300 dark:border-gray-600 rounded-r-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 font-bold text-xs uppercase transition-colors">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-2">Required Headers</label>
+                                <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto border border-gray-700">
+                                    <pre class="text-sm font-mono text-green-400"><code>Authorization: Bearer &lt;API_KEY_ANDA&gt;
+Accept: application/json</code></pre>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                                    * Atur variabel <code class="text-pink-500 bg-pink-50 dark:bg-pink-900/30 px-1 py-0.5 rounded">KPI_API_KEY</code> di file .env server Anda.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-750 px-4 py-4 sm:px-8 sm:flex sm:flex-row-reverse border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" @click="showApiModal = false" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-teal-600 text-base font-black text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm uppercase tracking-widest transition-all">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </div>
 

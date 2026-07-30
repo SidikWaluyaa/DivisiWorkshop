@@ -1,6 +1,18 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\KpiController;
+
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+// KPI Dashboard APIs
+Route::middleware(['api.key'])->prefix('v1/kpi')->group(function () {
+    Route::get('/workshop', [KpiController::class, 'getWorkshopKpi']);
+});
+
 
 Route::prefix('v1')->group(function () {
     // Public Tracking Endpoint (CORS-restricted, rate-limited, no API key required)

@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'access' => \App\Http\Middleware\CheckAccess::class,
+            'api.key' => \App\Http\Middleware\VerifyApiKey::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
