@@ -26,55 +26,29 @@ class KpiDurasiExport implements FromArray, ShouldAutoSize, WithStyles
     {
         $rows = [
             // Row 1: Title
-            ['SHOE WORKSHOP - LAPORAN ANALISIS DURASI TAHAPAN (KPI)'],
+            ['SHOE WORKSHOP - LAPORAN RINGKASAN KPI DURASI TAHAPAN SPK'],
             // Row 2: Date Info
-            ['Periode SPK:', $this->startLabel . ' s/d ' . $this->endLabel],
+            ['Periode Analisis:', $this->startLabel . ' s/d ' . $this->endLabel],
             // Row 3: Blank separator
             [''],
             
             // Row 4: Table Headers
             [
-                'No. SPK',
-                'Nama Pelanggan',
-                'Status Saat Ini',
-                'Masuk PREP',
-                'Keluar PREP',
-                'Durasi PREP',
-                'Masuk SORTIR',
-                'Keluar SORTIR',
-                'Durasi SORTIR',
-                'Masuk PROD',
-                'Keluar PROD',
-                'Durasi PROD',
-                'Masuk QC',
-                'Keluar QC',
-                'Durasi QC'
+                'Stasiun / Tahapan',
+                'Total SPK Masuk',
+                'Total SPK Keluar',
+                'Rata-rata Durasi Pengerjaan'
             ]
         ];
 
         // Row 5+: Data
-        if (empty($this->data)) {
-            $rows[] = ['Tidak ada data SPK pada periode ini.', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
-        } else {
-            foreach ($this->data as $item) {
-                $rows[] = [
-                    $item['spk_number'],
-                    $item['customer_name'],
-                    $item['current_status'],
-                    $item['prep_enter'],
-                    $item['prep_exit'],
-                    $item['prep_duration'],
-                    $item['sortir_enter'],
-                    $item['sortir_exit'],
-                    $item['sortir_duration'],
-                    $item['prod_enter'],
-                    $item['prod_exit'],
-                    $item['prod_duration'],
-                    $item['qc_enter'],
-                    $item['qc_exit'],
-                    $item['qc_duration']
-                ];
-            }
+        foreach ($this->data as $item) {
+            $rows[] = [
+                $item['stage'],
+                $item['total_masuk'],
+                $item['total_keluar'],
+                $item['avg_duration']
+            ];
         }
 
         // Blank separator
@@ -87,15 +61,14 @@ class KpiDurasiExport implements FromArray, ShouldAutoSize, WithStyles
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->mergeCells('A1:O1');
+        $sheet->mergeCells('A1:D1');
         $totalRows = $sheet->getHighestRow();
 
         // Alignment formatting
-        $sheet->getStyle('A4:O4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A4:O4')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('A4:D4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A4:D4')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         
-        // Align center for timestamps and durations (columns C to O)
-        $sheet->getStyle('C5:O' . ($totalRows - 2))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('B5:D' . ($totalRows - 2))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         return [
             1 => [
@@ -105,7 +78,7 @@ class KpiDurasiExport implements FromArray, ShouldAutoSize, WithStyles
                 'font' => ['italic' => true, 'color' => ['rgb' => '475569']],
             ],
             4 => [
-                'font' => ['bold' => true, 'color' => ['rgb' => 'ffffff'], 'size' => 10],
+                'font' => ['bold' => true, 'color' => ['rgb' => 'ffffff'], 'size' => 11],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
                     'startColor' => ['rgb' => '22AF85'] // Brand Green

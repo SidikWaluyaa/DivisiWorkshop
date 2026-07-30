@@ -1,17 +1,52 @@
-@extends('layouts.app')
+<x-app-layout>
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<!-- Flatpickr Theme Dark if needed, but let's use standard and customize -->
+<style>
+    .flatpickr-calendar {
+        background: #1f2937 !important;
+        border: 1px solid #374151 !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+        border-radius: 1.5rem !important;
+    }
+    .flatpickr-day {
+        color: #e5e7eb !important;
+        border-radius: 0.75rem !important;
+    }
+    .flatpickr-day.today {
+        border-color: #14b8a6 !important;
+    }
+    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+        background: #14b8a6 !important;
+        border-color: #14b8a6 !important;
+        color: #ffffff !important;
+    }
+    .flatpickr-day:hover {
+        background: #374151 !important;
+    }
+    .flatpickr-months .flatpickr-month, .flatpickr-current-month .flatpickr-monthDropdown-months {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+    }
+    .flatpickr-weekday {
+        color: #9ca3af !important;
+    }
+    .flatpickr-calendar .flatpickr-innerContainer {
+        padding: 0.5rem !important;
+    }
+</style>
 
-@section('content')
 <div class="container mx-auto px-4 py-8 max-w-7xl">
     
     {{-- Header Section --}}
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
             <div class="flex items-center gap-3">
                 <div class="w-1.5 h-8 bg-teal-500 rounded-full"></div>
                 <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight">KPI</h1>
             </div>
             <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1 ml-4">
-                Analisis Durasi Pengerjaan SPK per Tahapan Utama
+                Ringkasan Kinerja & Durasi Kerja per Tahapan Utama
             </p>
         </div>
         
@@ -27,185 +62,189 @@
 
     {{-- Filter Card --}}
     <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl p-6 mb-8">
-        <form method="GET" action="{{ route('admin.kpi.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <form method="GET" action="{{ route('admin.kpi.index') }}" class="flex flex-col sm:flex-row items-end gap-4">
             
-            {{-- Search Input --}}
-            <div class="space-y-1.5 col-span-1 md:col-span-2">
-                <label class="text-[9px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Pencarian SPK / Customer</label>
+            {{-- Date Range Picker --}}
+            <div class="space-y-1.5 flex-1 w-full">
+                <label class="text-[9px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Pilih Rentang Tanggal SPK</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400 pointer-events-none">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </span>
-                    <input type="text" name="search" value="{{ $search }}" placeholder="Ketik No. SPK atau Nama Pelanggan..."
-                           class="w-full bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-650 rounded-2xl pl-11 pr-4 py-3.5 text-sm text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-semibold">
+                    <input type="text" id="date-range" name="date_range" value="{{ $dateRange }}" placeholder="Pilih Tanggal Mulai s/d Selesai..." readonly
+                           class="w-full bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-650 rounded-2xl pl-11 pr-4 py-3.5 text-sm text-gray-805 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-bold cursor-pointer">
                 </div>
             </div>
 
-            {{-- Start Date Input --}}
-            <div class="space-y-1.5">
-                <label class="text-[9px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Tanggal Mulai SPK</label>
-                <input type="date" name="start_date" value="{{ $startDate }}"
-                       class="w-full bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-650 rounded-2xl px-4 py-3 text-sm text-gray-805 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-bold">
-            </div>
-
-            {{-- End Date Input --}}
-            <div class="space-y-1.5">
-                <label class="text-[9px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Tanggal Selesai SPK</label>
-                <input type="date" name="end_date" value="{{ $endDate }}"
-                       class="w-full bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-650 rounded-2xl px-4 py-3 text-sm text-gray-805 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all font-bold">
-            </div>
-
-            {{-- Submit and Reset Buttons --}}
-            <div class="col-span-1 md:col-span-4 flex justify-end gap-3 pt-2">
-                @if($search || $startDate || $endDate)
-                    <a href="{{ route('admin.kpi.index') }}" 
-                       class="px-6 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-650 text-gray-700 dark:text-white rounded-2xl text-xs font-black transition-all uppercase tracking-widest">
-                        Reset Filter
-                    </a>
-                @endif
+            {{-- Submit and Reset --}}
+            <div class="flex gap-3 w-full sm:w-auto">
                 <button type="submit" 
-                        class="px-10 py-3.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-xs font-black shadow-md shadow-teal-600/10 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest">
-                    Cari & Saring
+                        class="flex-1 sm:flex-none px-10 py-3.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-xs font-black shadow-md shadow-teal-600/10 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest">
+                    Terapkan
                 </button>
             </div>
         </form>
     </div>
 
-    {{-- Data Table Card --}}
-    <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden">
-        <div class="overflow-x-auto custom-scrollbar">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 dark:bg-gray-750 border-b border-gray-150 dark:border-gray-700 text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest">
-                        <th class="px-6 py-5 align-middle">SPK & Pelanggan</th>
-                        <th class="px-6 py-5 align-middle text-center">Status</th>
-                        
-                        {{-- PREP Stage Header --}}
-                        <th class="px-6 py-5 align-middle border-l border-gray-200 dark:border-gray-700 bg-teal-500/5 text-center">
-                            <span class="text-teal-600">PREPARATION</span>
-                        </th>
-                        
-                        {{-- SORTIR Stage Header --}}
-                        <th class="px-6 py-5 align-middle border-l border-gray-200 dark:border-gray-700 bg-amber-500/5 text-center">
-                            <span class="text-amber-600">SORTIR</span>
-                        </th>
-                        
-                        {{-- PRODUCTION Stage Header --}}
-                        <th class="px-6 py-5 align-middle border-l border-gray-200 dark:border-gray-700 bg-blue-500/5 text-center">
-                            <span class="text-blue-600">PRODUCTION</span>
-                        </th>
-                        
-                        {{-- QC Stage Header --}}
-                        <th class="px-6 py-5 align-middle border-l border-gray-200 dark:border-gray-700 bg-purple-500/5 text-center">
-                            <span class="text-purple-600">QC</span>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @forelse ($orders as $order)
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-750/30 transition-colors">
-                            
-                            {{-- SPK & Customer --}}
-                            <td class="px-6 py-4.5">
-                                <a href="{{ route('admin.orders.show', $order->id) }}" target="_blank" 
-                                   class="font-mono text-xs font-black text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 px-2.5 py-1 rounded-md border border-teal-100 dark:border-teal-900/40 hover:scale-105 inline-block transition-all mb-1">
-                                    {{ $order->spk_number }}
-                                </a>
-                                <div class="text-xs font-bold text-gray-800 dark:text-white leading-tight">
-                                    {{ $order->customer_name }}
-                                </div>
-                            </td>
-                            
-                            {{-- Current Status --}}
-                            <td class="px-6 py-4.5 text-center align-middle">
-                                @php
-                                    $statusLabel = $order->status ? $order->status->label() : '-';
-                                    $statusColor = 'gray';
-                                    if ($order->status) {
-                                        $statusColor = match($order->status) {
-                                            \App\Enums\WorkOrderStatus::PREPARATION => 'teal',
-                                            \App\Enums\WorkOrderStatus::SORTIR => 'amber',
-                                            \App\Enums\WorkOrderStatus::PRODUCTION => 'blue',
-                                            \App\Enums\WorkOrderStatus::QC => 'purple',
-                                            \App\Enums\WorkOrderStatus::SELESAI => 'green',
-                                            \App\Enums\WorkOrderStatus::BATAL => 'red',
-                                            default => 'gray'
-                                        };
-                                    }
-                                @endphp
-                                <span class="inline-flex items-center text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider bg-{{ $statusColor }}-50 text-{{ $statusColor }}-700 dark:bg-{{ $statusColor }}-955/30 dark:text-{{ $statusColor }}-400 border border-{{ $statusColor }}-200/50 dark:border-{{ $statusColor }}-900/40">
-                                    {{ $statusLabel }}
-                                </span>
-                            </td>
-
-                            {{-- PREPARATION KPI --}}
-                            <td class="px-6 py-4.5 border-l border-gray-100 dark:border-gray-700 bg-teal-500/[0.01]">
-                                <div class="text-[10px] space-y-0.5 text-gray-500 dark:text-gray-400">
-                                    <div class="flex justify-between gap-4"><span class="font-medium text-gray-400">Masuk:</span> <span class="font-bold text-gray-700 dark:text-gray-200">{{ $order->kpi_data['PREPARATION']['enter_at'] }}</span></div>
-                                    <div class="flex justify-between gap-4"><span class="font-medium text-gray-400">Keluar:</span> <span class="font-bold text-gray-700 dark:text-gray-200">{{ $order->kpi_data['PREPARATION']['exit_at'] }}</span></div>
-                                    <div class="flex justify-between gap-4 pt-1 border-t border-dashed border-gray-150 dark:border-gray-750">
-                                        <span class="font-black text-teal-600 uppercase text-[9px] tracking-widest">Durasi:</span>
-                                        <span class="font-black text-teal-700 dark:text-teal-400 text-xs">{{ $order->kpi_data['PREPARATION']['duration'] }}</span>
-                                    </div>
-                                </div>
-                            </td>
-
-                            {{-- SORTIR KPI --}}
-                            <td class="px-6 py-4.5 border-l border-gray-100 dark:border-gray-700 bg-amber-500/[0.01]">
-                                <div class="text-[10px] space-y-0.5 text-gray-500 dark:text-gray-400">
-                                    <div class="flex justify-between gap-4"><span class="font-medium text-gray-400">Masuk:</span> <span class="font-bold text-gray-700 dark:text-gray-200">{{ $order->kpi_data['SORTIR']['enter_at'] }}</span></div>
-                                    <div class="flex justify-between gap-4"><span class="font-medium text-gray-400">Keluar:</span> <span class="font-bold text-gray-700 dark:text-gray-200">{{ $order->kpi_data['SORTIR']['exit_at'] }}</span></div>
-                                    <div class="flex justify-between gap-4 pt-1 border-t border-dashed border-gray-150 dark:border-gray-750">
-                                        <span class="font-black text-amber-600 uppercase text-[9px] tracking-widest">Durasi:</span>
-                                        <span class="font-black text-amber-700 dark:text-amber-400 text-xs">{{ $order->kpi_data['SORTIR']['duration'] }}</span>
-                                    </div>
-                                </div>
-                            </td>
-
-                            {{-- PRODUCTION KPI --}}
-                            <td class="px-6 py-4.5 border-l border-gray-100 dark:border-gray-700 bg-blue-500/[0.01]">
-                                <div class="text-[10px] space-y-0.5 text-gray-500 dark:text-gray-400">
-                                    <div class="flex justify-between gap-4"><span class="font-medium text-gray-400">Masuk:</span> <span class="font-bold text-gray-700 dark:text-gray-200">{{ $order->kpi_data['PRODUCTION']['enter_at'] }}</span></div>
-                                    <div class="flex justify-between gap-4"><span class="font-medium text-gray-400">Keluar:</span> <span class="font-bold text-gray-700 dark:text-gray-200">{{ $order->kpi_data['PRODUCTION']['exit_at'] }}</span></div>
-                                    <div class="flex justify-between gap-4 pt-1 border-t border-dashed border-gray-150 dark:border-gray-750">
-                                        <span class="font-black text-blue-600 uppercase text-[9px] tracking-widest">Durasi:</span>
-                                        <span class="font-black text-blue-700 dark:text-blue-400 text-xs">{{ $order->kpi_data['PRODUCTION']['duration'] }}</span>
-                                    </div>
-                                </div>
-                            </td>
-
-                            {{-- QC KPI --}}
-                            <td class="px-6 py-4.5 border-l border-gray-100 dark:border-gray-700 bg-purple-500/[0.01]">
-                                <div class="text-[10px] space-y-0.5 text-gray-500 dark:text-gray-400">
-                                    <div class="flex justify-between gap-4"><span class="font-medium text-gray-400">Masuk:</span> <span class="font-bold text-gray-700 dark:text-gray-200">{{ $order->kpi_data['QC']['enter_at'] }}</span></div>
-                                    <div class="flex justify-between gap-4"><span class="font-medium text-gray-400">Keluar:</span> <span class="font-bold text-gray-700 dark:text-gray-200">{{ $order->kpi_data['QC']['exit_at'] }}</span></div>
-                                    <div class="flex justify-between gap-4 pt-1 border-t border-dashed border-gray-150 dark:border-gray-750">
-                                        <span class="font-black text-purple-600 uppercase text-[9px] tracking-widest">Durasi:</span>
-                                        <span class="font-black text-purple-700 dark:text-purple-400 text-xs">{{ $order->kpi_data['QC']['duration'] }}</span>
-                                    </div>
-                                </div>
-                            </td>
-
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-gray-400 dark:text-slate-500 text-xs font-semibold italic">
-                                Belum ada data SPK yang sesuai dengan filter atau pencarian Anda.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    {{-- Grid 4 KPI Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {{-- PREPARATION Card --}}
+        <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
+            <div class="bg-gradient-to-r from-teal-500/10 to-emerald-500/10 px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-teal-500/10 rounded-xl flex items-center justify-center text-teal-600 font-bold">
+                        🧼
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-gray-800 dark:text-white tracking-tight">1. PREPARATION</h3>
+                        <p class="text-[9px] text-gray-400 uppercase font-bold tracking-wider">Tahap Cuci & Pembongkaran</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 grid grid-cols-3 gap-4">
+                <div class="bg-slate-50 dark:bg-gray-750/30 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-center">
+                    <span class="block text-[8px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">📥 TOTAL MASUK</span>
+                    <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
+                        {{ $summary['PREPARATION']['total_masuk'] }} SPK
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-gray-750/30 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-center">
+                    <span class="block text-[8px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">📤 TOTAL KELUAR</span>
+                    <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
+                        {{ $summary['PREPARATION']['total_keluar'] }} SPK
+                    </div>
+                </div>
+                <div class="bg-teal-50/50 dark:bg-teal-950/20 rounded-2xl p-4 border border-teal-100/50 dark:border-teal-900/30 text-center col-span-3 sm:col-span-1">
+                    <span class="block text-[8px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
+                    <div class="text-sm font-black text-teal-700 dark:text-teal-400 tracking-tight py-1">
+                        {{ $summary['PREPARATION']['avg_duration'] }}
+                    </div>
+                </div>
+            </div>
         </div>
 
-        {{-- Pagination --}}
-        @if ($orders->hasPages())
-            <div class="px-6 py-5 bg-slate-50 dark:bg-gray-750 border-t border-gray-150 dark:border-gray-700">
-                {{ $orders->appends(request()->all())->links() }}
+        {{-- SORTIR Card --}}
+        <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
+            <div class="bg-gradient-to-r from-amber-500/10 to-orange-500/10 px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600 font-bold">
+                        🔍
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-gray-800 dark:text-white tracking-tight">2. SORTIR</h3>
+                        <p class="text-[9px] text-gray-400 uppercase font-bold tracking-wider">Tahap Sortir & Kelengkapan Material</p>
+                    </div>
+                </div>
             </div>
-        @endif
+            <div class="p-6 grid grid-cols-3 gap-4">
+                <div class="bg-slate-50 dark:bg-gray-750/30 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-center">
+                    <span class="block text-[8px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">📥 TOTAL MASUK</span>
+                    <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
+                        {{ $summary['SORTIR']['total_masuk'] }} SPK
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-gray-750/30 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-center">
+                    <span class="block text-[8px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">📤 TOTAL KELUAR</span>
+                    <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
+                        {{ $summary['SORTIR']['total_keluar'] }} SPK
+                    </div>
+                </div>
+                <div class="bg-amber-50/50 dark:bg-amber-955/20 rounded-2xl p-4 border border-amber-100/50 dark:border-amber-900/30 text-center col-span-3 sm:col-span-1">
+                    <span class="block text-[8px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
+                    <div class="text-sm font-black text-amber-700 dark:text-amber-400 tracking-tight py-1">
+                        {{ $summary['SORTIR']['avg_duration'] }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- PRODUCTION Card --}}
+        <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
+            <div class="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-600 font-bold">
+                        🛠️
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-gray-800 dark:text-white tracking-tight">3. PRODUCTION</h3>
+                        <p class="text-[9px] text-gray-400 uppercase font-bold tracking-wider">Tahap Produksi / Repacking & Reparasi</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 grid grid-cols-3 gap-4">
+                <div class="bg-slate-50 dark:bg-gray-750/30 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-center">
+                    <span class="block text-[8px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">📥 TOTAL MASUK</span>
+                    <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
+                        {{ $summary['PRODUCTION']['total_masuk'] }} SPK
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-gray-750/30 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-center">
+                    <span class="block text-[8px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">📤 TOTAL KELUAR</span>
+                    <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
+                        {{ $summary['PRODUCTION']['total_keluar'] }} SPK
+                    </div>
+                </div>
+                <div class="bg-blue-50/50 dark:bg-blue-955/20 rounded-2xl p-4 border border-blue-100/50 dark:border-blue-900/30 text-center col-span-3 sm:col-span-1">
+                    <span class="block text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
+                    <div class="text-sm font-black text-blue-700 dark:text-blue-400 tracking-tight py-1">
+                        {{ $summary['PRODUCTION']['avg_duration'] }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- QC Card --}}
+        <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
+            <div class="bg-gradient-to-r from-purple-500/10 to-pink-500/10 px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-600 font-bold">
+                        ✅
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-gray-800 dark:text-white tracking-tight">4. QUALITY CONTROL</h3>
+                        <p class="text-[9px] text-gray-400 uppercase font-bold tracking-wider">Tahap Quality Control & Finishing</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 grid grid-cols-3 gap-4">
+                <div class="bg-slate-50 dark:bg-gray-750/30 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-center">
+                    <span class="block text-[8px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">📥 TOTAL MASUK</span>
+                    <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
+                        {{ $summary['QC']['total_masuk'] }} SPK
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-gray-750/30 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-center">
+                    <span class="block text-[8px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1">📤 TOTAL KELUAR</span>
+                    <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
+                        {{ $summary['QC']['total_keluar'] }} SPK
+                    </div>
+                </div>
+                <div class="bg-purple-50/50 dark:bg-purple-955/20 rounded-2xl p-4 border border-purple-100/50 dark:border-purple-900/30 text-center col-span-3 sm:col-span-1">
+                    <span class="block text-[8px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
+                    <div class="text-sm font-black text-purple-700 dark:text-purple-400 tracking-tight py-1">
+                        {{ $summary['QC']['avg_duration'] }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
-@endsection
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr("#date-range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            onReady: function(selectedDates, dateStr, instance) {
+                // Ensure styling dark mode elements if needed
+            }
+        });
+    });
+</script>
+</x-app-layout>

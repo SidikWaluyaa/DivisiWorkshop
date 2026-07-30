@@ -13,148 +13,140 @@ class KpiController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->input('search');
-        $startDateInput = $request->input('start_date');
-        $endDateInput = $request->input('end_date');
+        $dateRange = $request->input('date_range');
 
-        // Query WorkOrders
-        $query = WorkOrder::with(['logs' => function ($q) {
-            $q->orderBy('created_at', 'asc');
-        }]);
-
-        // Search Filter
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('spk_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%");
-            });
+        // Parse date range
+        $startDate = null;
+        $endDate = null;
+        if (!empty($dateRange)) {
+            $parts = explode(' to ', $dateRange);
+            $startDate = Carbon::parse($parts[0])->startOfDay();
+            if (isset($parts[1])) {
+                $endDate = Carbon::parse($parts[1])->endOfDay();
+            } else {
+                $endDate = Carbon::parse($parts[0])->endOfDay();
+            }
+        } else {
+            // Default to current month
+            $startDate = Carbon::now()->startOfMonth()->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
+            $dateRange = $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d');
         }
 
-        // Date Filter (SPK entry_date)
-        if (!empty($startDateInput)) {
-            $query->whereDate('entry_date', '>=', Carbon::parse($startDateInput));
-        }
-        if (!empty($endDateInput)) {
-            $query->whereDate('entry_date', '<=', Carbon::parse($endDateInput));
-        }
-
-        $orders = $query->orderBy('id', 'desc')->paginate(25);
-
-        // Process KPI metrics for each order
-        foreach ($orders as $order) {
-            $order->kpi_data = $this->calculateKpi($order);
-        }
+        // Get KPI summary for each stage
+        $summary = $this->getKpiSummary($startDate, $endDate);
 
         return view('admin.kpi.index', [
-            'orders' => $orders,
-            'search' => $search,
-            'startDate' => $startDateInput,
-            'endDate' => $endDateInput,
+            'summary' => $summary,
+            'dateRange' => $dateRange,
         ]);
     }
 
     public function exportExcel(Request $request)
     {
-        $search = $request->input('search');
-        $startDateInput = $request->input('start_date');
-        $endDateInput = $request->input('end_date');
+        $dateRange = $request->input('date_range');
 
-        // Query WorkOrders for Export
-        $query = WorkOrder::with(['logs' => function ($q) {
-            $q->orderBy('created_at', 'asc');
-        }]);
-
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('spk_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%");
-            });
+        // Parse date range
+        $startDate = null;
+        $endDate = null;
+        if (!empty($dateRange)) {
+            $parts = explode(' to ', $dateRange);
+            $startDate = Carbon::parse($parts[0])->startOfDay();
+            if (isset($parts[1])) {
+                $endDate = Carbon::parse($parts[1])->endOfDay();
+            } else {
+                $endDate = Carbon::parse($parts[0])->endOfDay();
+            }
+        } else {
+            $startDate = Carbon::now()->startOfMonth()->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
         }
 
-        if (!empty($startDateInput)) {
-            $query->whereDate('entry_date', '>=', Carbon::parse($startDateInput));
-        }
-        if (!empty($endDateInput)) {
-            $query->whereDate('entry_date', '<=', Carbon::parse($endDateInput));
-        }
-
-        $orders = $query->orderBy('id', 'desc')->get();
+        // Get KPI summary for each stage
+        $summary = $this->getKpiSummary($startDate, $endDate);
 
         $exportData = [];
-        foreach ($orders as $order) {
-            $kpi = $this->calculateKpi($order);
+        foreach ($summary as $stageName => $metrics) {
             $exportData[] = [
-                'spk_number' => $order->spk_number,
-                'customer_name' => $order->customer_name,
-                'current_status' => $order->status->label() ?? $order->status->value ?? $order->status,
-                'prep_enter' => $kpi['PREPARATION']['enter_at'],
-                'prep_exit' => $kpi['PREPARATION']['exit_at'],
-                'prep_duration' => $kpi['PREPARATION']['duration'],
-                'sortir_enter' => $kpi['SORTIR']['enter_at'],
-                'sortir_exit' => $kpi['SORTIR']['exit_at'],
-                'sortir_duration' => $kpi['SORTIR']['duration'],
-                'prod_enter' => $kpi['PRODUCTION']['enter_at'],
-                'prod_exit' => $kpi['PRODUCTION']['exit_at'],
-                'prod_duration' => $kpi['PRODUCTION']['duration'],
-                'qc_enter' => $kpi['QC']['enter_at'],
-                'qc_exit' => $kpi['QC']['exit_at'],
-                'qc_duration' => $kpi['QC']['duration'],
+                'stage' => $stageName,
+                'total_masuk' => $metrics['total_masuk'] . ' SPK',
+                'total_keluar' => $metrics['total_keluar'] . ' SPK',
+                'avg_duration' => $metrics['avg_duration'],
             ];
         }
 
-        $startLabel = $startDateInput ? Carbon::parse($startDateInput)->format('d-m-Y') : 'Awal';
-        $endLabel = $endDateInput ? Carbon::parse($endDateInput)->format('d-m-Y') : 'Akhir';
+        $startLabel = $startDate->format('d-m-Y');
+        $endLabel = $endDate->format('d-m-Y');
 
         return Excel::download(
             new KpiDurasiExport($exportData, $startLabel, $endLabel),
-            "Laporan_KPI_Durasi_SPK_{$startLabel}_sd_{$endLabel}.xlsx"
+            "Laporan_Ringkasan_KPI_Tahapan_SPK_{$startLabel}_sd_{$endLabel}.xlsx"
         );
     }
 
-    private function calculateKpi($order): array
+    private function getKpiSummary($startDate, $endDate): array
     {
         $stages = ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC'];
-        $kpi = [];
-        $logs = $order->logs->sortBy('created_at')->values();
+        $summary = [];
 
         foreach ($stages as $stage) {
-            $enterAt = null;
-            $exitAt = null;
+            // 1. Total Masuk: unique SPKs that entered the stage in the range
+            $totalMasuk = \App\Models\WorkOrderLog::where('step', $stage)
+                ->where('action', 'STATUS_CHANGE')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereHas('workOrder', function($q) {
+                    $q->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING);
+                })
+                ->distinct('work_order_id')
+                ->count('work_order_id');
+
+            // 2. Total Keluar: unique SPKs that exited the stage in the range
+            $totalKeluar = \App\Models\WorkOrderLog::where('action', 'STATUS_CHANGE')
+                ->where('description', 'like', "Status berubah dari {$stage} ke %")
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereHas('workOrder', function($q) {
+                    $q->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING);
+                })
+                ->distinct('work_order_id')
+                ->count('work_order_id');
+
+            // 3. Average Duration: get all work_order_ids that had activity in this stage during the range
+            $activeOrderIds = \App\Models\WorkOrderLog::where(function($q) use ($stage) {
+                    $q->where(function($sub) use ($stage) {
+                        $sub->where('step', $stage)->where('action', 'STATUS_CHANGE');
+                    })->orWhere(function($sub) use ($stage) {
+                        $sub->where('action', 'STATUS_CHANGE')->where('description', 'like', "Status berubah dari {$stage} ke %");
+                    });
+                })
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->distinct()
+                ->pluck('work_order_id');
+
+            $orders = WorkOrder::whereIn('id', $activeOrderIds)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING)
+                ->with(['logs' => function($q) {
+                    $q->orderBy('created_at', 'asc');
+                }])
+                ->get();
+
             $totalSeconds = 0;
-            $tempEnter = null;
-
-            foreach ($logs as $log) {
-                // Determine step name safely
-                $stepName = $log->step;
-                $isTarget = ($stepName === $stage);
-
-                if ($isTarget) {
-                    if (is_null($tempEnter)) {
-                        $tempEnter = $log->created_at;
-                        if (is_null($enterAt)) {
-                            $enterAt = $log->created_at;
-                        }
-                    }
-                } else {
-                    if (!is_null($tempEnter)) {
-                        $totalSeconds += $log->created_at->diffInSeconds($tempEnter);
-                        $exitAt = $log->created_at;
-                        $tempEnter = null;
-                    }
+            $count = 0;
+            foreach ($orders as $order) {
+                $kpi = $this->calculateKpiForOrder($order);
+                if (isset($kpi[$stage]) && $kpi[$stage]['seconds'] > 0) {
+                    $totalSeconds += $kpi[$stage]['seconds'];
+                    $count++;
                 }
             }
 
-            // If currently in this stage (no exit log yet)
-            if (!is_null($tempEnter)) {
-                $totalSeconds += now()->diffInSeconds($tempEnter);
-            }
+            $avgSeconds = $count > 0 ? $totalSeconds / $count : 0;
 
-            // Format duration
+            // Format average duration into readable string
             $durationStr = '-';
-            if ($totalSeconds > 0) {
-                $days = floor($totalSeconds / 86400);
-                $hours = floor(($totalSeconds % 86400) / 3600);
-                $minutes = floor(($totalSeconds % 3600) / 60);
+            if ($avgSeconds > 0) {
+                $days = floor($avgSeconds / 86400);
+                $hours = floor(($avgSeconds % 86400) / 3600);
+                $minutes = floor(($avgSeconds % 3600) / 60);
 
                 $parts = [];
                 if ($days > 0) {
@@ -170,10 +162,48 @@ class KpiController extends Controller
                 $durationStr = implode(' ', $parts);
             }
 
+            $summary[$stage] = [
+                'total_masuk' => $totalMasuk,
+                'total_keluar' => $totalKeluar,
+                'avg_duration' => $durationStr,
+                'avg_seconds' => $avgSeconds,
+            ];
+        }
+
+        return $summary;
+    }
+
+    private function calculateKpiForOrder($order): array
+    {
+        $stages = ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC'];
+        $kpi = [];
+        $logs = $order->logs->sortBy('created_at')->values();
+
+        foreach ($stages as $stage) {
+            $totalSeconds = 0;
+            $tempEnter = null;
+
+            foreach ($logs as $log) {
+                $stepName = $log->step;
+                $isTarget = ($stepName === $stage);
+
+                if ($isTarget) {
+                    if (is_null($tempEnter)) {
+                        $tempEnter = $log->created_at;
+                    }
+                } else {
+                    if (!is_null($tempEnter)) {
+                        $totalSeconds += $log->created_at->diffInSeconds($tempEnter);
+                        $tempEnter = null;
+                    }
+                }
+            }
+
+            if (!is_null($tempEnter)) {
+                $totalSeconds += now()->diffInSeconds($tempEnter);
+            }
+
             $kpi[$stage] = [
-                'enter_at' => $enterAt ? $enterAt->format('d/m/Y H:i') : '-',
-                'exit_at' => $exitAt ? $exitAt->format('d/m/Y H:i') : '-',
-                'duration' => $durationStr,
                 'seconds' => $totalSeconds
             ];
         }
