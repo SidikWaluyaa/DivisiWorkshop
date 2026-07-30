@@ -139,7 +139,7 @@ class CxDashboardService
     {
         // 1. TAMBAH JASA (Manual)
         // Menggunakan kolom JSON is_cx_additional yang jauh lebih akurat dan ringan
-        $upsellServices = \App\Models\WorkOrderService::where('service_details->is_cx_additional', true)
+        $upsellServices = \App\Models\WorkOrderService::where('service_details', 'LIKE', '%"is_cx_additional":true%')
             ->whereBetween('created_at', [$start, $end])
             ->whereHas('workOrder', function($q) {
                 $q->where('status', '!=', 'BATAL');
