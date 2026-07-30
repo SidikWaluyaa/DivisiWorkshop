@@ -224,6 +224,12 @@ Route::middleware('auth')->group(function () {
             Route::get('reports/financial', [App\Http\Controllers\Admin\ReportController::class, 'exportFinancial'])->name('reports.financial.export');
             Route::get('reports/productivity', [App\Http\Controllers\Admin\ReportController::class, 'exportProductivity'])->name('reports.productivity.export');
         });
+
+        // KPI Stages Duration Report
+        Route::middleware('access:admin.performance')->group(function () {
+            Route::get('kpi', [App\Http\Controllers\Admin\KpiController::class, 'index'])->name('kpi.index');
+            Route::get('kpi/export', [App\Http\Controllers\Admin\KpiController::class, 'exportExcel'])->name('kpi.export');
+        });
     });
 
     // Gudang / Reception
