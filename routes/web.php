@@ -228,7 +228,8 @@ Route::middleware('auth')->group(function () {
         // KPI Stages Duration Report
         Route::middleware('access:admin.performance')->group(function () {
             Route::get('kpi', [App\Http\Controllers\Admin\KpiController::class, 'index'])->name('kpi.index');
-            Route::get('kpi/export', [App\Http\Controllers\Admin\KpiController::class, 'exportExcel'])->name('kpi.export');
+            Route::get('/kpi/export', [\App\Http\Controllers\Admin\KpiController::class, 'exportExcel'])->name('admin.kpi.export');
+            Route::get('/kpi/export-gudang', [\App\Http\Controllers\Admin\KpiController::class, 'exportGudangExcel'])->name('admin.kpi.exportGudang');
         });
     });
 

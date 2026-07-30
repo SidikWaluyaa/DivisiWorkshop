@@ -45,7 +45,7 @@
     }
 </style>
 
-<div class="container mx-auto px-4 py-8 max-w-7xl" x-data="{ activeTab: 'workshop', showApiModal: false }">
+<div class="container mx-auto px-4 py-8 max-w-7xl" x-data="{ activeTab: '{{ request('tab', 'workshop') }}', showApiModal: false }">
     
     {{-- Header Section --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -67,10 +67,20 @@
                 API
             </button>
 
-            {{-- Export Excel Button --}}
+            {{-- Export Excel Button Workshop --}}
             <a href="{{ route('admin.kpi.export', request()->all()) }}" 
                x-show="activeTab === 'workshop'"
                class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-teal-500/20 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Ekspor Excel
+            </a>
+
+            {{-- Export Excel Button Gudang --}}
+            <a href="{{ route('admin.kpi.exportGudang', request()->all()) }}" 
+               x-show="activeTab === 'gudang'" style="display: none;"
+               class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-amber-500/20 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
@@ -96,6 +106,7 @@
     {{-- Filter Card --}}
     <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl p-6 mb-8">
         <form method="GET" action="{{ route('admin.kpi.index') }}" class="flex flex-col sm:flex-row items-end gap-4">
+            <input type="hidden" name="tab" :value="activeTab">
             
             {{-- Date Range Picker --}}
             <div class="space-y-1.5 flex-1 w-full">

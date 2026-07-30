@@ -7,6 +7,7 @@ use App\Models\WorkOrder;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Exports\KpiDurasiExport;
+use App\Exports\KpiGudangExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 use App\Services\KpiService;
@@ -125,5 +126,37 @@ class KpiController extends Controller
         ];
 
         return $map[$stageId] ?? $stageId;
+    }
+
+    public function exportGudangExcel(Request $request)
+    {
+        $dateRange = $request->input('date_range');
+
+        // Parse date range
+        $startDate = null;
+        $endDate = null;
+        if (!empty($dateRange)) {
+            $parts = explode(' to ', $dateRange);
+            $startDate = Carbon::parse($parts[0])->startOfDay();
+            if (isset($parts[1])) {
+                $endDate = Carbon::parse($parts[1])->endOfDay();
+            } else {
+                $endDate = Carbon::parse($parts[0])->endOfDay();
+            }
+        } else {
+            $startDate = Carbon::now()->startOfMonth()->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
+        }
+
+        // Get KPI summary from Service
+        $gudangSummary = $this->kpiService->getGudangKpi($startDate, $endDate);
+
+        $startLabel = $startDate->format('d-m-Y');
+        $endLabel = $endDate->format('d-m-Y');
+
+        return Excel::download(
+            new KpiGudangExport($gudangSummary, $startLabel, $endLabel),
+            "Laporan_Ringkasan_KPI_Gudang_{$startLabel}_sd_{$endLabel}.xlsx"
+        );
     }
 }
