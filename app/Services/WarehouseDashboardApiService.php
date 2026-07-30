@@ -613,10 +613,12 @@ class WarehouseDashboardApiService
             ->where('status', '!=', WorkOrderStatus::SPK_PENDING)
             ->count();
 
-        // 2. SPK Print / Otw Ws (Status OTW_WORKSHOP - waktu)
-        $spkOtw = WorkOrder::where('status', WorkOrderStatus::OTW_WORKSHOP)
-            ->whereBetween('waktu', [$start, $end])
-            ->count();
+        // 2. SPK Print / Otw Ws (Historically captured via logs)
+        $spkOtw = WorkOrderLog::where('step', 'OTW_WORKSHOP')
+            ->where('action', 'STATUS_CHANGE')
+            ->whereBetween('created_at', [$start, $end])
+            ->distinct('work_order_id')
+            ->count('work_order_id');
 
         // 3. SPK Tertahan / QC Reject (Historical Rejections in this Period)
         $qcReject = WorkOrderLog::where('action', 'QC_REJECTED')
@@ -712,9 +714,11 @@ class WarehouseDashboardApiService
             ->groupBy('date')
             ->get();
 
-        $otw = WorkOrder::where('status', WorkOrderStatus::OTW_WORKSHOP)
-            ->whereBetween('waktu', [$start, $end])
-            ->select(DB::raw('DATE(waktu) as date'), DB::raw('count(*) as count'))
+        // Audit daily OTW_WORKSHOP historically
+        $otw = WorkOrderLog::where('step', 'OTW_WORKSHOP')
+            ->where('action', 'STATUS_CHANGE')
+            ->whereBetween('created_at', [$start, $end])
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(DISTINCT work_order_id) as count'))
             ->groupBy('date')
             ->get();
 
