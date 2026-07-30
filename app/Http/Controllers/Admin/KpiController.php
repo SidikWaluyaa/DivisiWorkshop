@@ -39,6 +39,13 @@ class KpiController extends Controller
         // Get CX Followup transitions summary
         $cxTransitions = $this->getCxTransitions($startDate, $endDate);
 
+        // Calculate Net metrics for the view
+        $stages = ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC'];
+        foreach ($stages as $stage) {
+            $summary[$stage]['masuk_bersih'] = $summary[$stage]['total_masuk'] - $cxTransitions[$stage]['from_cx'];
+            $summary[$stage]['keluar_bersih'] = $summary[$stage]['total_keluar'] - $cxTransitions[$stage]['to_cx'];
+        }
+
         return view('admin.kpi.index', [
             'summary' => $summary,
             'cxTransitions' => $cxTransitions,
@@ -68,14 +75,29 @@ class KpiController extends Controller
 
         // Get KPI summary for each stage
         $summary = $this->getKpiSummary($startDate, $endDate);
+        
+        // Get CX transitions for Net calculations
+        $cxTransitions = $this->getCxTransitions($startDate, $endDate);
 
         $exportData = [];
-        foreach ($summary as $stageName => $metrics) {
+        foreach ($summary as $stage => $metrics) {
+            
+            $masukKotor = (int)$metrics['total_masuk'];
+            $masukCx = (int)$cxTransitions[$stage]['from_cx'];
+            $masukBersih = $masukKotor - $masukCx;
+
+            $keluarKotor = (int)$metrics['total_keluar'];
+            $keluarCx = (int)$cxTransitions[$stage]['to_cx'];
+            $keluarBersih = $keluarKotor - $keluarCx;
+
             $exportData[] = [
-                'stage' => $stageName,
-                'total_masuk' => $metrics['total_masuk'] . ' SPK',
-                'total_keluar' => $metrics['total_keluar'] . ' SPK',
-                'avg_duration' => $metrics['avg_duration'],
+                'stage' => $stage,
+                'masuk_kotor' => $masukKotor . ' SPK',
+                'masuk_cx' => $masukCx . ' SPK',
+                'masuk_bersih' => $masukBersih . ' SPK',
+                'keluar_kotor' => $keluarKotor . ' SPK',
+                'keluar_cx' => $keluarCx . ' SPK',
+                'keluar_bersih' => $keluarBersih . ' SPK',
             ];
         }
 

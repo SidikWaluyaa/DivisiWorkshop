@@ -120,10 +120,18 @@
                         {{ $summary['PREPARATION']['total_keluar'] }} SPK
                     </div>
                 </div>
-                <div class="bg-teal-50/50 dark:bg-teal-950/20 rounded-2xl p-4 border border-teal-100/50 dark:border-teal-900/30 text-center col-span-3 sm:col-span-1">
-                    <span class="block text-[8px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
-                    <div class="text-sm font-black text-teal-700 dark:text-teal-400 tracking-tight py-1">
-                        {{ $summary['PREPARATION']['avg_duration'] }}
+                <div class="bg-teal-50/50 dark:bg-teal-950/20 rounded-2xl p-4 border border-teal-100/50 dark:border-teal-900/30 text-center col-span-3 sm:col-span-1 flex flex-col justify-center items-center">
+                    <span class="block text-[8px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mb-2">✨ NET (BERSIH)</span>
+                    <div class="flex gap-4 w-full justify-center">
+                        <div class="text-center">
+                            <span class="block text-[9px] text-teal-600/70 dark:text-teal-400/70 font-bold mb-0.5">MASUK</span>
+                            <span class="text-sm font-black text-teal-700 dark:text-teal-400">{{ $summary['PREPARATION']['masuk_bersih'] }}</span>
+                        </div>
+                        <div class="w-px bg-teal-600/20 dark:bg-teal-400/20"></div>
+                        <div class="text-center">
+                            <span class="block text-[9px] text-teal-600/70 dark:text-teal-400/70 font-bold mb-0.5">KELUAR</span>
+                            <span class="text-sm font-black text-teal-700 dark:text-teal-400">{{ $summary['PREPARATION']['keluar_bersih'] }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -155,10 +163,18 @@
                         {{ $summary['SORTIR']['total_keluar'] }} SPK
                     </div>
                 </div>
-                <div class="bg-amber-50/50 dark:bg-amber-955/20 rounded-2xl p-4 border border-amber-100/50 dark:border-amber-900/30 text-center col-span-3 sm:col-span-1">
-                    <span class="block text-[8px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
-                    <div class="text-sm font-black text-amber-700 dark:text-amber-400 tracking-tight py-1">
-                        {{ $summary['SORTIR']['avg_duration'] }}
+                <div class="bg-amber-50/50 dark:bg-amber-955/20 rounded-2xl p-4 border border-amber-100/50 dark:border-amber-900/30 text-center col-span-3 sm:col-span-1 flex flex-col justify-center items-center">
+                    <span class="block text-[8px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-2">✨ NET (BERSIH)</span>
+                    <div class="flex gap-4 w-full justify-center">
+                        <div class="text-center">
+                            <span class="block text-[9px] text-amber-600/70 dark:text-amber-400/70 font-bold mb-0.5">MASUK</span>
+                            <span class="text-sm font-black text-amber-700 dark:text-amber-400">{{ $summary['SORTIR']['masuk_bersih'] }}</span>
+                        </div>
+                        <div class="w-px bg-amber-600/20 dark:bg-amber-400/20"></div>
+                        <div class="text-center">
+                            <span class="block text-[9px] text-amber-600/70 dark:text-amber-400/70 font-bold mb-0.5">KELUAR</span>
+                            <span class="text-sm font-black text-amber-700 dark:text-amber-400">{{ $summary['SORTIR']['keluar_bersih'] }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -190,10 +206,18 @@
                         {{ $summary['PRODUCTION']['total_keluar'] }} SPK
                     </div>
                 </div>
-                <div class="bg-blue-50/50 dark:bg-blue-955/20 rounded-2xl p-4 border border-blue-100/50 dark:border-blue-900/30 text-center col-span-3 sm:col-span-1">
-                    <span class="block text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
-                    <div class="text-sm font-black text-blue-700 dark:text-blue-400 tracking-tight py-1">
-                        {{ $summary['PRODUCTION']['avg_duration'] }}
+                <div class="bg-blue-50/50 dark:bg-blue-955/20 rounded-2xl p-4 border border-blue-100/50 dark:border-blue-900/30 text-center col-span-3 sm:col-span-1 flex flex-col justify-center items-center">
+                    <span class="block text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">✨ NET (BERSIH)</span>
+                    <div class="flex gap-4 w-full justify-center">
+                        <div class="text-center">
+                            <span class="block text-[9px] text-blue-600/70 dark:text-blue-400/70 font-bold mb-0.5">MASUK</span>
+                            <span class="text-sm font-black text-blue-700 dark:text-blue-400">{{ $summary['PRODUCTION']['masuk_bersih'] }}</span>
+                        </div>
+                        <div class="w-px bg-blue-600/20 dark:bg-blue-400/20"></div>
+                        <div class="text-center">
+                            <span class="block text-[9px] text-blue-600/70 dark:text-blue-400/70 font-bold mb-0.5">KELUAR</span>
+                            <span class="text-sm font-black text-blue-700 dark:text-blue-400">{{ $summary['PRODUCTION']['keluar_bersih'] }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -225,10 +249,18 @@
                         {{ $summary['QC']['total_keluar'] }} SPK
                     </div>
                 </div>
-                <div class="bg-purple-50/50 dark:bg-purple-955/20 rounded-2xl p-4 border border-purple-100/50 dark:border-purple-900/30 text-center col-span-3 sm:col-span-1">
-                    <span class="block text-[8px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
-                    <div class="text-sm font-black text-purple-700 dark:text-purple-400 tracking-tight py-1">
-                        {{ $summary['QC']['avg_duration'] }}
+                <div class="bg-purple-50/50 dark:bg-purple-955/20 rounded-2xl p-4 border border-purple-100/50 dark:border-purple-900/30 text-center col-span-3 sm:col-span-1 flex flex-col justify-center items-center">
+                    <span class="block text-[8px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-2">✨ NET (BERSIH)</span>
+                    <div class="flex gap-4 w-full justify-center">
+                        <div class="text-center">
+                            <span class="block text-[9px] text-purple-600/70 dark:text-purple-400/70 font-bold mb-0.5">MASUK</span>
+                            <span class="text-sm font-black text-purple-700 dark:text-purple-400">{{ $summary['QC']['masuk_bersih'] }}</span>
+                        </div>
+                        <div class="w-px bg-purple-600/20 dark:bg-purple-400/20"></div>
+                        <div class="text-center">
+                            <span class="block text-[9px] text-purple-600/70 dark:text-purple-400/70 font-bold mb-0.5">KELUAR</span>
+                            <span class="text-sm font-black text-purple-700 dark:text-purple-400">{{ $summary['QC']['keluar_bersih'] }}</span>
+                        </div>
                     </div>
                 </div>
             </div>

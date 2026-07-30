@@ -35,9 +35,12 @@ class KpiDurasiExport implements FromArray, ShouldAutoSize, WithStyles
             // Row 4: Table Headers
             [
                 'Stasiun / Tahapan',
-                'Total SPK Masuk',
-                'Total SPK Keluar',
-                'Rata-rata Durasi Pengerjaan'
+                'Masuk (Kotor)',
+                'Masuk dari CX (Anomali)',
+                'Masuk (Bersih)',
+                'Keluar (Kotor)',
+                'Keluar ke CX (Anomali)',
+                'Keluar (Bersih)'
             ]
         ];
 
@@ -45,9 +48,12 @@ class KpiDurasiExport implements FromArray, ShouldAutoSize, WithStyles
         foreach ($this->data as $item) {
             $rows[] = [
                 $item['stage'],
-                $item['total_masuk'],
-                $item['total_keluar'],
-                $item['avg_duration']
+                $item['masuk_kotor'],
+                $item['masuk_cx'],
+                $item['masuk_bersih'],
+                $item['keluar_kotor'],
+                $item['keluar_cx'],
+                $item['keluar_bersih']
             ];
         }
 
@@ -61,14 +67,14 @@ class KpiDurasiExport implements FromArray, ShouldAutoSize, WithStyles
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->mergeCells('A1:D1');
+        $sheet->mergeCells('A1:G1');
         $totalRows = $sheet->getHighestRow();
 
         // Alignment formatting
-        $sheet->getStyle('A4:D4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A4:D4')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('A4:G4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A4:G4')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         
-        $sheet->getStyle('B5:D' . ($totalRows - 2))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('B5:G' . ($totalRows - 2))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         return [
             1 => [
