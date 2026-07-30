@@ -106,7 +106,8 @@ class CxDashboardService
             
             $hasValidUpsell = false;
             foreach ($wo->workOrderServices as $svc) {
-                if ($this->isServiceMatchIssue($svc, $issue)) {
+                $details = is_string($svc->service_details) ? json_decode($svc->service_details, true) : $svc->service_details;
+                if (!empty($details['is_cx_additional'])) {
                     $hasValidUpsell = true;
                     break;
                 }
