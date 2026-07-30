@@ -334,11 +334,11 @@
                                     <td class="px-6 py-6 border-l-4 border-green-500/20">
                                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ $rev->workOrder->spk_number }}</p>
                                         <p class="text-sm font-black text-gray-700 dark:text-gray-300 tracking-tight">{{ $rev->workOrder->shoe_brand }}</p>
-                                        <div class="mt-1.5 flex items-center gap-2">
-                                            <span class="text-[10px] font-bold text-gray-500 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded-md inline-flex items-center gap-1">
+                                        <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                                            <span class="whitespace-nowrap text-[9px] font-bold text-gray-600 bg-gray-100/80 border border-gray-200/60 dark:bg-gray-800 dark:text-gray-400 px-1.5 py-0.5 rounded inline-flex items-center gap-1">
                                                 👤 {{ $rev->workOrder->customer_name }}
                                             </span>
-                                            <span class="text-[10px] font-mono font-bold text-gray-500 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded-md inline-flex items-center gap-1">
+                                            <span class="whitespace-nowrap text-[9px] font-mono font-bold text-gray-600 bg-gray-100/80 border border-gray-200/60 dark:bg-gray-800 dark:text-gray-400 px-1.5 py-0.5 rounded inline-flex items-center gap-1">
                                                 📞 {{ $rev->workOrder->customer_phone }}
                                             </span>
                                         </div>
