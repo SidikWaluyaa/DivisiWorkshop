@@ -1769,7 +1769,7 @@
                                 </div>
                             </template>
 
-                            <div class="flex flex-col md:flex-row gap-3 items-end">
+                            <div class="flex flex-col md:flex-row flex-wrap gap-3 items-end">
                                 <div class="flex-1 min-w-[200px]">
                                     <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Kategori</label>
                                     <select x-model="selectedCategory" @change="onCategoryChange()" 
@@ -1792,7 +1792,7 @@
                                         <option value="custom">✏️ Layanan Custom...</option>
                                     </select>
                                 </div>
-                                <div x-show="selectedCategory === 'custom' || newServiceId === 'custom'" class="flex-1" x-transition>
+                                <div x-show="selectedCategory === 'custom' || newServiceId === 'custom'" class="flex-1 min-w-[200px]" x-transition>
                                     <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Nama Custom</label>
                                     <input type="text" x-model="newCustomName" placeholder="Nama layanan kustom"
                                            class="w-full rounded-xl border-gray-200 text-sm font-medium focus:border-[#22B086] focus:ring-[#22B086] shadow-sm">
