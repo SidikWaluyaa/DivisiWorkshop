@@ -130,21 +130,6 @@ class CxDashboardService
         ];
     }
 
-    /**
-     * THE ATOMIC MATCHING LOGIC (Identical to AuditPrecision v7)
-     */
-    private function isServiceMatchIssue($service, $issue)
-    {
-        // 1. Timestamp Lock: Service MUST be created after/during the issue
-        // v10: Allow 24 hour grace period for services added way before formal CX logging
-        if ($service->created_at < $issue->created_at->copy()->subDay()) return false;
-        
-        // 2. OTO Exclusion
-        if (!empty($service->custom_service_name) && str_starts_with($service->custom_service_name, 'OTO:')) return false;
-
-        // 3. Robust Match: If a service was created within the issue's timeframe and is not OTO, it is by definition the upsell service!
-        return true;
-    }
 
     /**
      * Upsell Metrics (Atomic Parity + OTO Monitoring Version v8)
@@ -152,23 +137,18 @@ class CxDashboardService
     private function getUpsellMetrics(Carbon $start, Carbon $end)
     {
         // 1. TAMBAH JASA (Manual)
-        $issues = CxIssue::where('status', 'RESOLVED')
-            ->where('resolution_type', 'tambah_jasa')
-            ->whereBetween('resolved_at', [$start, $end])
-            ->with(['workOrder.workOrderServices'])
-            ->get();
-            
-        $upsellServices = collect();
-        foreach ($issues as $issue) {
-            $wo = $issue->workOrder;
-            if (!$wo || $wo->status === 'BATAL') continue;
-            foreach ($wo->workOrderServices as $svc) {
-                if ($this->isServiceMatchIssue($svc, $issue)) {
-                    $svc->parent_issue_spk = $wo->spk_number;
-                    $upsellServices->push($svc);
-                }
-            }
-        }
+        // Menggunakan kolom JSON is_cx_additional yang jauh lebih akurat dan ringan
+        $upsellServices = \App\Models\WorkOrderService::where('service_details->is_cx_additional', true)
+            ->whereBetween('created_at', [$start, $end])
+            ->whereHas('workOrder', function($q) {
+                $q->where('status', '!=', 'BATAL');
+            })
+            ->with('workOrder')
+            ->get()
+            ->map(function($svc) {
+                $svc->parent_issue_spk = $svc->workOrder->spk_number ?? '-';
+                return $svc;
+            });
         
         $totalNominal = $upsellServices->sum('cost');
         $totalSpk = $upsellServices->unique('work_order_id')->count();
