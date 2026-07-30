@@ -402,7 +402,7 @@
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-2">Endpoint URL (GET)</label>
                                 <div class="relative bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 pr-24 shadow-inner">
                                     <div class="text-sm font-mono text-gray-800 dark:text-green-400 break-all" id="apiUrlText">
-                                        {{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange) : '' }}
+                                        {{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}
                                     </div>
                                     <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('apiUrlText').innerText.trim()); alert('URL tersalin!')" class="absolute top-1/2 -translate-y-1/2 right-3 inline-flex items-center px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold text-xs uppercase transition-colors shadow-sm">
                                         Copy
@@ -413,7 +413,7 @@
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-2">Required Headers</label>
                                 <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto border border-gray-700">
-                                    <pre class="text-sm font-mono text-green-400"><code>Authorization: Bearer &lt;API_KEY_ANDA&gt;
+                                    <pre class="text-sm font-mono text-green-400"><code>Authorization: Bearer {{ env('KPI_API_KEY', 'kuncirahasia123') }}
 Accept: application/json</code></pre>
                                 </div>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
