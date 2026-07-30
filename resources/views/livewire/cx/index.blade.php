@@ -646,34 +646,6 @@
                                         </select>
                                     </div>
 
-                                    {{-- Quick Recommendations (Saran) --}}
-                                    @if($selectedOrder && ($openIssueForSuggestion = $selectedOrder->cxIssues->where('status', 'OPEN')->first()))
-                                        @if($openIssueForSuggestion->rec_service_1 || $openIssueForSuggestion->rec_service_2)
-                                            <div class="space-y-1.5 py-1">
-                                                <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-2 flex items-center gap-1.5">
-                                                    <svg class="w-3.5 h-3.5 text-indigo-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                                    Saran Jasa dari Workshop:
-                                                </span>
-                                                <div class="flex flex-wrap gap-2 ml-2">
-                                                    @if($openIssueForSuggestion->rec_service_1)
-                                                        <button type="button" 
-                                                                wire:click="selectSuggestedService('{{ e($openIssueForSuggestion->rec_service_1) }}')"
-                                                                class="px-3.5 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded-xl text-xs font-black border border-indigo-500/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm">
-                                                            ✨ {{ $openIssueForSuggestion->rec_service_1 }}
-                                                        </button>
-                                                    @endif
-                                                    @if($openIssueForSuggestion->rec_service_2)
-                                                        <button type="button" 
-                                                                wire:click="selectSuggestedService('{{ e($openIssueForSuggestion->rec_service_2) }}')"
-                                                                class="px-3.5 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded-xl text-xs font-black border border-indigo-500/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm">
-                                                            ✨ {{ $openIssueForSuggestion->rec_service_2 }}
-                                                        </button>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @endif
-                                    @endif
-
                                     {{-- Searchable Select Dropdown (Alpine.js) --}}
                                     <div class="space-y-2" x-data="{ 
                                         open: false, 
