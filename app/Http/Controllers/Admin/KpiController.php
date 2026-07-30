@@ -48,9 +48,13 @@ class KpiController extends Controller
         $summary = $data['summary'];
         $cxTransitions = $data['cx_transitions'];
 
+        // Get Gudang KPI
+        $gudangSummary = $this->kpiService->getGudangKpi($startDate, $endDate);
+
         return view('admin.kpi.index', [
             'summary' => $summary,
             'cxTransitions' => $cxTransitions,
+            'gudangSummary' => $gudangSummary,
             'dateRange' => $dateRange,
         ]);
     }

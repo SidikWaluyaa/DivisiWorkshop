@@ -60,7 +60,6 @@
         <div class="flex gap-2">
             {{-- API Integration Button --}}
             <button @click="showApiModal = true" 
-               x-show="activeTab === 'workshop'"
                class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-2xl text-xs font-black shadow-sm transition-all hover:scale-105 active:scale-95 uppercase tracking-widest border border-gray-200 dark:border-gray-600">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -364,17 +363,124 @@
         </div> {{-- End of Main Layout Wrapper --}}
     </div> {{-- End of WORKSHOP TAB CONTENT --}}
 
-    {{-- GUDANG TAB CONTENT (PLACEHOLDER) --}}
+    {{-- GUDANG TAB CONTENT --}}
     <div x-show="activeTab === 'gudang'" style="display: none;" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
-        <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
-            <div class="w-24 h-24 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center text-5xl mb-6 shadow-inner shadow-amber-500/20">
-                🚧
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            
+            {{-- 1. SEPATU MASUK (BEFORE) --}}
+            <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300 relative">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <span class="block text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mb-1">1. SEPATU MASUK (BEFORE)</span>
+                            <div class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">DITERIMA FISIK DI GUDANG</div>
+                        </div>
+                        <div class="w-10 h-10 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold border border-teal-100 dark:border-teal-800">
+                            📥
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">{{ $gudangSummary['sepatu_masuk'] }}</span>
+                        <span class="text-sm font-bold text-gray-400 dark:text-gray-500">Pasang</span>
+                    </div>
+                </div>
+                <!-- Decorative background element -->
+                <div class="absolute -bottom-6 -right-6 text-9xl opacity-5 dark:opacity-10 pointer-events-none transform group-hover:scale-110 transition-transform duration-500">
+                    📥
+                </div>
             </div>
-            <h2 class="text-2xl font-black text-amber-800 dark:text-amber-400 mb-3 tracking-tight">Area Konstruksi KPI Gudang</h2>
-            <p class="text-amber-700/80 dark:text-amber-500/80 font-medium max-w-lg mx-auto text-sm leading-relaxed">
-                Data dan metrik untuk KPI Divisi Gudang saat ini sedang dalam tahap perancangan. Area ini akan segera diisi dengan laporan performa logistik dan persediaan barang Anda.
-            </p>
+
+            {{-- 2. SPK PRINT (OTW WS) --}}
+            <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300 relative">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <span class="block text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">2. SPK PRINT (OTW WS)</span>
+                            <div class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">DIKIRIM KE REPARASI / MANIFEST</div>
+                        </div>
+                        <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold border border-blue-100 dark:border-blue-800">
+                            🚚
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">{{ $gudangSummary['spk_otw'] }}</span>
+                        <span class="text-sm font-bold text-gray-400 dark:text-gray-500">Pasang</span>
+                    </div>
+                </div>
+                <div class="absolute -bottom-6 -right-6 text-9xl opacity-5 dark:opacity-10 pointer-events-none transform group-hover:scale-110 transition-transform duration-500">
+                    🚚
+                </div>
+            </div>
+
+            {{-- 3. SPK TERTAHAN (QC REJECT) --}}
+            <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300 relative">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <span class="block text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-1">3. SPK TERTAHAN (QC REJECT)</span>
+                            <div class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">GAGAL PENERIMAAN AWAL</div>
+                        </div>
+                        <div class="w-10 h-10 bg-rose-50 dark:bg-rose-900/20 rounded-xl flex items-center justify-center text-rose-600 dark:text-rose-400 font-bold border border-rose-100 dark:border-rose-800">
+                            ⚠️
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">{{ $gudangSummary['qc_reject'] }}</span>
+                        <span class="text-sm font-bold text-gray-400 dark:text-gray-500">Pasang</span>
+                    </div>
+                </div>
+                <div class="absolute -bottom-6 -right-6 text-9xl opacity-5 dark:opacity-10 pointer-events-none transform group-hover:scale-110 transition-transform duration-500">
+                    ⚠️
+                </div>
+            </div>
+
+            {{-- 4. AFTER MASUK --}}
+            <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300 relative">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <span class="block text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1">4. AFTER MASUK</span>
+                            <div class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">SELESAI REPARASI MASUK RAK</div>
+                        </div>
+                        <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold border border-amber-100 dark:border-amber-800">
+                            ✨
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">{{ $gudangSummary['after_masuk'] }}</span>
+                        <span class="text-sm font-bold text-gray-400 dark:text-gray-500">Pasang</span>
+                    </div>
+                </div>
+                <div class="absolute -bottom-6 -right-6 text-9xl opacity-5 dark:opacity-10 pointer-events-none transform group-hover:scale-110 transition-transform duration-500">
+                    ✨
+                </div>
+            </div>
+
+            {{-- 5. SEPATU KELUAR --}}
+            <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300 relative">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <span class="block text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-1">5. SEPATU KELUAR</span>
+                            <div class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">PENGAMBILAN & KIRIM LUNAS</div>
+                        </div>
+                        <div class="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-xl flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold border border-purple-100 dark:border-purple-800">
+                            📤
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">{{ $gudangSummary['sepatu_keluar'] }}</span>
+                        <span class="text-sm font-bold text-gray-400 dark:text-gray-500">Pasang</span>
+                    </div>
+                </div>
+                <div class="absolute -bottom-6 -right-6 text-9xl opacity-5 dark:opacity-10 pointer-events-none transform group-hover:scale-110 transition-transform duration-500">
+                    📤
+                </div>
+            </div>
+
         </div>
+
     </div> {{-- End of GUDANG TAB CONTENT --}}
 
     {{-- API Documentation Modal --}}
@@ -393,15 +499,15 @@
                             </svg>
                         </div>
                         <div class="mt-3 text-center sm:mt-0 sm:ml-5 sm:text-left w-full">
-                            <h3 class="text-xl leading-6 font-black text-gray-900 dark:text-white mb-2" id="modal-title">API Integration (Workshop KPI)</h3>
+                            <h3 class="text-xl leading-6 font-black text-gray-900 dark:text-white mb-2" id="modal-title" x-text="activeTab === 'workshop' ? 'API Integration (Workshop KPI)' : 'API Integration (Gudang KPI)'">API Integration</h3>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                                Gunakan *endpoint* ini untuk menarik data perhitungan Net KPI secara terprogram.
+                                Gunakan *endpoint* ini untuk menarik data laporan KPI secara terprogram.
                             </p>
                             
                             <div class="mb-5">
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-2">Endpoint URL (GET)</label>
                                 <div class="relative bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 pr-24 shadow-inner">
-                                    <div class="text-sm font-mono text-gray-800 dark:text-green-400 break-all" id="apiUrlText">
+                                    <div class="text-sm font-mono text-gray-800 dark:text-green-400 break-all" id="apiUrlText" x-text="activeTab === 'workshop' ? '{{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}' : '{{ url('/api/v1/kpi/gudang') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}'">
                                         {{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}
                                     </div>
                                     <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('apiUrlText').innerText.trim()); alert('URL tersalin!')" class="absolute top-1/2 -translate-y-1/2 right-3 inline-flex items-center px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold text-xs uppercase transition-colors shadow-sm">

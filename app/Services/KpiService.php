@@ -191,4 +191,46 @@ class KpiService
 
         return $transitions;
     }
+
+    /**
+     * Get the aggregated KPI data for the Gudang division.
+     */
+    public function getGudangKpi($startDate, $endDate): array
+    {
+        // 1. Sepatu Masuk (Status DITERIMA ke atas - entry_date)
+        $sepatuMasuk = WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$startDate, $endDate])
+            ->where('status', '!=', WorkOrderStatus::SPK_PENDING)
+            ->count();
+
+        // 2. SPK Print / Otw Ws (Historically captured via logs)
+        $spkOtw = WorkOrderLog::where('step', 'OTW_WORKSHOP')
+            ->where('action', 'STATUS_CHANGE')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->distinct('work_order_id')
+            ->count('work_order_id');
+
+        // 3. SPK Tertahan / QC Reject (Historical Rejections in this Period)
+        $qcReject = WorkOrderLog::where('action', 'QC_REJECTED')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
+
+        // 4. After Masuk (Status SELESAI - finished_date)
+        $afterMasuk = WorkOrder::whereNotNull('finished_date')
+            ->whereBetween('finished_date', [$startDate, $endDate])
+            ->count();
+
+        // 5. Sepatu Keluar (taken_date filled)
+        $sepatuKeluar = WorkOrder::whereNotNull('taken_date')
+            ->whereBetween('taken_date', [$startDate, $endDate])
+            ->count();
+
+        return [
+            'sepatu_masuk' => $sepatuMasuk,
+            'spk_otw' => $spkOtw,
+            'qc_reject' => $qcReject,
+            'after_masuk' => $afterMasuk,
+            'sepatu_keluar' => $sepatuKeluar,
+        ];
+    }
 }
