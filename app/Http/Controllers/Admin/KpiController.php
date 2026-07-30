@@ -110,6 +110,17 @@ class KpiController extends Controller
                 ->distinct('work_order_id')
                 ->count('work_order_id');
 
+            // 2.5. Total ke CX Follow Up: unique SPKs that went to CX_FOLLOWUP from this stage
+            $totalCx = \App\Models\WorkOrderLog::where('step', 'CX_FOLLOWUP')
+                ->where('action', 'STATUS_CHANGE')
+                ->where('description', 'like', "Status berubah dari {$stage} ke %")
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereHas('workOrder', function($q) {
+                    $q->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING);
+                })
+                ->distinct('work_order_id')
+                ->count('work_order_id');
+
             // 3. Average Duration: get all work_order_ids that had activity in this stage during the range
             $activeOrderIds = \App\Models\WorkOrderLog::where(function($q) use ($stage) {
                     $q->where(function($sub) use ($stage) {
@@ -165,6 +176,7 @@ class KpiController extends Controller
             $summary[$stage] = [
                 'total_masuk' => $totalMasuk,
                 'total_keluar' => $totalKeluar,
+                'total_cx' => $totalCx,
                 'avg_duration' => $durationStr,
                 'avg_seconds' => $avgSeconds,
             ];
