@@ -52,10 +52,10 @@
         <div>
             <div class="flex items-center gap-3">
                 <div class="w-1.5 h-8 bg-teal-500 rounded-full"></div>
-                <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight">KPI</h1>
+                <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight">KPI WORKSHOP</h1>
             </div>
             <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1 ml-4">
-                Ringkasan Kinerja & Durasi Kerja per Tahapan Utama
+                Ringkasan Kinerja & Beban Kerja Divisi Workshop
             </p>
         </div>
         
