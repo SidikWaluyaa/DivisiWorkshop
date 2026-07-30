@@ -1739,11 +1739,18 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 @can('manageOrder', \App\Models\WorkOrder::class)
-                                <button @click="showAddForm = !showAddForm" 
-                                        class="flex items-center gap-1.5 px-3 py-1.5 bg-[#22B086] hover:bg-[#1C8D6C] text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-200 hover:-translate-y-0.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                    Tambah
-                                </button>
+                                <div class="flex gap-2">
+                                    <button @click="if(showAddForm && !isCxMode) { showAddForm = false } else { isCxMode = false; showAddForm = true }" 
+                                            class="flex items-center gap-1.5 px-3 py-1.5 bg-[#22B086] hover:bg-[#1C8D6C] text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-200 hover:-translate-y-0.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                        Tambah
+                                    </button>
+                                    <button @click="if(showAddForm && isCxMode) { showAddForm = false } else { isCxMode = true; showAddForm = true }" 
+                                            class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-indigo-200 hover:-translate-y-0.5">
+                                        <svg class="w-4 h-4 text-indigo-100 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                                        Tambah Jasa (CX)
+                                    </button>
+                                </div>
                                 @endcan
                                 <div class="px-4 py-2 bg-[#FFC232] text-gray-900 rounded-lg font-mono font-bold shadow-lg shadow-orange-200 transition-all">
                                     TOTAL: Rp <span x-text="formatRupiah(totalTransaksi)">{{ number_format($order->total_transaksi, 0, ',', '.') }}</span>
@@ -1753,7 +1760,15 @@
 
                         {{-- Add Service Form (Slide Down) --}}
                         <div x-show="showAddForm" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
-                             class="px-8 py-5 bg-emerald-50/50 border-b border-emerald-100">
+                             :class="isCxMode ? 'px-8 py-5 bg-indigo-50/30 border-b border-indigo-100' : 'px-8 py-5 bg-emerald-50/50 border-b border-emerald-100'">
+                            
+                            <template x-if="isCxMode">
+                                <div class="bg-indigo-50 text-indigo-700 px-4 py-2 mb-4 rounded-lg text-[11px] font-bold border border-indigo-200 flex items-center gap-2 shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Mode CX Upsell: Pendapatan dari jasa ini akan dihitung ke Dashboard KPI CX.
+                                </div>
+                            </template>
+
                             <div class="flex flex-col md:flex-row gap-3 items-end">
                                 <div class="flex-1 min-w-[200px]">
                                     <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1 block">Kategori</label>
@@ -3321,6 +3336,7 @@ function serviceEditor() {
 
         // UI State
         showAddForm: false,
+        isCxMode: false,
         showEditModal: false,
         editingId: null,
         isLoading: false,
@@ -3405,6 +3421,7 @@ function serviceEditor() {
             this.newCost = 0;
             this.newHkDays = 0;
             this.newDetails = [''];
+            this.isCxMode = false;
         },
 
         async submitAdd() {
@@ -3430,7 +3447,8 @@ function serviceEditor() {
                 const body = { 
                     cost: this.newCost,
                     category_name: this.selectedCategory,
-                    hk_days: this.newHkDays || 0
+                    hk_days: this.newHkDays || 0,
+                    is_cx_additional: this.isCxMode
                 };
 
                 if (this.selectedCategory === 'custom' || this.newServiceId === 'custom') {

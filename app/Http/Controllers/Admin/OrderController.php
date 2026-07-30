@@ -193,6 +193,7 @@ class OrderController extends Controller
             'cost' => 'required|numeric|min:0',
             'service_details' => 'nullable|array',
             'hk_days' => 'nullable|integer|min:0',
+            'is_cx_additional' => 'nullable|boolean',
         ]);
 
         $order = WorkOrder::findOrFail($id);
@@ -215,6 +216,9 @@ class OrderController extends Controller
 
         $hkDays = (int) ($request->hk_days ?? 0);
         $details = $request->service_details ? ['manual_detail' => $request->service_details] : [];
+        if ($request->is_cx_additional) {
+            $details['is_cx_additional'] = true;
+        }
         $data['service_details'] = array_merge($details, ['hk_days' => $hkDays]);
 
         WorkOrderService::create($data);
