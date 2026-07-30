@@ -45,28 +45,41 @@
     }
 </style>
 
-<div class="container mx-auto px-4 py-8 max-w-7xl">
+<div class="container mx-auto px-4 py-8 max-w-7xl" x-data="{ activeTab: 'workshop' }">
     
     {{-- Header Section --}}
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
             <div class="flex items-center gap-3">
-                <div class="w-1.5 h-8 bg-teal-500 rounded-full"></div>
-                <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight">KPI WORKSHOP</h1>
+                <div class="w-1.5 h-8 rounded-full transition-colors" :class="activeTab === 'workshop' ? 'bg-teal-500' : 'bg-amber-500'"></div>
+                <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight" x-text="activeTab === 'workshop' ? 'KPI WORKSHOP' : 'KPI GUDANG'"></h1>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1 ml-4">
-                Ringkasan Kinerja & Beban Kerja Divisi Workshop
-            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1 ml-4" x-text="activeTab === 'workshop' ? 'Ringkasan Kinerja & Beban Kerja Divisi Workshop' : 'Ringkasan Kinerja & Logistik Gudang'"></p>
         </div>
         
         {{-- Export Excel Button --}}
         <a href="{{ route('admin.kpi.export', request()->all()) }}" 
+           x-show="activeTab === 'workshop'"
            class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-teal-500/20 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             Ekspor Excel
         </a>
+    </div>
+
+    {{-- Tab Navigation --}}
+    <div class="flex flex-wrap gap-2 mb-8 bg-gray-100/50 dark:bg-gray-800/50 p-1.5 rounded-2xl border border-gray-200 dark:border-gray-700/50 w-max">
+        <button @click="activeTab = 'workshop'" 
+                :class="activeTab === 'workshop' ? 'bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
+            <span class="text-base">🛠️</span> KPI WORKSHOP
+        </button>
+        <button @click="activeTab = 'gudang'" 
+                :class="activeTab === 'gudang' ? 'bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
+            <span class="text-base">📦</span> KPI GUDANG
+        </button>
     </div>
 
     {{-- Filter Card --}}
@@ -97,8 +110,10 @@
         </form>
     </div>
 
-    {{-- Main Layout Wrapper --}}
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+    {{-- WORKSHOP TAB CONTENT --}}
+    <div x-show="activeTab === 'workshop'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
+        {{-- Main Layout Wrapper --}}
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         
         {{-- Left Column: Grid 4 KPI Cards --}}
         <div class="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -334,7 +349,22 @@
             </div>
         </div> {{-- End of Right Column --}}
 
-    </div> {{-- End of Main Layout Wrapper --}}
+        </div> {{-- End of Main Layout Wrapper --}}
+    </div> {{-- End of WORKSHOP TAB CONTENT --}}
+
+    {{-- GUDANG TAB CONTENT (PLACEHOLDER) --}}
+    <div x-show="activeTab === 'gudang'" style="display: none;" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
+        <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
+            <div class="w-24 h-24 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center text-5xl mb-6 shadow-inner shadow-amber-500/20">
+                🚧
+            </div>
+            <h2 class="text-2xl font-black text-amber-800 dark:text-amber-400 mb-3 tracking-tight">Area Konstruksi KPI Gudang</h2>
+            <p class="text-amber-700/80 dark:text-amber-500/80 font-medium max-w-lg mx-auto text-sm leading-relaxed">
+                Data dan metrik untuk KPI Divisi Gudang saat ini sedang dalam tahap perancangan. Area ini akan segera diisi dengan laporan performa logistik dan persediaan barang Anda.
+            </p>
+        </div>
+    </div> {{-- End of GUDANG TAB CONTENT --}}
+
 </div>
 
 <!-- Flatpickr JS -->
