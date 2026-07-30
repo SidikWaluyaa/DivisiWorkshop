@@ -400,9 +400,11 @@
                             
                             <div class="mb-5">
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-2">Endpoint URL (GET)</label>
-                                <div class="relative rounded-xl shadow-sm flex">
-                                    <input type="text" readonly value="{{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange) : '' }}" class="flex-1 min-w-0 block w-full px-4 py-3 rounded-l-xl text-sm font-mono bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-green-400 focus:ring-teal-500 focus:border-teal-500" id="apiUrlInput">
-                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('apiUrlInput').value); alert('URL tersalin!')" class="inline-flex items-center px-4 py-3 border border-l-0 border-gray-300 dark:border-gray-600 rounded-r-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 font-bold text-xs uppercase transition-colors">
+                                <div class="relative bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 pr-24 shadow-inner">
+                                    <div class="text-sm font-mono text-gray-800 dark:text-green-400 break-all" id="apiUrlText">
+                                        {{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange) : '' }}
+                                    </div>
+                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('apiUrlText').innerText.trim()); alert('URL tersalin!')" class="absolute top-1/2 -translate-y-1/2 right-3 inline-flex items-center px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold text-xs uppercase transition-colors shadow-sm">
                                         Copy
                                     </button>
                                 </div>
