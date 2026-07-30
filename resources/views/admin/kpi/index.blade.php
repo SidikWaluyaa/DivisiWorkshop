@@ -24,6 +24,15 @@
     .flatpickr-day:hover {
         background: #374151 !important;
     }
+    .flatpickr-day.inRange {
+        background: rgba(20, 184, 166, 0.15) !important;
+        border-color: rgba(20, 184, 166, 0.1) !important;
+        box-shadow: -5px 0 0 rgba(20, 184, 166, 0.15), 5px 0 0 rgba(20, 184, 166, 0.15) !important;
+        color: #14b8a6 !important;
+    }
+    .flatpickr-day.inRange:hover {
+        background: rgba(20, 184, 166, 0.25) !important;
+    }
     .flatpickr-months .flatpickr-month, .flatpickr-current-month .flatpickr-monthDropdown-months {
         color: #ffffff !important;
         fill: #ffffff !important;
