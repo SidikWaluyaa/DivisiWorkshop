@@ -35,9 +35,13 @@ class KpiController extends Controller
 
         // Get KPI summary for each stage
         $summary = $this->getKpiSummary($startDate, $endDate);
+        
+        // Get CX Followup transitions summary
+        $cxTransitions = $this->getCxTransitions($startDate, $endDate);
 
         return view('admin.kpi.index', [
             'summary' => $summary,
+            'cxTransitions' => $cxTransitions,
             'dateRange' => $dateRange,
         ]);
     }
@@ -110,17 +114,6 @@ class KpiController extends Controller
                 ->distinct('work_order_id')
                 ->count('work_order_id');
 
-            // 2.5. Total ke CX Follow Up: unique SPKs that went to CX_FOLLOWUP from this stage
-            $totalCx = \App\Models\WorkOrderLog::where('step', 'CX_FOLLOWUP')
-                ->where('action', 'STATUS_CHANGE')
-                ->where('description', 'like', "Status berubah dari {$stage} ke %")
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->whereHas('workOrder', function($q) {
-                    $q->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING);
-                })
-                ->distinct('work_order_id')
-                ->count('work_order_id');
-
             // 3. Average Duration: get all work_order_ids that had activity in this stage during the range
             $activeOrderIds = \App\Models\WorkOrderLog::where(function($q) use ($stage) {
                     $q->where(function($sub) use ($stage) {
@@ -176,7 +169,6 @@ class KpiController extends Controller
             $summary[$stage] = [
                 'total_masuk' => $totalMasuk,
                 'total_keluar' => $totalKeluar,
-                'total_cx' => $totalCx,
                 'avg_duration' => $durationStr,
                 'avg_seconds' => $avgSeconds,
             ];
@@ -221,5 +213,42 @@ class KpiController extends Controller
         }
 
         return $kpi;
+    }
+
+    private function getCxTransitions($startDate, $endDate)
+    {
+        $stages = ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC'];
+        $transitions = [];
+
+        foreach ($stages as $stage) {
+            // Stage -> CX_FOLLOWUP
+            $toCx = \App\Models\WorkOrderLog::where('step', 'CX_FOLLOWUP')
+                ->where('action', 'STATUS_CHANGE')
+                ->where('description', 'like', "Status berubah dari {$stage} ke %")
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereHas('workOrder', function($q) {
+                    $q->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING);
+                })
+                ->distinct('work_order_id')
+                ->count('work_order_id');
+
+            // CX_FOLLOWUP -> Stage
+            $fromCx = \App\Models\WorkOrderLog::where('step', $stage)
+                ->where('action', 'STATUS_CHANGE')
+                ->where('description', 'like', "Status berubah dari CX_FOLLOWUP ke %")
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereHas('workOrder', function($q) {
+                    $q->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING);
+                })
+                ->distinct('work_order_id')
+                ->count('work_order_id');
+
+            $transitions[$stage] = [
+                'to_cx' => $toCx,
+                'from_cx' => $fromCx
+            ];
+        }
+
+        return $transitions;
     }
 }

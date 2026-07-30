@@ -88,8 +88,11 @@
         </form>
     </div>
 
-    {{-- Grid 4 KPI Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {{-- Main Layout Wrapper --}}
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+        
+        {{-- Left Column: Grid 4 KPI Cards --}}
+        <div class="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {{-- PREPARATION Card --}}
         <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
@@ -116,12 +119,6 @@
                     <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
                         {{ $summary['PREPARATION']['total_keluar'] }} SPK
                     </div>
-                    @if($summary['PREPARATION']['total_cx'] > 0)
-                    <div class="text-[9px] font-bold text-rose-500 mt-1.5 flex items-center justify-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        {{ $summary['PREPARATION']['total_cx'] }} ke CX
-                    </div>
-                    @endif
                 </div>
                 <div class="bg-teal-50/50 dark:bg-teal-950/20 rounded-2xl p-4 border border-teal-100/50 dark:border-teal-900/30 text-center col-span-3 sm:col-span-1">
                     <span class="block text-[8px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
@@ -157,12 +154,6 @@
                     <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
                         {{ $summary['SORTIR']['total_keluar'] }} SPK
                     </div>
-                    @if($summary['SORTIR']['total_cx'] > 0)
-                    <div class="text-[9px] font-bold text-rose-500 mt-1.5 flex items-center justify-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        {{ $summary['SORTIR']['total_cx'] }} ke CX
-                    </div>
-                    @endif
                 </div>
                 <div class="bg-amber-50/50 dark:bg-amber-955/20 rounded-2xl p-4 border border-amber-100/50 dark:border-amber-900/30 text-center col-span-3 sm:col-span-1">
                     <span class="block text-[8px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
@@ -198,12 +189,6 @@
                     <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
                         {{ $summary['PRODUCTION']['total_keluar'] }} SPK
                     </div>
-                    @if($summary['PRODUCTION']['total_cx'] > 0)
-                    <div class="text-[9px] font-bold text-rose-500 mt-1.5 flex items-center justify-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        {{ $summary['PRODUCTION']['total_cx'] }} ke CX
-                    </div>
-                    @endif
                 </div>
                 <div class="bg-blue-50/50 dark:bg-blue-955/20 rounded-2xl p-4 border border-blue-100/50 dark:border-blue-900/30 text-center col-span-3 sm:col-span-1">
                     <span class="block text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
@@ -239,12 +224,6 @@
                     <div class="text-xl font-black text-slate-800 dark:text-white tracking-tight">
                         {{ $summary['QC']['total_keluar'] }} SPK
                     </div>
-                    @if($summary['QC']['total_cx'] > 0)
-                    <div class="text-[9px] font-bold text-rose-500 mt-1.5 flex items-center justify-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        {{ $summary['QC']['total_cx'] }} ke CX
-                    </div>
-                    @endif
                 </div>
                 <div class="bg-purple-50/50 dark:bg-purple-955/20 rounded-2xl p-4 border border-purple-100/50 dark:border-purple-900/30 text-center col-span-3 sm:col-span-1">
                     <span class="block text-[8px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-1">⏱️ RERATA DURASI</span>
@@ -255,7 +234,66 @@
             </div>
         </div>
 
-    </div>
+        </div> {{-- End of Left Column --}}
+
+        {{-- Right Column: CX Follow Up Anomalies Table --}}
+        <div class="xl:col-span-1">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl border border-rose-100 dark:border-rose-900/30 shadow-xl overflow-hidden group transition-all duration-300">
+                <div class="bg-gradient-to-r from-rose-500/10 to-red-500/10 px-6 py-5 border-b border-rose-100 dark:border-rose-900/30 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-rose-500/10 rounded-xl flex items-center justify-center text-rose-600 font-bold">
+                            ⚠️
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black text-gray-800 dark:text-white tracking-tight">CX FOLLOW UP</h3>
+                            <p class="text-[9px] text-gray-400 uppercase font-bold tracking-wider">Laporan Anomali Status</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-0 overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-50 dark:bg-gray-750/50 text-[10px] uppercase text-gray-400 font-black tracking-wider">
+                            <tr>
+                                <th class="px-6 py-3">Arah Pergerakan</th>
+                                <th class="px-6 py-3 text-center">Total SPK</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                            <!-- Stage to CX -->
+                            @foreach(['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC'] as $s)
+                                <tr class="hover:bg-rose-50/50 dark:hover:bg-rose-900/10 transition-colors">
+                                    <td class="px-6 py-3 font-medium text-slate-700 dark:text-gray-300">
+                                        <div class="flex items-center gap-2 text-xs">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                            {{ $s }} <span class="text-gray-300">→</span> CX
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-3 text-center font-black text-rose-600 dark:text-rose-400">
+                                        {{ $cxTransitions[$s]['to_cx'] }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                            <!-- CX to Stage -->
+                            @foreach(['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC'] as $s)
+                                <tr class="hover:bg-teal-50/50 dark:hover:bg-teal-900/10 transition-colors">
+                                    <td class="px-6 py-3 font-medium text-slate-700 dark:text-gray-300">
+                                        <div class="flex items-center gap-2 text-xs">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+                                            CX <span class="text-gray-300">→</span> {{ $s }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-3 text-center font-black text-teal-600 dark:text-teal-400">
+                                        {{ $cxTransitions[$s]['from_cx'] }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div> {{-- End of Right Column --}}
+
+    </div> {{-- End of Main Layout Wrapper --}}
 </div>
 
 <!-- Flatpickr JS -->
