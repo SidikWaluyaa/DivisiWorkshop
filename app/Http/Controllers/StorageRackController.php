@@ -261,7 +261,7 @@ class StorageRackController extends Controller
                 $q->whereHas('workOrder');
             })
             ->with(['storedByUser', 'workOrder' => function($q) {
-                $q->with('services');
+                $q->with(['services', 'invoice']);
             }])
             ->orderBy('stored_at', 'asc')
             ->get();

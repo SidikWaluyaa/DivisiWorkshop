@@ -68,10 +68,11 @@
         <thead>
             <tr>
                 <th width="3%">#</th>
-                <th width="20%">No. SPK</th>
-                <th width="24%">Tipe</th>
-                <th width="15%">Customer</th>
-                <th width="14%">Tgl Masuk</th>
+                <th width="18%">No. SPK</th>
+                <th width="18%">Tipe</th>
+                <th width="13%">Customer</th>
+                <th width="12%">Status Invoice</th>
+                <th width="12%">Tgl Masuk</th>
                 <th width="14%">Aksesories</th>
                 <th width="10%">Petugas</th>
             </tr>
@@ -88,7 +89,17 @@
                         @endif
                     </td>
                     <td>{{ optional($item->workOrder)->customer_name ?? '-' }}</td>
-                    <td>{{ optional($item->stored_at)->format('d/m/y H:i') ?? '-' }}</td>
+                    <td style="text-align: center;">
+                        @if($item->workOrder && $item->workOrder->invoice)
+                            @php $invStatus = $item->workOrder->invoice->status; @endphp
+                            <span style="color: {{ $invStatus === 'Lunas' ? '#38a169' : ($invStatus === 'DP/Cicil' ? '#dd6b20' : '#e53e3e') }}; font-weight: bold;">
+                                {{ strtoupper($invStatus) }}
+                            </span>
+                        @else
+                            <span style="color: #a0aec0;">-</span>
+                        @endif
+                    </td>
+                    <td>{{ optional($item->stored_at)->format('d/m/y') ?? '-' }}</td>
                     <td>
                         @if($item->workOrder)
                             @php
@@ -115,7 +126,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" style="text-align: center; color: #a0aec0; padding: 30px;">
+                    <td colspan="8" style="text-align: center; color: #a0aec0; padding: 30px;">
                         Tidak ada barang yang tersimpan di rak ini.
                     </td>
                 </tr>
