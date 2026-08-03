@@ -1,17 +1,12 @@
-<audio id="bell-sound" src="{{ asset('audio/ambil.aac') }}" preload="auto" loop></audio>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     let activeAlertId = null;
 
-    // Autoplay browser audio unlocking
+    // Autoplay browser TTS unlocking
     const unlockAudio = () => {
-        const audio = document.getElementById('bell-sound');
-        if (audio) {
-            audio.play().then(() => {
-                audio.pause();
-                audio.currentTime = 0;
-            }).catch(e => console.log('Audio unlock ignored/failed:', e));
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance('');
+            window.speechSynthesis.speak(utterance);
         }
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('keydown', unlockAudio);
@@ -29,27 +24,49 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.status === 'success') {
                 activeAlertId = data.id;
 
-                // Mainkan suara bel kustom (dengan force load dan retry on gesture bypass)
-                const audio = document.getElementById('bell-sound');
-                if (audio) {
-                    audio.load();
-                    const playPromise = audio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            console.warn('Autoplay blocked initially. Retrying on user interaction...', error);
-                            const forcePlay = () => {
-                                audio.play().then(() => {
-                                    document.removeEventListener('mousemove', forcePlay);
-                                    document.removeEventListener('touchstart', forcePlay);
-                                    document.removeEventListener('click', forcePlay);
-                                }).catch(e => console.log('Retry play failed:', e));
+                // Siapkan Teks TTS berdasarkan data dari server
+                let racks = [];
+                if (data.rack_finish) racks.push("Finish " + data.rack_finish);
+                if (data.rack_accessories) racks.push("Aksesoris " + data.rack_accessories);
+                if (data.rack_inbound) racks.push("Inbound " + data.rack_inbound);
+
+                let rackText = racks.length > 0 
+                    ? "di rak " + racks.join(" dan ") 
+                    : "belum ditempatkan di rak";
+
+                // Format text untuk dibacakan
+                let baseText = `Panggilan pengambilan barang. SPK ${data.spk_number}, atas nama ${data.customer_name}. Lokasi barang ${rackText}.`;
+
+                // Fungsi untuk membaca TTS (Mendukung pengulangan)
+                const playTTS = (isRepeat = false) => {
+                    // Jika popup sudah ditutup, batalkan niat bicara
+                    if (activeAlertId !== data.id) return;
+                    
+                    let textToSpeak = (isRepeat ? "Sekali lagi. " : "") + baseText;
+                    
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                        utterance.lang = 'id-ID';
+                        utterance.volume = 1.0;
+                        utterance.rate = 0.9; // sedikit lambat agar jelas
+                        utterance.pitch = 1.0;
+                        
+                        // Jika ini ucapan pertama, atur callback onend untuk mengulang 1x
+                        if (!isRepeat) {
+                            utterance.onend = () => {
+                                // Jeda 1.5 detik sebelum mengulang
+                                setTimeout(() => {
+                                    playTTS(true); // Panggil ulang dengan flag isRepeat = true
+                                }, 1500);
                             };
-                            document.addEventListener('mousemove', forcePlay, { once: true });
-                            document.addEventListener('touchstart', forcePlay, { once: true });
-                            document.addEventListener('click', forcePlay, { once: true });
-                        });
+                        }
+                        
+                        window.speechSynthesis.speak(utterance);
                     }
-                }
+                };
+
+                // Langsung jalankan TTS tanpa bel
+                playTTS(false);
 
                 // Tentukan class badge untuk status pembayaran
                 let badgeClass = 'bg-gray-100 text-gray-700 border border-gray-200';
@@ -217,11 +234,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     buttonsStyling: false
                 }).then(async (result) => {
-                    // Hentikan pemutaran audio
-                    const audio = document.getElementById('bell-sound');
-                    if (audio) {
-                        audio.pause();
-                        audio.currentTime = 0;
+                    // Hentikan pemutaran TTS jika popup ditutup
+                    if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel();
                     }
 
                     // Jika klik "Buka Stasiun"
