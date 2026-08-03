@@ -180,10 +180,8 @@ class FinishController extends Controller
         
         DB::beginTransaction();
         try {
-            // 1. Release from storage if currently stored
-            if ($order->storage_rack_code) {
-                app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, $notes);
-            }
+            // 1. Release from storage unconditionally (Sweep all active assignments like accessories or shoes)
+            app(\App\Services\Storage\StorageService::class)->retrieveAllFromStorage($order->id, $notes);
 
             // 2. Set taken date and pickup method (Garansi tetap terhitung sejak simpan di gudang)
             $order->taken_date = now();
@@ -233,10 +231,8 @@ class FinishController extends Controller
 
         DB::beginTransaction();
         try {
-            // 1. Release from storage if currently stored
-            if ($order->storage_rack_code) {
-                app(\App\Services\Storage\StorageService::class)->retrieveFromStorage($order->id, $notes);
-            }
+            // 1. Release from storage unconditionally (Sweep all active assignments like accessories or shoes)
+            app(\App\Services\Storage\StorageService::class)->retrieveAllFromStorage($order->id, $notes);
 
             // 2. Set taken date, pickup method, and actual shipping cost (Garansi tetap terhitung sejak simpan di gudang)
             $order->taken_date = now();

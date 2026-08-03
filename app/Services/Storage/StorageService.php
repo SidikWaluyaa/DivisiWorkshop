@@ -176,6 +176,66 @@ class StorageService
     }
 
     /**
+     * Force retrieve ALL active storage assignments for a specific work order (Sapu Jagat).
+     * Used when an order is completely picked up/delivered to ensure no items (shoes or accessories) are left in any racks.
+     */
+    public function retrieveAllFromStorage(int $workOrderId, ?string $notes = null): int
+    {
+        return DB::transaction(function () use ($workOrderId, $notes) {
+            $workOrder = WorkOrder::findOrFail($workOrderId);
+            $now = now();
+            
+            // Find ALL active stored assignments for this work order
+            $assignments = StorageAssignment::where('work_order_id', $workOrderId)
+                ->where('status', 'stored')
+                ->get();
+                
+            $retrievedCount = 0;
+            $rackCodes = [];
+            
+            foreach ($assignments as $assignment) {
+                $assignment->update([
+                    'retrieved_at' => $now,
+                    'retrieved_by' => Auth::id(),
+                    'status' => 'retrieved',
+                    'notes' => $assignment->notes . ($notes ? "\nRetrieved: {$notes}" : ''),
+                ]);
+                
+                if ($assignment->rack_code) {
+                    $rackCodes[] = $assignment->rack_code;
+                }
+                
+                $retrievedCount++;
+                
+                $catVal = is_object($assignment->category) ? $assignment->category->value : $assignment->category;
+                $catLabel = $catVal === 'before' ? 'Inbound' : ($catVal === 'accessories' ? 'Aksesoris' : 'Finish');
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $workOrderId,
+                    'user_id' => Auth::id() ?? 1,
+                    'step' => 'LOGISTICS',
+                    'action' => 'rack_retrieved',
+                    'description' => "Barang ({$catLabel}) dikeluarkan dari Rak {$assignment->rack_code} secara otomatis saat pesanan diambil/dikirim." . ($notes ? " Catatan: {$notes}" : '')
+                ]);
+            }
+            
+            // Clean up work order unconditionally to guarantee it's removed from storage
+            $workOrder->update([
+                'storage_rack_code' => null,
+                'stored_at' => null,
+                'retrieved_at' => $now,
+            ]);
+            
+            // Recalculate unique rack codes
+            $uniqueRacks = array_unique($rackCodes);
+            foreach ($uniqueRacks as $rackCode) {
+                $this->recalculateRackCount($rackCode);
+            }
+            
+            return $retrievedCount;
+        });
+    }
+
+    /**
      * Move work order from one rack to another (Internal Move)
      */
     public function moveRack(int $workOrderId, string $newRackCode, ?string $notes = null, ?int $assignmentId = null): StorageAssignment
