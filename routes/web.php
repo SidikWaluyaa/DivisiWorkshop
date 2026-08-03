@@ -783,7 +783,6 @@ Route::get('/api/sync-work-orders', [App\Http\Controllers\Api\WorkOrderSyncContr
 Route::get('/api/sync-shipping', [App\Http\Controllers\Api\ShippingSyncController::class, 'index'])->name('api.sync.shipping');
 
 // Public Report Viewer (No Auth required for customers/bots)
-Route::get('/view-report/{id}/laporan.pdf', [FinishController::class, 'viewReport'])->name('finish.view-report');
 
 // Public Address Verification (Token based)
 Route::get('/verifikasi-alamat/{token}', function ($token) {

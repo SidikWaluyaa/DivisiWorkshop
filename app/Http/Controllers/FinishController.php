@@ -668,43 +668,7 @@ class FinishController extends Controller
         }
     }
 
-    /**
-     * View/Stream the PDF report directly with proper headers
-     */
-    public function viewReport($id)
-    {
-        $order = WorkOrder::findOrFail($id);
-        
-        // Security: Strictly only allow public viewing for SELESAI orders
-        if ($order->status !== WorkOrderStatus::SELESAI) {
-             abort(403, 'Laporan hanya tersedia untuk order yang sudah SELESAI.');
-        }
 
-        // Reconstruct the standardized filename (matching PhotoReportService logic)
-        $filename = 'REPORT_FINISH_' . str_replace('/', '-', $order->spk_number) . '.pdf';
-        $path = storage_path('app/public/reports/finish/' . $filename);
-
-        // [ROBUSTNESS] If physical file missing, try to generate it ON THE FLY
-        if (!file_exists($path)) {
-            try {
-                $service = app(PhotoReportService::class);
-                $service->generateFinishReport($order);
-                
-                // Re-check existence after generation
-                if (!file_exists($path)) {
-                    abort(404, 'File PDF tidak ditemukan dan gagal di-generate otomatis.');
-                }
-            } catch (\Exception $e) {
-                abort(500, 'Gagal generate PDF otomatis: ' . $e->getMessage());
-            }
-        }
-
-        return response()->file($path, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
-            'Cache-Control' => 'no-cache, no-store, must-revalidate'
-        ]);
-    }
     /**
      * List Garansi — semua order yang mendapat garansi saat pickup
      */

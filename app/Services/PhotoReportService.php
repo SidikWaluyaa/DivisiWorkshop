@@ -66,33 +66,9 @@ class PhotoReportService
             return null;
         }
 
-        // 2. Prepare data for the PDF template
-        $data = [
-            'workOrder' => $workOrder,
-            'photos' => $validPhotos,
-            'generatedAt' => now()->format('d F Y, H:i'),
-        ];
+        // 2. Tidak lagi mencetak file PDF fisik.
+        // PDF raksasa telah diganti menjadi Digital Web Report URL yang jauh lebih efisien.
 
-        // 3. Render PDF
-        $pdf = Pdf::loadView('reports.finish-report-pdf', $data);
-        
-        // Optimize for speed/resizing if needed
-        $pdf->setPaper('a4', 'portrait');
-
-        // 4. Save to storage
-        $filename = 'REPORT_FINISH_' . str_replace('/', '-', $workOrder->spk_number) . '.pdf';
-        $path = 'reports/finish/' . $filename;
-
-        // [CLEANUP] Delete old PDF file if it exists to keep server clean
-        $oldUrl = $workOrder->finish_report_url;
-        if ($oldUrl && str_contains($oldUrl, 'storage/reports/finish/')) {
-            $oldRelativePath = 'reports/finish/' . basename(parse_url($oldUrl, PHP_URL_PATH));
-            if ($oldRelativePath !== $path && Storage::disk('public')->exists($oldRelativePath)) {
-                Storage::disk('public')->delete($oldRelativePath);
-            }
-        }
-
-        Storage::disk('public')->put($path, $pdf->output());
 
         // 5. Ensure invoice_token exists (Fallback)
         if (empty($workOrder->invoice_token)) {

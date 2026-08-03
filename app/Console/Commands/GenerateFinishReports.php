@@ -63,8 +63,15 @@ class GenerateFinishReports extends Command
 
             foreach ($orders as $order) {
                 /** @var WorkOrder $order */
+                // Ensure invoice_token exists
+                if (empty($order->invoice_token)) {
+                    $order->invoice_token = \Illuminate\Support\Str::uuid()->toString();
+                }
                 // Pre-update the link in DB even for async queue
-                $order->finish_report_url = route('finish.view-report', $order->id);
+                $order->finish_report_url = route('customer.report', [
+                    'spk' => \Illuminate\Support\Str::slug($order->spk_number),
+                    'token' => $order->invoice_token
+                ]);
                 $order->save();
                 
                 GeneratePhotoReportJob::dispatch($order);
