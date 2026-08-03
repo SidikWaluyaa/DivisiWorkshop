@@ -2,8 +2,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     let activeAlertId = null;
 
-    // Autoplay browser TTS unlocking
+    // Autoplay browser TTS & Notification unlocking
     const unlockAudio = () => {
+        // Minta Izin Notifikasi jika belum
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance('');
             window.speechSynthesis.speak(utterance);
@@ -65,8 +70,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 };
 
-                // Langsung jalankan TTS tanpa bel
-                playTTS(false);
+                // Cek apakah user sedang membuka tab lain (misal YouTube)
+                if (document.hidden) {
+                    // 1. Tampilkan Notifikasi OS Windows/Mac
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        const notif = new Notification("👟 Panggilan Pengambilan!", {
+                            body: `SPK: ${data.spk_number}\nPelanggan: ${data.customer_name}\nLokasi: ${rackText}`,
+                            requireInteraction: true
+                        });
+                        
+                        // Jika notif diklik, paksa pindah ke tab ini
+                        notif.onclick = function() {
+                            window.focus();
+                            this.close();
+                        };
+                    }
+                    
+                    // 2. Tunda suara TTS sampai tab kembali dilihat (focus)
+                    const onVisibilityChange = () => {
+                        if (!document.hidden && activeAlertId === data.id) {
+                            playTTS(false); // Ngomong setelah tab dibuka
+                            document.removeEventListener('visibilitychange', onVisibilityChange);
+                        }
+                    };
+                    document.addEventListener('visibilitychange', onVisibilityChange);
+                } else {
+                    // Jika tab sedang aktif, langsung ngomong
+                    playTTS(false);
+                }
 
                 // Tentukan class badge untuk status pembayaran
                 let badgeClass = 'bg-gray-100 text-gray-700 border border-gray-200';
