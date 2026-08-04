@@ -1,6 +1,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     let activeAlertId = null;
+    let currentBellAudio = null; // Penampung objek Audio bel kereta
 
     // Autoplay browser TTS & Notification unlocking
     const unlockAudio = () => {
@@ -70,6 +71,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 };
 
+                // Fungsi untuk memutar bel kereta selama 8 detik kemudian disusul TTS
+                const playBellThenTTS = () => {
+                    currentBellAudio = new Audio('/audio/kereta.mp3');
+                    currentBellAudio.volume = 1.0;
+
+                    currentBellAudio.play().then(() => {
+                        // Batasi hanya 8 detik pertama
+                        setTimeout(() => {
+                            if (currentBellAudio && activeAlertId === data.id) {
+                                // Efek fade out lambat (0.5 detik) agar tidak mati mendadak
+                                let fadeInterval = setInterval(() => {
+                                    if (!currentBellAudio) {
+                                        clearInterval(fadeInterval);
+                                        return;
+                                    }
+                                    if (currentBellAudio.volume > 0.1) {
+                                        currentBellAudio.volume -= 0.1;
+                                    } else {
+                                        clearInterval(fadeInterval);
+                                        currentBellAudio.pause();
+                                        currentBellAudio.currentTime = 0;
+                                        // Setelah bel mati, jalankan pengumuman suara robot TTS
+                                        playTTS(false);
+                                    }
+                                }, 50);
+                            }
+                        }, 8000);
+                    }).catch(err => {
+                        console.warn("Autoplay audio bel kereta diblokir browser, langsung memutar TTS:", err);
+                        playTTS(false); // Cadangan langsung ke suara robot TTS
+                    });
+                };
+
                 // Cek apakah user sedang membuka tab lain (misal YouTube)
                 if (document.hidden) {
                     // 1. Tampilkan Notifikasi OS Windows/Mac
@@ -86,17 +120,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         };
                     }
                     
-                    // 2. Tunda suara TTS sampai tab kembali dilihat (focus)
+                    // 2. Tunda suara TTS & Bel sampai tab kembali dilihat (focus)
                     const onVisibilityChange = () => {
                         if (!document.hidden && activeAlertId === data.id) {
-                            playTTS(false); // Ngomong setelah tab dibuka
+                            playBellThenTTS(); // Ngomong setelah tab dibuka
                             document.removeEventListener('visibilitychange', onVisibilityChange);
                         }
                     };
                     document.addEventListener('visibilitychange', onVisibilityChange);
                 } else {
-                    // Jika tab sedang aktif, langsung ngomong
-                    playTTS(false);
+                    // Jika tab sedang aktif, langsung mainkan bel & TTS
+                    playBellThenTTS();
                 }
 
                 // Tentukan class badge untuk status pembayaran
@@ -268,6 +302,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Hentikan pemutaran TTS jika popup ditutup
                     if ('speechSynthesis' in window) {
                         window.speechSynthesis.cancel();
+                    }
+
+                    // Hentikan pemutaran audio bel kereta secara paksa
+                    if (currentBellAudio) {
+                        currentBellAudio.pause();
+                        currentBellAudio.currentTime = 0;
+                        currentBellAudio = null;
                     }
 
                     // Jika klik "Buka Stasiun"
