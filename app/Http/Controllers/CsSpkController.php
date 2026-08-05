@@ -82,6 +82,15 @@ class CsSpkController extends Controller
         return $pdf->stream('laporan-spk-' . now()->format('YmdHis') . '.pdf');
     }
 
+    public function reportExcel(Request $request)
+    {
+        $filters = $request->all();
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\CsSpkExport($filters), 
+            'laporan-spk-' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
     public function bulkDestroy(Request $request)
     {
         $ids = $request->ids;

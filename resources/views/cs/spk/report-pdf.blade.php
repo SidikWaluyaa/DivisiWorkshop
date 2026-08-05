@@ -167,16 +167,23 @@
         </p>
     </div>
 
-    <div class="metrics-container">
-        <div class="metric-card">
-            <div class="metric-label">Total SPK Dibuat</div>
-            <div class="metric-value">{{ $totalSpk }} SPK</div>
-        </div>
-        <div class="metric-card right">
-            <div class="metric-label">Total Nilai Transaksi (Omzet)</div>
-            <div class="metric-value">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
-        </div>
-    </div>
+    <table style="width: 100%; border: none; margin-bottom: 20px; border-collapse: collapse;">
+        <tr>
+            <td style="width: 48%; border: none; padding: 0; vertical-align: top;">
+                <div style="background: #f8fafc; border-left: 5px solid #22AF85; padding: 10px 15px; border-radius: 4px;">
+                    <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; margin-bottom: 4px;">Total SPK Dibuat</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #0f172a;">{{ $totalSpk }} SPK</div>
+                </div>
+            </td>
+            <td style="width: 4%; border: none;"></td>
+            <td style="width: 48%; border: none; padding: 0; vertical-align: top;">
+                <div style="background: #f8fafc; border-left: 5px solid #22AF85; padding: 10px 15px; border-radius: 4px;">
+                    <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; margin-bottom: 4px;">Total Nilai Transaksi (Omzet)</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #0f172a;">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
+                </div>
+            </td>
+        </tr>
+    </table>
 
     <table>
         <thead>
