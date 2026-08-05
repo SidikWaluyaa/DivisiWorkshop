@@ -43,6 +43,17 @@ Pembaruan ini bertujuan untuk:
      - **Bahan Baku (Material)** yang akan digunakan untuk perbaikan tersebut.
      - **Teknisi** yang ditugaskan (sistem otomatis memfilter teknisi yang kompeten berdasarkan Jasa SPK).
 
+* **Konsep Penanganan SPK dengan Banyak Jasa & Pembagian Teknisi:**
+  Jika 1 SPK memiliki lebih dari 1 jasa perbaikan (misalnya: *Glue & Stitch* + *Repaint*):
+  - **Penugasan Berdasarkan Kolom Stasiun:** Penugasan teknisi disimpan langsung menggunakan kolom stasiun yang sudah ada pada database SPK utama (`prod_sol_by` untuk stasiun Sol, `prod_upper_by` untuk stasiun Upper, dan `prod_cleaning_by` untuk stasiun Treatment/Cleaning).
+  - **Penyaringan Keahlian di Halaman ACC:**
+    - Jika SPK membutuhkan Soling, Admin WS akan melihat dropdown penugasan stasiun Sol yang hanya menampilkan teknisi spesialis Soling.
+    - Jika SPK membutuhkan Repaint, Admin WS akan melihat dropdown penugasan stasiun Treatment yang hanya menampilkan teknisi spesialis Treatment.
+    - Untuk **Jasa Kustom** (ditulis manual), sistem menampilkan pilihan semua teknisi yang aktif di stasiun tersebut agar Admin WS leluasa menunjuk penanggung jawab.
+  - **Alur Kerja Berurutan (Sequential Station Workflow):** Sepatu akan dikerjakan secara bertahap mengikuti urutan stasiun: **Soling ➡️ Upper ➡️ Treatment**.
+    - Contoh: Tugas pengerjaan *Repaint* baru akan muncul di layar/antrean Teknisi Treatment setelah Teknisi Sol menyelesaikan tugasnya dan mengeklik tombol *"Selesai Soling"*.
+    - Ketika stasiun terakhir menyelesaikan tugasnya, status global SPK otomatis berubah menjadi **QC (Quality Control)**.
+
 ---
 
 ### Fitur 3: Validasi Stok Bahan & Otomatisasi Daftar Belanja oleh Workshop
