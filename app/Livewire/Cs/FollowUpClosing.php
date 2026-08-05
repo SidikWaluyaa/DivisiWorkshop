@@ -100,7 +100,7 @@ class FollowUpClosing extends Component
         }
 
         $this->addedServices[] = [
-            'id' => microtime(true),
+            'id' => uniqid(),
             'service_id' => $serviceId,
             'category_name' => $this->selectedCategory ?: 'Custom',
             'custom_name' => ($this->selectedServiceId === 'custom') ? $this->customServiceName : null,
@@ -115,7 +115,7 @@ class FollowUpClosing extends Component
 
     public function removeService($id)
     {
-        $this->addedServices = array_filter($this->addedServices, fn($s) => $s['id'] !== $id);
+        $this->addedServices = array_values(array_filter($this->addedServices, fn($s) => $s['id'] !== $id));
     }
 
     public function processAction()
