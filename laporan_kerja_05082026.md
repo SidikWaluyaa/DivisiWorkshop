@@ -38,4 +38,22 @@ Kami membersihkan kode program otomatis terjadwal yang sudah tidak digunakan di 
 - **Tindakan:** Menghapus pemicu tugas otomatis yang mati tersebut dari file `routes/console.php`. Sistem kini lebih bersih, ringan, dan bebas dari log error tak berguna.
 - **Cabang Kerja:** Perubahan ini disimpan di cabang `bugfix/general-fixes` dan **tidak** di-push langsung ke `main` sesuai instruksi Anda.
 
+---
+
+### 3. Pemasangan Filter Rentang Tanggal & Cetak PDF Laporan SPK CS
+**Status:** ✅ Selesai (Diterapkan di Cabang `bugfix/general-fixes`)
+
+**Penjelasan Sederhana:**
+Kami telah berhasil menambahkan fitur penyaring rentang tanggal (*Date Range Picker*) dan cetak PDF laporan transaksi SPK pada halaman data SPK CS (`/cs/spk-data`).
+
+**Hasil Implementasi:**
+- **Sistem Penyaringan:** Menggunakan pustaka *Flatpickr* mode `range` agar petugas CS dapat memilih rentang tanggal awal dan akhir dalam satu kolom masukan yang bersih dan modern.
+- **Kartu Metrik & Penyelarasan:** Menghapus kartu metrik "Menunggu Handover" dari halaman utama dan laporan cetak sesuai dengan permintaan Anda. Tata letak baris metrik diubah menjadi 2 kolom yang lebih bersih dan proporsional.
+- **Ekspor Laporan PDF:** Menambahkan tombol berikon printer yang mengarah ke link ekspor PDF. Laporan PDF berorientasi lanskap (*landscape*) agar tabel detail SPK (berisi No SPK, Tanggal, Customer, Detail Jasa, Total Omzet, dan Status) muat dan rapi dibaca.
+- **Cabang Kerja:** Pengerjaan fitur ini dilakukan sepenuhnya pada cabang `bugfix/general-fixes` dan **tidak** di-push langsung ke `main`.
+
+
+Rencana teknis lengkap telah kami dokumentasikan pada berkas khusus: [implementation_plan_spk_filter_pdf.md](file:///C:/Users/Lenovo/.gemini/antigravity-ide/brain/a4124662-7a26-452b-ad5a-f77b122642e2/implementation_plan_spk_filter_pdf.md).
+
+
 

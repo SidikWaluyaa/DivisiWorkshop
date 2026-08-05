@@ -40,11 +40,46 @@ class CsSpkController extends Controller
         // Metrics
         $totalSpk = $query->count();
         $totalRevenue = $query->sum('total_price');
-        $waitingHandover = (clone $query)->whereNull('work_order_id')->count();
 
         $spks = $query->paginate(20)->withQueryString();
 
-        return view('cs.spk.index', compact('spks', 'totalSpk', 'totalRevenue', 'waitingHandover'));
+        return view('cs.spk.index', compact('spks', 'totalSpk', 'totalRevenue'));
+    }
+
+    public function reportPdf(Request $request)
+    {
+        $query = CsSpk::with(['lead', 'customer', 'workOrder', 'items.workOrder'])
+            ->withCount('items')
+            ->orderBy('created_at', 'desc');
+
+        // Filters
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function($c) use ($search) {
+                      $c->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $totalSpk = $query->count();
+        $totalRevenue = $query->sum('total_price');
+        $spks = $query->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('cs.spk.report-pdf', compact('spks', 'totalSpk', 'totalRevenue'))
+            ->setPaper('a4', 'landscape'); // Landscape gives more space for columns
+
+        return $pdf->stream('laporan-spk-' . now()->format('YmdHis') . '.pdf');
     }
 
     public function bulkDestroy(Request $request)

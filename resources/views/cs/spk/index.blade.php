@@ -5,18 +5,45 @@
         </h2>
     </x-slot>
 
+    {{-- Flatpickr Styles & Scripts --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <style>
+        .flatpickr-calendar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.1) !important;
+            padding: 8px 6px !important;
+            font-family: 'Inter', sans-serif !important;
+            width: 320px !important;
+            box-sizing: border-box !important;
+        }
+        .flatpickr-day.selected, 
+        .flatpickr-day.startRange, 
+        .flatpickr-day.endRange {
+            background: linear-gradient(135deg, #22AF85 0%, #1d9d76 100%) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 15px -3px rgba(34, 175, 133, 0.3) !important;
+            border-radius: 12px !important;
+        }
+        .flatpickr-day.inRange {
+            background: rgba(34, 175, 133, 0.08) !important;
+            color: #22AF85 !important;
+        }
+    </style>
+
     <div class="py-12 bg-gray-50/50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             {{-- Metrics Cards --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div class="bg-white rounded-[2rem] shadow-xl p-6 border-l-8 border-[#22AF85]">
                     <div class="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Total SPK Dibuat</div>
                     <div class="text-3xl font-black text-gray-900 leading-none">{{ $totalSpk }}</div>
-                </div>
-                <div class="bg-white rounded-[2rem] shadow-xl p-6 border-l-8 border-[#FFC232]">
-                    <div class="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Menunggu Handover (Gudang)</div>
-                    <div class="text-3xl font-black text-gray-900 leading-none">{{ $waitingHandover }}</div>
                 </div>
                 <div class="bg-white rounded-[2rem] shadow-xl p-6 border-l-8 border-[#22AF85]">
                     <div class="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Total Nilai Transaksi</div>
@@ -39,11 +66,38 @@
                                 <option value="HANDED_TO_WORKSHOP" {{ request('status') == 'HANDED_TO_WORKSHOP' ? 'selected' : '' }}>Masuk Gudang</option>
                             </select>
                             
-                            <div class="flex gap-2 col-span-1 md:col-span-2">
-                                <input type="date" name="date_from" value="{{ request('date_from') }}" class="flex-1 rounded-2xl border-none bg-gray-50 px-4 py-3 text-sm font-bold shadow-sm">
-                                <button type="submit" class="px-8 bg-[#22AF85] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-lg transition">
+                            <div class="flex gap-2 col-span-1 md:col-span-2" x-data="{
+                                dateFrom: '{{ request('date_from') }}',
+                                dateTo: '{{ request('date_to') }}',
+                                initFlatpickr() {
+                                    flatpickr($refs.dateRange, {
+                                        mode: 'range',
+                                        dateFormat: 'Y-m-d',
+                                        defaultDate: this.dateFrom && this.dateTo ? [this.dateFrom, this.dateTo] : (this.dateFrom ? [this.dateFrom] : []),
+                                        onChange: (selectedDates, dateStr, instance) => {
+                                            if (selectedDates.length === 2) {
+                                                this.dateFrom = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                                this.dateTo = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                            } else if (selectedDates.length === 0) {
+                                                this.dateFrom = '';
+                                                this.dateTo = '';
+                                            }
+                                        }
+                                    });
+                                }
+                            }" x-init="initFlatpickr()">
+                                <input type="hidden" name="date_from" :value="dateFrom">
+                                <input type="hidden" name="date_to" :value="dateTo">
+                                <input type="text" x-ref="dateRange" placeholder="Pilih Rentang Tanggal..." readonly class="flex-1 rounded-2xl border-none bg-gray-50 px-4 py-3 text-sm font-bold shadow-sm focus:ring-2 focus:ring-[#22AF85] cursor-pointer">
+                                
+                                <button type="submit" class="px-6 bg-[#22AF85] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-lg transition active:scale-95">
                                     Filter
                                 </button>
+                                
+                                <a href="{{ route('spk.report-pdf', request()->all()) }}" target="_blank" class="px-4 bg-gray-100 text-gray-700 hover:bg-[#22AF85] hover:text-white rounded-2xl font-black text-xs uppercase tracking-widest transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Cetak Laporan PDF">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                    PDF
+                                </a>
                             </div>
                         </form>
 
