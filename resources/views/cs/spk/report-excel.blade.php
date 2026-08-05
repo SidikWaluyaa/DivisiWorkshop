@@ -43,7 +43,7 @@
             <th style="font-weight: bold; background-color: #e2e8f0; border: 1px solid #94a3b8; width: 18px;">Tanggal</th>
             <th style="font-weight: bold; background-color: #e2e8f0; border: 1px solid #94a3b8; width: 25px;">Nama Customer</th>
             <th style="font-weight: bold; background-color: #e2e8f0; border: 1px solid #94a3b8; width: 15px;">No Telepon</th>
-            <th style="font-weight: bold; background-color: #e2e8f0; border: 1px solid #94a3b8; width: 45px;">Detail Item & Jasa</th>
+            <th style="font-weight: bold; background-color: #e2e8f0; border: 1px solid #94a3b8; width: 45px;">Detail Item &amp; Jasa</th>
             <th style="font-weight: bold; background-color: #e2e8f0; border: 1px solid #94a3b8; text-align: right; width: 18px;">Total Transaksi</th>
             <th style="font-weight: bold; background-color: #e2e8f0; border: 1px solid #94a3b8; text-align: right; width: 15px;">DP Amount</th>
             <th style="font-weight: bold; background-color: #e2e8f0; border: 1px solid #94a3b8; text-align: center; width: 18px;">Status SPK</th>
