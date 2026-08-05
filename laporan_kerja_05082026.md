@@ -25,3 +25,17 @@ Berikut konsep yang disepakati:
 
 Catatan lengkap mengenai rencana ini juga telah dimasukkan ke file rencana kerja PWA.
 
+---
+
+### 2. Pembersihan Tugas Terjadwal Mati (Defunct Scheduled Jobs)
+**Status:** ✅ Selesai (Diterapkan di Cabang `bugfix/general-fixes`)
+
+**Penjelasan Sederhana:**
+Kami membersihkan kode program otomatis terjadwal yang sudah tidak digunakan di dalam file `routes/console.php`.
+
+**Hasil Perubahan:**
+- **Masalah Sebelumnya:** Sistem terus mencoba menjalankan tiga tugas otomatis algoritma (`algorithm:auto-assign`, `algorithm:priorities`, dan `algorithm:bottlenecks`) setiap beberapa menit, serta pembersihan mingguan metrik algoritma. Padahal, berkas-berkas kode utama dan tabel database dari algoritma tersebut sudah dihapus sejak lama. Hal ini menyebabkan error log sampah menumpuk di latar belakang.
+- **Tindakan:** Menghapus pemicu tugas otomatis yang mati tersebut dari file `routes/console.php`. Sistem kini lebih bersih, ringan, dan bebas dari log error tak berguna.
+- **Cabang Kerja:** Perubahan ini disimpan di cabang `bugfix/general-fixes` dan **tidak** di-push langsung ke `main` sesuai instruksi Anda.
+
+
