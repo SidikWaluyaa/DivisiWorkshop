@@ -520,6 +520,8 @@ Route::middleware('auth')->group(function () {
         // SPK & Conversion
         Route::middleware('access:cs.spk')->group(function () {
             Route::get('/spk-data', [App\Http\Controllers\CsSpkController::class, 'index'])->name('spk.index');
+            Route::get('/spk-data/report-pdf', [App\Http\Controllers\CsSpkController::class, 'reportPdf'])->name('spk.report-pdf');
+            Route::get('/spk-data/report-excel', [App\Http\Controllers\CsSpkController::class, 'reportExcel'])->name('spk.report-excel');
             Route::delete('/spk-data/bulk-destroy', [App\Http\Controllers\CsSpkController::class, 'bulkDestroy'])->name('spk.bulk-destroy');
             Route::post('/leads/{id}/generate-spk', [App\Http\Controllers\CsLeadController::class, 'generateSpk'])->name('spk.generate');
             Route::get('/leads/{id}/generate-spk', function($id) {
