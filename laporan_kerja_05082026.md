@@ -50,10 +50,11 @@ Kami telah berhasil menambahkan fitur penyaring rentang tanggal (*Date Range Pic
 - **Sistem Penyaringan:** Menggunakan pustaka *Flatpickr* mode `range` agar petugas CS dapat memilih rentang tanggal awal dan akhir dalam satu kolom masukan yang bersih dan modern.
 - **Kartu Metrik & Penyelarasan:** Menghapus kartu metrik "Menunggu Handover" dari halaman utama dan laporan cetak sesuai dengan permintaan Anda. Tata letak baris metrik diubah menjadi 2 kolom yang lebih bersih dan proporsional.
 - **Ekspor Laporan PDF:** Menambahkan tombol berikon printer yang mengarah ke link ekspor PDF. Laporan PDF berorientasi lanskap (*landscape*) agar tabel detail SPK muat dan rapi dibaca. Layout metrik yang sebelumnya tumpang tindih sudah diperbaiki menggunakan tabel grid 100% yang stabil.
-- **Unduh Laporan Excel:** Menambahkan tombol "Excel" di samping tombol PDF. Sistem akan mengekspor file Excel (`.xlsx`) rapi yang berisi No SPK, Tanggal, Nama Customer, No Telepon, Detail Item & Jasa, Total Transaksi, DP Amount, dan Status SPK.
+- **Unduh & Optimasi Laporan Excel:** Menambahkan tombol "Excel" di samping tombol PDF. Sistem mengekspor file Excel (`.xlsx`) rapi yang berisi detail transaksi lengkap. Awalnya menggunakan render Blade HTML, kini dioptimalkan menggunakan metode **`FromQuery` dengan Event `AfterSheet`** agar penulisan file berjalan secara langsung dan sangat cepat, mencegah terjadinya timeout Cloudflare 524 pada volume data besar. Laporan Excel ini juga menyertakan baris metrik ringkasan di atas tabel serta pewarnaan status bersyarat secara programmatis.
 - **Cabang Kerja:** Pengerjaan fitur ini dilakukan sepenuhnya pada cabang `bugfix/general-fixes` dan **tidak** di-push langsung ke `main`.
 
-Rencana teknis lengkap telah kami dokumentasikan pada berkas khusus: [implementation_plan_spk_filter_pdf.md](file:///C:/Users/Lenovo/.gemini/antigravity-ide/brain/a4124662-7a26-452b-ad5a-f77b122642e2/implementation_plan_spk_filter_pdf.md).
+Rencana teknis lengkap telah kami dokumentasikan pada berkas khusus: [implementation_plan_excel_optimization.md](file:///C:/Users/Lenovo/.gemini/antigravity-ide/brain/a4124662-7a26-452b-ad5a-f77b122642e2/implementation_plan_excel_optimization.md).
+
 
 
 

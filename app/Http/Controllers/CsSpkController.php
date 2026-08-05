@@ -84,9 +84,33 @@ class CsSpkController extends Controller
 
     public function reportExcel(Request $request)
     {
-        $filters = $request->all();
+        $query = CsSpk::query();
+
+        // Filters
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function($c) use ($search) {
+                      $c->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $totalSpk = $query->count();
+        $totalRevenue = (float) $query->sum('total_price');
+
         return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\CsSpkExport($filters), 
+            new \App\Exports\CsSpkExport($request->all(), $totalSpk, $totalRevenue), 
             'laporan-spk-' . now()->format('Y-m-d') . '.xlsx'
         );
     }
