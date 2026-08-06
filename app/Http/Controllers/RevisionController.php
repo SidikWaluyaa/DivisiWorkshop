@@ -42,6 +42,16 @@ class RevisionController extends Controller
             $baseQuery->whereDate('created_at', '<=', $request->end_date);
         }
 
+        if ($request->filled('origin')) {
+            if ($request->origin === 'SELESAI') {
+                $baseQuery->where(function($q) {
+                    $q->whereNull('origin_status')->orWhere('origin_status', 'SELESAI');
+                });
+            } else {
+                $baseQuery->where('origin_status', $request->origin);
+            }
+        }
+
         if ($request->filled('pic')) {
             $baseQuery->where('created_by', $request->pic);
         }
