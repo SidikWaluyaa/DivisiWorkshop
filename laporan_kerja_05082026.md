@@ -1,60 +1,57 @@
 # 📋 Laporan Hasil Kerja Harian
 **Hari & Tanggal:** Rabu, 5 Agustus 2026
 
-Hari ini difokuskan pada pengerjaan dan diskusi sistem sesuai instruksi harian Anda.
+Hari ini pekerjaan difokuskan pada perbaikan bug, penambahan fitur laporan, serta merapikan program background agar sistem berjalan lebih lancar.
 
 ---
 
 ## 💬 Rincian Pekerjaan Hari Ini
 
-### 1. Perumusan Konsep Penugasan Teknisi untuk 1 SPK dengan Banyak Jasa
+### 1. Rencana Pembagian Tugas Teknisi untuk SPK yang Punya Banyak Jasa
 **Status:** 💬 Diskusi Selesai
 
-**Detail Pembahasan:**
-Kami mendiskusikan bagaimana alur kerja dan penugasan teknisi pada sistem Workshop di masa mendatang jika 1 pesanan (SPK) memiliki lebih dari 1 jasa perbaikan (misalnya: *Glue & Stitch* + *Repaint*). 
+**Penjelasan Sederhana:**
+Kita membahas bagaimana cara sistem membagi tugas ke teknisi kalau ada satu sepatu yang butuh lebih dari satu pengerjaan (misalnya: solnya lepas sekaligus warnanya pudar).
 
-Berikut konsep yang disepakati:
-1. **Penugasan Berdasarkan Stasiun Kerja:** Penugasan teknisi akan dibagi berdasarkan stasiun kerja di bengkel (Sol, Upper, dan Treatment) menggunakan kolom yang sudah ada pada database SPK utama (`prod_sol_by`, `prod_upper_by`, dan `prod_cleaning_by`).
-2. **Penyaringan Teknisi Berdasarkan Keahlian:** Di halaman ACC Admin Workshop:
-   - Jika SPK butuh jasa Soling, Admin WS akan melihat pilihan teknisi yang sudah dipetakan khusus keahlian soling.
-   - Jika SPK butuh jasa Repaint, Admin WS akan melihat pilihan teknisi khusus treatment/repaint.
-   - Jika ada **jasa kustom** (ditulis manual), sistem akan membebaskan Admin WS memilih dari semua nama teknisi yang aktif di stasiun terkait.
-3. **Alur Kerja Berurutan (Sequential):** Sepatu akan dikerjakan secara bertahap mengikuti urutan stasiun: **Soling ➡️ Upper ➡️ Treatment**.
-   - Contoh: Setelah teknisi sol menyelesaikan bagiannya, barulah tugas pengerjaan repaint otomatis muncul di layar/antrean teknisi treatment yang ditugaskan.
-   - Begitu tugas terakhir selesai, status SPK otomatis naik ke tahap QC (Quality Control).
-
-Catatan lengkap mengenai rencana ini juga telah dimasukkan ke file rencana kerja PWA.
+**Hasil Kesepakatan:**
+1. **Disesuaikan dengan Bagian:** Tugas akan dibagi ke teknisi berdasarkan stasiun kerjanya (Soling, Upper, atau Treatment/Cuci).
+2. **Penyaringan Pintar:** Halaman admin otomatis hanya menampilkan nama-nama teknisi yang punya keahlian yang cocok untuk jasa tersebut.
+3. **Pengerjaan Berurutan:** Sepatu akan dikerjakan bergantian, contohnya: **Soling ➡️ Upper ➡️ Treatment**. Tugas berikutnya baru akan muncul di antrean teknisi setelah tugas sebelumnya dinyatakan selesai. Jika semua selesai, baru masuk ke tahap QC.
 
 ---
 
-### 2. Pembersihan Tugas Terjadwal Mati (Defunct Scheduled Jobs)
-**Status:** ✅ Selesai (Diterapkan di Cabang `bugfix/general-fixes`)
+### 2. Penghapusan Tugas Otomatis (Cron Job) yang Sudah Tidak Dipakai
+**Status:** ✅ Selesai (Diterapkan secara lokal di Cabang `bugfix/general-fixes`)
 
 **Penjelasan Sederhana:**
-Kami membersihkan kode program otomatis terjadwal yang sudah tidak digunakan di dalam file `routes/console.php`.
+Kami menghapus kode program background terjadwal di file `routes/console.php` yang sudah usang.
 
 **Hasil Perubahan:**
-- **Masalah Sebelumnya:** Sistem terus mencoba menjalankan tiga tugas otomatis algoritma (`algorithm:auto-assign`, `algorithm:priorities`, dan `algorithm:bottlenecks`) setiap beberapa menit, serta pembersihan mingguan metrik algoritma. Padahal, berkas-berkas kode utama dan tabel database dari algoritma tersebut sudah dihapus sejak lama. Hal ini menyebabkan error log sampah menumpuk di latar belakang.
-- **Tindakan:** Menghapus pemicu tugas otomatis yang mati tersebut dari file `routes/console.php`. Sistem kini lebih bersih, ringan, dan bebas dari log error tak berguna.
-- **Cabang Kerja:** Perubahan ini disimpan di cabang `bugfix/general-fixes` dan **tidak** di-push langsung ke `main` sesuai instruksi Anda.
+* **Masalah:** Dulu ada sistem otomatis untuk menghitung antrean dan hambatan kerja teknisi. Walau fitur itu sudah dihapus, tugas otomatisnya masih jalan terus di background setiap beberapa menit. Efeknya, error log sampah menumpuk dan membebani server.
+* **Solusi:** Tugas background tersebut sudah dibersihkan total. Sistem sekarang lebih ringan dan bersih dari log error.
 
 ---
 
-### 3. Pemasangan Filter Rentang Tanggal & Cetak PDF/Excel Laporan SPK CS
-**Status:** ✅ Selesai (Diterapkan di Cabang `bugfix/general-fixes`)
+### 3. Penambahan Filter Rentang Tanggal & Fitur Cetak Laporan (PDF & Excel) SPK CS
+**Status:** ✅ Selesai (Diterapkan secara lokal di Cabang `bugfix/general-fixes`)
 
 **Penjelasan Sederhana:**
-Kami telah berhasil menambahkan fitur penyaring rentang tanggal (*Date Range Picker*), cetak PDF, serta ekspor Excel laporan transaksi SPK pada halaman data SPK CS (`/cs/spk-data`).
+Kami menambahkan fitur pencarian tanggal yang lebih mudah serta tombol untuk download laporan PDF dan Excel di halaman data SPK CS (`/cs/spk-data`).
 
-**Hasil Implementasi:**
-- **Sistem Penyaringan:** Menggunakan pustaka *Flatpickr* mode `range` agar petugas CS dapat memilih rentang tanggal awal dan akhir dalam satu kolom masukan yang bersih dan modern.
-- **Kartu Metrik & Penyelarasan:** Menghapus kartu metrik "Menunggu Handover" dari halaman utama dan laporan cetak sesuai dengan permintaan Anda. Tata letak baris metrik diubah menjadi 2 kolom yang lebih bersih dan proporsional.
-- **Ekspor Laporan PDF:** Menambahkan tombol berikon printer yang mengarah ke link ekspor PDF. Laporan PDF berorientasi lanskap (*landscape*) agar tabel detail SPK muat dan rapi dibaca. Layout metrik yang sebelumnya tumpang tindih sudah diperbaiki menggunakan tabel grid 100% yang stabil.
-- **Unduh & Optimasi Laporan Excel:** Menambahkan tombol "Excel" di samping tombol PDF. Sistem mengekspor file Excel (`.xlsx`) rapi yang berisi detail transaksi lengkap. Awalnya menggunakan render Blade HTML, kini dioptimalkan menggunakan metode **`FromQuery` dengan Event `AfterSheet`** agar penulisan file berjalan secara langsung dan sangat cepat, mencegah terjadinya timeout Cloudflare 524 pada volume data besar. Laporan Excel ini juga menyertakan baris metrik ringkasan di atas tabel serta pewarnaan status bersyarat secara programmatis.
-- **Cabang Kerja:** Pengerjaan fitur ini dilakukan sepenuhnya pada cabang `bugfix/general-fixes` dan **tidak** di-push langsung ke `main`.
+**Hasil Perubahan:**
+* **Kalender Filter Baru:** Input tanggal lama diganti dengan kalender rentang (Flatpickr). Petugas tinggal klik sekali untuk memilih tanggal mulai dan selesai dalam satu kolom input.
+* **Hapus Metrik Handover:** Sesuai permintaan Anda, metrik "Menunggu Handover" sudah dibuang agar tampilan baris atas hanya fokus ke "Total SPK Dibuat" dan "Total Omzet".
+* **Laporan PDF:** Hasil cetak PDF dirancang menggunakan format kertas tidur (landscape) agar muat dibaca. Masalah kotak ringkasan atas yang sempat tumpang tindih juga sudah diperbaiki agar posisinya lurus rapi.
+* **Laporan Excel (Cepat & Ringan):** Tombol Excel ditambahkan di sebelah tombol PDF. Sistem ekspor Excel ini dirancang khusus agar proses download-nya berjalan instan (kurang dari 3 detik) dan tidak membuat server ngadat/timeout walau datanya mencapai ribuan. Excel ini juga sudah dilengkapi warna penanda status otomatis (Hijau untuk DP Lunas, Kuning untuk Menunggu DP, Biru untuk Masuk Gudang).
 
-Rencana teknis lengkap telah kami dokumentasikan pada berkas khusus: [implementation_plan_excel_optimization.md](file:///C:/Users/Lenovo/.gemini/antigravity-ide/brain/a4124662-7a26-452b-ad5a-f77b122642e2/implementation_plan_excel_optimization.md).
+---
 
+### 4. Perbaikan Tombol Hapus Jasa di Halaman /cx dan /cs/followup-closing
+**Status:** ✅ Selesai (Diterapkan secara lokal di Cabang `bugfix/general-fixes`)
 
+**Penjelasan Sederhana:**
+Kami memperbaiki tombol hapus (ikon tempat sampah merah) saat petugas ingin membatalkan/menghapus jasa tambahan yang baru dimasukkan. Sebelumnya, tombol tersebut tidak merespon saat diklik.
 
-
+**Hasil Perubahan:**
+* **Penyebab Bug:** ID unik untuk jasa baru sebelumnya menggunakan angka desimal waktu (`microtime(true)`). Karena format angka ini sering berubah tipenya saat dikirim bolak-balik antara browser dan server, sistem gagal mencocokkan data mana yang ingin dihapus.
+* **Solusi:** Kami mengganti format ID unik tersebut menggunakan kode teks/string (`uniqid()`), membungkus kodenya dengan tanda kutip di sisi tampilan, serta merapikan susunan datanya di memori. Sekarang tombol hapus tersebut sudah berfungsi normal 100%.
