@@ -12,6 +12,7 @@ Route::get('/user', function (Request $request) {
 Route::middleware(['api.key'])->prefix('v1/kpi')->group(function () {
     Route::get('/workshop', [KpiController::class, 'getWorkshopKpi']);
     Route::get('/gudang', [KpiController::class, 'gudangKpi']);
+    Route::get('/finance', [KpiController::class, 'financeKpi']);
 });
 
 

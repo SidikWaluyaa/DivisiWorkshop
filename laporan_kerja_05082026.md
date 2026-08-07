@@ -11,7 +11,7 @@ Hari ini pekerjaan difokuskan pada perbaikan bug, penambahan fitur laporan, sert
 **Status:** 💬 Diskusi Selesai
 
 **Penjelasan Sederhana:**
-Kita membahas bagaimana cara sistem membagi tugas ke teknisi kalau ada satu sepatu yang butuh lebih dari satu pengerjaan (misalnya: solnya lepas sekaligus warnanya pudar).
+Kita membahas bagaimana cara sistem membagi tugas ke teknisi kalau ada satu sepatu yang butuh lebih dari satu pengerjaan (misalnya: jasa sol dan jasa upper dalam 1 spk).
 
 **Hasil Kesepakatan:**
 1. **Disesuaikan dengan Bagian:** Tugas akan dibagi ke teknisi berdasarkan stasiun kerjanya (Soling, Upper, atau Treatment/Cuci).
