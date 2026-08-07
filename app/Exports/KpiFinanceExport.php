@@ -47,14 +47,6 @@ class KpiFinanceExport implements FromArray, ShouldAutoSize, WithStyles
             [''],
             
             // Row 12: Section 2 Header
-            ['RINGKASAN AKUMULASI PERUSAHAAN (ALL-TIME)', 'NILAI NOMINAL', 'KETERANGAN'],
-            ['Total Nilai Tagihan (All-Time)', 'Rp ' . number_format($this->data['total_invoiced_all_time'] ?? 0, 0, ',', '.'), 'Total tagihan keseluruhan sepanjang masa'],
-            ['Total Kas Masuk (All-Time)', 'Rp ' . number_format($this->data['cash_received_all_time'] ?? 0, 0, ',', '.'), 'Total akumulasi penerimaan kas tervalidasi sepanjang masa'],
-            ['Sisa Piutang Perusahaan (All-Time)', 'Rp ' . number_format($this->data['active_receivables_all_time'] ?? 0, 0, ',', '.'), 'Total sisa piutang belum lunas perusahaan'],
-
-            [''],
-
-            // Row 17: Section 3 Header
             ['DISTRIBUSI STATUS TAGIHAN (PERIODE AKTIF)', 'JUMLAH TRANSAKSI', 'TOTAL NOMINAL'],
             ['Belum Bayar', ($statusDist['belum_bayar']['count'] ?? 0) . ' Transaksi', 'Rp ' . number_format($statusDist['belum_bayar']['total'] ?? 0, 0, ',', '.')],
             ['DP / Cicil', ($statusDist['dp_cicil']['count'] ?? 0) . ' Transaksi', 'Rp ' . number_format($statusDist['dp_cicil']['total'] ?? 0, 0, ',', '.')],
@@ -62,7 +54,7 @@ class KpiFinanceExport implements FromArray, ShouldAutoSize, WithStyles
 
             [''],
 
-            // Row 22: Section 4 Header
+            // Row 17: Section 3 Header
             ['DISTRIBUSI TIPE PEMBAYARAN (PERIODE AKTIF)', 'JUMLAH TRANSAKSI', 'TOTAL NOMINAL'],
             ['DP Awal (BEFORE)', ($paymentTypeDist['dp_awal']['count'] ?? 0) . ' Transaksi', 'Rp ' . number_format($paymentTypeDist['dp_awal']['total'] ?? 0, 0, ',', '.')],
             ['Pelunasan (AFTER)', ($paymentTypeDist['pelunasan']['count'] ?? 0) . ' Transaksi', 'Rp ' . number_format($paymentTypeDist['pelunasan']['total'] ?? 0, 0, ',', '.')],
@@ -86,7 +78,6 @@ class KpiFinanceExport implements FromArray, ShouldAutoSize, WithStyles
         $sheet->getStyle('A4:C4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle('A12:C12')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle('A17:C17')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle('A22:C22')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
 
         return [
             1 => ['font' => ['bold' => true, 'size' => 14, 'color' => ['rgb' => '166534']]],
@@ -97,13 +88,9 @@ class KpiFinanceExport implements FromArray, ShouldAutoSize, WithStyles
             ],
             12 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'ffffff'], 'size' => 11],
-                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '9333EA']] // Purple-600
-            ],
-            17 => [
-                'font' => ['bold' => true, 'color' => ['rgb' => 'ffffff'], 'size' => 11],
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0284C7']] // Sky-600
             ],
-            22 => [
+            17 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'ffffff'], 'size' => 11],
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4F46E5']] // Indigo-600
             ],

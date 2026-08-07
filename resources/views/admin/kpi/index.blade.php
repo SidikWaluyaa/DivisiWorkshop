@@ -625,7 +625,7 @@
             <div class="flex items-center gap-2 mb-6">
                 <span class="w-2.5 h-6 bg-teal-500 rounded-full inline-block"></span>
                 <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest italic">
-                    1. METRIK KEUANGAN PERIODE AKTIF ({{ (isset($startDate) && $startDate) ? $startDate->format('d M Y') . ' s/d ' . $endDate->format('d M Y') : $dateRange }})
+                    METRIK KEUANGAN PERIODE AKTIF ({{ (isset($startDate) && $startDate) ? $startDate->format('d M Y') . ' s/d ' . $endDate->format('d M Y') : $dateRange }})
                 </h3>
             </div>
 
@@ -904,74 +904,7 @@
             </div>
         </div>
 
-        {{-- SECTION 2: METRIK AKUMULASI KESELURUHAN (ALL-TIME / SEPANJANG MASA) --}}
-        <div class="mb-10 pt-8 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
-            <div class="flex items-center gap-2 mb-6">
-                <span class="w-2.5 h-6 bg-purple-500 rounded-full inline-block"></span>
-                <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest italic">
-                    2. RINGKASAN AKUMULASI PERUSAHAAN (ALL-TIME / SEPANJANG MASA)
-                </h3>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {{-- All-Time Card 1: Total Tagihan All-Time --}}
-                <div class="bg-gradient-to-br from-emerald-500/10 via-white to-teal-500/10 dark:from-emerald-950/20 dark:via-gray-800 dark:to-teal-950/20 rounded-3xl border border-emerald-200/60 dark:border-emerald-800/40 shadow-xl p-6 relative overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="w-10 h-10 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-700">
-                                📊
-                            </div>
-                            <span class="px-3 py-1 bg-emerald-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
-                                ALL-TIME
-                            </span>
-                        </div>
-                        <span class="block text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest mb-1">TOTAL TAGIHAN KESELURUHAN</span>
-                        <div class="text-3xl font-black text-slate-900 dark:text-white italic tracking-tight mb-2">
-                            Rp {{ number_format($financeSummary['total_invoiced_all_time'], 0, ',', '.') }}
-                        </div>
-                    </div>
-                    <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">AKUMULASI SEMUA INVOICE DITERBITKAN</span>
-                </div>
-
-                {{-- All-Time Card 2: Total Kas Masuk All-Time --}}
-                <div class="bg-gradient-to-br from-blue-500/10 via-white to-indigo-500/10 dark:from-blue-950/20 dark:via-gray-800 dark:to-indigo-950/20 rounded-3xl border border-blue-200/60 dark:border-blue-800/40 shadow-xl p-6 relative overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="w-10 h-10 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold border border-blue-300 dark:border-blue-700">
-                                💰
-                            </div>
-                            <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
-                                ALL-TIME
-                            </span>
-                        </div>
-                        <span class="block text-[10px] font-black text-blue-800 dark:text-blue-300 uppercase tracking-widest mb-1">TOTAL KAS MASUK KESELURUHAN</span>
-                        <div class="text-3xl font-black text-blue-600 dark:text-blue-400 italic tracking-tight mb-2">
-                            Rp {{ number_format($financeSummary['cash_received_all_time'], 0, ',', '.') }}
-                        </div>
-                    </div>
-                    <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">AKUMULASI SELURUH PENERIMAAN TERVALIDASI</span>
-                </div>
-
-                {{-- All-Time Card 3: Total Piutang Aktif All-Time --}}
-                <div class="bg-gradient-to-br from-rose-500/10 via-white to-pink-500/10 dark:from-rose-950/20 dark:via-gray-800 dark:to-pink-950/20 rounded-3xl border border-rose-200/60 dark:border-rose-800/40 shadow-xl p-6 relative overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="w-10 h-10 bg-rose-500/20 rounded-2xl flex items-center justify-center text-rose-700 dark:text-rose-300 font-bold border border-rose-300 dark:border-rose-700">
-                                🚨
-                            </div>
-                            <span class="px-3 py-1 bg-rose-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
-                                ALL-TIME PIUTANG
-                            </span>
-                        </div>
-                        <span class="block text-[10px] font-black text-rose-800 dark:text-rose-300 uppercase tracking-widest mb-1">SISA PIUTANG PERUSAHAAN</span>
-                        <div class="text-3xl font-black text-rose-600 dark:text-rose-400 italic tracking-tight mb-2">
-                            Rp {{ number_format($financeSummary['active_receivables_all_time'], 0, ',', '.') }}
-                        </div>
-                    </div>
-                    <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">TOTAL PIUTANG DARI SEMUA INVOICE BELUM LUNAS</span>
-                </div>
-            </div>
-        </div>
+    </div> {{-- End of FINANCE TAB CONTENT --}}
 
     </div> {{-- End of FINANCE TAB CONTENT --}}
 
