@@ -33,6 +33,25 @@ class KpiService
         $stages = ['PREPARATION', 'SORTIR', 'PRODUCTION', 'QC'];
         $summary = [];
 
+        // 1. Fetch active WorkOrders with logs in a single query
+        $activeOrderIds = WorkOrderLog::where('action', 'STATUS_CHANGE')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->distinct()
+            ->pluck('work_order_id');
+
+        $orders = WorkOrder::whereIn('id', $activeOrderIds)
+            ->where('status', '!=', WorkOrderStatus::SPK_PENDING)
+            ->with(['logs' => function($q) {
+                $q->orderBy('created_at', 'asc');
+            }])
+            ->get();
+
+        // Calculate KPI per order once in memory
+        $orderKpis = [];
+        foreach ($orders as $order) {
+            $orderKpis[$order->id] = $this->calculateKpiForOrder($order);
+        }
+
         foreach ($stages as $stage) {
             // 1. Total Masuk: unique SPKs that entered the stage in the range
             $totalMasuk = WorkOrderLog::where('step', $stage)
@@ -54,29 +73,10 @@ class KpiService
                 ->distinct('work_order_id')
                 ->count('work_order_id');
 
-            // Average Duration Calculation
-            $activeOrderIds = WorkOrderLog::where(function($q) use ($stage) {
-                    $q->where(function($sub) use ($stage) {
-                        $sub->where('step', $stage)->where('action', 'STATUS_CHANGE');
-                    })->orWhere(function($sub) use ($stage) {
-                        $sub->where('action', 'STATUS_CHANGE')->where('description', 'like', "Status berubah dari {$stage} ke %");
-                    });
-                })
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->distinct()
-                ->pluck('work_order_id');
-
-            $orders = WorkOrder::whereIn('id', $activeOrderIds)
-                ->where('status', '!=', WorkOrderStatus::SPK_PENDING)
-                ->with(['logs' => function($q) {
-                    $q->orderBy('created_at', 'asc');
-                }])
-                ->get();
-
+            // Average Duration Calculation from memory
             $totalSeconds = 0;
             $count = 0;
-            foreach ($orders as $order) {
-                $kpi = $this->calculateKpiForOrder($order);
+            foreach ($orderKpis as $kpi) {
                 if (isset($kpi[$stage]) && $kpi[$stage]['seconds'] > 0) {
                     $totalSeconds += $kpi[$stage]['seconds'];
                     $count++;
@@ -250,24 +250,11 @@ class KpiService
             ')
             ->first();
 
-        $totalInvoiced = (float) $heroInvoices->total_invoiced;
+        $totalInvoiced = (float) ($heroInvoices->total_invoiced ?? 0);
 
-        // 1b. Global / All-Time Invoice Totals (Without Date Filter)
-        $globalInvoices = \App\Models\Invoice::selectRaw('
-                COALESCE(SUM(total_amount + shipping_cost - discount), 0) as total_invoiced_all_time,
-                COALESCE(SUM(CASE WHEN status != "Lunas" THEN (total_amount + shipping_cost - paid_amount - discount) ELSE 0 END), 0) as total_outstanding_all_time
-            ')
-            ->first();
-
-        $totalInvoicedAllTime = (float) $globalInvoices->total_invoiced_all_time;
-        $activeReceivablesAllTime = max(0, (float) $globalInvoices->total_outstanding_all_time);
-
-        // 2. Verified Cash Received in Period & All-Time
+        // 2. Verified Cash Received in Period
         $cashReceived = (float) \App\Models\InvoicePayment::where('verified', true)
             ->whereBetween('payment_date', [$startStr, $endStr])
-            ->sum('amount');
-
-        $cashReceivedAllTime = (float) \App\Models\InvoicePayment::where('verified', true)
             ->sum('amount');
 
         // Total Diskon Diberikan (in period)
@@ -275,7 +262,7 @@ class KpiService
             ->sum('discount');
 
         // Sisa Piutang Aktif (Piutang berjalan dari tagihan periode terpilih)
-        $activeReceivables = max(0, (float) $heroInvoices->total_outstanding);
+        $activeReceivables = max(0, (float) ($heroInvoices->total_outstanding ?? 0));
 
         // Collection Rate
         $collectionRate = $totalInvoiced > 0 ? round(($cashReceived / $totalInvoiced) * 100, 2) : 0;
@@ -302,27 +289,22 @@ class KpiService
             ],
         ];
 
-        // 4. Payment Type Distribution (verified payments in period)
-        $types = [
-            'dp_awal'     => 'BEFORE',
-            'pelunasan'   => 'AFTER',
-            'tambah_jasa' => 'TAMBAH_JASA',
-            'lunas_awal'  => 'LUNAS_AWAL',
-            'ongkir'      => 'ONGKIR',
-            'oto'         => 'OTO',
+        // 4. Payment Type Distribution (verified payments in period - Grouped single query)
+        $rawTypes = \App\Models\InvoicePayment::where('verified', true)
+            ->whereBetween('payment_date', [$startStr, $endStr])
+            ->selectRaw('type, COUNT(*) as cnt, COALESCE(SUM(amount), 0) as total')
+            ->groupBy('type')
+            ->get()
+            ->keyBy('type');
+
+        $paymentTypeDistribution = [
+            'dp_awal'     => ['count' => (int)($rawTypes->get('BEFORE')?->cnt ?? 0), 'total' => (float)($rawTypes->get('BEFORE')?->total ?? 0)],
+            'pelunasan'   => ['count' => (int)($rawTypes->get('AFTER')?->cnt ?? 0), 'total' => (float)($rawTypes->get('AFTER')?->total ?? 0)],
+            'tambah_jasa' => ['count' => (int)($rawTypes->get('TAMBAH_JASA')?->cnt ?? 0), 'total' => (float)($rawTypes->get('TAMBAH_JASA')?->total ?? 0)],
+            'lunas_awal'  => ['count' => (int)($rawTypes->get('LUNAS_AWAL')?->cnt ?? 0), 'total' => (float)($rawTypes->get('LUNAS_AWAL')?->total ?? 0)],
+            'ongkir'      => ['count' => (int)($rawTypes->get('ONGKIR')?->cnt ?? 0), 'total' => (float)($rawTypes->get('ONGKIR')?->total ?? 0)],
+            'oto'         => ['count' => (int)($rawTypes->get('OTO')?->cnt ?? 0), 'total' => (float)($rawTypes->get('OTO')?->total ?? 0)],
         ];
-
-        $paymentTypeDistribution = [];
-        foreach ($types as $key => $typeCode) {
-            $query = \App\Models\InvoicePayment::where('verified', true)
-                ->where('type', $typeCode)
-                ->whereBetween('payment_date', [$startStr, $endStr]);
-
-            $paymentTypeDistribution[$key] = [
-                'count' => (int) $query->count(),
-                'total' => (float) $query->sum('amount'),
-            ];
-        }
 
         // 5. Revenue Realization (Omset Closing Valid)
         // Match /cs/analytics logic: total_transaksi from valid WorkOrders (entry_date in period, not SPK_PENDING or BATAL)
@@ -347,11 +329,11 @@ class KpiService
 
         return [
             'total_invoiced' => $totalInvoiced,
-            'total_invoiced_all_time' => $totalInvoicedAllTime,
+            'total_invoiced_all_time' => 0,
             'cash_received' => $cashReceived,
-            'cash_received_all_time' => $cashReceivedAllTime,
+            'cash_received_all_time' => 0,
             'active_receivables' => $activeReceivables,
-            'active_receivables_all_time' => $activeReceivablesAllTime,
+            'active_receivables_all_time' => 0,
             'collection_rate' => $collectionRate,
             'total_discount' => $totalDiscount,
             'status_distribution' => $statusDistribution,
