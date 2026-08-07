@@ -4,44 +4,154 @@
 <!-- Flatpickr Theme Dark if needed, but let's use standard and customize -->
 <style>
     .flatpickr-calendar {
-        background: #1f2937 !important;
-        border: 1px solid #374151 !important;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(226, 232, 240, 0.9) !important;
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(15, 23, 42, 0.05) !important;
         border-radius: 1.5rem !important;
+        padding: 12px !important;
+        width: 320px !important;
+        box-sizing: border-box !important;
+        font-family: inherit !important;
     }
-    .flatpickr-day {
-        color: #e5e7eb !important;
-        border-radius: 0.75rem !important;
+    .dark .flatpickr-calendar {
+        background: rgba(30, 41, 59, 0.98) !important;
+        border: 1px solid rgba(51, 65, 85, 0.9) !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
     }
-    .flatpickr-day.today {
-        border-color: #14b8a6 !important;
+    .flatpickr-innerContainer {
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
-    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
-        background: #14b8a6 !important;
-        border-color: #14b8a6 !important;
-        color: #ffffff !important;
+    .flatpickr-rContainer, .flatpickr-days, .dayContainer {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
     }
-    .flatpickr-day:hover {
-        background: #374151 !important;
+    .dayContainer {
+        justify-content: space-around !important;
     }
-    .flatpickr-day.inRange {
-        background: rgba(20, 184, 166, 0.15) !important;
-        border-color: rgba(20, 184, 166, 0.1) !important;
-        box-shadow: -5px 0 0 rgba(20, 184, 166, 0.15), 5px 0 0 rgba(20, 184, 166, 0.15) !important;
-        color: #14b8a6 !important;
+    .flatpickr-months {
+        align-items: center !important;
+        margin-bottom: 6px !important;
     }
-    .flatpickr-day.inRange:hover {
-        background: rgba(20, 184, 166, 0.25) !important;
+    .flatpickr-months .flatpickr-month,
+    .flatpickr-current-month .flatpickr-monthDropdown-months,
+    .flatpickr-current-month input.cur-year {
+        color: #0f172a !important;
+        fill: #0f172a !important;
+        font-weight: 800 !important;
     }
-    .flatpickr-months .flatpickr-month, .flatpickr-current-month .flatpickr-monthDropdown-months {
-        color: #ffffff !important;
-        fill: #ffffff !important;
+    .dark .flatpickr-months .flatpickr-month,
+    .dark .flatpickr-current-month .flatpickr-monthDropdown-months,
+    .dark .flatpickr-current-month input.cur-year {
+        color: #f8fafc !important;
+        fill: #f8fafc !important;
+    }
+    .flatpickr-months .flatpickr-prev-month,
+    .flatpickr-months .flatpickr-next-month {
+        padding: 6px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .flatpickr-months .flatpickr-prev-month svg,
+    .flatpickr-months .flatpickr-next-month svg {
+        fill: #475569 !important;
+        width: 12px !important;
+        height: 12px !important;
+    }
+    .dark .flatpickr-months .flatpickr-prev-month svg,
+    .dark .flatpickr-months .flatpickr-next-month svg {
+        fill: #cbd5e1 !important;
+    }
+    .flatpickr-weekdays {
+        width: 100% !important;
+        margin-bottom: 6px !important;
     }
     .flatpickr-weekday {
-        color: #9ca3af !important;
+        color: #64748b !important;
+        font-weight: 700 !important;
+        font-size: 0.75rem !important;
+    }
+    .dark .flatpickr-weekday {
+        color: #94a3b8 !important;
+    }
+    .flatpickr-day {
+        color: #1e293b !important;
+        font-weight: 600 !important;
+        font-size: 0.8125rem !important;
+        max-width: 38px !important;
+        height: 38px !important;
+        line-height: 38px !important;
+        margin: 1px 0 !important;
+        border-radius: 8px !important;
+        border-color: transparent !important;
+    }
+    .dark .flatpickr-day {
+        color: #e2e8f0 !important;
+    }
+    .flatpickr-day.today {
+        border: 2px solid #0d9488 !important;
+        color: #0d9488 !important;
+        font-weight: 800 !important;
+        background: transparent !important;
+    }
+    .dark .flatpickr-day.today {
+        border-color: #14b8a6 !important;
+        color: #2dd4bf !important;
+    }
+    .flatpickr-day:hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+    .dark .flatpickr-day:hover {
+        background: #334155 !important;
+        color: #ffffff !important;
+    }
+    .flatpickr-day.startRange {
+        background: #0d9488 !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        border-radius: 12px 0 0 12px !important;
+    }
+    .flatpickr-day.endRange {
+        background: #0d9488 !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        border-radius: 0 12px 12px 0 !important;
+    }
+    .flatpickr-day.startRange.endRange,
+    .flatpickr-day.selected {
+        background: #0d9488 !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        border-radius: 12px !important;
+    }
+    .flatpickr-day.inRange {
+        background: rgba(13, 148, 136, 0.15) !important;
+        border-color: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        color: #0f766e !important;
+        font-weight: 700 !important;
+    }
+    .dark .flatpickr-day.inRange {
+        background: rgba(20, 184, 166, 0.25) !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        color: #5eead4 !important;
+        font-weight: 700 !important;
+    }
+    .flatpickr-day.inRange:hover {
+        background: rgba(13, 148, 136, 0.25) !important;
+    }
+    .dark .flatpickr-day.inRange:hover {
+        background: rgba(20, 184, 166, 0.35) !important;
     }
     .flatpickr-calendar .flatpickr-innerContainer {
-        padding: 0.5rem !important;
+        padding: 0.25rem !important;
     }
 </style>
 
@@ -51,10 +161,10 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
             <div class="flex items-center gap-3">
-                <div class="w-1.5 h-8 rounded-full transition-colors" :class="activeTab === 'workshop' ? 'bg-teal-500' : 'bg-amber-500'"></div>
-                <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight" x-text="activeTab === 'workshop' ? 'KPI WORKSHOP' : 'KPI GUDANG'"></h1>
+                <div class="w-1.5 h-8 rounded-full transition-colors" :class="activeTab === 'workshop' ? 'bg-teal-500' : (activeTab === 'gudang' ? 'bg-amber-500' : 'bg-emerald-500')"></div>
+                <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight" x-text="activeTab === 'workshop' ? 'KPI WORKSHOP' : (activeTab === 'gudang' ? 'KPI GUDANG' : 'KPI FINANCE')"></h1>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1 ml-4" x-text="activeTab === 'workshop' ? 'Ringkasan Kinerja & Beban Kerja Divisi Workshop' : 'Ringkasan Kinerja & Logistik Gudang'"></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1 ml-4" x-text="activeTab === 'workshop' ? 'Ringkasan Kinerja & Beban Kerja Divisi Workshop' : (activeTab === 'gudang' ? 'Ringkasan Kinerja & Logistik Gudang' : 'Ringkasan Arus Kas, Tagihan & Piutang Keuangan')"></p>
         </div>
         
         <div class="flex gap-2">
@@ -86,6 +196,16 @@
                 </svg>
                 Ekspor Excel
             </a>
+
+            {{-- Export Excel Button Finance --}}
+            <a href="{{ route('admin.kpi.exportFinance', request()->all()) }}" 
+               x-show="activeTab === 'finance'" style="display: none;"
+               class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Ekspor Excel
+            </a>
         </div>
     </div>
 
@@ -100,6 +220,11 @@
                 :class="activeTab === 'gudang' ? 'bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'"
                 class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
             <span class="text-base">📦</span> KPI GUDANG
+        </button>
+        <button @click="activeTab = 'finance'" 
+                :class="activeTab === 'finance' ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
+            <span class="text-base">💰</span> KPI FINANCE
         </button>
     </div>
 
@@ -489,10 +614,366 @@
                     📤
                 </div>
             </div>
+        </div> {{-- End of Gudang Grid --}}
+    </div> {{-- End of GUDANG TAB CONTENT --}}
 
+    {{-- FINANCE TAB CONTENT --}}
+    <div x-show="activeTab === 'finance'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
+        
+        {{-- SECTION 1: METRIK KEUANGAN PERIODE AKTIF --}}
+        <div class="mb-12">
+            <div class="flex items-center gap-2 mb-6">
+                <span class="w-2.5 h-6 bg-teal-500 rounded-full inline-block"></span>
+                <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest italic">
+                    1. METRIK KEUANGAN PERIODE AKTIF ({{ (isset($startDate) && $startDate) ? $startDate->format('d M Y') . ' s/d ' . $endDate->format('d M Y') : $dateRange }})
+                </h3>
+            </div>
+
+            {{-- 4 Hero Cards Periode Aktif --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {{-- Card 1: Total Nilai Tagihan (Periode) --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl p-6 relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-100 dark:border-emerald-800">
+                                🧮
+                            </div>
+                            <span class="px-3 py-1 bg-emerald-100/60 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                PERIODE AKTIF
+                            </span>
+                        </div>
+                        <span class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">TOTAL NILAI TAGIHAN</span>
+                        <div class="text-3xl font-black text-slate-800 dark:text-white italic tracking-tight mb-2">
+                            Rp {{ number_format($financeSummary['total_invoiced'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">INVOICE DITERBITKAN PERIODE INI</span>
+                </div>
+
+                {{-- Card 2: Kas Masuk Tervalidasi (Periode) --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl p-6 relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold border border-blue-100 dark:border-blue-800">
+                                💵
+                            </div>
+                            <span class="px-3 py-1 bg-blue-100/60 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                PERIODE AKTIF
+                            </span>
+                        </div>
+                        <span class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">KAS MASUK (TERVALIDASI)</span>
+                        <div class="text-3xl font-black text-blue-600 dark:text-blue-400 italic tracking-tight mb-2">
+                            Rp {{ number_format($financeSummary['cash_received'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">PENERIMAAN KAS PERIODE INI</span>
+                </div>
+
+                {{-- Card 3: Sisa Piutang Aktif (Periode) --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl p-6 relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="w-10 h-10 bg-rose-50 dark:bg-rose-900/20 rounded-2xl flex items-center justify-center text-rose-600 dark:text-rose-400 font-bold border border-rose-100 dark:border-rose-800">
+                                💲
+                            </div>
+                            <span class="px-3 py-1 bg-rose-100/60 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                PERIODE AKTIF
+                            </span>
+                        </div>
+                        <span class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">SISA PIUTANG AKTIF</span>
+                        <div class="text-3xl font-black text-rose-600 dark:text-rose-400 italic tracking-tight mb-2">
+                            Rp {{ number_format($financeSummary['active_receivables'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">BELUM TERTAGIH DARI TAGIHAN PERIODE INI</span>
+                </div>
+
+                {{-- Card 4: Rasio Penagihan (Periode) --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl p-6 relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold border border-amber-100 dark:border-amber-800">
+                                🎯
+                            </div>
+                            <span class="px-3 py-1 bg-amber-100/60 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                EFEKTIVITAS
+                            </span>
+                        </div>
+                        <span class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">RASIO PENAGIHAN (COLLECTION)</span>
+                        <div class="text-3xl font-black text-amber-600 dark:text-amber-400 italic tracking-tight mb-2">
+                            {{ $financeSummary['collection_rate'] }}%
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">PENERIMAAN VS TAGIHAN PERIODE INI</span>
+                </div>
+            </div>
+
+            {{-- Distribusi Status Tagihan (Periode Aktif) --}}
+            <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl p-8 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest italic">DISTRIBUSI STATUS TAGIHAN PERIODE AKTIF</h3>
+                    <span class="px-3 py-1 bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-slate-300 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        TAGIHAN INVOICE PERIODE INI
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {{-- Belum Bayar --}}
+                    <div class="bg-slate-50 dark:bg-gray-750 p-6 rounded-2xl border border-slate-100 dark:border-gray-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+                                <span class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">BELUM BAYAR</span>
+                            </div>
+                            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{{ $financeSummary['status_distribution']['belum_bayar']['count'] }} TRANSAKSI</span>
+                        </div>
+                        <div class="flex justify-between items-baseline mb-3">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">TOTAL NOMINAL</span>
+                            <span class="text-lg font-black text-slate-800 dark:text-white italic">Rp {{ number_format($financeSummary['status_distribution']['belum_bayar']['total'], 0, ',', '.') }}</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                            @php
+                                $totalAll = max(1, $financeSummary['total_invoiced']);
+                                $pctBelum = min(100, round(($financeSummary['status_distribution']['belum_bayar']['total'] / $totalAll) * 100));
+                            @endphp
+                            <div class="bg-slate-400 h-full rounded-full" style="width: {{ $pctBelum }}%;"></div>
+                        </div>
+                    </div>
+
+                    {{-- DP / Cicil --}}
+                    <div class="bg-amber-50/40 dark:bg-amber-900/10 p-6 rounded-2xl border border-amber-100 dark:border-amber-900/30">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                <span class="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider">DP/CICIL</span>
+                            </div>
+                            <span class="text-[10px] font-extrabold text-amber-500/80 uppercase tracking-widest">{{ $financeSummary['status_distribution']['dp_cicil']['count'] }} TRANSAKSI</span>
+                        </div>
+                        <div class="flex justify-between items-baseline mb-3">
+                            <span class="text-[10px] font-black text-amber-500/80 uppercase tracking-widest">TOTAL NOMINAL</span>
+                            <span class="text-lg font-black text-amber-800 dark:text-amber-300 italic">Rp {{ number_format($financeSummary['status_distribution']['dp_cicil']['total'], 0, ',', '.') }}</span>
+                        </div>
+                        <div class="w-full bg-amber-200/50 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                            @php
+                                $pctDp = min(100, round(($financeSummary['status_distribution']['dp_cicil']['total'] / $totalAll) * 100));
+                            @endphp
+                            <div class="bg-amber-500 h-full rounded-full" style="width: {{ $pctDp }}%;"></div>
+                        </div>
+                    </div>
+
+                    {{-- Lunas --}}
+                    <div class="bg-emerald-50/40 dark:bg-emerald-900/10 p-6 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                <span class="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">LUNAS</span>
+                            </div>
+                            <span class="text-[10px] font-extrabold text-emerald-500/80 uppercase tracking-widest">{{ $financeSummary['status_distribution']['lunas']['count'] }} TRANSAKSI</span>
+                        </div>
+                        <div class="flex justify-between items-baseline mb-3">
+                            <span class="text-[10px] font-black text-emerald-500/80 uppercase tracking-widest">TOTAL NOMINAL</span>
+                            <span class="text-lg font-black text-emerald-800 dark:text-emerald-300 italic">Rp {{ number_format($financeSummary['status_distribution']['lunas']['total'], 0, ',', '.') }}</span>
+                        </div>
+                        <div class="w-full bg-emerald-200/50 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                            @php
+                                $pctLunas = min(100, round(($financeSummary['status_distribution']['lunas']['total'] / $totalAll) * 100));
+                            @endphp
+                            <div class="bg-emerald-500 h-full rounded-full" style="width: {{ $pctLunas }}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Distribusi Type Pembayaran (Periode Aktif) --}}
+            <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl p-8 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest italic">DISTRIBUSI TYPE PEMBAYARAN PERIODE AKTIF</h3>
+                    <span class="px-3 py-1 bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-slate-300 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        PEMBAYARAN TERDRAFT & VERIFIKASI PERIODE INI
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {{-- DP Awal --}}
+                    <div class="bg-white dark:bg-gray-750 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold">⏱️</div>
+                                <span class="px-2 py-0.5 bg-blue-100/60 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded text-[9px] font-black uppercase tracking-widest">BEFORE</span>
+                            </div>
+                            <span class="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">DP AWAL</span>
+                            <div class="text-lg font-black text-blue-600 dark:text-blue-400 italic mb-1">Rp {{ number_format($financeSummary['payment_type_distribution']['dp_awal']['total'], 0, ',', '.') }}</div>
+                        </div>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $financeSummary['payment_type_distribution']['dp_awal']['count'] }} TRANSAKSI</span>
+                    </div>
+
+                    {{-- Pelunasan --}}
+                    <div class="bg-white dark:bg-gray-750 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">✔️</div>
+                                <span class="px-2 py-0.5 bg-emerald-100/60 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 rounded text-[9px] font-black uppercase tracking-widest">AFTER</span>
+                            </div>
+                            <span class="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">PELUNASAN</span>
+                            <div class="text-lg font-black text-emerald-600 dark:text-emerald-400 italic mb-1">Rp {{ number_format($financeSummary['payment_type_distribution']['pelunasan']['total'], 0, ',', '.') }}</div>
+                        </div>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $financeSummary['payment_type_distribution']['pelunasan']['count'] }} TRANSAKSI</span>
+                    </div>
+
+                    {{-- Tambah Jasa --}}
+                    <div class="bg-white dark:bg-gray-750 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs font-bold">➕</div>
+                                <span class="px-2 py-0.5 bg-purple-100/60 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 rounded text-[9px] font-black uppercase tracking-widest">TAMBAH JASA</span>
+                            </div>
+                            <span class="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">TAMBAH JASA</span>
+                            <div class="text-lg font-black text-purple-600 dark:text-purple-400 italic mb-1">Rp {{ number_format($financeSummary['payment_type_distribution']['tambah_jasa']['total'], 0, ',', '.') }}</div>
+                        </div>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $financeSummary['payment_type_distribution']['tambah_jasa']['count'] }} TRANSAKSI</span>
+                    </div>
+
+                    {{-- Lunas Awal --}}
+                    <div class="bg-white dark:bg-gray-750 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold">⚡</div>
+                                <span class="px-2 py-0.5 bg-amber-100/60 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300 rounded text-[9px] font-black uppercase tracking-widest">LUNAS AWAL</span>
+                            </div>
+                            <span class="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">LUNAS AWAL</span>
+                            <div class="text-lg font-black text-amber-600 dark:text-amber-400 italic mb-1">Rp {{ number_format($financeSummary['payment_type_distribution']['lunas_awal']['total'], 0, ',', '.') }}</div>
+                        </div>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $financeSummary['payment_type_distribution']['lunas_awal']['count'] }} TRANSAKSI</span>
+                    </div>
+
+                    {{-- Ongkos Kirim --}}
+                    <div class="bg-white dark:bg-gray-750 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xs font-bold">📦</div>
+                                <span class="px-2 py-0.5 bg-rose-100/60 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300 rounded text-[9px] font-black uppercase tracking-widest">ONGKIR</span>
+                            </div>
+                            <span class="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">ONGKOS KIRIM</span>
+                            <div class="text-lg font-black text-rose-600 dark:text-rose-400 italic mb-1">Rp {{ number_format($financeSummary['payment_type_distribution']['ongkir']['total'], 0, ',', '.') }}</div>
+                        </div>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $financeSummary['payment_type_distribution']['ongkir']['count'] }} TRANSAKSI</span>
+                    </div>
+
+                    {{-- Pembayaran OTO --}}
+                    <div class="bg-white dark:bg-gray-750 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="w-8 h-8 rounded-xl bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 flex items-center justify-center text-xs font-bold">⚡</div>
+                                <span class="px-2 py-0.5 bg-pink-100/60 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300 rounded text-[9px] font-black uppercase tracking-widest">OTO</span>
+                            </div>
+                            <span class="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">PEMBAYARAN OTO</span>
+                            <div class="text-lg font-black text-pink-600 dark:text-pink-400 italic mb-1">Rp {{ number_format($financeSummary['payment_type_distribution']['oto']['total'], 0, ',', '.') }}</div>
+                        </div>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $financeSummary['payment_type_distribution']['oto']['count'] }} TRANSAKSI</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Summary Cards (Revenue Realization & Total Diskon) --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl">
+                {{-- Revenue Realization --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl p-8 relative overflow-hidden border-t-4 border-t-purple-500 flex flex-col justify-between">
+                    <div>
+                        <span class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">REVENUE REALIZATION</span>
+                        <div class="text-3xl xl:text-4xl font-black text-slate-800 dark:text-white tracking-tight mb-4">
+                            Rp {{ number_format($financeSummary['revenue_realization'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    <span class="inline-block w-max px-4 py-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-purple-100 dark:border-purple-800">
+                        OMSET CLOSING VALID PERIODE INI
+                    </span>
+                </div>
+
+                {{-- Total Diskon Diberikan --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl p-8 relative overflow-hidden border-t-4 border-t-amber-500 flex flex-col justify-between">
+                    <div>
+                        <span class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">TOTAL DISKON DIBERIKAN</span>
+                        <div class="text-3xl xl:text-4xl font-black text-amber-600 dark:text-amber-400 tracking-tight mb-4">
+                            Rp {{ number_format($financeSummary['total_discount'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    <span class="inline-block w-max px-4 py-1.5 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100 dark:border-amber-800">
+                        DISKON INVOICE PERIODE INI
+                    </span>
+                </div>
+            </div>
         </div>
 
-    </div> {{-- End of GUDANG TAB CONTENT --}}
+        {{-- SECTION 2: METRIK AKUMULASI KESELURUHAN (ALL-TIME / SEPANJANG MASA) --}}
+        <div class="mb-10 pt-8 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-2 mb-6">
+                <span class="w-2.5 h-6 bg-purple-500 rounded-full inline-block"></span>
+                <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest italic">
+                    2. RINGKASAN AKUMULASI PERUSAHAAN (ALL-TIME / SEPANJANG MASA)
+                </h3>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {{-- All-Time Card 1: Total Tagihan All-Time --}}
+                <div class="bg-gradient-to-br from-emerald-500/10 via-white to-teal-500/10 dark:from-emerald-950/20 dark:via-gray-800 dark:to-teal-950/20 rounded-3xl border border-emerald-200/60 dark:border-emerald-800/40 shadow-xl p-6 relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="w-10 h-10 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-700">
+                                📊
+                            </div>
+                            <span class="px-3 py-1 bg-emerald-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                ALL-TIME
+                            </span>
+                        </div>
+                        <span class="block text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest mb-1">TOTAL TAGIHAN KESELURUHAN</span>
+                        <div class="text-3xl font-black text-slate-900 dark:text-white italic tracking-tight mb-2">
+                            Rp {{ number_format($financeSummary['total_invoiced_all_time'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">AKUMULASI SEMUA INVOICE DITERBITKAN</span>
+                </div>
+
+                {{-- All-Time Card 2: Total Kas Masuk All-Time --}}
+                <div class="bg-gradient-to-br from-blue-500/10 via-white to-indigo-500/10 dark:from-blue-950/20 dark:via-gray-800 dark:to-indigo-950/20 rounded-3xl border border-blue-200/60 dark:border-blue-800/40 shadow-xl p-6 relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="w-10 h-10 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold border border-blue-300 dark:border-blue-700">
+                                💰
+                            </div>
+                            <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                ALL-TIME
+                            </span>
+                        </div>
+                        <span class="block text-[10px] font-black text-blue-800 dark:text-blue-300 uppercase tracking-widest mb-1">TOTAL KAS MASUK KESELURUHAN</span>
+                        <div class="text-3xl font-black text-blue-600 dark:text-blue-400 italic tracking-tight mb-2">
+                            Rp {{ number_format($financeSummary['cash_received_all_time'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">AKUMULASI SELURUH PENERIMAAN TERVALIDASI</span>
+                </div>
+
+                {{-- All-Time Card 3: Total Piutang Aktif All-Time --}}
+                <div class="bg-gradient-to-br from-rose-500/10 via-white to-pink-500/10 dark:from-rose-950/20 dark:via-gray-800 dark:to-pink-950/20 rounded-3xl border border-rose-200/60 dark:border-rose-800/40 shadow-xl p-6 relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="w-10 h-10 bg-rose-500/20 rounded-2xl flex items-center justify-center text-rose-700 dark:text-rose-300 font-bold border border-rose-300 dark:border-rose-700">
+                                🚨
+                            </div>
+                            <span class="px-3 py-1 bg-rose-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                ALL-TIME PIUTANG
+                            </span>
+                        </div>
+                        <span class="block text-[10px] font-black text-rose-800 dark:text-rose-300 uppercase tracking-widest mb-1">SISA PIUTANG PERUSAHAAN</span>
+                        <div class="text-3xl font-black text-rose-600 dark:text-rose-400 italic tracking-tight mb-2">
+                            Rp {{ number_format($financeSummary['active_receivables_all_time'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">TOTAL PIUTANG DARI SEMUA INVOICE BELUM LUNAS</span>
+                </div>
+            </div>
+        </div>
+
+    </div> {{-- End of FINANCE TAB CONTENT --}}
 
     {{-- API Documentation Modal --}}
     <div x-show="showApiModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -510,7 +991,7 @@
                             </svg>
                         </div>
                         <div class="mt-3 text-center sm:mt-0 sm:ml-5 sm:text-left w-full">
-                            <h3 class="text-xl leading-6 font-black text-gray-900 dark:text-white mb-2" id="modal-title" x-text="activeTab === 'workshop' ? 'API Integration (Workshop KPI)' : 'API Integration (Gudang KPI)'">API Integration</h3>
+                            <h3 class="text-xl leading-6 font-black text-gray-900 dark:text-white mb-2" id="modal-title" x-text="activeTab === 'workshop' ? 'API Integration (Workshop KPI)' : (activeTab === 'gudang' ? 'API Integration (Gudang KPI)' : 'API Integration (Finance KPI)')">API Integration</h3>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
                                 Gunakan *endpoint* ini untuk menarik data laporan KPI secara terprogram.
                             </p>
@@ -518,7 +999,7 @@
                             <div class="mb-5">
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-2">Endpoint URL (GET)</label>
                                 <div class="relative bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 pr-24 shadow-inner">
-                                    <div class="text-sm font-mono text-gray-800 dark:text-green-400 break-all" id="apiUrlText" x-text="activeTab === 'workshop' ? '{{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}' : '{{ url('/api/v1/kpi/gudang') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}'">
+                                    <div class="text-sm font-mono text-gray-800 dark:text-green-400 break-all" id="apiUrlText" x-text="activeTab === 'workshop' ? '{{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}' : (activeTab === 'gudang' ? '{{ url('/api/v1/kpi/gudang') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}' : '{{ url('/api/v1/kpi/finance') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}')">
                                         {{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}
                                     </div>
                                     <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('apiUrlText').innerText.trim()); alert('URL tersalin!')" class="absolute top-1/2 -translate-y-1/2 right-3 inline-flex items-center px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold text-xs uppercase transition-colors shadow-sm">

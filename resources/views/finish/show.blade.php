@@ -18,7 +18,7 @@
                 open: false,
                 showRevisionModal: false,
                 selected: [],
-                validDays: 7,
+                validDays: 3,
                 validUntil: '',
                 sendAutomation: '1',
                 services: initialServices || [],

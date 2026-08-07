@@ -233,4 +233,130 @@ class KpiService
             'sepatu_keluar' => $sepatuKeluar,
         ];
     }
+
+    /**
+     * Get the aggregated KPI data for the Finance division.
+     */
+    public function getFinanceKpi($startDate, $endDate): array
+    {
+        $startStr = $startDate->toDateString();
+        $endStr = $endDate->toDateString();
+
+        // 1. Invoices Created in Period
+        $heroInvoices = \App\Models\Invoice::whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('
+                COALESCE(SUM(total_amount + shipping_cost - discount), 0) as total_invoiced,
+                COALESCE(SUM(total_amount + shipping_cost - paid_amount - discount), 0) as total_outstanding
+            ')
+            ->first();
+
+        $totalInvoiced = (float) $heroInvoices->total_invoiced;
+
+        // 1b. Global / All-Time Invoice Totals (Without Date Filter)
+        $globalInvoices = \App\Models\Invoice::selectRaw('
+                COALESCE(SUM(total_amount + shipping_cost - discount), 0) as total_invoiced_all_time,
+                COALESCE(SUM(CASE WHEN status != "Lunas" THEN (total_amount + shipping_cost - paid_amount - discount) ELSE 0 END), 0) as total_outstanding_all_time
+            ')
+            ->first();
+
+        $totalInvoicedAllTime = (float) $globalInvoices->total_invoiced_all_time;
+        $activeReceivablesAllTime = max(0, (float) $globalInvoices->total_outstanding_all_time);
+
+        // 2. Verified Cash Received in Period & All-Time
+        $cashReceived = (float) \App\Models\InvoicePayment::where('verified', true)
+            ->whereBetween('payment_date', [$startStr, $endStr])
+            ->sum('amount');
+
+        $cashReceivedAllTime = (float) \App\Models\InvoicePayment::where('verified', true)
+            ->sum('amount');
+
+        // Total Diskon Diberikan (in period)
+        $totalDiscount = (float) \App\Models\Invoice::whereBetween('created_at', [$startDate, $endDate])
+            ->sum('discount');
+
+        // Sisa Piutang Aktif (Piutang berjalan dari tagihan periode terpilih)
+        $activeReceivables = max(0, (float) $heroInvoices->total_outstanding);
+
+        // Collection Rate
+        $collectionRate = $totalInvoiced > 0 ? round(($cashReceived / $totalInvoiced) * 100, 2) : 0;
+
+        // 3. Invoice Status Breakdown (in period)
+        $statusCounts = \App\Models\Invoice::whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('status, COUNT(*) as cnt, COALESCE(SUM(total_amount + shipping_cost - discount), 0) as total')
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
+
+        $statusDistribution = [
+            'belum_bayar' => [
+                'count' => (int) ($statusCounts->get('Belum Bayar')?->cnt ?? 0),
+                'total' => (float) ($statusCounts->get('Belum Bayar')?->total ?? 0),
+            ],
+            'dp_cicil' => [
+                'count' => (int) ($statusCounts->get('DP/Cicil')?->cnt ?? 0),
+                'total' => (float) ($statusCounts->get('DP/Cicil')?->total ?? 0),
+            ],
+            'lunas' => [
+                'count' => (int) ($statusCounts->get('Lunas')?->cnt ?? 0),
+                'total' => (float) ($statusCounts->get('Lunas')?->total ?? 0),
+            ],
+        ];
+
+        // 4. Payment Type Distribution (verified payments in period)
+        $types = [
+            'dp_awal'     => 'BEFORE',
+            'pelunasan'   => 'AFTER',
+            'tambah_jasa' => 'TAMBAH_JASA',
+            'lunas_awal'  => 'LUNAS_AWAL',
+            'ongkir'      => 'ONGKIR',
+            'oto'         => 'OTO',
+        ];
+
+        $paymentTypeDistribution = [];
+        foreach ($types as $key => $typeCode) {
+            $query = \App\Models\InvoicePayment::where('verified', true)
+                ->where('type', $typeCode)
+                ->whereBetween('payment_date', [$startStr, $endStr]);
+
+            $paymentTypeDistribution[$key] = [
+                'count' => (int) $query->count(),
+                'total' => (float) $query->sum('amount'),
+            ];
+        }
+
+        // 5. Revenue Realization (Omset Closing Valid)
+        // Match /cs/analytics logic: total_transaksi from valid WorkOrders (entry_date in period, not SPK_PENDING or BATAL)
+        $revenueRealization = (float) \App\Models\WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$startDate, $endDate])
+            ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+            ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+            ->sum('total_transaksi');
+
+        if ($revenueRealization == 0) {
+            $revenueRealization = (float) \App\Models\WorkOrder::whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+                ->sum('total_transaksi');
+        }
+
+        if ($revenueRealization == 0) {
+            $revenueRealization = (float) \App\Models\CsSpk::whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+                ->sum('total_price');
+        }
+
+        return [
+            'total_invoiced' => $totalInvoiced,
+            'total_invoiced_all_time' => $totalInvoicedAllTime,
+            'cash_received' => $cashReceived,
+            'cash_received_all_time' => $cashReceivedAllTime,
+            'active_receivables' => $activeReceivables,
+            'active_receivables_all_time' => $activeReceivablesAllTime,
+            'collection_rate' => $collectionRate,
+            'total_discount' => $totalDiscount,
+            'status_distribution' => $statusDistribution,
+            'payment_type_distribution' => $paymentTypeDistribution,
+            'revenue_realization' => $revenueRealization,
+        ];
+    }
 }

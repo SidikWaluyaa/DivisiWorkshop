@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Exports\KpiDurasiExport;
 use App\Exports\KpiGudangExport;
+use App\Exports\KpiFinanceExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 use App\Services\KpiService;
@@ -52,11 +53,17 @@ class KpiController extends Controller
         // Get Gudang KPI
         $gudangSummary = $this->kpiService->getGudangKpi($startDate, $endDate);
 
+        // Get Finance KPI
+        $financeSummary = $this->kpiService->getFinanceKpi($startDate, $endDate);
+
         return view('admin.kpi.index', [
             'summary' => $summary,
             'cxTransitions' => $cxTransitions,
             'gudangSummary' => $gudangSummary,
+            'financeSummary' => $financeSummary,
             'dateRange' => $dateRange,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
         ]);
     }
 
@@ -157,6 +164,38 @@ class KpiController extends Controller
         return Excel::download(
             new KpiGudangExport($gudangSummary, $startLabel, $endLabel),
             "Laporan_Ringkasan_KPI_Gudang_{$startLabel}_sd_{$endLabel}.xlsx"
+        );
+    }
+
+    public function exportFinanceExcel(Request $request)
+    {
+        $dateRange = $request->input('date_range');
+
+        // Parse date range
+        $startDate = null;
+        $endDate = null;
+        if (!empty($dateRange)) {
+            $parts = explode(' to ', $dateRange);
+            $startDate = Carbon::parse($parts[0])->startOfDay();
+            if (isset($parts[1])) {
+                $endDate = Carbon::parse($parts[1])->endOfDay();
+            } else {
+                $endDate = Carbon::parse($parts[0])->endOfDay();
+            }
+        } else {
+            $startDate = Carbon::now()->startOfMonth()->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
+        }
+
+        // Get KPI summary from Service
+        $financeSummary = $this->kpiService->getFinanceKpi($startDate, $endDate);
+
+        $startLabel = $startDate->format('d-m-Y');
+        $endLabel = $endDate->format('d-m-Y');
+
+        return Excel::download(
+            new KpiFinanceExport($financeSummary, $startLabel, $endLabel),
+            "Laporan_Ringkasan_KPI_Finance_{$startLabel}_sd_{$endLabel}.xlsx"
         );
     }
 }

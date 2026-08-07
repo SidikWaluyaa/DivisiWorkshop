@@ -230,6 +230,7 @@ Route::middleware('auth')->group(function () {
             Route::get('kpi', [App\Http\Controllers\Admin\KpiController::class, 'index'])->name('kpi.index');
             Route::get('/kpi/export', [\App\Http\Controllers\Admin\KpiController::class, 'exportExcel'])->name('kpi.export');
             Route::get('/kpi/export-gudang', [\App\Http\Controllers\Admin\KpiController::class, 'exportGudangExcel'])->name('kpi.exportGudang');
+            Route::get('/kpi/export-finance', [\App\Http\Controllers\Admin\KpiController::class, 'exportFinanceExcel'])->name('kpi.exportFinance');
         });
     });
 
