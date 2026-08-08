@@ -765,54 +765,57 @@ class CsDashboardController extends Controller
             $incomingItemsOffline = \App\Models\CsSpkItem::whereIn('spk_id', $spkIdsOffline)->count();
             $incomingItems = $incomingItemsOnline + $incomingItemsOffline;
 
-            // 1. Data Sepatu Masuk (Diterima) split by Online / Offline (Status NOT SPK_PENDING and NOT BATAL)
-            $spkIdsOnline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
-                ->where('cs_leads.cs_id', $user->id)
-                ->where('cs_leads.channel', CsLead::CHANNEL_ONLINE)
-                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
-                ->whereBetween('cs_spk.created_at', [$start, $end])
-                ->pluck('cs_spk.id');
+            // 1. Data Sepatu Masuk (Diterima) based on entry_date in range, status DITERIMA or higher
+            $agentDiterimaQuery = \App\Models\WorkOrder::whereNotNull('entry_date')
+                ->whereBetween('entry_date', [$start, $end])
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+                ->where(function($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                    if (!empty($user->cs_code)) {
+                        $q->orWhere('spk_number', 'LIKE', '%-' . $user->cs_code);
+                    }
+                    $q->orWhereIn('id', function($sub) use ($user) {
+                        $sub->select('cs_spk_items.work_order_id')
+                            ->from('cs_spk_items')
+                            ->join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
+                            ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                            ->where('cs_leads.cs_id', $user->id)
+                            ->whereNotNull('cs_spk_items.work_order_id');
+                    });
+                });
 
-            $sepatuDiterimaOnline = \App\Models\WorkOrder::whereIn('id', function ($query) use ($spkIdsOnline) {
-                $query->select('work_order_id')
-                    ->from('cs_spk_items')
-                    ->whereIn('spk_id', $spkIdsOnline)
-                    ->whereNotNull('work_order_id');
-            })
-            ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-            ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
-            ->count();
+            $sepatuDiterimaTotal = (clone $agentDiterimaQuery)->count();
 
-            $spkIdsOffline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
-                ->where('cs_leads.cs_id', $user->id)
-                ->where('cs_leads.channel', CsLead::CHANNEL_OFFLINE)
-                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
-                ->whereBetween('cs_spk.created_at', [$start, $end])
-                ->pluck('cs_spk.id');
+            $sepatuDiterimaOnline = (clone $agentDiterimaQuery)->where(function($q) {
+                $q->where('channel', CsLead::CHANNEL_ONLINE)
+                  ->orWhereIn('id', function($sub) {
+                      $sub->select('cs_spk_items.work_order_id')
+                          ->from('cs_spk_items')
+                          ->join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
+                          ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                          ->where('cs_leads.channel', CsLead::CHANNEL_ONLINE)
+                          ->whereNotNull('cs_spk_items.work_order_id');
+                  });
+            })->count();
 
-            $sepatuDiterimaOffline = \App\Models\WorkOrder::whereIn('id', function ($query) use ($spkIdsOffline) {
-                $query->select('work_order_id')
-                    ->from('cs_spk_items')
-                    ->whereIn('spk_id', $spkIdsOffline)
-                    ->whereNotNull('work_order_id');
-            })
-            ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-            ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
-            ->count();
+            $sepatuDiterimaOffline = max(0, $sepatuDiterimaTotal - $sepatuDiterimaOnline);
 
-            $sepatuDiterimaTotal = $sepatuDiterimaOnline + $sepatuDiterimaOffline;
-
-            // 2. Data SPK Pending (Status SPK_PENDING)
+            // 2. Data SPK Pending (Status SPK_PENDING & created_at in range)
             $allSpkIds = $spkIdsOnline->concat($spkIdsOffline)->unique();
 
-            $sepatuSpkPending = \App\Models\WorkOrder::whereIn('id', function ($query) use ($allSpkIds) {
-                $query->select('work_order_id')
-                    ->from('cs_spk_items')
-                    ->whereIn('spk_id', $allSpkIds)
-                    ->whereNotNull('work_order_id');
-            })
-            ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-            ->count();
+            $sepatuSpkPending = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+                ->whereBetween('created_at', [$start, $end])
+                ->where(function($q) use ($user, $allSpkIds) {
+                    $q->where('created_by', $user->id);
+                    if (!empty($user->cs_code)) {
+                        $q->orWhere('spk_number', 'LIKE', '%-' . $user->cs_code);
+                    }
+                    $q->orWhereIn('id', function($sub) use ($allSpkIds) {
+                        $sub->select('work_order_id')->from('cs_spk_items')->whereIn('spk_id', $allSpkIds)->whereNotNull('work_order_id');
+                    });
+                })
+                ->count();
 
             // Data SPK Batal (using soft-deleted / onlyTrashed() work orders)
             $sepatuBatal = \App\Models\WorkOrder::onlyTrashed()

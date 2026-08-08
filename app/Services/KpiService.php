@@ -341,4 +341,278 @@ class KpiService
             'revenue_realization' => $revenueRealization,
         ];
     }
+
+    /**
+     * Get the aggregated KPI data for the CS division.
+     */
+    public function getCsKpi($startDate, $endDate): array
+    {
+        // 1. Global Overview Metrics
+        $totalLeads = \App\Models\CsLead::whereBetween('created_at', [$startDate, $endDate])->count();
+        $totalClosings = \App\Models\CsLead::whereIn('status', [\App\Models\CsLead::STATUS_CLOSING, \App\Models\CsLead::STATUS_CONVERTED])
+            ->whereBetween('updated_at', [$startDate, $endDate])
+            ->count();
+
+        $workOrdersQuery = WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$startDate, $endDate])
+            ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
+            ->where('status', '!=', WorkOrderStatus::BATAL->value);
+
+        $totalIncomingItems = $workOrdersQuery->count();
+        $totalRevenue = (float) $workOrdersQuery->sum('total_transaksi');
+
+        if ($totalRevenue == 0) {
+            $totalRevenue = (float) WorkOrder::whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', WorkOrderStatus::BATAL->value)
+                ->sum('total_transaksi');
+        }
+
+        $conversionRate = $totalLeads > 0 ? round(($totalClosings / $totalLeads) * 100, 1) : 0;
+        $avgDealValue = $totalClosings > 0 ? round($totalRevenue / $totalClosings) : 0;
+
+        $overview = [
+            'total_leads' => $totalLeads,
+            'total_closings' => $totalClosings,
+            'total_revenue' => $totalRevenue,
+            'conversion_rate' => $conversionRate,
+            'avg_deal_value' => $avgDealValue,
+            'total_incoming_items' => $totalIncomingItems,
+        ];
+
+        // 2. Closing Path Analysis
+        $closedLeadIds = \App\Models\CsLead::whereIn('status', [\App\Models\CsLead::STATUS_CLOSING, \App\Models\CsLead::STATUS_CONVERTED])
+            ->whereBetween('updated_at', [$startDate, $endDate])
+            ->pluck('id');
+
+        $closedViaFollowUp = \App\Models\CsActivity::whereIn('cs_lead_id', $closedLeadIds)
+            ->where('type', \App\Models\CsActivity::TYPE_STATUS_CHANGE)
+            ->where('content', 'LIKE', '%Status diubah ke FOLLOW_UP%')
+            ->distinct('cs_lead_id')
+            ->count('cs_lead_id');
+
+        $closedDirect = max(0, $closedLeadIds->count() - $closedViaFollowUp);
+
+        $totalToFollowUp = \App\Models\CsActivity::whereHas('lead', function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->where('type', \App\Models\CsActivity::TYPE_STATUS_CHANGE)
+            ->where('content', 'LIKE', '%Status diubah ke FOLLOW_UP%')
+            ->distinct('cs_lead_id')
+            ->count('cs_lead_id');
+
+        $activeFollowUp = \App\Models\CsLead::where('status', \App\Models\CsLead::STATUS_FOLLOW_UP)->count();
+
+        $followUpEffectiveness = $totalToFollowUp > 0 ? round(($closedViaFollowUp / $totalToFollowUp) * 100, 1) : 0;
+
+        $pathAnalysis = [
+            'closed_direct' => $closedDirect,
+            'closed_via_followup' => $closedViaFollowUp,
+            'total_to_followup' => $totalToFollowUp,
+            'active_followup' => $activeFollowUp,
+            'followup_effectiveness' => $followUpEffectiveness,
+            'total_closed' => $closedLeadIds->count(),
+        ];
+
+        // 3. Channel Stats
+        $channels = [\App\Models\CsLead::CHANNEL_ONLINE, \App\Models\CsLead::CHANNEL_OFFLINE];
+        $channelStats = [];
+
+        foreach ($channels as $ch) {
+            $chLeads = \App\Models\CsLead::where('channel', $ch)->whereBetween('created_at', [$startDate, $endDate])->count();
+            $chClosings = \App\Models\CsLead::where('channel', $ch)
+                ->whereIn('status', [\App\Models\CsLead::STATUS_CLOSING, \App\Models\CsLead::STATUS_CONVERTED])
+                ->whereBetween('updated_at', [$startDate, $endDate])
+                ->count();
+            $chRevenue = (float) WorkOrder::whereNotNull('entry_date')
+                ->whereBetween('entry_date', [$startDate, $endDate])
+                ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', WorkOrderStatus::BATAL->value)
+                ->where('channel', $ch)
+                ->sum('total_transaksi');
+
+            $chCr = $chLeads > 0 ? round(($chClosings / $chLeads) * 100, 1) : 0;
+
+            $channelStats[$ch] = [
+                'leads' => $chLeads,
+                'closings' => $chClosings,
+                'revenue' => $chRevenue,
+                'cr' => $chCr,
+            ];
+        }
+
+        // 4. CS Performance Leaderboard
+        $csUsers = \App\Models\User::where('access_rights', 'LIKE', '%"cs"%')
+            ->orWhere('role', 'cs')
+            ->get();
+
+        $leaderboard = [];
+
+        // Global Sepatu Diterima (entry_date in range, status DITERIMA or higher)
+        $sepatuDiterimaBaseQuery = WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$startDate, $endDate])
+            ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
+            ->where('status', '!=', WorkOrderStatus::BATAL->value);
+
+        $globalDiterimaTotal = (clone $sepatuDiterimaBaseQuery)->count();
+        $globalDiterimaOnline = (clone $sepatuDiterimaBaseQuery)->where(function($q) {
+            $q->where('channel', \App\Models\CsLead::CHANNEL_ONLINE)
+              ->orWhereIn('id', function($sub) {
+                  $sub->select('cs_spk_items.work_order_id')
+                      ->from('cs_spk_items')
+                      ->join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
+                      ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                      ->where('cs_leads.channel', \App\Models\CsLead::CHANNEL_ONLINE)
+                      ->whereNotNull('cs_spk_items.work_order_id');
+              });
+        })->count();
+        $globalDiterimaOffline = max(0, $globalDiterimaTotal - $globalDiterimaOnline);
+
+        $totalSpkPendingGlobal = WorkOrder::where('status', WorkOrderStatus::SPK_PENDING->value)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
+
+        foreach ($csUsers as $user) {
+            $totalLeadsAgent = \App\Models\CsLead::where('cs_id', $user->id)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
+
+            $leadsOnlineAgent = \App\Models\CsLead::where('cs_id', $user->id)
+                ->where('channel', \App\Models\CsLead::CHANNEL_ONLINE)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
+
+            $leadsOfflineAgent = max(0, $totalLeadsAgent - $leadsOnlineAgent);
+
+            $closedLeadIdsAgent = \App\Models\CsLead::where('cs_id', $user->id)
+                ->whereIn('status', [\App\Models\CsLead::STATUS_CLOSING, \App\Models\CsLead::STATUS_CONVERTED])
+                ->whereBetween('updated_at', [$startDate, $endDate])
+                ->pluck('id');
+
+            $closingsAgent = $closedLeadIdsAgent->count();
+
+            $closingViaFuAgent = \App\Models\CsActivity::whereIn('cs_lead_id', $closedLeadIdsAgent)
+                ->where('type', \App\Models\CsActivity::TYPE_STATUS_CHANGE)
+                ->where('content', 'LIKE', '%Status diubah ke FOLLOW_UP%')
+                ->distinct('cs_lead_id')
+                ->count('cs_lead_id');
+
+            $closingDirectAgent = max(0, $closingsAgent - $closingViaFuAgent);
+
+            $spkIdsOnline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.cs_id', $user->id)
+                ->where('cs_leads.channel', \App\Models\CsLead::CHANNEL_ONLINE)
+                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+                ->whereBetween('cs_spk.created_at', [$startDate, $endDate])
+                ->pluck('cs_spk.id');
+
+            $incomingOnline = \App\Models\CsSpkItem::whereIn('spk_id', $spkIdsOnline)->count();
+
+            $spkIdsOffline = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.cs_id', $user->id)
+                ->where('cs_leads.channel', \App\Models\CsLead::CHANNEL_OFFLINE)
+                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+                ->whereBetween('cs_spk.created_at', [$startDate, $endDate])
+                ->pluck('cs_spk.id');
+
+            $incomingOffline = \App\Models\CsSpkItem::whereIn('spk_id', $spkIdsOffline)->count();
+            $incomingTotal = $incomingOnline + $incomingOffline;
+
+            // Agent Sepatu Diterima (entry_date in range, status DITERIMA or higher)
+            $agentDiterimaQuery = WorkOrder::whereNotNull('entry_date')
+                ->whereBetween('entry_date', [$startDate, $endDate])
+                ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
+                ->where('status', '!=', WorkOrderStatus::BATAL->value)
+                ->where(function($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                    if (!empty($user->cs_code)) {
+                        $q->orWhere('spk_number', 'LIKE', '%-' . $user->cs_code);
+                    }
+                    $q->orWhereIn('id', function($sub) use ($user) {
+                        $sub->select('cs_spk_items.work_order_id')
+                            ->from('cs_spk_items')
+                            ->join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
+                            ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                            ->where('cs_leads.cs_id', $user->id)
+                            ->whereNotNull('cs_spk_items.work_order_id');
+                    });
+                });
+
+            $diterimaTotal = (clone $agentDiterimaQuery)->count();
+            $diterimaOnline = (clone $agentDiterimaQuery)->where(function($q) {
+                $q->where('channel', \App\Models\CsLead::CHANNEL_ONLINE)
+                  ->orWhereIn('id', function($sub) {
+                      $sub->select('cs_spk_items.work_order_id')
+                          ->from('cs_spk_items')
+                          ->join('cs_spk', 'cs_spk_items.spk_id', '=', 'cs_spk.id')
+                          ->join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                          ->where('cs_leads.channel', \App\Models\CsLead::CHANNEL_ONLINE)
+                          ->whereNotNull('cs_spk_items.work_order_id');
+                  });
+            })->count();
+            $diterimaOffline = max(0, $diterimaTotal - $diterimaOnline);
+
+            $allSpkIds = $spkIdsOnline->concat($spkIdsOffline)->unique();
+
+            $pendingSpkAgent = WorkOrder::where('status', WorkOrderStatus::SPK_PENDING->value)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->where(function($q) use ($user, $allSpkIds) {
+                    $q->where('created_by', $user->id);
+                    if (!empty($user->cs_code)) {
+                        $q->orWhere('spk_number', 'LIKE', '%-' . $user->cs_code);
+                    }
+                    $q->orWhereIn('id', function($sub) use ($allSpkIds) {
+                        $sub->select('work_order_id')->from('cs_spk_items')->whereIn('spk_id', $allSpkIds)->whereNotNull('work_order_id');
+                    });
+                })->count();
+
+            $batalAgent = WorkOrder::onlyTrashed()->whereIn('id', function ($query) use ($allSpkIds) {
+                $query->select('work_order_id')->from('cs_spk_items')->whereIn('spk_id', $allSpkIds)->whereNotNull('work_order_id');
+            })->count();
+
+            $invoiceIdsAgent = WorkOrder::whereIn('id', function ($query) use ($allSpkIds) {
+                $query->select('work_order_id')->from('cs_spk_items')->whereIn('spk_id', $allSpkIds)->whereNotNull('work_order_id');
+            })->whereNotNull('invoice_id')->pluck('invoice_id')->unique();
+
+            $revenueAgent = (float) \App\Models\Invoice::whereIn('id', $invoiceIdsAgent)
+                ->selectRaw('COALESCE(SUM(total_amount + shipping_cost - discount), 0) as total_invoiced')
+                ->value('total_invoiced');
+
+            $leaderboard[] = [
+                'cs_name' => $user->name,
+                'avatar_initial' => strtoupper(substr($user->name, 0, 1)),
+                'total_leads' => $totalLeadsAgent,
+                'incoming_total' => $incomingTotal,
+                'incoming_online' => $incomingOnline,
+                'incoming_offline' => $incomingOffline,
+                'closings' => $closingsAgent,
+                'closing_direct' => $closingDirectAgent,
+                'closing_via_fu' => $closingViaFuAgent,
+                'diterima_total' => $diterimaTotal,
+                'diterima_online' => $diterimaOnline,
+                'diterima_offline' => $diterimaOffline,
+                'spk_pending' => $pendingSpkAgent,
+                'batal' => $batalAgent,
+                'revenue' => $revenueAgent,
+                'aio' => $closingsAgent > 0 ? round($incomingTotal / $closingsAgent, 2) : 0,
+            ];
+        }
+
+        usort($leaderboard, fn($a, $b) => $b['closings'] <=> $a['closings']);
+
+        $summaryCards = [
+            'total_sepatu_diterima' => $globalDiterimaTotal,
+            'sepatu_diterima_online' => $globalDiterimaOnline,
+            'sepatu_diterima_offline' => $globalDiterimaOffline,
+            'total_spk_pending' => $totalSpkPendingGlobal,
+        ];
+
+        return [
+            'overview' => $overview,
+            'path_analysis' => $pathAnalysis,
+            'channel_stats' => $channelStats,
+            'leaderboard' => $leaderboard,
+            'summary_cards' => $summaryCards,
+        ];
+    }
 }
