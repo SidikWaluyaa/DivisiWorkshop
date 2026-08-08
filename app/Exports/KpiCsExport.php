@@ -5,10 +5,10 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOfficePhpSpreadsheet\Worksheet\Worksheet;
-use PhpOfficePhpSpreadsheet\Style\Fill;
-use PhpOfficePhpSpreadsheet\Style\Alignment;
-use PhpOfficePhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class KpiCsExport implements FromArray, ShouldAutoSize, WithStyles
 {
