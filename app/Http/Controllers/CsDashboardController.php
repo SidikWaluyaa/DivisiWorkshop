@@ -121,25 +121,34 @@ class CsDashboardController extends Controller
             ->when($csId, fn($q) => $q->where('cs_id', $csId))
             ->count();
 
-        // Received work orders in this period:
-        $workOrdersQuery = \App\Models\WorkOrder::whereNotNull('entry_date')
-            ->whereBetween('entry_date', [$start, $end])
-            ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-            ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value);
+        $spkQuery = \App\Models\CsSpk::where('status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+            ->whereBetween('created_at', [$start, $end]);
 
         if ($csId) {
-            $csUser = User::find($csId);
-            if ($csUser) {
-                if (!empty($csUser->cs_code)) {
-                    $workOrdersQuery->where('spk_number', 'LIKE', '%-' . $csUser->cs_code);
-                } else {
-                    $workOrdersQuery->where('created_by', $csId);
-                }
-            }
+            $spkQuery->whereHas('lead', fn($q) => $q->where('cs_id', $csId));
         }
 
-        $totalIncomingItems = $workOrdersQuery->count();
-        $totalRevenue = $workOrdersQuery->sum('total_transaksi');
+        $allSpkIds = $spkQuery->pluck('id');
+
+        $validWoQuery = \App\Models\WorkOrder::where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+            ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+            ->where(function($q) use ($start, $end, $allSpkIds) {
+                $q->whereBetween('entry_date', [$start, $end])
+                  ->orWhereBetween('created_at', [$start, $end])
+                  ->orWhereIn('id', function($sub) use ($allSpkIds) {
+                      $sub->select('work_order_id')->from('cs_spk_items')->whereIn('spk_id', $allSpkIds)->whereNotNull('work_order_id');
+                  });
+            });
+
+        $totalIncomingItems = (clone $validWoQuery)->count();
+        if ($totalIncomingItems == 0 && count($allSpkIds) > 0) {
+            $totalIncomingItems = \App\Models\CsSpkItem::whereIn('spk_id', $allSpkIds)->count();
+        }
+
+        $totalRevenue = (float) (clone $validWoQuery)->sum('total_transaksi');
+        if ($totalRevenue == 0 && count($allSpkIds) > 0) {
+            $totalRevenue = (float) \App\Models\CsSpk::whereIn('id', $allSpkIds)->sum('total_price');
+        }
 
         $conversionRate = $totalLeads > 0 ? round(($totalClosings / $totalLeads) * 100, 1) : 0;
         $avgDealValue = $totalClosings > 0 ? round($totalRevenue / $totalClosings) : 0;
@@ -298,24 +307,18 @@ class CsDashboardController extends Controller
                 ->when($csId, fn($q) => $q->where('cs_id', $csId))
                 ->count();
 
-            $revenueQuery = \App\Models\WorkOrder::whereNotNull('entry_date')
-                ->whereBetween('entry_date', [$start, $end])
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
-                ->where('channel', $channel);
+            $chSpkIds = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.channel', $channel)
+                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+                ->whereBetween('cs_spk.created_at', [$start, $end])
+                ->when($csId, fn($q) => $q->where('cs_leads.cs_id', $csId))
+                ->pluck('cs_spk.id');
 
-            if ($csId) {
-                $csUser = User::find($csId);
-                if ($csUser) {
-                    if (!empty($csUser->cs_code)) {
-                        $revenueQuery->where('spk_number', 'LIKE', '%-' . $csUser->cs_code);
-                    } else {
-                        $revenueQuery->where('created_by', $csId);
-                    }
-                }
+            $chWoIds = \App\Models\CsSpkItem::whereIn('spk_id', $chSpkIds)->whereNotNull('work_order_id')->pluck('work_order_id');
+            $revenue = (float) \App\Models\WorkOrder::whereIn('id', $chWoIds)->sum('total_transaksi');
+            if ($revenue == 0) {
+                $revenue = (float) \App\Models\CsSpk::whereIn('id', $chSpkIds)->sum('total_price');
             }
-
-            $revenue = $revenueQuery->sum('total_transaksi');
 
             $conversionRate = $leads > 0 ? round(($closings / $leads) * 100, 1) : 0;
 

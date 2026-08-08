@@ -347,25 +347,34 @@ class KpiService
      */
     public function getCsKpi($startDate, $endDate): array
     {
-        // 1. Global Overview Metrics
+        // 1. Global Overview Metrics & All SPKs in Period
         $totalLeads = \App\Models\CsLead::whereBetween('created_at', [$startDate, $endDate])->count();
         $totalClosings = \App\Models\CsLead::whereIn('status', [\App\Models\CsLead::STATUS_CLOSING, \App\Models\CsLead::STATUS_CONVERTED])
             ->whereBetween('updated_at', [$startDate, $endDate])
             ->count();
 
-        $workOrdersQuery = WorkOrder::whereNotNull('entry_date')
-            ->whereBetween('entry_date', [$startDate, $endDate])
-            ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
-            ->where('status', '!=', WorkOrderStatus::BATAL->value);
+        $allSpkIdsGlobal = \App\Models\CsSpk::where('status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->pluck('id');
 
-        $totalIncomingItems = $workOrdersQuery->count();
-        $totalRevenue = (float) $workOrdersQuery->sum('total_transaksi');
+        $validWoQuery = WorkOrder::where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
+            ->where('status', '!=', WorkOrderStatus::BATAL->value)
+            ->where(function($q) use ($startDate, $endDate, $allSpkIdsGlobal) {
+                $q->whereBetween('entry_date', [$startDate, $endDate])
+                  ->orWhereBetween('created_at', [$startDate, $endDate])
+                  ->orWhereIn('id', function($sub) use ($allSpkIdsGlobal) {
+                      $sub->select('work_order_id')->from('cs_spk_items')->whereIn('spk_id', $allSpkIdsGlobal)->whereNotNull('work_order_id');
+                  });
+            });
 
-        if ($totalRevenue == 0) {
-            $totalRevenue = (float) WorkOrder::whereBetween('created_at', [$startDate, $endDate])
-                ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
-                ->where('status', '!=', WorkOrderStatus::BATAL->value)
-                ->sum('total_transaksi');
+        $totalIncomingItems = (clone $validWoQuery)->count();
+        if ($totalIncomingItems == 0 && count($allSpkIdsGlobal) > 0) {
+            $totalIncomingItems = \App\Models\CsSpkItem::whereIn('spk_id', $allSpkIdsGlobal)->count();
+        }
+
+        $totalRevenue = (float) (clone $validWoQuery)->sum('total_transaksi');
+        if ($totalRevenue == 0 && count($allSpkIdsGlobal) > 0) {
+            $totalRevenue = (float) \App\Models\CsSpk::whereIn('id', $allSpkIdsGlobal)->sum('total_price');
         }
 
         $conversionRate = $totalLeads > 0 ? round(($totalClosings / $totalLeads) * 100, 1) : 0;
@@ -424,12 +433,18 @@ class KpiService
                 ->whereIn('status', [\App\Models\CsLead::STATUS_CLOSING, \App\Models\CsLead::STATUS_CONVERTED])
                 ->whereBetween('updated_at', [$startDate, $endDate])
                 ->count();
-            $chRevenue = (float) WorkOrder::whereNotNull('entry_date')
-                ->whereBetween('entry_date', [$startDate, $endDate])
-                ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
-                ->where('status', '!=', WorkOrderStatus::BATAL->value)
-                ->where('channel', $ch)
-                ->sum('total_transaksi');
+
+            $chSpkIds = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+                ->where('cs_leads.channel', $ch)
+                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+                ->whereBetween('cs_spk.created_at', [$startDate, $endDate])
+                ->pluck('cs_spk.id');
+
+            $chWoIds = \App\Models\CsSpkItem::whereIn('spk_id', $chSpkIds)->whereNotNull('work_order_id')->pluck('work_order_id');
+            $chRevenue = (float) WorkOrder::whereIn('id', $chWoIds)->sum('total_transaksi');
+            if ($chRevenue == 0) {
+                $chRevenue = (float) \App\Models\CsSpk::whereIn('id', $chSpkIds)->sum('total_price');
+            }
 
             $chCr = $chLeads > 0 ? round(($chClosings / $chLeads) * 100, 1) : 0;
 
@@ -570,13 +585,11 @@ class KpiService
                 $query->select('work_order_id')->from('cs_spk_items')->whereIn('spk_id', $allSpkIds)->whereNotNull('work_order_id');
             })->count();
 
-            $invoiceIdsAgent = WorkOrder::whereIn('id', function ($query) use ($allSpkIds) {
-                $query->select('work_order_id')->from('cs_spk_items')->whereIn('spk_id', $allSpkIds)->whereNotNull('work_order_id');
-            })->whereNotNull('invoice_id')->pluck('invoice_id')->unique();
-
-            $revenueAgent = (float) \App\Models\Invoice::whereIn('id', $invoiceIdsAgent)
-                ->selectRaw('COALESCE(SUM(total_amount + shipping_cost - discount), 0) as total_invoiced')
-                ->value('total_invoiced');
+            $agentWoIds = \App\Models\CsSpkItem::whereIn('spk_id', $allSpkIds)->whereNotNull('work_order_id')->pluck('work_order_id');
+            $revenueAgent = (float) WorkOrder::whereIn('id', $agentWoIds)->sum('total_transaksi');
+            if ($revenueAgent == 0) {
+                $revenueAgent = (float) \App\Models\CsSpk::whereIn('id', $allSpkIds)->sum('total_price');
+            }
 
             $leaderboard[] = [
                 'cs_name' => $user->name,
