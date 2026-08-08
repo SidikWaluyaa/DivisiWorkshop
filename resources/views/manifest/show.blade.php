@@ -42,8 +42,8 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Sidebar Info -->
-            <div class="lg:col-span-1 space-y-6">
+            <!-- Sidebar Info (Web Only) -->
+            <div class="lg:col-span-1 space-y-6 print:hidden">
                 <!-- Status & Logistik -->
                 <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
                     <h2 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center">
@@ -90,41 +90,66 @@
                 @endif
             </div>
 
-            <!-- Main Items List -->
-            <div class="lg:col-span-2">
-                <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-                    <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm">
-                        <h2 class="text-lg font-bold text-gray-800">Daftar Barang Bawaan</h2>
-                        <span class="text-xs font-black px-4 py-1.5 bg-gray-100 text-gray-500 rounded-lg uppercase tracking-widest">{{ $manifest->workOrders->count() }} Pasang Sepatu</span>
+            <!-- Main Items List & Print Content -->
+            <div class="lg:col-span-2 print:col-span-3">
+                <!-- Status Pengiriman Box (Print Only) -->
+                <div class="hidden print:block mb-6 p-4 border-2 border-black">
+                    <table class="w-full text-xs text-black" style="border: none !important;">
+                        <tr style="border: none !important;">
+                            <td class="font-bold border-none py-1 px-2 text-left" style="width: 25%; border: none !important;">STATUS PENGIRIMAN</td>
+                            <td class="border-none py-1 px-2 text-left" style="width: 37.5%; border: none !important;">
+                                <strong class="uppercase">Dikirim (Gudang):</strong><br>
+                                {{ $manifest->dispatcher->name }}<br>
+                                <span class="italic text-[10px]">{{ $manifest->dispatched_at->format('d/m/Y H:i') }}</span>
+                            </td>
+                            <td class="border-none py-1 px-2 text-left" style="width: 37.5%; border: none !important;">
+                                <strong class="uppercase">Diterima (Workshop):</strong><br>
+                                {{ $manifest->receiver ? $manifest->receiver->name : 'MENUNGGU KONFIRMASI' }}<br>
+                                <span class="italic text-[10px]">{{ $manifest->received_at ? $manifest->received_at->format('d/m/Y H:i') : '-' }}</span>
+                            </td>
+                        </tr>
+                        @if($manifest->notes)
+                        <tr style="border: none !important;">
+                            <td class="font-bold border-none pt-2 px-2 text-left" style="border: none !important;">CATATAN:</td>
+                            <td colspan="2" class="border-none pt-2 px-2 italic text-left" style="border: none !important;">"{{ $manifest->notes }}"</td>
+                        </tr>
+                        @endif
+                    </table>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden print:border-black print:rounded-none">
+                    <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm print:bg-white print:border-black print:py-3 print:px-4">
+                        <h2 class="text-lg font-bold text-gray-800 print:text-black print:text-sm print:font-extrabold">Daftar Barang Bawaan</h2>
+                        <span class="text-xs font-black px-4 py-1.5 bg-gray-100 text-gray-500 rounded-lg uppercase tracking-widest print:bg-white print:text-black print:border print:border-black print:py-0.5 print:px-2 print:text-[10px]">{{ $manifest->workOrders->count() }} Pasang Sepatu</span>
                     </div>
                     
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-100">
+                        <table class="min-w-full divide-y divide-gray-100 print:border-black">
                             <thead>
-                                <tr class="bg-gray-50/50">
-                                    <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Data Order</th>
-                                    <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Detail Item</th>
-                                    <th class="px-8 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Priority</th>
+                                <tr class="bg-gray-50/50 print:bg-white print:border-black">
+                                    <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] print:text-black print:font-black">Data Order</th>
+                                    <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] print:text-black print:font-black">Detail Item</th>
+                                    <th class="px-8 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] print:text-black print:font-black">Priority</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-50">
+                            <tbody class="divide-y divide-gray-50 print:divide-black">
                                 @foreach($manifest->workOrders as $order)
-                                <tr class="hover:bg-[#22AF85]/[0.02] transition-colors group">
-                                    <td class="px-8 py-6 whitespace-nowrap">
-                                        <p class="text-sm font-black text-[#22AF85] tracking-tight">{{ $order->spk_number }}</p>
-                                        <div class="text-[11px] text-gray-400 font-bold mt-0.5 uppercase tracking-tighter">{{ $order->customer_name }}</div>
+                                <tr class="hover:bg-[#22AF85]/[0.02] transition-colors group print:border-black">
+                                    <td class="px-8 py-6 whitespace-nowrap print:py-2 print:px-4">
+                                        <p class="text-sm font-black text-[#22AF85] tracking-tight print:text-black print:font-bold">{{ $order->spk_number }}</p>
+                                        <div class="text-[11px] text-gray-400 font-bold mt-0.5 uppercase tracking-tighter print:text-black print:font-normal">{{ $order->customer_name }}</div>
                                     </td>
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <div class="text-xs font-bold text-gray-700 tracking-tight group-hover:text-gray-900 transition-colors uppercase">{{ $order->shoe_brand }}</div>
-                                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1">{{ $order->shoe_type }} • {{ $order->shoe_color }} • SZ {{ $order->shoe_size }}</div>
+                                    <td class="px-6 py-6 whitespace-nowrap print:py-2 print:px-4">
+                                        <div class="text-xs font-bold text-gray-700 tracking-tight group-hover:text-gray-900 transition-colors uppercase print:text-black print:font-bold">{{ $order->shoe_brand }}</div>
+                                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1 print:text-black print:font-normal">{{ $order->shoe_type }} • {{ $order->shoe_color }} • SZ {{ $order->shoe_size }}</div>
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap text-center">
+                                    <td class="px-8 py-6 whitespace-nowrap text-center print:py-2 print:px-4">
                                         @if($order->priority === 'Prioritas' || $order->priority === 'Urgent' || $order->priority === 'Express')
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-red-50 text-red-600 text-[10px] font-black border border-red-100 uppercase italic">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-red-50 text-red-600 text-[10px] font-black border border-red-100 uppercase italic print:border-black print:text-black print:bg-white print:not-italic print:font-black">
                                                 {{ $order->priority }}
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-gray-50 text-gray-500 text-[10px] font-black border border-gray-100 uppercase tracking-tighter">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-gray-50 text-gray-500 text-[10px] font-black border border-gray-100 uppercase tracking-tighter print:border-black print:text-black print:bg-white print:font-bold">
                                                 {{ $order->priority }}
                                             </span>
                                         @endif
@@ -136,12 +161,32 @@
                     </div>
                 </div>
 
-                <div class="mt-8 bg-gray-50 border border-dashed border-gray-200 rounded-3xl p-8 text-center">
+                <div class="mt-8 bg-gray-50 border border-dashed border-gray-200 rounded-3xl p-8 text-center print:border-black print:bg-white print:rounded-none print:p-4 print:mt-4">
                     <div class="max-w-md mx-auto">
-                        <svg class="w-12 h-12 text-gray-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-2">Pemeriksaan Barang</h4>
-                        <p class="text-xs text-gray-400 leading-relaxed italic">"Manifest ini adalah bukti tanda terima sah antara Gudang dan Workshop Hijau. Pastikan jumlah fisik cocok dengan jumlah di sistem sebelum konfirmasi."</p>
+                        <svg class="w-12 h-12 text-gray-200 mx-auto mb-4 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-2 print:text-black print:font-bold print:text-xs">Pemeriksaan Barang</h4>
+                        <p class="text-xs text-gray-400 leading-relaxed italic print:text-black print:not-italic print:font-medium print:text-[11px]">"Manifest ini adalah bukti tanda terima sah antara Gudang dan Workshop Hijau. Pastikan jumlah fisik cocok dengan jumlah di sistem sebelum konfirmasi."</p>
                     </div>
+                </div>
+
+                <!-- Print Signature Box (Guaranteed Side-by-Side Table Layout) -->
+                <div class="hidden print:block mt-8 pt-4 border-t-2 border-black">
+                    <table class="w-full text-center text-black" style="border: none !important;">
+                        <tr style="border: none !important;">
+                            <td style="width: 50%; border: none !important;" class="align-top text-center px-4">
+                                <p class="text-xs font-bold uppercase tracking-wider text-black mb-1">DIKIRIM OLEH (GUDANG)</p>
+                                <p class="text-[10px] text-black italic">{{ $manifest->dispatched_at->format('d/m/Y H:i') }}</p>
+                                <div style="height: 60px;"></div>
+                                <p class="text-xs font-bold text-black border-t border-black pt-1 inline-block px-6">( {{ $manifest->dispatcher->name }} )</p>
+                            </td>
+                            <td style="width: 50%; border: none !important;" class="align-top text-center px-4">
+                                <p class="text-xs font-bold uppercase tracking-wider text-black mb-1">DITERIMA OLEH (WORKSHOP)</p>
+                                <p class="text-[10px] text-black italic">{{ $manifest->received_at ? $manifest->received_at->format('d/m/Y H:i') : 'Tanggal & Jam: ....................' }}</p>
+                                <div style="height: 60px;"></div>
+                                <p class="text-xs font-bold text-black border-t border-black pt-1 inline-block px-6">( {{ $manifest->receiver ? $manifest->receiver->name : '........................................' }} )</p>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </div>
@@ -150,7 +195,16 @@
 
 <style>
     @media print {
-        /* Reset ALL potential height/overflow constraints on parents */
+        /* Force All Colors to Solid Black & Clean White Background */
+        *, *::before, *::after {
+            color: #000000 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
         html, body, 
         div.min-h-screen, 
         div.main-content, 
@@ -165,9 +219,9 @@
             position: static !important;
             padding: 0 !important;
             margin: 0 !important;
+            background-color: #ffffff !important;
         }
 
-        /* Ensure no margin/padding at the top level for clear page flow */
         .max-w-7xl { 
             max-width: 100% !important; 
             padding: 0 !important; 
@@ -175,52 +229,56 @@
             margin: 0 !important;
         }
         
-        /* Remove Layout Constraints on Grid */
-        .grid { display: block !important; }
-        .lg\:col-span-1, .lg\:col-span-2 { 
-            width: 100% !important; 
-            margin-bottom: 2rem !important; 
-        }
-        
-        /* Fix Table Content */
-        div.overflow-hidden, div.overflow-x-auto, .bg-white { 
+        div.overflow-hidden, div.overflow-x-auto, .bg-white, .bg-gray-50 { 
             overflow: visible !important; 
             height: auto !important; 
             display: block !important;
             border: none !important;
             box-shadow: none !important;
+            background: #ffffff !important;
         }
 
+        /* High-Contrast Table Styling */
         table { 
             width: 100% !important; 
             border-collapse: collapse !important; 
             table-layout: auto !important;
         }
 
-        tr { 
-            page-break-inside: avoid !important; 
-            break-inside: avoid !important; 
+        /* Badges for High Contrast Printing */
+        span.inline-flex {
+            border: 1px solid #000000 !important;
+            color: #000000 !important;
+            background: #ffffff !important;
+            font-weight: 900 !important;
+            padding: 2px 8px !important;
+            border-radius: 4px !important;
         }
 
-        td {
-            border-bottom: 1px solid #eee !important;
-        }
-
-        /* High Visibility Green for Printing */
-        .text-[#22AF85] { color: #1a8a68 !important; }
-
-        /* Hide EVERYTHING else (Navigation, Sidebar, Buttons) */
+        /* Hide Web Navigation, Buttons, Icons */
         header, aside, .sidebar-collapsed, .lg\:ml-64, 
-        nav, button, a, form, .flex.items-center.space-x-4 { 
+        nav, button, a, form, .flex.items-center.space-x-4,
+        svg.w-5.h-5, svg.w-6.h-6, .before\:absolute { 
             display: none !important; 
         }
 
-        /* Show the Header Info clearly */
-        .mb-8 { display: block !important; }
-        .mb-8 a, .mb-8 button { display: none !important; }
-        
-        /* Force background rendering for priority colors */
-        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        /* Header Info Layout */
+        .mb-8 { 
+            display: block !important;
+            border-bottom: 2px solid #000000 !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 16px !important;
+        }
+
+        h1 {
+            font-size: 22px !important;
+            font-weight: 900 !important;
+            color: #000000 !important;
+        }
+
+        h1 span {
+            color: #000000 !important;
+        }
     }
 </style>
 </x-app-layout>
