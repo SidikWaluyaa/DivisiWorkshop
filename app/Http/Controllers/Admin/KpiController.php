@@ -56,11 +56,15 @@ class KpiController extends Controller
         // Get Finance KPI
         $financeSummary = $this->kpiService->getFinanceKpi($startDate, $endDate);
 
+        // Get CS KPI
+        $csSummary = $this->kpiService->getCsKpi($startDate, $endDate);
+
         return view('admin.kpi.index', [
             'summary' => $summary,
             'cxTransitions' => $cxTransitions,
             'gudangSummary' => $gudangSummary,
             'financeSummary' => $financeSummary,
+            'csSummary' => $csSummary,
             'dateRange' => $dateRange,
             'startDate' => $startDate,
             'endDate' => $endDate,
@@ -196,6 +200,38 @@ class KpiController extends Controller
         return Excel::download(
             new KpiFinanceExport($financeSummary, $startLabel, $endLabel),
             "Laporan_Ringkasan_KPI_Finance_{$startLabel}_sd_{$endLabel}.xlsx"
+        );
+    }
+
+    public function exportCsExcel(Request $request)
+    {
+        $dateRange = $request->input('date_range');
+
+        // Parse date range
+        $startDate = null;
+        $endDate = null;
+        if (!empty($dateRange)) {
+            $parts = explode(' to ', $dateRange);
+            $startDate = Carbon::parse($parts[0])->startOfDay();
+            if (isset($parts[1])) {
+                $endDate = Carbon::parse($parts[1])->endOfDay();
+            } else {
+                $endDate = Carbon::parse($parts[0])->endOfDay();
+            }
+        } else {
+            $startDate = Carbon::now()->startOfMonth()->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
+        }
+
+        // Get CS KPI summary from Service
+        $csSummary = $this->kpiService->getCsKpi($startDate, $endDate);
+
+        $startLabel = $startDate->format('d-m-Y');
+        $endLabel = $endDate->format('d-m-Y');
+
+        return Excel::download(
+            new \App\Exports\KpiCsExport($csSummary, $startDate, $endDate),
+            "Laporan_Ringkasan_KPI_CS_{$startLabel}_sd_{$endLabel}.xlsx"
         );
     }
 }

@@ -161,10 +161,10 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
             <div class="flex items-center gap-3">
-                <div class="w-1.5 h-8 rounded-full transition-colors" :class="activeTab === 'workshop' ? 'bg-teal-500' : (activeTab === 'gudang' ? 'bg-amber-500' : 'bg-emerald-500')"></div>
-                <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight" x-text="activeTab === 'workshop' ? 'KPI WORKSHOP' : (activeTab === 'gudang' ? 'KPI GUDANG' : 'KPI FINANCE')"></h1>
+                <div class="w-1.5 h-8 rounded-full transition-colors" :class="activeTab === 'workshop' ? 'bg-teal-500' : (activeTab === 'gudang' ? 'bg-amber-500' : (activeTab === 'finance' ? 'bg-emerald-500' : 'bg-cyan-500'))"></div>
+                <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight" x-text="activeTab === 'workshop' ? 'KPI WORKSHOP' : (activeTab === 'gudang' ? 'KPI GUDANG' : (activeTab === 'finance' ? 'KPI FINANCE' : 'KPI CS'))"></h1>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1 ml-4" x-text="activeTab === 'workshop' ? 'Ringkasan Kinerja & Beban Kerja Divisi Workshop' : (activeTab === 'gudang' ? 'Ringkasan Kinerja & Logistik Gudang' : 'Ringkasan Arus Kas, Tagihan & Piutang Keuangan')"></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1 ml-4" x-text="activeTab === 'workshop' ? 'Ringkasan Kinerja & Beban Kerja Divisi Workshop' : (activeTab === 'gudang' ? 'Ringkasan Kinerja & Logistik Gudang' : (activeTab === 'finance' ? 'Ringkasan Arus Kas, Tagihan & Piutang Keuangan' : 'Ringkasan Performa, Closing Path & Hasill CS'))"></p>
         </div>
         
         <div class="flex gap-2">
@@ -206,6 +206,16 @@
                 </svg>
                 Ekspor Excel
             </a>
+
+            {{-- Export Excel Button CS --}}
+            <a href="{{ route('admin.kpi.exportCs', request()->all()) }}" 
+               x-show="activeTab === 'cs'" style="display: none;"
+               class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-cyan-500/20 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Ekspor Excel
+            </a>
         </div>
     </div>
 
@@ -225,6 +235,11 @@
                 :class="activeTab === 'finance' ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'"
                 class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
             <span class="text-base">💰</span> KPI FINANCE
+        </button>
+        <button @click="activeTab = 'cs'" 
+                :class="activeTab === 'cs' ? 'bg-white dark:bg-gray-700 text-cyan-600 dark:text-cyan-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">
+            <span class="text-base">🎧</span> KPI CS
         </button>
     </div>
 
@@ -906,7 +921,295 @@
 
     </div> {{-- End of FINANCE TAB CONTENT --}}
 
-    </div> {{-- End of FINANCE TAB CONTENT --}}
+    {{-- CS TAB CONTENT --}}
+    <div x-show="activeTab === 'cs'" style="display: none;" class="space-y-8">
+        
+        {{-- SECTION 1: GLOBAL OVERVIEW METRICS --}}
+        <div>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
+                <h2 class="text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-[0.2em]">GLOBAL OVERVIEW METRICS</h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+                {{-- Total Lead Intake --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl border-t-4 border-t-emerald-500">
+                    <p class="text-[10px] font-black text-gray-400 dark:text-gray-400 uppercase tracking-widest mb-3">TOTAL LEAD INTAKE</p>
+                    <p class="text-4xl font-black text-slate-800 dark:text-white tracking-tight mb-4">{{ number_format($csSummary['overview']['total_leads']) }}</p>
+                    <span class="inline-block px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-800">
+                        INPUT PERIODE INI
+                    </span>
+                </div>
+
+                {{-- Total Closing --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl border-t-4 border-t-amber-400">
+                    <p class="text-[10px] font-black text-gray-400 dark:text-gray-400 uppercase tracking-widest mb-3">TOTAL CLOSING</p>
+                    <p class="text-4xl font-black text-slate-800 dark:text-white tracking-tight mb-4">{{ number_format($csSummary['overview']['total_closings']) }}</p>
+                    <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden flex items-center mb-1">
+                        <div class="bg-amber-400 h-2 rounded-full" style="width: {{ min(100, $csSummary['overview']['conversion_rate']) }}%"></div>
+                    </div>
+                    <p class="text-right text-[10px] font-black text-amber-500">{{ $csSummary['overview']['conversion_rate'] }}%</p>
+                </div>
+
+                {{-- Total Sepatu Masuk --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl border-t-4 border-t-cyan-400">
+                    <p class="text-[10px] font-black text-gray-400 dark:text-gray-400 uppercase tracking-widest mb-3">TOTAL SEPATU MASUK</p>
+                    <p class="text-4xl font-black text-slate-800 dark:text-white tracking-tight mb-4">{{ number_format($csSummary['overview']['total_incoming_items']) }}</p>
+                    <span class="inline-block px-3 py-1 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-cyan-100 dark:border-cyan-800">
+                        VOLUME FISIK MASUK
+                    </span>
+                </div>
+
+                {{-- Revenue Realization --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl border-t-4 border-t-indigo-500">
+                    <p class="text-[10px] font-black text-gray-400 dark:text-gray-400 uppercase tracking-widest mb-3">REVENUE REALIZATION</p>
+                    <p class="text-3xl font-black text-slate-800 dark:text-white tracking-tight mb-4">Rp {{ number_format($csSummary['overview']['total_revenue'], 0, ',', '.') }}</p>
+                    <span class="inline-block px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-100 dark:border-indigo-800">
+                        OMSET CLOSING VALID
+                    </span>
+                </div>
+
+                {{-- Avg Deal Value --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl border-t-4 border-t-pink-500">
+                    <p class="text-[10px] font-black text-gray-400 dark:text-gray-400 uppercase tracking-widest mb-3">AVG DEAL VALUE</p>
+                    <p class="text-3xl font-black text-slate-800 dark:text-white tracking-tight mb-4">Rp {{ number_format($csSummary['overview']['avg_deal_value'], 0, ',', '.') }}</p>
+                    <span class="inline-block px-3 py-1 bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-pink-100 dark:border-pink-800">
+                        RATA-RATA PER DEAL
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {{-- SECTION 2: CLOSING PATH ANALYSIS --}}
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-1.5 h-6 bg-amber-500 rounded-full"></div>
+                <h2 class="text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-[0.2em]">CLOSING PATH ANALYSIS</h2>
+            </div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6 ml-4">JALUR LEAD MENUJU CLOSING</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {{-- Closing Langsung --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl border-t-4 border-t-emerald-500 relative overflow-hidden">
+                    <svg class="w-16 h-16 absolute -right-3 top-4 text-emerald-100 dark:text-emerald-900/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                    <p class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">CLOSING LANGSUNG</p>
+                    <p class="text-4xl font-black text-slate-800 dark:text-white tracking-tight mb-4">{{ number_format($csSummary['path_analysis']['closed_direct']) }}</p>
+                    <p class="text-[10px] font-bold text-gray-400 italic">Konsultasi → Closing (tanpa Follow-up)</p>
+                </div>
+
+                {{-- Closing via Follow-up --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl border-t-4 border-t-orange-400 relative overflow-hidden">
+                    <svg class="w-16 h-16 absolute -right-3 top-4 text-orange-100 dark:text-orange-900/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-3">CLOSING VIA FOLLOW-UP</p>
+                    <p class="text-4xl font-black text-slate-800 dark:text-white tracking-tight mb-4">{{ number_format($csSummary['path_analysis']['closed_via_followup']) }}</p>
+                    <p class="text-[10px] font-bold text-gray-400 italic">Konsultasi → Follow-up → Closing</p>
+                </div>
+
+                {{-- Konsultasi -> Follow-up --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl border-t-4 border-t-amber-400">
+                    <p class="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-3">KONSULTASI → FOLLOW-UP</p>
+                    <p class="text-4xl font-black text-slate-800 dark:text-white tracking-tight mb-4">{{ number_format($csSummary['path_analysis']['total_to_followup']) }}</p>
+                    <p class="text-[10px] font-bold text-gray-400 italic mb-3">Total lead yang masuk tahap Follow-up</p>
+                    <span class="inline-block px-3 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-100 dark:border-amber-800">
+                        EFEKTIVITAS: {{ $csSummary['path_analysis']['followup_effectiveness'] }}%
+                    </span>
+                </div>
+
+                {{-- Follow-up Aktif --}}
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl border-t-4 border-t-sky-400">
+                    <p class="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-3">FOLLOW-UP AKTIF</p>
+                    <p class="text-4xl font-black text-slate-800 dark:text-white tracking-tight mb-4">{{ number_format($csSummary['path_analysis']['active_followup']) }}</p>
+                    <p class="text-[10px] font-bold text-gray-400 italic mb-3">Saat ini masih di tahap Follow-up</p>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-sky-100 dark:border-sky-800">
+                        <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span> LIVE COUNT
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {{-- SECTION 3: CHANNEL & SUMMARY CARDS --}}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {{-- Channel Card --}}
+            <div class="lg:col-span-1 bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-xl">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
+                    <h2 class="text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-[0.2em]">CHANNEL</h2>
+                </div>
+
+                <div class="space-y-6">
+                    {{-- Online --}}
+                    <div class="p-4 bg-gray-50 dark:bg-gray-750 rounded-2xl border border-gray-100 dark:border-gray-700">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                                <span class="text-xs font-black text-gray-800 dark:text-white uppercase tracking-wider">ONLINE</span>
+                            </div>
+                            <span class="text-xl font-black text-gray-900 dark:text-white">{{ number_format($csSummary['channel_stats']['ONLINE']['leads']) }} <span class="text-[9px] text-gray-400 font-bold">LEADS</span></span>
+                        </div>
+                        <p class="text-[10px] font-bold text-gray-400 mb-2">REV: RP {{ number_format($csSummary['channel_stats']['ONLINE']['revenue'], 0, ',', '.') }}</p>
+                        
+                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 overflow-hidden mb-2">
+                            <div class="bg-indigo-500 h-1.5 rounded-full" style="width: {{ min(100, $csSummary['channel_stats']['ONLINE']['cr']) }}%"></div>
+                        </div>
+                        
+                        <div class="flex justify-between text-[10px] font-bold">
+                            <span class="text-gray-500">Closing: {{ number_format($csSummary['channel_stats']['ONLINE']['closings']) }}</span>
+                            <span class="text-emerald-500">CR: {{ $csSummary['channel_stats']['ONLINE']['cr'] }}%</span>
+                        </div>
+                    </div>
+
+                    {{-- Offline --}}
+                    <div class="p-4 bg-gray-50 dark:bg-gray-750 rounded-2xl border border-gray-100 dark:border-gray-700">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                <span class="text-xs font-black text-gray-800 dark:text-white uppercase tracking-wider">OFFLINE</span>
+                            </div>
+                            <span class="text-xl font-black text-gray-900 dark:text-white">{{ number_format($csSummary['channel_stats']['OFFLINE']['leads']) }} <span class="text-[9px] text-gray-400 font-bold">LEADS</span></span>
+                        </div>
+                        <p class="text-[10px] font-bold text-gray-400 mb-2">REV: RP {{ number_format($csSummary['channel_stats']['OFFLINE']['revenue'], 0, ',', '.') }}</p>
+                        
+                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 overflow-hidden mb-2">
+                            <div class="bg-amber-500 h-1.5 rounded-full" style="width: {{ min(100, $csSummary['channel_stats']['OFFLINE']['cr']) }}%"></div>
+                        </div>
+                        
+                        <div class="flex justify-between text-[10px] font-bold">
+                            <span class="text-gray-500">Closing: {{ number_format($csSummary['channel_stats']['OFFLINE']['closings']) }}</span>
+                            <span class="text-emerald-500">CR: {{ $csSummary['channel_stats']['OFFLINE']['cr'] }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Summary Cards (Sepatu Diterima & SPK Pending) --}}
+            <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {{-- Sepatu Diterima Card --}}
+                <div class="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-6">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">TOTAL SEPATU DITERIMA</p>
+                            <div class="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center border border-teal-500/30">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </div>
+                        <p class="text-4xl font-black text-white tracking-tight mb-2">{{ number_format($csSummary['summary_cards']['total_sepatu_diterima']) }} <span class="text-lg font-bold text-slate-400">Pasang</span></p>
+                    </div>
+                    <p class="text-xs font-black text-cyan-400 tracking-wider">{{ $csSummary['summary_cards']['sepatu_diterima_online'] }} OL / {{ $csSummary['summary_cards']['sepatu_diterima_offline'] }} OFF</p>
+                </div>
+
+                {{-- SPK Pending Card --}}
+                <div class="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-6">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">TOTAL SPK PENDING</p>
+                            <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                        </div>
+                        <p class="text-4xl font-black text-white tracking-tight mb-2">{{ number_format($csSummary['summary_cards']['total_spk_pending']) }} <span class="text-lg font-bold text-slate-400">Pasang</span></p>
+                    </div>
+                    <p class="text-xs font-black text-amber-400 tracking-wider">BELUM DI-RECEIVE WORKSHOP</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- SECTION 4: LEADERBOARD TABLE --}}
+        <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-1.5 h-6 bg-cyan-400 rounded-full"></div>
+                    <h2 class="text-xs font-black text-white uppercase tracking-[0.2em]">RANGKING EFISIENSI & HASIL CS</h2>
+                </div>
+                <div class="flex items-center gap-4 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> ONLINE</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400"></span> OFFLINE</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            <th class="py-4 px-3">RANK</th>
+                            <th class="py-4 px-3">CS AGENT</th>
+                            <th class="py-4 px-3">INTAKE (SEPATU MASUK)</th>
+                            <th class="py-4 px-3">CLOSING (CONVERTED)</th>
+                            <th class="py-4 px-3">SEPATU DITERIMA</th>
+                            <th class="py-4 px-3">SPK PENDING</th>
+                            <th class="py-4 px-3">BATAL (TRASH)</th>
+                            <th class="py-4 px-3 text-right">REVENUE</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                        @foreach($csSummary['leaderboard'] as $index => $cs)
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            {{-- Rank --}}
+                            <td class="py-4 px-3 font-black text-sm text-slate-300">
+                                @if($index === 0)
+                                    <span class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 inline-flex items-center justify-center">🥇</span>
+                                @elseif($index === 1)
+                                    <span class="w-7 h-7 rounded-full bg-slate-300/20 text-slate-300 border border-slate-400/30 inline-flex items-center justify-center">🥈</span>
+                                @elseif($index === 2)
+                                    <span class="w-7 h-7 rounded-full bg-amber-700/20 text-amber-600 border border-amber-600/30 inline-flex items-center justify-center">🥉</span>
+                                @else
+                                    <span class="w-7 h-7 rounded-lg bg-slate-800 text-slate-400 inline-flex items-center justify-center text-xs font-bold">{{ $index + 1 }}</span>
+                                @endif
+                            </td>
+
+                            {{-- Agent Name & Avatar --}}
+                            <td class="py-4 px-3 whitespace-nowrap">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-black text-xs flex items-center justify-center shadow-sm">
+                                        {{ $cs['avatar_initial'] }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white tracking-tight">{{ $cs['cs_name'] }}</p>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">TOTAL {{ $cs['total_leads'] }} LEADS</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            {{-- Intake --}}
+                            <td class="py-4 px-3 whitespace-nowrap">
+                                <p class="text-sm font-black text-white">{{ $cs['incoming_total'] }} Psg</p>
+                                <p class="text-[10px] font-bold text-emerald-400">{{ $cs['incoming_online'] }} OL <span class="text-slate-500">•</span> <span class="text-purple-400">{{ $cs['incoming_offline'] }} OFF</span></p>
+                            </td>
+
+                            {{-- Closing --}}
+                            <td class="py-4 px-3 whitespace-nowrap">
+                                <p class="text-sm font-black text-white">{{ $cs['closings'] }} Closing</p>
+                                <p class="text-[10px] font-bold text-emerald-400">DIR: {{ $cs['closing_direct'] }} <span class="text-slate-500">•</span> <span class="text-amber-400">FU: {{ $cs['closing_via_fu'] }}</span></p>
+                            </td>
+
+                            {{-- Sepatu Diterima --}}
+                            <td class="py-4 px-3 whitespace-nowrap">
+                                <p class="text-sm font-black text-white">{{ $cs['diterima_total'] }} Psg</p>
+                                <p class="text-[10px] font-bold text-emerald-400">{{ $cs['diterima_online'] }} OL <span class="text-slate-500">•</span> <span class="text-purple-400">{{ $cs['diterima_offline'] }} OFF</span></p>
+                            </td>
+
+                            {{-- SPK Pending --}}
+                            <td class="py-4 px-3 whitespace-nowrap">
+                                <span class="text-sm font-black text-amber-400">{{ $cs['spk_pending'] }} Psg</span>
+                            </td>
+
+                            {{-- Batal --}}
+                            <td class="py-4 px-3 whitespace-nowrap">
+                                <span class="text-sm font-black text-red-400">{{ $cs['batal'] }} Psg</span>
+                            </td>
+
+                            {{-- Revenue --}}
+                            <td class="py-4 px-3 whitespace-nowrap text-right">
+                                <p class="text-sm font-black text-emerald-400">Rp {{ number_format($cs['revenue'], 0, ',', '.') }}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">AIO: {{ $cs['aio'] }} PSG/ORDER</p>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div> {{-- End of CS TAB CONTENT --}}
 
     {{-- API Documentation Modal --}}
     <div x-show="showApiModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -924,7 +1227,7 @@
                             </svg>
                         </div>
                         <div class="mt-3 text-center sm:mt-0 sm:ml-5 sm:text-left w-full">
-                            <h3 class="text-xl leading-6 font-black text-gray-900 dark:text-white mb-2" id="modal-title" x-text="activeTab === 'workshop' ? 'API Integration (Workshop KPI)' : (activeTab === 'gudang' ? 'API Integration (Gudang KPI)' : 'API Integration (Finance KPI)')">API Integration</h3>
+                            <h3 class="text-xl leading-6 font-black text-gray-900 dark:text-white mb-2" id="modal-title" x-text="activeTab === 'workshop' ? 'API Integration (Workshop KPI)' : (activeTab === 'gudang' ? 'API Integration (Gudang KPI)' : (activeTab === 'finance' ? 'API Integration (Finance KPI)' : 'API Integration (CS KPI)'))">API Integration</h3>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
                                 Gunakan *endpoint* ini untuk menarik data laporan KPI secara terprogram.
                             </p>
@@ -932,7 +1235,7 @@
                             <div class="mb-5">
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-2">Endpoint URL (GET)</label>
                                 <div class="relative bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 pr-24 shadow-inner">
-                                    <div class="text-sm font-mono text-gray-800 dark:text-green-400 break-all" id="apiUrlText" x-text="activeTab === 'workshop' ? '{{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}' : (activeTab === 'gudang' ? '{{ url('/api/v1/kpi/gudang') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}' : '{{ url('/api/v1/kpi/finance') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}')">
+                                    <div class="text-sm font-mono text-gray-800 dark:text-green-400 break-all" id="apiUrlText" x-text="activeTab === 'workshop' ? '{{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}' : (activeTab === 'gudang' ? '{{ url('/api/v1/kpi/gudang') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}' : (activeTab === 'finance' ? '{{ url('/api/v1/kpi/finance') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}' : '{{ url('/api/v1/kpi/cs') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}'))">
                                         {{ url('/api/v1/kpi/workshop') }}{{ $dateRange ? '?date_range='.urlencode($dateRange).'&' : '?' }}api_key={{ env('KPI_API_KEY', 'kuncirahasia123') }}
                                     </div>
                                     <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('apiUrlText').innerText.trim()); alert('URL tersalin!')" class="absolute top-1/2 -translate-y-1/2 right-3 inline-flex items-center px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-bold text-xs uppercase transition-colors shadow-sm">
