@@ -96,19 +96,97 @@
                     </div>
                 </div>
 
+                <!-- Flatpickr CDN -->
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+                <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+                <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+
                 {{-- Row 2: Advanced Filters --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 pt-4 border-t border-gray-50">
-                    <div class="flex items-center gap-2 md:col-span-2">
-                        <div class="relative flex-grow">
-                            <label class="text-[10px] uppercase font-black tracking-widest text-gray-400 absolute -top-2.5 left-2 bg-white px-1 z-10">Dari Tgl</label>
-                            <input type="date" wire:model.live="start_date" class="w-full border-gray-200 rounded-xl text-xs font-bold text-gray-600 focus:ring-teal-500 py-2.5 bg-gray-50/30">
-                        </div>
-                        <span class="text-gray-300 text-xs">s/d</span>
-                        <div class="relative flex-grow">
-                            <label class="text-[10px] uppercase font-black tracking-widest text-gray-400 absolute -top-2.5 left-2 bg-white px-1 z-10">Sampai Tgl</label>
-                            <input type="date" wire:model.live="end_date" class="w-full border-gray-200 rounded-xl text-xs font-bold text-gray-600 focus:ring-teal-500 py-2.5 bg-gray-50/30">
-                        </div>
+                <div class="pt-4 border-t border-gray-50 space-y-3">
+                    {{-- Date Range Preset Buttons Bar --}}
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="text-[10px] uppercase font-black text-gray-400 tracking-wider mr-1 flex items-center gap-1">
+                            <span>⚡ Presets Tanggal:</span>
+                        </span>
+                        <button wire:click="setDatePreset('today')" type="button" 
+                                class="px-3 py-1 rounded-lg text-xs font-bold border transition-all {{ $start_date === date('Y-m-d') && $end_date === date('Y-m-d') ? 'bg-teal-600 text-white border-teal-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-teal-50 hover:text-teal-700' }}">
+                            Hari Ini
+                        </button>
+                        <button wire:click="setDatePreset('7days')" type="button"
+                                class="px-3 py-1 rounded-lg text-xs font-bold border transition-all {{ $start_date === \Carbon\Carbon::now()->subDays(6)->format('Y-m-d') && $end_date === \Carbon\Carbon::now()->format('Y-m-d') ? 'bg-teal-600 text-white border-teal-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-teal-50 hover:text-teal-700' }}">
+                            7 Hari Terakhir
+                        </button>
+                        <button wire:click="setDatePreset('this_month')" type="button"
+                                class="px-3 py-1 rounded-lg text-xs font-bold border transition-all {{ $start_date === \Carbon\Carbon::now()->startOfMonth()->format('Y-m-d') && $end_date === \Carbon\Carbon::now()->endOfMonth()->format('Y-m-d') ? 'bg-teal-600 text-white border-teal-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-teal-50 hover:text-teal-700' }}">
+                            Bulan Ini
+                        </button>
+                        <button wire:click="setDatePreset('last_month')" type="button"
+                                class="px-3 py-1 rounded-lg text-xs font-bold border transition-all {{ $start_date === \Carbon\Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d') && $end_date === \Carbon\Carbon::now()->subMonth()->endOfMonth()->format('Y-m-d') ? 'bg-teal-600 text-white border-teal-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-teal-50 hover:text-teal-700' }}">
+                            Bulan Lalu
+                        </button>
+                        @if($start_date || $end_date)
+                            <button wire:click="setDatePreset('clear')" type="button"
+                                    class="px-3 py-1 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-all flex items-center gap-1">
+                                ❌ Reset Tanggal
+                            </button>
+                        @endif
                     </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                        {{-- Flatpickr Date Range Picker Component with wire:ignore --}}
+                        <div wire:ignore 
+                             x-data="{
+                                picker: null,
+                                initPicker() {
+                                    if (this.picker) this.picker.destroy();
+                                    this.picker = flatpickr(this.$refs.rangeInput, {
+                                        mode: 'range',
+                                        dateFormat: 'Y-m-d',
+                                        altInput: true,
+                                        altFormat: 'd/m/Y',
+                                        allowInput: false,
+                                        clickOpens: true,
+                                        locale: 'id',
+                                        defaultDate: [
+                                            '{{ $start_date }}' || null,
+                                            '{{ $end_date }}' || null
+                                        ],
+                                        onChange: (selectedDates, dateStr, instance) => {
+                                            if (selectedDates.length === 2) {
+                                                const start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                                const end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                                @this.setDateRange(start, end);
+                                            } else if (selectedDates.length === 0) {
+                                                @this.setDatePreset('clear');
+                                            }
+                                        }
+                                    });
+                                }
+                            }"
+                            x-init="initPicker()"
+                            x-on:update-date-range.window="
+                                if (picker) {
+                                    if ($event.detail.start && $event.detail.end) {
+                                        picker.setDate([$event.detail.start, $event.detail.end], false);
+                                    } else {
+                                        picker.clear(false);
+                                    }
+                                }
+                            "
+                            class="relative md:col-span-2">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-teal-700 absolute -top-2.5 left-2 bg-white px-1.5 z-10 rounded border border-teal-100 flex items-center gap-1 shadow-xs">
+                                <span>📅 RENTANG TANGGAL</span>
+                            </label>
+                            <div class="relative cursor-pointer" @click="if (picker) picker.open()">
+                                <input x-ref="rangeInput" type="text" placeholder="Pilih Rentang Tanggal Filter..." readonly
+                                       class="w-full border-teal-200 rounded-xl text-xs font-bold text-gray-700 focus:ring-teal-500 focus:border-teal-500 py-2.5 pl-4 pr-9 bg-teal-50/30 shadow-sm cursor-pointer">
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-teal-600 pointer-events-none">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
 
                     @if($currentTab === 'active')
                     <div class="relative">

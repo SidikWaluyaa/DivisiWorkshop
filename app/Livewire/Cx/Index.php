@@ -73,6 +73,45 @@ class Index extends Component
         $this->sort = ($this->currentTab === 'active') ? 'asc' : 'desc';
     }
 
+    public function setDatePreset($preset)
+    {
+        $now = \Carbon\Carbon::now();
+        
+        switch ($preset) {
+            case 'today':
+                $this->start_date = $now->format('Y-m-d');
+                $this->end_date = $now->format('Y-m-d');
+                break;
+            case '7days':
+                $this->start_date = $now->copy()->subDays(6)->format('Y-m-d');
+                $this->end_date = $now->format('Y-m-d');
+                break;
+            case 'this_month':
+                $this->start_date = $now->copy()->startOfMonth()->format('Y-m-d');
+                $this->end_date = $now->copy()->endOfMonth()->format('Y-m-d');
+                break;
+            case 'last_month':
+                $this->start_date = $now->copy()->subMonth()->startOfMonth()->format('Y-m-d');
+                $this->end_date = $now->copy()->subMonth()->endOfMonth()->format('Y-m-d');
+                break;
+            case 'clear':
+                $this->start_date = '';
+                $this->end_date = '';
+                break;
+        }
+
+        $this->dispatch('update-date-range', start: $this->start_date, end: $this->end_date);
+        $this->resetPage();
+    }
+
+    public function setDateRange($start, $end)
+    {
+        $this->start_date = $start;
+        $this->end_date = $end;
+        $this->dispatch('update-date-range', start: $this->start_date, end: $this->end_date);
+        $this->resetPage();
+    }
+
     public function openEditModal($id)
     {
         $this->dispatch('open-edit-issue-modal', id: $id)->to(EditIssueModal::class);
@@ -506,6 +545,19 @@ class Index extends Component
             if ($this->last_status) {
                 if ($this->last_status === 'QC_REJECT') $query->whereNull('previous_status');
                 else $query->where('previous_status', $this->last_status);
+            }
+
+            if ($this->start_date || $this->end_date) {
+                $query->where(function($q) {
+                    $q->whereHas('cxIssues', function($sq) {
+                        if ($this->start_date) $sq->whereDate('created_at', '>=', $this->start_date);
+                        if ($this->end_date) $sq->whereDate('created_at', '<=', $this->end_date);
+                    })
+                    ->orWhere(function($sq2) {
+                        if ($this->start_date) $sq2->whereDate('created_at', '>=', $this->start_date);
+                        if ($this->end_date) $sq2->whereDate('created_at', '<=', $this->end_date);
+                    });
+                });
             }
             
             // Apply Estimation Filter (<= 3 Days & Overdue)
