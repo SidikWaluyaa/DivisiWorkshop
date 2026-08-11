@@ -161,6 +161,13 @@ Route::middleware('auth')->group(function () {
             Route::get('activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
         });
 
+        // System Announcements Management
+        Route::get('announcements', [App\Http\Controllers\Admin\AnnouncementController::class, 'index'])->name('announcements.index');
+        Route::get('announcements/fetch-work-log', [App\Http\Controllers\Admin\AnnouncementController::class, 'fetchWorkLog'])->name('announcements.fetch-work-log');
+        Route::post('announcements', [App\Http\Controllers\Admin\AnnouncementController::class, 'store'])->name('announcements.store');
+        Route::put('announcements/{id}', [App\Http\Controllers\Admin\AnnouncementController::class, 'update'])->name('announcements.update');
+        Route::delete('announcements/{id}', [App\Http\Controllers\Admin\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+
         // Complaints
         Route::middleware('access:admin.complaints')->group(function () {
             Route::get('complaints/trash', [ComplaintController::class, 'trash'])->name('complaints.trash');

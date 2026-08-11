@@ -302,8 +302,10 @@
                 }
             </script>
 
-            <!-- User Profile Dropdown (Simple & Clean) -->
-            <div class="hidden sm:flex items-center ms-4">
+            <!-- System Announcements Bell Notification & User Profile Dropdown -->
+            <div class="hidden sm:flex items-center ms-4 gap-2">
+                <livewire:system-announcement-notification />
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all focus:outline-none">
