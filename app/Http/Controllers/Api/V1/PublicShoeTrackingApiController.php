@@ -49,21 +49,13 @@ class PublicShoeTrackingApiController extends Controller
                 }
             }
 
-            // Exclude private/restricted statuses for public safety (like CX followups/holds)
             $query->where(function ($q) use ($spk) {
                 $q->where('spk_number', $spk)
                   ->orWhere('spk_number', 'LIKE', $spk);
-            })->whereNotIn('status', [
-                WorkOrderStatus::CX_FOLLOWUP->value,
-                WorkOrderStatus::HOLD_FOR_CX->value
-            ]);
+            });
         } else {
             $id = (int) $request->query('id');
-            $query->where('id', $id)
-                  ->whereNotIn('status', [
-                      WorkOrderStatus::CX_FOLLOWUP->value,
-                      WorkOrderStatus::HOLD_FOR_CX->value
-                  ]);
+            $query->where('id', $id);
         }
 
         // Eager load workOrderServices and their related service configurations
@@ -91,6 +83,14 @@ class PublicShoeTrackingApiController extends Controller
             ];
         });
 
+        $statusVal = is_object($order->status) ? $order->status->value : $order->status;
+        $isOnHold = in_array($statusVal, [
+            WorkOrderStatus::CX_FOLLOWUP->value ?? 'CX_FOLLOWUP',
+            WorkOrderStatus::HOLD_FOR_CX->value ?? 'HOLD_FOR_CX',
+            'CX_FOLLOWUP',
+            'HOLD_FOR_CX'
+        ]);
+
         // Compile clean lightweight response
         return response()->json([
             'success' => true,
@@ -102,8 +102,12 @@ class PublicShoeTrackingApiController extends Controller
                 'shoe_type' => $order->shoe_type,
                 'shoe_size' => $order->shoe_size,
                 'shoe_color' => $order->shoe_color,
-                'status' => is_object($order->status) ? $order->status->value : $order->status,
+                'status' => $statusVal,
                 'status_label' => is_object($order->status) ? $order->status->label() : '-',
+                'is_on_hold' => $isOnHold,
+                'hold_title' => $isOnHold ? 'Konfirmasi Kendala Diperlukan' : null,
+                'hold_message' => $isOnHold ? 'Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu Anda. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.' : null,
+                'report_issue_url' => $isOnHold ? route('cx-issues.report', $order->spk_number) : null,
                 'services' => $services
             ]
         ]);

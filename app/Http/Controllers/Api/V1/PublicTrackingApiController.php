@@ -36,20 +36,12 @@ class PublicTrackingApiController extends Controller
 
         // Query the WorkOrder with relationships
         $order = WorkOrder::where('spk_number', $spk)
-            ->whereNotIn('status', [
-                WorkOrderStatus::CX_FOLLOWUP->value,
-                WorkOrderStatus::HOLD_FOR_CX->value
-            ])
             ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
             ->first();
 
         // Fallback exact match using LIKE if exact = fails
         if (!$order) {
             $order = WorkOrder::where('spk_number', 'LIKE', $spk)
-                ->whereNotIn('status', [
-                    WorkOrderStatus::CX_FOLLOWUP->value,
-                    WorkOrderStatus::HOLD_FOR_CX->value
-                ])
                 ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
                 ->first();
         }
@@ -177,6 +169,13 @@ class PublicTrackingApiController extends Controller
         $heroPhoto = $order->photos->where('is_public', true)->last();
         $heroPhotoUrl = $heroPhoto ? $heroPhoto->photo_url : null;
 
+        $isOnHold = in_array($currentStatusVal, [
+            WorkOrderStatus::CX_FOLLOWUP->value ?? 'CX_FOLLOWUP',
+            WorkOrderStatus::HOLD_FOR_CX->value ?? 'HOLD_FOR_CX',
+            'CX_FOLLOWUP',
+            'HOLD_FOR_CX'
+        ]);
+
         // Compile response
         return response()->json([
             'success' => true,
@@ -192,6 +191,10 @@ class PublicTrackingApiController extends Controller
                     'size' => $order->shoe_size,
                 ],
                 'current_status' => $currentStatusDetails,
+                'is_on_hold' => $isOnHold,
+                'hold_title' => $isOnHold ? 'Konfirmasi Kendala Diperlukan' : null,
+                'hold_message' => $isOnHold ? 'Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu Anda. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.' : null,
+                'report_issue_url' => $isOnHold ? route('cx-issues.report', $order->spk_number) : null,
                 'visual_photos' => [
                     'before_photo_url' => $beforePhotoUrl,
                     'after_photo_url' => $afterPhotoUrl,
