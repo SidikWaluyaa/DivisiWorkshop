@@ -52,10 +52,13 @@ class CsLeadController extends Controller
         // 4. Calculate Dashboard Metrics
         $metrics = $this->calculateDashboardMetrics($baseQuery, $greetingLeads, $konsultasiLeads, $followUpLeads, $closingLeads);
 
-        // 5. Supplemental Data
-        $csUsers = \App\Models\User::where('access_rights', 'LIKE', '%"cs"%')
-            ->orWhere('role', 'admin')
-            ->orWhere('role', 'owner')
+        // 5. Supplemental Data (Active users only)
+        $csUsers = \App\Models\User::where('is_active', true)
+            ->where(function($q) {
+                $q->where('access_rights', 'LIKE', '%"cs"%')
+                  ->orWhere('role', 'admin')
+                  ->orWhere('role', 'owner');
+            })
             ->orderBy('name')
             ->get();
 

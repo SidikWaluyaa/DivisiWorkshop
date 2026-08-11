@@ -43,9 +43,12 @@ class CsDashboardController extends Controller
         // 7. Enhanced CS KPI Leaderboard
         $csKpis = $this->getCsPerformanceList($startDate, $endDate);
 
-        // CS Users for filter
-        $csUsers = User::where('access_rights', 'LIKE', '%"cs"%')
-            ->orWhere('role', 'cs')
+        // CS Users for filter (Active users only)
+        $csUsers = User::where('is_active', true)
+            ->where(function($q) {
+                $q->where('access_rights', 'LIKE', '%"cs"%')
+                  ->orWhere('role', 'cs');
+            })
             ->orderBy('name')
             ->get();
 
@@ -701,8 +704,11 @@ class CsDashboardController extends Controller
         $start = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : now()->startOfMonth();
         $end = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now()->endOfDay();
 
-        $csUsers = User::where('access_rights', 'LIKE', '%"cs"%')
-            ->orWhere('role', 'cs')
+        $csUsers = User::where('is_active', true)
+            ->where(function($q) {
+                $q->where('access_rights', 'LIKE', '%"cs"%')
+                  ->orWhere('role', 'cs');
+            })
             ->get();
 
         $performance = [];

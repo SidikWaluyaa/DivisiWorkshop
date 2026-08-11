@@ -225,22 +225,28 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        // SECURITY: Cannot delete self
+        // SECURITY: Cannot deactivate self
         if ($user->id === Auth::id()) {
-            return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+            return redirect()->back()->with('error', 'Anda tidak dapat menonaktifkan akun Anda sendiri.');
         }
 
-        // SECURITY: Only Admin/Owner can delete Admin
+        // SECURITY: Only Admin/Owner can deactivate Admin
         /** @var \App\Models\User $authUser */
         $authUser = Auth::user();
         if ($user->role === 'admin' && (!$authUser || !in_array($authUser->role, ['admin', 'owner']))) {
-             return redirect()->back()->with('error', 'Hanya Administrator/Owner yang dapat menghapus akun admin.');
+             return redirect()->back()->with('error', 'Hanya Administrator/Owner yang dapat menonaktifkan akun admin.');
         }
 
-        ActivityLogger::log('Menghapus user', 'User dihapus: ' . $user->name . ' (' . $user->email . ') dengan role: ' . $user->role);
+        ActivityLogger::log('Menonaktifkan user', 'User dinonaktifkan: ' . $user->name . ' (' . $user->email . ') dengan role: ' . $user->role);
 
-        $user->delete();
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus.');
+        $user->update(['is_active' => false]);
+
+        // Force immediate logout by clearing active sessions
+        \Illuminate\Support\Facades\DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->delete();
+
+        return redirect()->route('admin.users.index')->with('success', 'User ' . $user->name . ' berhasil dinonaktifkan dan disembunyikan dari sistem.');
     }
 
     public function bulkDestroy(Request $request)
@@ -250,11 +256,18 @@ class UserController extends Controller
             'ids.*' => 'exists:users,id',
         ]);
 
-        $userNames = User::whereIn('id', $request->ids)->pluck('name')->implode(', ');
-        ActivityLogger::log('Menghapus massal user', 'Menghapus ' . count($request->ids) . ' user: ' . $userNames);
+        // Exclude current authenticated user from bulk deactivation
+        $ids = array_diff($request->ids, [Auth::id()]);
 
-        User::whereIn('id', $request->ids)->delete();
+        $userNames = User::whereIn('id', $ids)->pluck('name')->implode(', ');
+        ActivityLogger::log('Menonaktifkan massal user', 'Menonaktifkan ' . count($ids) . ' user: ' . $userNames);
 
-        return redirect()->route('admin.users.index')->with('success', count($request->ids) . ' user berhasil dihapus.');
+        User::whereIn('id', $ids)->update(['is_active' => false]);
+
+        \Illuminate\Support\Facades\DB::table('sessions')
+            ->whereIn('user_id', $ids)
+            ->delete();
+
+        return redirect()->route('admin.users.index')->with('success', count($ids) . ' user berhasil dinonaktifkan.');
     }
 }
