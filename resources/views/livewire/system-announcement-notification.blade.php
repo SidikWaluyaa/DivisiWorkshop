@@ -1,7 +1,7 @@
-<div class="relative inline-block text-left" x-data="{ openDropdown: @entangle('showDropdown') }">
+<div class="relative inline-block text-left" x-data="{ openDropdown: false }">
     {{-- Bell Icon in Header --}}
-    <button wire:click="toggleDropdown" type="button" 
-            class="relative p-2 text-white/90 hover:text-white rounded-xl hover:bg-white/10 transition-all focus:outline-none flex items-center justify-center" 
+    <button @click="openDropdown = !openDropdown" type="button" 
+            class="relative p-2 text-white/90 hover:text-white rounded-xl hover:bg-white/10 transition-all focus:outline-none flex items-center justify-center cursor-pointer" 
             title="Fitur Baru & Pengumuman Sistem">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -14,61 +14,67 @@
         @endif
     </button>
 
-    {{-- Slide-down Dropdown Menu --}}
-    @if($showDropdown)
-        <div class="fixed inset-0 z-[9990]" wire:click="$set('showDropdown', false)"></div>
-        <div class="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 z-[9999] overflow-hidden border border-gray-100 divide-y divide-gray-100 text-left whitespace-normal"
-             style="min-width: 320px; max-width: 380px;">
-            
-            <div class="px-4 py-3.5 bg-slate-900 text-white flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">🚀</span>
-                    <div>
-                        <h3 class="text-xs font-black uppercase tracking-wider text-white">Apa Yang Baru</h3>
-                        <p class="text-[10px] text-slate-300">Pembaruan & Fitur Sistem Workshop</p>
-                    </div>
+    {{-- Slide-down Dropdown Menu (0ms Alpine Instant Toggle) --}}
+    <div x-show="openDropdown" 
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 scale-95 transform -translate-y-2"
+         x-transition:enter-end="opacity-100 scale-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave-start="opacity-100 scale-100 transform translate-y-0"
+         x-transition:leave-end="opacity-0 scale-95 transform -translate-y-2"
+         @click.away="openDropdown = false"
+         class="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 z-[9999] overflow-hidden border border-gray-100 divide-y divide-gray-100 text-left whitespace-normal"
+         style="display: none; min-width: 320px; max-width: 380px;">
+        
+        <div class="px-4 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">🚀</span>
+                <div>
+                    <h3 class="text-xs font-black uppercase tracking-wider text-white">Apa Yang Baru</h3>
+                    <p class="text-[10px] text-slate-300">Pembaruan & Fitur Sistem Workshop</p>
                 </div>
-                @if(in_array(auth()->user()->role ?? '', ['admin', 'owner']) || str_contains(auth()->user()->access_rights ?? '', '"admin"'))
-                    <a href="{{ route('admin.announcements.index') }}" class="text-[10px] bg-teal-600 hover:bg-teal-500 text-white px-2.5 py-1 rounded-lg font-bold transition-all shadow-sm">
-                        ⚙️ Kelola
-                    </a>
-                @endif
             </div>
-
-            <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-gray-300">
-                @forelse($announcements as $ann)
-                    @php $isRead = $ann->isReadBy(auth()->user()); @endphp
-                    <div wire:click="openDetail({{ $ann->id }})" 
-                         class="p-4 hover:bg-teal-50/60 cursor-pointer transition-colors relative {{ !$isRead ? 'bg-amber-50/40' : '' }}">
-                        <div class="flex items-center justify-between gap-2 mb-1.5">
-                            <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider {{ $ann->category === 'FEATURE_UPDATE' ? 'bg-teal-100 text-teal-800' : ($ann->category === 'MAINTENANCE' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800') }}">
-                                {{ $ann->version }} • {{ str_replace('_', ' ', $ann->category) }}
-                            </span>
-                            <span class="text-[9px] font-bold text-gray-400">
-                                {{ $ann->published_at ? $ann->published_at->diffForHumans() : $ann->created_at->diffForHumans() }}
-                            </span>
-                        </div>
-                        <h4 class="text-xs font-bold text-gray-900 leading-snug flex items-start gap-1.5">
-                            @if(!$isRead)
-                                <span class="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0 mt-1 animate-ping"></span>
-                            @endif
-                            <span>{{ $ann->title }}</span>
-                        </h4>
-                        @if($ann->summary)
-                            <p class="text-[11px] text-gray-600 line-clamp-2 mt-1 font-normal leading-relaxed">
-                                {{ $ann->summary }}
-                            </p>
-                        @endif
-                    </div>
-                @empty
-                    <div class="p-6 text-center text-gray-400">
-                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p class="text-xs font-bold">Belum ada pengumuman baru</p>
-                    </div>
-                @endforelse
-            </div>
+            @if(in_array(auth()->user()->role ?? '', ['admin', 'owner']) || str_contains(auth()->user()->access_rights ?? '', '"admin"'))
+                <a href="{{ route('admin.announcements.index') }}" class="text-[10px] bg-teal-600 hover:bg-teal-500 text-white px-2.5 py-1 rounded-lg font-bold transition-all shadow-sm">
+                    ⚙️ Kelola
+                </a>
+            @endif
         </div>
-    @endif
+
+        <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-gray-300">
+            @forelse($announcements as $ann)
+                @php $isRead = $ann->reads->isNotEmpty(); @endphp
+                <div wire:click="openDetail({{ $ann->id }})" 
+                     @click="openDropdown = false"
+                     class="p-4 hover:bg-teal-50/60 cursor-pointer transition-colors relative {{ !$isRead ? 'bg-amber-50/40' : '' }}">
+                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                        <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider {{ $ann->category === 'FEATURE_UPDATE' ? 'bg-teal-100 text-teal-800' : ($ann->category === 'MAINTENANCE' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800') }}">
+                            {{ $ann->version }} • {{ str_replace('_', ' ', $ann->category) }}
+                        </span>
+                        <span class="text-[9px] font-bold text-gray-400">
+                            {{ $ann->published_at ? $ann->published_at->diffForHumans() : $ann->created_at->diffForHumans() }}
+                        </span>
+                    </div>
+                    <h4 class="text-xs font-bold text-gray-900 leading-snug flex items-start gap-1.5">
+                        @if(!$isRead)
+                            <span class="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0 mt-1 animate-ping"></span>
+                        @endif
+                        <span>{{ $ann->title }}</span>
+                    </h4>
+                    @if($ann->summary)
+                        <p class="text-[11px] text-gray-600 line-clamp-2 mt-1 font-normal leading-relaxed">
+                            {{ $ann->summary }}
+                        </p>
+                    @endif
+                </div>
+            @empty
+                <div class="p-6 text-center text-gray-400">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <p class="text-xs font-bold">Belum ada pengumuman baru</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
 
     {{-- Toast Auto-Popup (Bottom Right) --}}
     @if($showToast && $selectedAnnouncement)

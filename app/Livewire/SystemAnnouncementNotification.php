@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class SystemAnnouncementNotification extends Component
 {
-    public $showDropdown = false;
     public $showModal = false;
     public $showToast = false;
     public $selectedAnnouncement = null;
@@ -39,18 +38,12 @@ class SystemAnnouncementNotification extends Component
         }
     }
 
-    public function toggleDropdown()
-    {
-        $this->showDropdown = !$this->showDropdown;
-    }
-
     public function openDetail($id)
     {
         $announcement = SystemAnnouncement::find($id);
         if ($announcement) {
             $this->selectedAnnouncement = $announcement->toArray();
             $this->showModal = true;
-            $this->showDropdown = false;
             $this->showToast = false;
             $this->markAsRead($id);
         }
@@ -91,6 +84,7 @@ class SystemAnnouncementNotification extends Component
         $unreadCount = 0;
 
         if ($user) {
+            // Eager load reads for current user to eliminate N+1 queries
             $announcements = SystemAnnouncement::where('is_active', true)
                 ->where(function($q) {
                     $q->whereNull('published_at')
@@ -103,15 +97,10 @@ class SystemAnnouncementNotification extends Component
                 ->limit(10)
                 ->get();
 
-            $unreadCount = SystemAnnouncement::where('is_active', true)
-                ->where(function($q) {
-                    $q->whereNull('published_at')
-                      ->orWhere('published_at', '<=', now());
-                })
-                ->whereDoesntHave('reads', function($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                })
-                ->count();
+            // Count unread directly using memory mapping to avoid extra count query
+            $unreadCount = $announcements->filter(function($ann) {
+                return $ann->reads->isEmpty();
+            })->count();
         }
 
         return view('livewire.system-announcement-notification', [
