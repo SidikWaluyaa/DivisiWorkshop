@@ -388,8 +388,11 @@ class CsDashboardController extends Controller
      */
     private function getCsPerformanceList($start, $end)
     {
-        $csUsers = User::where('access_rights', 'LIKE', '%"cs"%')
-            ->orWhere('role', 'cs')
+        $csUsers = User::where('is_active', true)
+            ->where(function($q) {
+                $q->where('access_rights', 'LIKE', '%"cs"%')
+                  ->orWhere('role', 'cs');
+            })
             ->get();
 
         $performance = [];
