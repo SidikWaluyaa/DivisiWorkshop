@@ -90,6 +90,7 @@ class PublicShoeTrackingApiController extends Controller
             'CX_FOLLOWUP',
             'HOLD_FOR_CX'
         ]);
+        $isRevising = ($statusVal === 'REVISI' || (bool)$order->is_revising);
 
         // Compile clean lightweight response
         return response()->json([
@@ -108,6 +109,9 @@ class PublicShoeTrackingApiController extends Controller
                 'hold_title' => $isOnHold ? 'Konfirmasi Kendala Diperlukan' : null,
                 'hold_message' => $isOnHold ? 'Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu Anda. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.' : null,
                 'report_issue_url' => $isOnHold ? route('cx-issues.report', $order->spk_number) : null,
+                'is_revising' => $isRevising,
+                'revision_title' => $isRevising ? 'Pengerjaan Ulang & Penyesuaian Kualitas (Revisi)' : null,
+                'revision_message' => $isRevising ? 'Sepatu Anda saat ini sedang dalam proses penyesuaian pengerjaan ulang oleh tim spesialis kami untuk memastikan hasil akhir memenuhi standar mutu terbaik.' : null,
                 'services' => $services
             ]
         ]);

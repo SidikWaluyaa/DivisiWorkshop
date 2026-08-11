@@ -228,26 +228,6 @@
                             Timeline Pengerjaan
                         </h2>
 
-                        @if($isHoldStatus)
-                            <div class="mb-8 p-6 bg-rose-50 border border-rose-100 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
-                                <div class="flex items-start gap-4">
-                                    <div class="p-3 bg-rose-100 text-rose-600 rounded-full shrink-0">
-                                        <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                    </div>
-                                    <div class="text-left">
-                                        <h3 class="font-extrabold text-rose-800 text-base">Konfirmasi Kendala Diperlukan</h3>
-                                        <p class="text-rose-700/90 text-xs mt-1 font-semibold leading-relaxed">
-                                            Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu Anda. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.
-                                        </p>
-                                    </div>
-                                </div>
-                                <a href="{{ route('cx-issues.report', $order->spk_number) }}" class="w-full md:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black transition-all shadow-md tracking-wider uppercase">
-                                    Lihat Laporan Kendala
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
-                                </a>
-                            </div>
-                        @endif
-
                         @php
                             $statuses = [
                                 'DITERIMA' => [
@@ -282,7 +262,15 @@
                             $statusKeys = array_keys($statuses);
                             $currentStatusVal = is_object($order->status) ? $order->status->value : $order->status;
                             $isHoldStatus = in_array($currentStatusVal, ['CX_FOLLOWUP', 'HOLD_FOR_CX']);
-                            $timelineStatusVal = $isHoldStatus ? ($order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status) : $currentStatusVal;
+                            $isRevisingStatus = ($currentStatusVal === 'REVISI' || (bool)$order->is_revising);
+
+                            if ($currentStatusVal === 'REVISI' || $isHoldStatus) {
+                                $prevVal = $order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status;
+                                $timelineStatusVal = $prevVal ?: 'PRODUCTION';
+                            } else {
+                                $timelineStatusVal = $currentStatusVal;
+                            }
+
                             if (!$timelineStatusVal) {
                                 $timelineStatusVal = 'DITERIMA';
                             }
@@ -293,9 +281,9 @@
                             }
 
                             // ENHANCED LOGIC: If physically in QC (Production finished) OR in Revision, 
-                            // visually move the index to QC (index 5) for the customer.
+                            // visually move the index to QC (index 5) for the customer if not specified.
                             if ($timelineStatusVal === 'PRODUCTION' && ($order->is_production_finished || $order->is_revising)) {
-                                $currentIndex = 5; // Index of QC
+                                $currentIndex = 4; // Index of PRODUCTION / Service
                             }
 
                             // ENHANCED LOGIC: If physically SELESAI (QC finished) but status still QC,
@@ -304,6 +292,40 @@
                                 $currentIndex = 6; // Index of SELESAI
                             }
                         @endphp
+
+                        @if($isHoldStatus)
+                            <div class="mb-8 p-6 bg-rose-50 border border-rose-100 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+                                <div class="flex items-start gap-4">
+                                    <div class="p-3 bg-rose-100 text-rose-600 rounded-full shrink-0">
+                                        <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <h3 class="font-extrabold text-rose-800 text-base">Konfirmasi Kendala Diperlukan</h3>
+                                        <p class="text-rose-700/90 text-xs mt-1 font-semibold leading-relaxed">
+                                            Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu Anda. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.
+                                        </p>
+                                    </div>
+                                </div>
+                                <a href="{{ route('cx-issues.report', $order->spk_number) }}" class="w-full md:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black transition-all shadow-md tracking-wider uppercase">
+                                    Lihat Laporan Kendala
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+                                </a>
+                            </div>
+                        @elseif($isRevisingStatus)
+                            <div class="mb-8 p-6 bg-amber-50 border border-amber-200 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+                                <div class="flex items-start gap-4">
+                                    <div class="p-3 bg-amber-100 text-amber-600 rounded-full shrink-0">
+                                        <svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <h3 class="font-extrabold text-amber-900 text-base">Pengerjaan Ulang & Penyesuaian Kualitas (Revisi)</h3>
+                                        <p class="text-amber-800/90 text-xs mt-1 font-semibold leading-relaxed">
+                                            Sepatu Anda saat ini sedang dalam proses penyesuaian pengerjaan ulang oleh tim spesialis kami untuk memastikan hasil akhir memenuhi standar mutu terbaik.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
 
                         <!-- Responsive Stepper Container -->
                         <div class="relative w-full pb-0 md:pb-8">
@@ -333,6 +355,9 @@
                                             if ($isHoldStatus) {
                                                 $circleColorClass = 'bg-rose-500 text-white border-rose-600 shadow-lg scale-110 animate-pulse';
                                                 $iconColorClass = 'text-rose-600 drop-shadow-md';
+                                            } elseif ($isRevisingStatus) {
+                                                $circleColorClass = 'bg-amber-500 text-white border-amber-600 shadow-lg scale-110 animate-pulse';
+                                                $iconColorClass = 'text-amber-600 drop-shadow-md';
                                             } else {
                                                 $circleColorClass = 'bg-teal-500 text-white border-teal-600 shadow-lg scale-110';
                                                 $iconColorClass = 'text-teal-600 drop-shadow-md';

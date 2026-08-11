@@ -82,19 +82,35 @@ class PublicTrackingApiController extends Controller
         $stageKeys = array_keys($stages);
         $currentStatusVal = is_object($order->status) ? $order->status->value : $order->status;
         
-        $currentIndex = array_search($currentStatusVal, $stageKeys);
+        $isOnHold = in_array($currentStatusVal, [
+            WorkOrderStatus::CX_FOLLOWUP->value ?? 'CX_FOLLOWUP',
+            WorkOrderStatus::HOLD_FOR_CX->value ?? 'HOLD_FOR_CX',
+            'CX_FOLLOWUP',
+            'HOLD_FOR_CX'
+        ]);
+
+        $isRevising = ($currentStatusVal === 'REVISI' || (bool)$order->is_revising);
+
+        if ($currentStatusVal === 'REVISI' || $isOnHold) {
+            $prevVal = $order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status;
+            $effectiveStatusVal = $prevVal ?: 'PRODUCTION';
+        } else {
+            $effectiveStatusVal = $currentStatusVal;
+        }
+
+        $currentIndex = array_search($effectiveStatusVal, $stageKeys);
         if ($currentIndex === false && is_object($order->status)) {
             $currentIndex = array_search($order->status->name, $stageKeys);
         }
 
         // Visual enhancement overrides from result.blade.php
-        // 1. If in PRODUCTION but production is finished or revising -> move visual indicator to QC
-        if ($currentStatusVal === 'PRODUCTION' && ($order->is_production_finished || $order->is_revising)) {
-            $currentIndex = 5; // Index of QC
+        // 1. If in PRODUCTION but production is finished or revising -> keep at PRODUCTION / Service index
+        if ($effectiveStatusVal === 'PRODUCTION' && ($order->is_production_finished || $order->is_revising)) {
+            $currentIndex = 4; // Index of PRODUCTION
         }
 
         // 2. If in QC but QC is finished -> move visual indicator to SELESAI
-        if ($currentStatusVal === 'QC' && $order->is_qc_finished) {
+        if ($effectiveStatusVal === 'QC' && $order->is_qc_finished) {
             $currentIndex = 6; // Index of SELESAI
         }
 
@@ -107,7 +123,10 @@ class PublicTrackingApiController extends Controller
             'is_qc_finished' => (bool)$order->is_qc_finished,
         ];
 
-        if ($currentIndex !== false && isset($stageKeys[$currentIndex])) {
+        if ($isRevising) {
+            $currentStatusDetails['label'] = 'Service (Revisi)';
+            $currentStatusDetails['description'] = 'Order Anda sedang dalam penyesuaian pengerjaan ulang (revisi).';
+        } elseif ($currentIndex !== false && isset($stageKeys[$currentIndex])) {
             $activeKey = $stageKeys[$currentIndex];
             $currentStatusDetails['label'] = $stages[$activeKey]['label'];
 
@@ -169,13 +188,6 @@ class PublicTrackingApiController extends Controller
         $heroPhoto = $order->photos->where('is_public', true)->last();
         $heroPhotoUrl = $heroPhoto ? $heroPhoto->photo_url : null;
 
-        $isOnHold = in_array($currentStatusVal, [
-            WorkOrderStatus::CX_FOLLOWUP->value ?? 'CX_FOLLOWUP',
-            WorkOrderStatus::HOLD_FOR_CX->value ?? 'HOLD_FOR_CX',
-            'CX_FOLLOWUP',
-            'HOLD_FOR_CX'
-        ]);
-
         // Compile response
         return response()->json([
             'success' => true,
@@ -195,6 +207,9 @@ class PublicTrackingApiController extends Controller
                 'hold_title' => $isOnHold ? 'Konfirmasi Kendala Diperlukan' : null,
                 'hold_message' => $isOnHold ? 'Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu Anda. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.' : null,
                 'report_issue_url' => $isOnHold ? route('cx-issues.report', $order->spk_number) : null,
+                'is_revising' => $isRevising,
+                'revision_title' => $isRevising ? 'Pengerjaan Ulang & Penyesuaian Kualitas (Revisi)' : null,
+                'revision_message' => $isRevising ? 'Sepatu Anda saat ini sedang dalam proses penyesuaian pengerjaan ulang oleh tim spesialis kami untuk memastikan hasil akhir memenuhi standar mutu terbaik.' : null,
                 'visual_photos' => [
                     'before_photo_url' => $beforePhotoUrl,
                     'after_photo_url' => $afterPhotoUrl,
