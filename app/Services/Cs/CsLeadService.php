@@ -26,8 +26,9 @@ class CsLeadService
      */
     public function findCsForAssignment()
     {
-        // 1. Get all eligible users (Role admin/owner or has explicit CS access)
-        $eligibleUsers = User::where(function($q) {
+        // 1. Get all eligible active users (Role admin/owner or has explicit CS access)
+        $eligibleUsers = User::where('is_active', true)
+            ->where(function($q) {
                 $q->where('access_rights', 'LIKE', '%"cs"%')
                   ->orWhereIn('role', ['admin', 'owner']);
             })
