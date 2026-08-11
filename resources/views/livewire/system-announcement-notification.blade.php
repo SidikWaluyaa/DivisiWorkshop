@@ -34,7 +34,7 @@
                     <p class="text-[10px] text-slate-300">Pembaruan & Fitur Sistem Workshop</p>
                 </div>
             </div>
-            @if(in_array(auth()->user()->role ?? '', ['admin', 'owner']) || str_contains(auth()->user()->access_rights ?? '', '"admin"'))
+            @if(auth()->user() && (auth()->user()->isAdmin() || auth()->user()->isOwner() || auth()->user()->hasAccess('admin.announcements')))
                 <a href="{{ route('admin.announcements.index') }}" class="text-[10px] bg-teal-600 hover:bg-teal-500 text-white px-2.5 py-1 rounded-lg font-bold transition-all shadow-sm">
                     ⚙️ Kelola
                 </a>
