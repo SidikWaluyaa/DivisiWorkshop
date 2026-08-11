@@ -15,7 +15,7 @@ return new class extends Migration
             $table->enum('category', ['FEATURE_UPDATE', 'MAINTENANCE', 'SYSTEM_NOTICE', 'BUG_FIX'])->default('FEATURE_UPDATE');
             $table->text('summary')->nullable();
             $table->longText('description')->nullable();
-            $table->json('target_roles')->nullable(); // e.g. ["all"] or ["admin", "cs", "gudang", "finance", "workshop"]
+            $table->text('target_roles')->nullable(); // e.g. ["all"] or ["admin", "cs", "gudang", "finance", "workshop"]
             $table->boolean('is_active')->default(true);
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('published_at')->nullable();
