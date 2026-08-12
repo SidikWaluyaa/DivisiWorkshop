@@ -15,6 +15,7 @@ class StorageRack extends Model
         'capacity',
         'current_count',
         'category',
+        'workshop_zone',
         'status',
         'notes',
     ];
@@ -90,6 +91,22 @@ class StorageRack extends Model
     public function isAvailable(): bool
     {
         return $this->status === \App\Enums\RackStatus::ACTIVE && $this->current_count < $this->capacity;
+    }
+
+    /**
+     * Check if rack is at or over capacity (FR-9.1 soft warning indicator)
+     */
+    public function isOverCapacity(): bool
+    {
+        return $this->capacity > 0 && $this->current_count >= $this->capacity;
+    }
+
+    /**
+     * Get indicator color for dashboard (red if over-capacity, green if normal)
+     */
+    public function getIndicatorColorAttribute(): string
+    {
+        return $this->isOverCapacity() ? 'red' : 'green';
     }
 
     /**

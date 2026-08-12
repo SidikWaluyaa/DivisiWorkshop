@@ -15,15 +15,12 @@
             
             <div class="flex items-center space-x-4">
                 @if($manifest->status === 'SENT')
-                    <form action="{{ route('manifest.receive', $manifest->id) }}" method="POST" onsubmit="return confirm('Konfirmasi bahwa semua {{ $manifest->workOrders->count() }} pasang sepatu telah diterima secara fisik di Workshop Hijau?')">
-                        @csrf
-                        <button type="submit" class="inline-flex items-center px-8 py-4 bg-[#FFC232] border border-transparent rounded-2xl font-black text-sm text-gray-900 uppercase tracking-[0.2em] hover:bg-[#e6af2e] shadow-lg shadow-yellow-200/50 transition-all active:scale-95">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Konfirmasi Terima
-                        </button>
-                    </form>
+                    <a href="{{ route('manifest.receive.form', $manifest->id) }}" class="inline-flex items-center px-8 py-4 bg-[#FFC232] border border-transparent rounded-2xl font-black text-sm text-gray-900 uppercase tracking-[0.2em] hover:bg-[#e6af2e] shadow-lg shadow-yellow-200/50 transition-all active:scale-95">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Konfirmasi Terima
+                    </a>
                 @else
                     <div class="inline-flex items-center px-8 py-4 bg-[#22AF85]/10 text-[#22AF85] border border-[#22AF85]/20 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-sm">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

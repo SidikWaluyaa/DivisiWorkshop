@@ -60,6 +60,28 @@ class MaterialRequestController extends Controller
     }
 
     /**
+     * Print view for a material request
+     */
+    public function print(MaterialRequest $materialRequest)
+    {
+        $materialRequest->load(['requestedBy', 'approvedBy', 'items.material', 'items.workOrder', 'workOrder', 'oto']);
+
+        // Group items by SPK (Work Order)
+        $itemsBySpk = $materialRequest->items->groupBy(function ($item) {
+            $wo = $item->workOrder ?? $item->materialRequest?->workOrder;
+            return $wo?->spk_number ?? 'NO_SPK';
+        });
+
+        $spkList = $materialRequest->items
+            ->map(fn($item) => $item->workOrder ?? $materialRequest->workOrder)
+            ->filter()
+            ->unique('id')
+            ->values();
+
+        return view('material-requests.print', compact('materialRequest', 'itemsBySpk', 'spkList'));
+    }
+
+    /**
      * Approve a material request
      */
     public function approve(MaterialRequest $materialRequest)

@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Enums\WorkOrderStatus;
 
 class WorkOrder extends Model
@@ -111,6 +113,9 @@ class WorkOrder extends Model
         'qc_final_completed_at',
         'qc_final_by',
         'is_revising',
+        // Sortir Classification (GAP PRD-SRS FR-3.1)
+        'perlu_bongkar',
+        'perlu_belanja',
         // Reception
         'accessories_data',
         'reception_qc_passed',
@@ -185,6 +190,18 @@ class WorkOrder extends Model
         return $this->belongsTo(User::class, 'cx_handler_id');
     }
 
+    public function suratJalanItems(): HasMany
+    {
+        return $this->hasMany(SuratJalanItem::class, 'work_order_id');
+    }
+
+    public function suratJalans(): BelongsToMany
+    {
+        return $this->belongsToMany(SuratJalan::class, 'surat_jalan_items', 'work_order_id', 'surat_jalan_id')
+                    ->withPivot('kondisi_serah_terima')
+                    ->withTimestamps();
+    }
+
 
     protected $casts = [
         'status' => WorkOrderStatus::class, // Enum Casting
@@ -234,9 +251,35 @@ class WorkOrder extends Model
         'material_arrival_date' => 'date',
         'is_warranty' => 'boolean',
         'is_manual_estimasi' => 'boolean',
+        'perlu_bongkar' => 'boolean',
+        'perlu_belanja' => 'boolean',
     ];
 
     protected $appends = ['spk_cover_photo_url', 'material_photo_url'];
+
+    /**
+     * Check if SPK requires Bongkar (GAP FR-3.1)
+     */
+    public function needsBongkar(): bool
+    {
+        return (bool) $this->perlu_bongkar;
+    }
+
+    /**
+     * Check if SPK requires Belanja via Finlog (GAP FR-3.1)
+     */
+    public function needsBelanja(): bool
+    {
+        return (bool) $this->perlu_belanja;
+    }
+
+    /**
+     * Check if SPK has complete classification to leave Sortir stage (Gate 3, FR-3.2)
+     */
+    public function canLeaveSortir(): bool
+    {
+        return $this->perlu_bongkar !== null && $this->perlu_belanja !== null;
+    }
 
     /**
      * Boot the model - handle cascade deletes
@@ -760,8 +803,6 @@ class WorkOrder extends Model
     {
         $missing = [];
         if (is_null($this->prep_washing_completed_at)) $missing[] = 'Cuci (Washing)';
-        if ($this->needs_prep_sol && is_null($this->prep_sol_completed_at)) $missing[] = 'Bongkar Sol';
-        if ($this->needs_prep_upper && is_null($this->prep_upper_completed_at)) $missing[] = 'Bongkar Upper';
 
         return implode(', ', $missing);
     }

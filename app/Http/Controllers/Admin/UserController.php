@@ -96,7 +96,10 @@ class UserController extends Controller
             'phone' => $request->phone,
             'role' => $request->role,
             'is_active' => $request->boolean('is_active'),
-            'specialization' => $request->role === 'technician' ? $request->specialization : null,
+            'specialization' => in_array($request->role, ['technician', 'pic']) ? $request->specialization : null,
+            'workshop_pool' => $request->workshop_pool,
+            'availability_status' => $request->availability_status ?? 'tersedia',
+            'is_support' => $request->boolean('is_support'),
             'access_rights' => $request->access_rights ?? [],
             'password' => Hash::make($request->password),
         ]);
@@ -197,7 +200,10 @@ class UserController extends Controller
             'phone' => $request->phone,
             'role' => $targetRole,
             'is_active' => $request->boolean('is_active'),
-            'specialization' => $request->role === 'technician' ? $request->specialization : null,
+            'specialization' => in_array($targetRole, ['technician', 'pic']) ? $request->specialization : null,
+            'workshop_pool' => $request->workshop_pool,
+            'availability_status' => $request->availability_status ?? 'tersedia',
+            'is_support' => $request->boolean('is_support'),
             'access_rights' => $request->access_rights ?? [],
         ];
 

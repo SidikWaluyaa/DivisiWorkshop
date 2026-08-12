@@ -14,6 +14,7 @@ class WorkOrderRevision extends Model
         'photo_paths',
         'status',
         'origin_status',
+        'qc_stage',
         'created_by',
         'resolved_by',
         'finished_at',

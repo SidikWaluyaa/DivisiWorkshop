@@ -23,6 +23,11 @@ class Detail extends Component
     public $pic_sortir_sol_id;
     public $pic_sortir_upper_id;
 
+    // Sortir Classification (GAP PRD-SRS FR-3.1)
+    public $perlu_bongkar = false;
+    public $perlu_belanja = false;
+    public $bypass_reason = '';
+
     // Upsell state
     public $showUpsellModal = false;
     public $upsellServiceId;
@@ -35,6 +40,10 @@ class Detail extends Component
     // UI State
     public $activeTab = 'upper';
     public $searchMaterial = '';
+
+    // Bongkar (Disassembly) technician assignments
+    public $bongkar_sol_tech_id;
+    public $bongkar_upper_tech_id;
 
     protected $listeners = ['refreshDetail' => '$refresh'];
 
@@ -68,6 +77,13 @@ class Detail extends Component
         $this->pic_sortir_sol_id = $this->order->pic_sortir_sol_id;
         $this->pic_sortir_upper_id = $this->order->pic_sortir_upper_id;
 
+        $this->perlu_bongkar = (bool) $this->order->perlu_bongkar;
+        $this->perlu_belanja = (bool) $this->order->perlu_belanja;
+
+        // Bongkar tech assignments (reusing prep_sol_by / prep_upper_by columns for Sortir Bongkar)
+        $this->bongkar_sol_tech_id = $this->order->prep_sol_by;
+        $this->bongkar_upper_tech_id = $this->order->prep_upper_by;
+
         // Suggested tab logic
         $hasSolService = $this->order->services->contains(function($service) {
             $cat = strtolower($service->category);
@@ -79,6 +95,64 @@ class Detail extends Component
     public function runSelfHealing()
     {
         $materialService = app(MaterialManagementService::class);
+
+        // Auto-import requested materials from CS SPK if work_order_materials is empty
+        if ($this->order->materials->isEmpty()) {
+            $csSpk = \App\Models\CsSpk::where('spk_number', $this->order->spk_number)->with('items')->first();
+            if ($csSpk) {
+                $csMaterials = [];
+                if (!empty($csSpk->requested_materials) && is_array($csSpk->requested_materials)) {
+                    $csMaterials = array_merge($csMaterials, $csSpk->requested_materials);
+                }
+                foreach ($csSpk->items as $item) {
+                    if (!empty($item->requested_materials) && is_array($item->requested_materials)) {
+                        $csMaterials = array_merge($csMaterials, $item->requested_materials);
+                    }
+                }
+
+                if (!empty($csMaterials)) {
+                    $hasMissingStock = false;
+
+                    foreach ($csMaterials as $matData) {
+                        $matId = $matData['material_id'] ?? null;
+                        $matQty = (int)($matData['quantity'] ?? 1);
+                        if (!$matId) continue;
+
+                        $material = Material::find($matId);
+                        if (!$material) continue;
+
+                        $status = 'ALLOCATED';
+                        if ($material->stock < $matQty) {
+                            $status = 'REQUESTED';
+                            $hasMissingStock = true;
+                        } else {
+                            $materialService->logTransaction(
+                                $material, 
+                                'OUT', 
+                                $matQty, 
+                                'WorkOrder', 
+                                $this->order->id, 
+                                "Auto-allocated from CS Material Request for SPK #{$this->order->spk_number}"
+                            );
+                            $material->decrement('stock', $matQty);
+                        }
+
+                        $this->order->materials()->syncWithoutDetaching([
+                            $matId => [
+                                'quantity' => $matQty,
+                                'status' => $status
+                            ]
+                        ]);
+                    }
+
+                    if ($hasMissingStock) {
+                        $this->order->update(['perlu_belanja' => true]);
+                        $this->perlu_belanja = true;
+                    }
+                }
+            }
+        }
+
         $materialService->autoAllocateStock();
         
         $this->loadOrder();
@@ -290,33 +364,244 @@ class Detail extends Component
         }
     }
 
+    /**
+     * Start Bongkar (Disassembly) for Sol or Upper
+     */
+    public function startBongkar($type)
+    {
+        if (!in_array($type, ['sol', 'upper'])) return;
+
+        $startedCol = "prep_{$type}_started_at";
+        $techCol = "prep_{$type}_by";
+        $techProp = "bongkar_{$type}_tech_id";
+
+        if ($this->order->$startedCol) {
+            $this->dispatch('notify', ['type' => 'warning', 'message' => 'Bongkar ' . ucfirst($type) . ' sudah dimulai.']);
+            return;
+        }
+
+        $techId = $this->$techProp ?? Auth::id();
+
+        $this->order->update([
+            $startedCol => now(),
+            $techCol => $techId,
+        ]);
+
+        $this->order->logs()->create([
+            'user_id' => Auth::id(),
+            'step' => 'SORTIR_BONGKAR',
+            'action' => "bongkar_{$type}_start",
+            'description' => 'Memulai proses Bongkar ' . ucfirst($type) . ' (Sortir Stage)',
+        ]);
+
+        $this->loadOrder();
+        $this->initializeState();
+        $this->dispatch('notify', ['type' => 'success', 'message' => 'Bongkar ' . ucfirst($type) . ' dimulai.']);
+    }
+
+    /**
+     * Finish Bongkar (Disassembly) for Sol or Upper
+     */
+    public function finishBongkar($type)
+    {
+        if (!in_array($type, ['sol', 'upper'])) return;
+
+        $startedCol = "prep_{$type}_started_at";
+        $completedCol = "prep_{$type}_completed_at";
+        $techCol = "prep_{$type}_by";
+        $techProp = "bongkar_{$type}_tech_id";
+
+        if (!$this->order->$startedCol) {
+            $this->dispatch('notify', ['type' => 'error', 'message' => 'Bongkar ' . ucfirst($type) . ' belum dimulai.']);
+            return;
+        }
+
+        if ($this->order->$completedCol) {
+            $this->dispatch('notify', ['type' => 'warning', 'message' => 'Bongkar ' . ucfirst($type) . ' sudah selesai.']);
+            return;
+        }
+
+        $techId = $this->$techProp ?? Auth::id();
+
+        $this->order->update([
+            $completedCol => now(),
+            $techCol => $techId,
+        ]);
+
+        $this->order->logs()->create([
+            'user_id' => Auth::id(),
+            'step' => 'SORTIR_BONGKAR',
+            'action' => "bongkar_{$type}_finish",
+            'description' => 'Menyelesaikan proses Bongkar ' . ucfirst($type) . ' (Sortir Stage)',
+        ]);
+
+        $this->loadOrder();
+        $this->initializeState();
+        $this->dispatch('notify', ['type' => 'success', 'message' => 'Bongkar ' . ucfirst($type) . ' selesai.']);
+    }
+
+    /**
+     * Check if this SPK needs Bongkar Sol (has sol-related services)
+     */
+    public function getNeedsBongkarSolProperty()
+    {
+        return $this->order->services->contains(function ($service) {
+            $cat = strtolower($service->category ?? '');
+            return str_contains($cat, 'sol') || str_contains($cat, 'midsole') || str_contains($cat, 'paket');
+        });
+    }
+
+    /**
+     * Check if this SPK needs Bongkar Upper (has upper/repaint-related services)
+     */
+    public function getNeedsBongkarUpperProperty()
+    {
+        return $this->order->services->contains(function ($service) {
+            $cat = strtolower($service->category ?? '');
+            return str_contains($cat, 'upper') || str_contains($cat, 'repaint') || str_contains($cat, 'jahit');
+        });
+    }
+
+    public function saveDraft()
+    {
+        try {
+            $this->order->update([
+                'pic_sortir_sol_id' => $this->pic_sortir_sol_id,
+                'pic_sortir_upper_id' => $this->pic_sortir_upper_id,
+                'perlu_bongkar' => $this->perlu_bongkar,
+                'perlu_belanja' => $this->perlu_belanja,
+            ]);
+
+            $this->saveMaterials();
+
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Draft klasifikasi & material SPK #' . $this->order->spk_number . ' berhasil disimpan.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Gagal menyimpan draft: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     public function completeSortir()
     {
         $this->validate([
             'pic_sortir_sol_id' => 'nullable|exists:users,id',
             'pic_sortir_upper_id' => 'nullable|exists:users,id',
+            'perlu_bongkar' => 'required|boolean',
+            'perlu_belanja' => 'required|boolean',
         ]);
 
         try {
+            // 1. Auto-save classification & materials first
             $this->order->update([
                 'pic_sortir_sol_id' => $this->pic_sortir_sol_id,
                 'pic_sortir_upper_id' => $this->pic_sortir_upper_id,
+                'perlu_bongkar' => $this->perlu_bongkar,
+                'perlu_belanja' => $this->perlu_belanja,
             ]);
 
+            $this->saveMaterials();
+
+            // 2. Hard-block validation for Bongkar
+            if ($this->perlu_bongkar) {
+                $blocked = [];
+                if ($this->needsBongkarSol && !$this->order->prep_sol_completed_at) {
+                    $blocked[] = 'Bongkar Sol';
+                }
+                if ($this->needsBongkarUpper && !$this->order->prep_upper_completed_at) {
+                    $blocked[] = 'Bongkar Upper';
+                }
+                if (!empty($blocked)) {
+                    $this->dispatch('notify', [
+                        'type' => 'error',
+                        'message' => 'Tidak dapat menyelesaikan Sortir. Proses berikut belum selesai: ' . implode(', ', $blocked)
+                    ]);
+                    return;
+                }
+            }
+
             $workflow = app(WorkflowService::class);
+            $materialService = app(MaterialManagementService::class);
 
             if ($this->order->is_revising && $this->order->previous_status instanceof WorkOrderStatus) {
                 $targetStatus = $this->order->previous_status;
                 $workflow->updateStatus($this->order, $targetStatus, "Revision completed in Sortir (Livewire). Returning to " . $targetStatus->value);
                 $this->order->update(['is_revising' => false, 'previous_status' => null]);
                 return redirect()->route('sortir.index')->with('success', 'Revisi selesai. Sepatu kembali ke ' . $targetStatus->value);
-            } 
+            }
 
-            $workflow->updateStatus($this->order, WorkOrderStatus::PRODUCTION, 'Material Verified (Livewire). Ready for Production.');
-            return redirect()->route('sortir.index')->with('success', 'Material OK. Sepatu masuk Production.');
+            // 3. Routing: cek apakah material sudah ALLOCATED/RECEIVED (override perlu_belanja)
+            $hasAllocatedMaterial = $this->order->materials()
+                ->wherePivotIn('status', ['ALLOCATED', 'RECEIVED'])
+                ->exists();
+
+            $hasRequestedMaterial = $this->order->materials()
+                ->wherePivot('status', 'REQUESTED')
+                ->exists();
+
+            // Jika ada material yang sudah dialokasikan DAN tidak ada yang masih REQUESTED,
+            // maka material sudah siap → langsung ke produksi (tidak perlu belanja lagi)
+            $isMaterialReady = $hasAllocatedMaterial && !$hasRequestedMaterial;
+
+            if ($this->perlu_belanja && !$isMaterialReady) {
+                // Jalur belanja: ada material REQUESTED dan perlu_belanja = true
+                $requestedMaterials = $this->order->materials()
+                    ->wherePivot('status', 'REQUESTED')
+                    ->get();
+
+                if ($requestedMaterials->isNotEmpty()) {
+                    $existingReq = $this->order->materialRequests()
+                        ->whereIn('status', ['PENDING', 'APPROVED', 'PURCHASED'])
+                        ->exists();
+
+                    if (!$existingReq) {
+                        $items = $requestedMaterials->map(fn($m) => [
+                            'material' => $m,
+                            'quantity' => $m->pivot->quantity,
+                            'work_order_id' => $this->order->id,
+                        ])->toArray();
+
+                        $materialService->createShoppingRequest(
+                            $items,
+                            $this->order->id,
+                            null,
+                            "Pengajuan belanja otomatis saat penyelesaian klasifikasi Sortir — SPK #{$this->order->spk_number}"
+                        );
+                    }
+                }
+
+                $this->order->logs()->create([
+                    'user_id' => Auth::id(),
+                    'step' => 'SORTIR_BELANJA',
+                    'action' => 'HELD_FOR_MATERIALS',
+                    'description' => "Klasifikasi Sortir disimpan. SPK ditahan di Rak Tunggu Belanja dan Pengajuan Finlog telah dibuat/diproses.",
+                ]);
+
+                return redirect()->route('sortir.index')->with('info', "Klasifikasi OK & Pengajuan Belanja Finlog berhasil dibuat! SPK berada di Rak Tunggu Belanja.");
+            }
+
+            // 4. Routing: Material Siap atau Perlu Belanja = False -> Transition status to PRODUCTION & Ready for Surat Jalan
+            $workflow->updateStatus($this->order, WorkOrderStatus::PRODUCTION, 'Sortir & Klasifikasi Selesai. SPK Siap Diterbitkan Surat Jalan ke Produksi.');
+
+            $belanjaNote = $isMaterialReady
+                ? 'Material sudah ALLOCATED (override)'
+                : ($this->perlu_belanja ? 'Ya (override: material siap)' : 'Tidak');
+
+            $this->order->logs()->create([
+                'user_id' => Auth::id(),
+                'step' => 'SORTIR',
+                'action' => 'CLASSIFICATION_COMPLETED',
+                'description' => "Klasifikasi Sortir Selesai: Bongkar=" . ($this->perlu_bongkar ? 'Ya' : 'Tidak') . ", Belanja={$belanjaNote}. SPK Pindah ke Produksi & Siap Surat Jalan.",
+            ]);
+
+            return redirect()->route('sortir.index')->with('success', 'Klasifikasi Selesai! SPK #' . $this->order->spk_number . ' telah selesai di Sortir & siap diserah-terimakan via Surat Jalan.');
 
         } catch (\Exception $e) {
-            $this->dispatch('notify', ['type' => 'error', 'message' => $e->getMessage()]);
+            $this->dispatch('notify', ['type' => 'error', 'message' => 'Gagal memproses: ' . $e->getMessage()]);
         }
     }
 
@@ -326,6 +611,14 @@ class Detail extends Component
             abort(403, 'Unauthorized action.');
         }
 
+        // Mandatory reason enforcement (FR-11.1)
+        $this->validate([
+            'bypass_reason' => 'required|string|min:5',
+        ], [
+            'bypass_reason.required' => 'Alasan bypass wajib diisi!',
+            'bypass_reason.min' => 'Alasan bypass minimal 5 karakter.',
+        ]);
+
         try {
             $oldStatus = $this->order->status;
             DB::transaction(function () use ($oldStatus) {
@@ -333,16 +626,23 @@ class Detail extends Component
                 $this->order->current_location = 'Rumah Abu';
                 $this->order->save();
 
+                $this->order->logs()->create([
+                    'user_id' => Auth::id(),
+                    'step' => 'SORTIR_BYPASS',
+                    'action' => 'BYPASS_SERVIS',
+                    'description' => "Bypass Servis ke Produksi. Alasan: " . $this->bypass_reason,
+                ]);
+
                 \App\Events\WorkOrderStatusUpdated::dispatch(
                     $this->order, 
                     $oldStatus, 
                     WorkOrderStatus::PRODUCTION, 
-                    'Direct to Production (Bypass Livewire)', 
+                    'Direct to Production (Bypass Livewire: ' . $this->bypass_reason . ')', 
                     Auth::id()
                 );
             });
 
-            return redirect()->route('sortir.index')->with('success', 'Order dikirim langsung ke Production!');
+            return redirect()->route('sortir.index')->with('success', 'Order dikirim langsung ke Production dengan alasan audit trail!');
         } catch (\Exception $e) {
             $this->dispatch('notify', ['type' => 'error', 'message' => $e->getMessage()]);
         }
@@ -364,17 +664,28 @@ class Detail extends Component
             $materialQuery->where('name', 'like', "%{$this->searchMaterial}%");
         }
 
-        $solMaterials = (clone $materialQuery)->where('category', 'PRODUCTION')->where('type', 'Material Sol')->orderBy('name')->get();
-        $upperMaterials = (clone $materialQuery)->where('category', 'PRODUCTION')->where('type', 'Material Upper')->orderBy('name')->get();
-        $otherMaterials = (clone $materialQuery)->where('category', 'SHOPPING')
-            ->orWhere(function($q) use ($materialQuery) {
-                $q->where('category', 'PRODUCTION')->whereNotIn('type', ['Material Sol', 'Material Upper']);
-                if ($this->searchMaterial) $q->where('name', 'like', "%{$this->searchMaterial}%");
-            })->orderBy('name')->get();
+        $solMaterials = (clone $materialQuery)->where(function($q) {
+            $q->where('type', 'Material Sol')
+              ->orWhere('category', 'SOL');
+        })->orderBy('name')->get();
+
+        $upperMaterials = (clone $materialQuery)->where(function($q) {
+            $q->where('type', 'Material Upper')
+              ->orWhere('category', 'UPPER');
+        })->orderBy('name')->get();
+
+        $otherMaterials = (clone $materialQuery)->where(function($q) {
+            $q->whereNotIn('type', ['Material Sol', 'Material Upper'])
+              ->orWhere('category', 'SHOPPING');
+        })->orderBy('name')->get();
 
         $techSol = User::where('role', 'pic')->get();
         $techUpper = User::where('role', 'pic')->get();
         $services = \App\Models\Service::orderBy('name')->get();
+
+        // Bongkar technician lists
+        $bongkarSolTechs = User::whereIn('specialization', ['Sol Repair', 'PIC Material Sol'])->select('id', 'name')->get();
+        $bongkarUpperTechs = User::whereIn('specialization', ['Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])->select('id', 'name')->get();
 
         return view('livewire.sortir.detail', [
             'solMaterials' => $solMaterials,
@@ -383,6 +694,8 @@ class Detail extends Component
             'techSol' => $techSol,
             'techUpper' => $techUpper,
             'services' => $services,
+            'bongkarSolTechs' => $bongkarSolTechs,
+            'bongkarUpperTechs' => $bongkarUpperTechs,
         ])->layout('layouts.app');
     }
 
@@ -392,9 +705,18 @@ class Detail extends Component
             $request = $service->requestMissingMaterialsForWorkOrder($this->order);
 
             if ($request) {
+                // Send purchase request to Finlog API (FR-4.3)
+                $finlogService = app(\App\Services\FinlogApiService::class);
+                $result = $finlogService->sendPurchaseRequest($request);
+
+                $msg = "Request #{$request->request_number} berhasil dibuat & dikirim ke Finlog.";
+                if (!empty($result['finlog_request_id'])) {
+                    $msg .= " (Finlog ID: {$result['finlog_request_id']})";
+                }
+
                 $this->dispatch('notify', [
                     'type' => 'success', 
-                    'message' => "Request #{$request->request_number} berhasil dibuat & dikirim ke Purchasing."
+                    'message' => $msg
                 ]);
                 $this->loadOrder();
                 $this->initializeState();

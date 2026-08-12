@@ -193,6 +193,51 @@ class LeadDetailManager extends Component
         ];
     }
 
+    public function addMaterialToDraftItem($itemIdx, $materialId)
+    {
+        $material = Material::find($materialId);
+        if (!$material) return;
+
+        if (!isset($this->draftItems[$itemIdx]['requested_materials'])) {
+            $this->draftItems[$itemIdx]['requested_materials'] = [];
+        }
+
+        foreach ($this->draftItems[$itemIdx]['requested_materials'] as $m) {
+            if (($m['material_id'] ?? null) == $materialId) {
+                $this->dispatch('notify', ['type' => 'warning', 'message' => 'Material sudah ada di daftar.']);
+                return;
+            }
+        }
+
+        $this->draftItems[$itemIdx]['requested_materials'][] = [
+            'material_id' => $material->id,
+            'name' => $material->name,
+            'sub_category' => $material->sub_category ?? '-',
+            'unit' => $material->unit ?? 'pcs',
+            'quantity' => 1,
+        ];
+
+        $this->dispatch('notify', ['type' => 'success', 'message' => $material->name . ' ditambahkan ke kebutuhan material.']);
+    }
+
+    public function removeMaterialFromDraftItem($itemIdx, $matIdx)
+    {
+        if (isset($this->draftItems[$itemIdx]['requested_materials'][$matIdx])) {
+            $name = $this->draftItems[$itemIdx]['requested_materials'][$matIdx]['name'] ?? 'Material';
+            unset($this->draftItems[$itemIdx]['requested_materials'][$matIdx]);
+            $this->draftItems[$itemIdx]['requested_materials'] = array_values($this->draftItems[$itemIdx]['requested_materials']);
+            $this->dispatch('notify', ['type' => 'info', 'message' => $name . ' dihapus dari daftar material.']);
+        }
+    }
+
+    public function updateDraftItemMaterialQty($itemIdx, $matIdx, $qty)
+    {
+        if ($qty < 1) $qty = 1;
+        if (isset($this->draftItems[$itemIdx]['requested_materials'][$matIdx])) {
+            $this->draftItems[$itemIdx]['requested_materials'][$matIdx]['quantity'] = (int)$qty;
+        }
+    }
+
     public function removeDraftItem($index)
     {
         unset($this->draftItems[$index]);
@@ -443,6 +488,7 @@ class LeadDetailManager extends Component
                         'item_notes' => $this->calculateDraftSummary($index),
                         'is_warranty' => (bool)$itemData['is_warranty'],
                         'hk_days' => (int)($itemData['hk_days'] ?? 0),
+                        'requested_materials' => $itemData['requested_materials'] ?? [],
                         'item_total_price' => collect($itemData['custom_service_prices'] ?? [])->sum(fn($p) => (float)$p) + collect($itemData['custom_services'] ?? [])->sum(fn($cs) => (float)($cs['price'] ?? 0)),
                     ]);
 

@@ -24,6 +24,9 @@ class User extends Authenticatable
         'role',
         'is_active',
         'specialization',
+        'workshop_pool',
+        'availability_status',
+        'is_support',
         'access_rights',
         'cs_code',
         'password',
@@ -52,6 +55,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'access_rights' => 'array',
             'is_active' => 'boolean',
+            'is_support' => 'boolean',
             'last_active_at' => 'datetime',
         ];
     }

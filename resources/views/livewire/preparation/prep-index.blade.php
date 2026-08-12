@@ -1,7 +1,18 @@
 <div class="py-6 bg-gray-50" x-data="{ 
     activeTab: @entangle('activeTab'),
     selectedItems: @entangle('selectedItems'),
-    selectAll: @entangle('selectAll')
+    selectAll: @entangle('selectAll'),
+    toggleManifestSelection(event, orderIds) {
+        if (event.target.checked) {
+            orderIds.forEach(id => {
+                if (!this.selectedItems.includes(String(id))) {
+                    this.selectedItems.push(String(id));
+                }
+            });
+        } else {
+            this.selectedItems = this.selectedItems.filter(id => !orderIds.map(String).includes(String(id)));
+        }
+    }
 }">
     {{-- Original Style Header Slot (Inside Component) --}}
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-6">
@@ -44,93 +55,49 @@
     @endpush
 
 
-        {{-- Original Style Stats Grid (Acting as Tabs) --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            {{-- Washing Stat --}}
-            <div wire:click="setTab('washing')"
-                 class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] {{ $activeTab === 'washing' ? 'ring-4 ring-teal-400 ring-opacity-50' : 'opacity-80 grayscale-[20%] hover:grayscale-0' }}">
+        {{-- Consolidated Stats Tabs --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {{-- Antrean Prep Stat --}}
+            <div wire:click="setTab('queue')"
+                 class="group relative overflow-hidden rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] {{ $activeTab === 'queue' ? 'ring-4 ring-teal-400 ring-opacity-50' : 'opacity-85 grayscale-[10%] hover:grayscale-0' }}">
                 <div class="absolute inset-0 bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600"></div>
                 <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                <div class="relative z-10 flex justify-between items-center">
+                    <div>
+                        <div class="p-3 bg-white/20 rounded-2xl backdrop-blur-md w-fit mb-3">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
                             </svg>
                         </div>
-                        @if($activeTab === 'washing')
-                            <span class="px-2 py-1 bg-white/30 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider">Active</span>
-                        @endif
+                        <div class="text-sm font-black text-white/90 uppercase tracking-widest mb-1">Antrean Preparation</div>
+                        <div class="text-xs text-white/80 font-bold uppercase tracking-wider">Antrean unit aktif</div>
                     </div>
-                    <div class="text-sm font-semibold text-white/90 uppercase tracking-wide mb-1">Washing</div>
-                    <div class="text-4xl font-black text-white mb-1">{{ $this->counts['washing'] }}</div>
-                    <div class="text-xs text-white/80 font-medium">Orders in queue</div>
+                    <div class="text-right">
+                        <div class="text-5xl font-black text-white leading-none mb-1">{{ $this->counts['queue'] }}</div>
+                        <div class="text-[10px] text-white/80 font-bold uppercase tracking-wider">Unit SPK</div>
+                    </div>
                 </div>
             </div>
 
-            {{-- Sol Stat --}}
-            <div wire:click="setTab('sol')"
-                 class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] {{ $activeTab === 'sol' ? 'ring-4 ring-orange-400 ring-opacity-50' : 'opacity-80 grayscale-[20%] hover:grayscale-0' }}">
-                <div class="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600"></div>
-                <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
-                            </svg>
-                        </div>
-                        @if($activeTab === 'sol')
-                            <span class="px-2 py-1 bg-white/30 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider">Active</span>
-                        @endif
-                    </div>
-                    <div class="text-sm font-semibold text-white/90 uppercase tracking-wide mb-1">Sol Repair</div>
-                    <div class="text-4xl font-black text-white mb-1">{{ $this->counts['sol'] }}</div>
-                    <div class="text-xs text-white/80 font-medium">Orders in queue</div>
-                </div>
-            </div>
-
-            {{-- Upper Stat --}}
-            <div wire:click="setTab('upper')"
-                 class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] {{ $activeTab === 'upper' ? 'ring-4 ring-purple-400 ring-opacity-50' : 'opacity-80 grayscale-[20%] hover:grayscale-0' }}">
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600"></div>
-                <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
-                            </svg>
-                        </div>
-                        @if($activeTab === 'upper')
-                            <span class="px-2 py-1 bg-white/30 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider">Active</span>
-                        @endif
-                    </div>
-                    <div class="text-sm font-semibold text-white/90 uppercase tracking-wide mb-1">Upper & Repaint</div>
-                    <div class="text-4xl font-black text-white mb-1">{{ $this->counts['upper'] }}</div>
-                    <div class="text-xs text-white/80 font-medium">Orders in queue</div>
-                </div>
-            </div>
-
-            {{-- Review Stat --}}
+            {{-- Review Admin Stat --}}
             <div wire:click="setTab('review')"
-                 class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] {{ $activeTab === 'review' ? 'ring-4 ring-blue-400 ring-opacity-50' : 'opacity-80 grayscale-[20%] hover:grayscale-0' }}">
-                <div class="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600"></div>
+                 class="group relative overflow-hidden rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] {{ $activeTab === 'review' ? 'ring-4 ring-blue-400 ring-opacity-50' : 'opacity-85 grayscale-[10%] hover:grayscale-0' }}">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-650"></div>
                 <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                <div class="relative z-10 flex justify-between items-center">
+                    <div>
+                        <div class="p-3 bg-white/20 rounded-2xl backdrop-blur-md w-fit mb-3">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        @if($activeTab === 'review')
-                            <span class="px-2 py-1 bg-white/30 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider">Active</span>
-                        @endif
+                        <div class="text-sm font-black text-white/90 uppercase tracking-widest mb-1">Review Admin</div>
+                        <div class="text-xs text-white/80 font-bold uppercase tracking-wider">Menunggu persetujuan</div>
                     </div>
-                    <div class="text-sm font-semibold text-white/90 uppercase tracking-wide mb-1">Review Admin</div>
-                    <div class="text-4xl font-black text-white mb-1">{{ $this->counts['review'] }}</div>
-                    <div class="text-xs text-white/80 font-medium">Awaiting approval</div>
+                    <div class="text-right">
+                        <div class="text-5xl font-black text-white leading-none mb-1">{{ $this->counts['review'] }}</div>
+                        <div class="text-[10px] text-white/80 font-bold uppercase tracking-wider">Unit SPK</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -200,23 +167,17 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[500px]">
             @php
                 $activeTabLabel = match($activeTab) {
-                    'washing' => 'Washing & Cleaning',
-                    'sol' => 'Bongkar Sol',
-                    'upper' => 'Bongkar Upper',
+                    'queue' => 'Antrean Preparation (Consolidated)',
                     'review' => 'Review Admin',
                     default => ''
                 };
                 $activeTabEmoji = match($activeTab) {
-                    'washing' => '🧼',
-                    'sol' => '👟',
-                    'upper' => '🎨',
+                    'queue' => '🧼',
                     'review' => '👮',
                     default => ''
                 };
                 $activeTabColor = match($activeTab) {
-                    'washing' => 'teal',
-                    'sol' => 'orange',
-                    'upper' => 'purple',
+                    'queue' => 'teal',
                     'review' => 'blue',
                     default => 'gray'
                 };
@@ -224,7 +185,7 @@
             
             <div class="p-4 border-b border-{{ $activeTabColor }}-200 bg-gradient-to-r from-{{ $activeTabColor }}-50 to-{{ $activeTabColor }}-100 flex justify-between items-center">
                 <h3 class="font-bold text-{{ $activeTabColor }}-800 flex items-center gap-2">
-                    <span>{{ $activeTabEmoji }} Station {{ $activeTabLabel }}</span>
+                    <span>{{ $activeTabEmoji }} {{ $activeTabLabel }}</span>
                     <span class="px-2 py-0.5 bg-white rounded-full text-[10px] border border-{{ $activeTabColor }}-200">{{ $orders->total() }} items</span>
                 </h3>
                 @if($activeTab === 'review')
@@ -252,49 +213,138 @@
                      class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
                     <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
                         <div class="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-                        <div class="text-[10px] font-black text-teal-700 mt-4 tracking-widest uppercase">Sinkronisasi Data Prep...</div>
                     </div>
                 </div>
-                <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
+                <table class="min-w-full w-full divide-y divide-gray-250 dark:divide-gray-700 text-left font-sans">
+                    <thead class="bg-gray-100 dark:bg-gray-750">
                         <tr>
-                            @if($activeTab === 'review')
-                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-24">
-                                    <div class="flex items-center gap-2">
-                                        <input type="checkbox" wire:model.live="selectAll" class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer">
-                                        <span>No</span>
-                                    </div>
-                                </th>
-                            @else
-                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
-                            @endif
-                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
-                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
-                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Prioritas</th>
-                            @if($activeTab === 'review')
-                                <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status Pengerjaan</th>
-                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Aksi</th>
-                            @else
-                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
-                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi / SLA</th>
-                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
-                            @endif
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Manifest</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Catatan</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider text-center">Progress Pengerjaan</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">Aksi</th>
                         </tr>
                     </thead>
-                    @forelse($orders as $order)
-                        <x-station-card 
-                            wire:key="order-{{ $order->id }}-{{ $activeTab }}"
-                            :order="$order" 
-                            :type="'prep_'.$activeTab" 
-                            :technicians="$this->techs[$activeTab] ?? collect()"
-                            :loopIteration="($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration"
-                            showCheckbox="true"
-                            :isReviewTab="$activeTab === 'review'"
-                        />
+                    @forelse($orders as $group)
+                        @php
+                            $groupId = (string)$group->id;
+                            $isExpanded = in_array($groupId, $expandedManifests) || !empty($search);
+                            
+                            // Calculate progress of prep for SPKs in this group (strictly Cuci/Washing)
+                            $totalGroupSPK = $group->work_orders->count();
+                            $completedGroupSPK = $group->work_orders->filter(function($wo) {
+                                return !is_null($wo->prep_washing_completed_at);
+                            })->count();
+                            
+                            $progressPercent = $totalGroupSPK > 0 ? round(($completedGroupSPK / $totalGroupSPK) * 100) : 0;
+                            $allGroupOrderIds = $group->work_orders->pluck('id')->map(fn($id) => (string)$id)->toArray();
+                            
+                            // Check if all group orders are currently selected
+                            $isGroupAllSelected = count($allGroupOrderIds) > 0 && count(array_intersect($selectedItems, $allGroupOrderIds)) === count($allGroupOrderIds);
+                        @endphp
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800" wire:key="group-tbody-{{ $groupId }}">
+                            <!-- Row Manifest Utama -->
+                            <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer" @click="$wire.toggleManifest('{{ $groupId }}')">
+                                <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-gray-500">
+                                    {{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div @click.stop class="flex items-center">
+                                            <input type="checkbox" 
+                                                   @if($isGroupAllSelected) checked @endif
+                                                   @change="toggleManifestSelection($event, [{{ implode(',', $allGroupOrderIds) }}])"
+                                                   class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer">
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="font-black text-xs text-gray-800 dark:text-white uppercase tracking-wider">
+                                                {{ $group->manifest_number }}
+                                            </span>
+                                            @if($group->created_at)
+                                                <span class="text-[10px] text-gray-400 font-bold mt-0.5">
+                                                    Diterima: {{ \Carbon\Carbon::parse($group->created_at)->translatedFormat('d M Y H:i') }} WIB
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 italic">
+                                    {{ $group->notes ?? 'Tidak ada catatan.' }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col items-center justify-center w-full max-w-[200px] mx-auto">
+                                        <div class="flex items-center justify-between w-full text-[10px] font-bold text-teal-700 dark:text-teal-400 mb-1">
+                                            <span>Progress</span>
+                                            <span>{{ $completedGroupSPK }} / {{ $totalGroupSPK }} SPK Selesai ({{ $progressPercent }}%)</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                                            <div class="bg-teal-600 h-full rounded-full transition-all duration-300" style="width: {{ $progressPercent }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right whitespace-nowrap flex items-center justify-end gap-2">
+                                    <a href="{{ route('manifest.show', $group->id) }}" target="_blank" @click.stop class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all border border-indigo-200">
+                                        <span>🖨️ Cetak Surat Jalan</span>
+                                    </a>
+                                    <button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-teal-50 text-teal-700 hover:bg-teal-100 transition-all border border-teal-200">
+                                        <svg class="w-4 h-4 transform transition-transform duration-200 @if($isExpanded) rotate-180 @endif" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                        <span>{{ $isExpanded ? 'Tutup SPK' : 'Buka SPK' }}</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                            <!-- Accordion Dropdown SPK -->
+                            @if($isExpanded)
+                            <tr>
+                                <td colspan="5" class="bg-gray-50/70 dark:bg-gray-900/30 p-4 border-t border-b border-gray-100 dark:border-gray-800">
+                                    <div class="rounded-xl border border-gray-200/80 dark:border-gray-750 bg-white dark:bg-gray-850 shadow-sm overflow-hidden p-2">
+                                        <table class="min-w-full w-full divide-y divide-gray-200 text-left">
+                                            <thead class="bg-gray-50/50">
+                                                <tr>
+                                                    @if($activeTab === 'review')
+                                                        <th class="px-6 py-2.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-20">Checkbox</th>
+                                                    @else
+                                                        <th class="px-6 py-2.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-16">Pilih</th>
+                                                    @endif
+                                                    <th class="px-6 py-2.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">SPK</th>
+                                                    <th class="px-6 py-2.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                                                    <th class="px-6 py-2.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Prioritas</th>
+                                                    @if($activeTab === 'review')
+                                                        <th class="px-6 py-2.5 text-center text-[10px] font-bold text-gray-500 uppercase tracking-wider">Status Pengerjaan</th>
+                                                        <th class="px-6 py-2.5 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider w-20">Aksi</th>
+                                                    @else
+                                                        <th class="px-6 py-2.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-center">Progress Tugas Prep</th>
+                                                        <th class="px-6 py-2.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Estimasi</th>
+                                                        <th class="px-6 py-2.5 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider w-20">Detail</th>
+                                                    @endif
+                                                </tr>
+                                            </thead>
+                                            @php
+                                                $groupIteration = 1;
+                                            @endphp
+                                            @foreach($group->work_orders as $order)
+                                                <x-station-card 
+                                                    wire:key="order-{{ $order->id }}-{{ $activeTab }}"
+                                                    :order="$order" 
+                                                    :type="'prep_'.$activeTab" 
+                                                    :technicians="$this->techs"
+                                                    :loopIteration="$groupIteration++"
+                                                    showCheckbox="true"
+                                                    :isReviewTab="$activeTab === 'review'"
+                                                />
+                                            @endforeach
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endif
+                        </tbody>
                     @empty
                         <tbody class="divide-y divide-gray-150 dark:divide-gray-750">
                             <tr>
-                                <td colspan="{{ $activeTab === 'review' ? 6 : 7 }}" class="p-12 text-center text-gray-400 dark:text-gray-505 italic">
+                                <td colspan="5" class="p-12 text-center text-gray-400 dark:text-gray-550 italic">
                                     <span class="text-4xl block mb-2">✨</span>
                                     <p>Tidak ada antrian di stasiun ini.</p>
                                 </td>
@@ -310,68 +360,8 @@
             </div>
         </div>
 
-        {{-- Floating Bulk Action Bar --}}
-        <div x-show="selectedItems.length > 0" 
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="translate-y-full opacity-0 scale-95"
-             x-transition:enter-end="translate-y-0 opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="translate-y-0 opacity-100 scale-100"
-             x-transition:leave-end="translate-y-full opacity-0 scale-95"
-             class="fixed bottom-6 inset-x-0 z-50 flex justify-center px-4"
-             style="display: none;">
-            
-            <div class="bg-white/90 backdrop-blur-md border border-gray-200 shadow-2xl rounded-2xl p-4 w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-4 ring-1 ring-black/5">
-                
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-lg">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Terpilih</span>
-                        <span class="bg-gray-800 text-white px-2 py-0.5 rounded-md font-bold text-sm" x-text="selectedItems.length"></span>
-                    </div>
-                    <button @click="selectedItems = []; selectAll = false" class="text-[10px] font-bold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors uppercase tracking-widest">
-                        Batal
-                    </button>
-                </div>
-
-                <div class="h-8 w-px bg-gray-200 hidden md:block"></div>
-
-                <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide justify-end">
-                    @if($activeTab !== 'review')
-                        <div class="flex items-center gap-2">
-                            <div class="relative">
-                                <select id="bulk-tech-{{ $activeTab }}" class="appearance-none bg-white border border-gray-200 text-gray-700 text-[10px] rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-40 pl-3 pr-8 py-2.5 font-bold shadow-sm cursor-pointer hover:border-blue-300 transition-colors uppercase">
-                                    <option value="">-- PILIH TEKNISI --</option>
-                                    @foreach($this->techs[$activeTab] ?? [] as $t)
-                                        <option value="{{ $t->id }}">{{ $t->name }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
-                            </div>
-
-                            <button type="button" onclick="confirmBulkAction('assign', document.getElementById('bulk-tech-{{ $activeTab }}').value)" 
-                                    class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg text-[10px] font-black shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95 uppercase tracking-widest">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                Assign &amp; Mulai
-                            </button>
-                        </div>
-
-                        <button type="button" onclick="confirmBulkAction('finish')" 
-                                class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-[10px] font-black shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95 uppercase tracking-widest">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Selesai Semua
-                        </button>
-                    @else
-                        <button type="button" onclick="confirmBulkAction('approve')" 
-                                class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl text-xs font-black shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95 uppercase tracking-widest">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Approve &amp; Sortir Terpilih
-                        </button>
-                    @endif
-                </div>
-            </div>
-        </div>
+        {{-- Floating Bulk Action Bar Component --}}
+        <x-prep-bulk-bar :activeTab="$activeTab" :techs="$this->techs" />
 
     </div>
 
@@ -386,12 +376,63 @@
         window.openReportModal = function(orderId) {
             window.dispatchEvent(new CustomEvent('open-report-modal', { detail: orderId }));
         };
-        window.confirmBulkAction = (action, techId = null) => {
+        window.submitBulkAssign = function() {
+            const washingId = document.getElementById('bulk-tech-washing')?.value || '';
+            const solId = document.getElementById('bulk-tech-sol')?.value || '';
+            const upperId = document.getElementById('bulk-tech-upper')?.value || '';
+
+            if (!washingId && !solId && !upperId) {
+                Swal.fire({ icon: 'warning', title: 'Pilih Teknisi', text: 'Silakan pilih minimal satu teknisi terlebih dahulu.' });
+                return;
+            }
+            confirmBulkAction('assign', { washing: washingId, sol: solId, upper: upperId });
+        };
+        window.submitBulkFinish = function() {
+            const washingId = document.getElementById('bulk-tech-washing')?.value || '';
+            const solId = document.getElementById('bulk-tech-sol')?.value || '';
+            const upperId = document.getElementById('bulk-tech-upper')?.value || '';
+
+            if (!washingId && !solId && !upperId) {
+                Swal.fire({ icon: 'warning', title: 'Pilih Teknisi', text: 'Silakan pilih minimal satu teknisi terlebih dahulu.' });
+                return;
+            }
+            confirmBulkAction('finish', { washing: washingId, sol: solId, upper: upperId });
+        };
+        window.confirmBulkCompleteAll = function() {
+            const count = $wire.selectedItems.length;
+            if (count === 0) return;
+
+            Swal.fire({
+                title: `Selesaikan Semua Prep (${count} SPK)?`,
+                text: 'Seluruh sub-tugas persiapan (Cuci, Sol, Upper) untuk seluruh SPK terpilih akan dianggap selesai dan dipindahkan ke Review Admin.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0d9488',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Selesaikan Semua',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Memproses...',
+                        text: 'Mohon tunggu sebentar.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    $wire.bulkCompleteAllPrep();
+                }
+            });
+        };
+        window.confirmBulkAction = (action, techs = {}) => {
             const count = $wire.selectedItems.length;
             if (count === 0) return;
 
             const title = action === 'approve' ? `Setujui ${count} Order?` : `Proses ${count} Order?`;
-            const text = action === 'approve' ? 'Semua order terpilih akan langsung dikirim ke Sortir.' : 'Proses status pengerjaan untuk order terpilih.';
+            const text = action === 'approve' 
+                ? 'Semua order terpilih akan langsung dikirim ke Sortir.' 
+                : 'Perubahan status pengerjaan akan diterapkan untuk seluruh SPK terpilih.';
             
             Swal.fire({
                 title: title,
@@ -412,7 +453,7 @@
                             Swal.showLoading();
                         }
                     });
-                    $wire.bulkAction(action, techId);
+                    $wire.bulkAction(action, techs);
                 }
             });
         }

@@ -300,21 +300,6 @@
 
 
 
-        @if(Auth::user()->hasAccess('admin.materials'))
-
-
-        {{-- Stok Material --}}
-        <a href="{{ route('admin.materials.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.materials.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Stok Material</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Material</span>
-        </a>
-        @endif
-
         @if(Auth::user()->hasAccess('admin.purchases'))
 
         @endif
@@ -461,8 +446,6 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Logistik</span>
         </a>
 
-
-
         @if(Auth::user()->hasAccess('admin'))
         {{-- Gudang Manual --}}
         <a href="{{ route('storage.manual.index') }}" 
@@ -493,14 +476,14 @@
     {{-- 3. DIVISI WORKSHOP --}}
     @can('access-workshop')
     <div x-data="{ 
-            open: localStorage.getItem('sb_workshop') === 'true' || {{ request()->routeIs('workshop.*') || request()->routeIs('preparation.*') || request()->routeIs('sortir.*') || request()->routeIs('production.*') || request()->routeIs('qc.*') || request()->routeIs('finish.*') || request()->routeIs('revision.*') || request()->routeIs('garansi.*') ? 'true' : 'false' }},
+            open: localStorage.getItem('sb_workshop') === 'true' || {{ request()->routeIs('workshop.*') || request()->routeIs('preparation.*') || request()->routeIs('sortir.*') || request()->routeIs('surat-jalan.*') || request()->routeIs('production.*') || request()->routeIs('qc.*') || request()->routeIs('finish.*') || request()->routeIs('revision.*') || request()->routeIs('garansi.*') || request()->routeIs('admin.materials.*') || request()->routeIs('material-requests.*') ? 'true' : 'false' }},
             toggle() {
                 this.open = !this.open;
                 localStorage.setItem('sb_workshop', this.open);
             }
          }" 
          class="mt-4 text-white">
-        
+
         <button @click="toggle()" 
                 type="button" 
                 class="w-full flex items-center justify-between px-3 py-2.5 transition-all duration-300 group rounded-xl mb-1 active:scale-95 touch-manipulation"
@@ -547,6 +530,27 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Fast Track</span>
         </a>
 
+        @if(Auth::user()->hasAccess('preparation'))
+        {{-- Penerimaan Inbound --}}
+        <a href="{{ route('manifest.index', ['status' => 'SENT']) }}" 
+           class="nav-item {{ request()->routeIs('manifest.*') && request('status') === 'SENT' ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-amber-500/10 bg-amber-500/5 hover:bg-amber-500/15"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-amber-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-amber-400 font-bold">Penerimaan Inbound</span>
+            
+            @php $pendingInboundCount = \App\Models\WorkshopManifest::where('status', 'SENT')->count(); @endphp
+            @if($pendingInboundCount > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-amber-500 text-slate-950 shadow-sm animate-bounce">
+                    {{ $pendingInboundCount }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 border border-white rounded-full animate-pulse"></span>
+            @endif
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Penerimaan</span>
+        </a>
+        @endif
+
 
         @if(Auth::user()->hasAccess('preparation'))
         <a href="{{ route('preparation.index') }}" 
@@ -571,22 +575,68 @@
 
         @if(Auth::user()->hasAccess('sortir'))
         <a href="{{ route('sortir.index') }}" 
-           class="nav-item {{ request()->routeIs('sortir.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           class="nav-item {{ request()->routeIs('sortir.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-amber-500/10 bg-amber-500/5 hover:bg-amber-500/15"
            :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="nav-icon flex-shrink-0 text-amber-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
             </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1">Sortir</span>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-amber-400 font-bold">Sortir & Klasifikasi</span>
             
             {{-- Badge --}}
             @if(isset($sidebarCounts['sortir']) && $sidebarCounts['sortir'] > 0)
-                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-teal-500 text-white shadow-sm">
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-amber-500 text-slate-950 shadow-sm">
                     {{ $sidebarCounts['sortir'] }}
                 </span>
-                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-teal-500 border border-white rounded-full"></span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 border border-white rounded-full"></span>
             @endif
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Sortir</span>
+        </a>
+        @endif
+
+        {{-- Surat Jalan Workshop Internal --}}
+        <a href="{{ route('surat-jalan.index') }}" 
+           class="nav-item {{ request()->routeIs('surat-jalan.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-indigo-500/10 bg-indigo-500/5 hover:bg-indigo-500/15"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-indigo-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-indigo-400 font-bold">Surat Jalan Workshop</span>
+            
+            @php $suratJalanCount = \App\Models\SuratJalan::where('status', 'DIKIRIM')->count(); @endphp
+            @if($suratJalanCount > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-amber-500 text-white shadow-sm">
+                    {{ $suratJalanCount }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Surat Jalan</span>
+        </a>
+
+        {{-- Master Data & Stok Material --}}
+        @if(Auth::user()->hasAccess('admin.materials'))
+        <a href="{{ route('admin.materials.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.materials.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/15"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-emerald-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-emerald-400 font-bold">Stok & Katalog Material</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Stok Material</span>
+        </a>
+        @endif
+
+        {{-- Pengadaan & Belanja Material --}}
+        @if(Route::has('material-requests.index'))
+        <a href="{{ route('material-requests.index') }}" 
+           class="nav-item {{ request()->routeIs('material-requests.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1">Pengadaan Belanja (Finlog)</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Belanja Material</span>
         </a>
         @endif
 

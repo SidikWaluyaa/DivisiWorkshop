@@ -57,6 +57,13 @@
         </div>
 
         <div class="flex items-center gap-3">
+            {{-- Tombol Print (selalu tampil) --}}
+            <a href="{{ route('material-requests.print', $materialRequest->id) }}" target="_blank"
+               class="px-5 py-3 bg-slate-800 text-white text-sm font-black rounded-xl hover:bg-slate-900 transition-all flex items-center gap-2 shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Cetak Nota
+            </a>
+
              @if($materialRequest->status === 'PENDING')
                 @can('manageInventory', \App\Models\WorkOrder::class)
                     <button wire:click="approve" wire:loading.attr="disabled" class="px-6 py-3 bg-[#FFC232] text-gray-900 text-sm font-black rounded-xl hover:shadow-lg hover:shadow-[#FFC232]/20 transition-all flex items-center gap-2 border-none">
@@ -159,11 +166,19 @@
                             </thead>
                             <tbody class="divide-y divide-gray-50">
                                 @foreach($materialRequest->items as $item)
+                                    @php
+                                        $wo = $item->workOrder ?? $materialRequest->workOrder;
+                                    @endphp
                                     <tr class="hover:bg-gray-50/50 transition-colors">
                                         <td class="px-10 py-6">
                                             <div class="flex flex-col">
                                                 <span class="text-sm font-black text-gray-800">{{ $item->material_name }}</span>
                                                 <span class="text-xs text-gray-400 mt-0.5">{{ $item->specification ?? 'Standard Specs' }}</span>
+                                                @if($wo)
+                                                    <span class="mt-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-md border border-indigo-100 w-max">
+                                                        <span>📦</span> SPK #{{ $wo->spk_number }} — {{ $wo->customer_name }}
+                                                    </span>
+                                                @endif
                                             </div>
                                         </td>
                                         <td class="px-6 py-6 text-center">

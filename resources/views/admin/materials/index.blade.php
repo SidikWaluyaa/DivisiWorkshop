@@ -195,6 +195,7 @@
                                     <input type="checkbox" @click="selectAllOnPage" :checked="isAllOnPageSelected" class="rounded border-gray-300 text-teal-600 shadow-sm focus:ring-teal-500">
                                 </th>
                                 <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Material</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Kategori</th>
                                 <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Ukuran</th>
                                 <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Stock</th>
                                 <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Harga Beli</th>
@@ -212,19 +213,23 @@
                                 </td>
                                 <td class="px-6 py-5">
                                     <div class="font-bold text-gray-900 dark:text-white mb-0.5">{{ $material->name }}</div>
-                                    <div class="flex flex-wrap items-center gap-2 mt-1">
-                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black {{ $material->type === 'Material Upper' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-purple-50 text-purple-700 border border-purple-100' }}">
-                                            {{ $material->type }}
+                                    <div class="text-[10px] text-gray-400 font-medium">Min: {{ $material->min_stock }} {{ $material->unit }}</div>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="flex flex-col gap-1 items-start">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-black {{ $material->type === 'Material Upper' ? 'bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-purple-50 text-purple-700 border border-purple-100 dark:bg-purple-900/40 dark:text-purple-300' }}">
+                                            {{ $material->type ?? 'General' }}
                                         </span>
                                         @if($material->category)
-                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-orange-50 text-orange-700 border border-orange-100">
-                                            {{ $material->category }}
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $material->category === 'PRODUCTION' ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300' }}">
+                                            📦 {{ $material->category === 'PRODUCTION' ? 'Produksi (Cek Stok)' : ($material->category === 'SHOPPING' ? 'Belanja (Budget)' : $material->category) }}
                                         </span>
                                         @endif
                                         @if($material->sub_category)
-                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-100">{{ $material->sub_category }}</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-100 dark:bg-teal-900/40 dark:text-teal-300">
+                                            🏷️ {{ $material->sub_category }}
+                                        </span>
                                         @endif
-                                        <span class="text-[10px] text-gray-400 font-medium">Min: {{ $material->min_stock }} {{ $material->unit }}</span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
@@ -394,9 +399,9 @@
                         <div>
                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Kategori Material</label>
                             <select name="category" class="w-full px-4 py-3 text-sm bg-gray-50 border-gray-100 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all font-semibold p-3">
-                                <option value="" selected>Tanpa Kategori (Opsional)</option>
-                                <option value="PRODUCTION">Produksi (Cek Stok)</option>
+                                <option value="PRODUCTION" selected>Produksi (Cek Stok)</option>
                                 <option value="SHOPPING">Belanja (Budget)</option>
+                                <option value="">Tanpa Kategori (Opsional)</option>
                             </select>
                             <p class="mt-1.5 text-[10px] text-gray-400 italic leading-relaxed">Kategori menentukan lokasi penyimpanan di zona gudang A atau B.</p>
                         </div>

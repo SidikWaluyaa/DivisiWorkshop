@@ -1,411 +1,422 @@
-<div class="min-h-screen bg-[#f8fafc] pb-20">
+<div class="min-h-screen bg-[#f8fafc] dark:bg-slate-900 pb-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         
-        {{-- Breadcrumbs & Header --}}
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-            <div class="space-y-2">
-                <nav class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-                    <a href="#" class="hover:text-teal-600 transition-colors">Inventory</a>
+        {{-- Header & Title --}}
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            <div>
+                <nav class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                    <span>INVENTARIS WORKSHOP</span>
                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
-                    <span class="text-teal-600">Sortir Queue</span>
+                    <span class="text-amber-500 font-black">STAGE SORTIR</span>
                 </nav>
-                <h1 class="text-4xl font-black text-[#1a3b34] tracking-tight">Sortir Queue</h1>
-                <p class="text-sm font-medium text-gray-500 max-w-lg">Manage and monitor live workshop intake and material allocation status.</p>
+                <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Antrean & Klasifikasi Sortir</h1>
+                <p class="text-xs font-medium text-slate-500 max-w-lg mt-1">Kelola klasifikasi Bongkar & Belanja bahan baku, integrasi Finlog, serta rute OTW Produksi.</p>
             </div>
 
             <div class="flex items-center gap-3">
-                <div class="relative group">
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search SPK or Customer..." 
-                           class="pl-11 pr-5 py-3.5 text-xs border-transparent bg-white rounded-2xl focus:ring-2 focus:ring-teal-500/20 focus:bg-white shadow-sm w-72 transition-all font-bold text-gray-700 placeholder:text-gray-400 ring-1 ring-gray-100">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                </div>
-
-                {{-- Advanced Filters Dropdown --}}
-                <div x-data="{ open: false }" class="relative">
-                    <button @click="open = !open" 
-                            class="flex items-center gap-2 px-5 py-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm text-[10px] font-black uppercase tracking-widest transition-all {{ $filterPriority || $filterBrand || $filterType ? 'text-teal-600 ring-2 ring-teal-500/20' : 'text-gray-600 hover:bg-gray-50' }}">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 4.5h18m-18 5h18m-18 5h18m-18 5h18"></path></svg>
-                        Filters
-                        @if($filterPriority || $filterBrand || $filterType)
-                            <span class="w-2 h-2 bg-teal-500 rounded-full"></span>
-                        @endif
-                    </button>
-
-                    <div x-show="open" x-cloak @click.away="open = false" 
-                         x-transition:enter="transition ease-out duration-200"
-                         x-transition:enter-start="opacity-0 scale-95 translate-y-2"
-                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                         style="width: 420px; min-width: 420px;"
-                         class="absolute right-0 mt-3 bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 z-50 p-10 space-y-9 ring-1 ring-black/5">
-                        
-                        <div class="flex flex-col items-start justify-between border-b border-gray-100 pb-6 gap-5">
-                            <div class="space-y-1">
-                                <h3 class="text-sm font-black uppercase tracking-[0.25em] text-[#1a3b34]">Advanced Filters</h3>
-                                <p class="text-[10px] font-bold text-gray-400">Refine your workshop queue</p>
-                            </div>
-                            <button wire:click="resetFilters" @click="open = false" class="w-full sm:w-auto px-6 py-2 bg-gray-50 text-[11px] font-black uppercase tracking-widest text-[#22AF85] rounded-2xl hover:bg-[#22AF85] hover:text-white transition-all border border-gray-100 shadow-sm">
-                                Reset All Filters
-                            </button>
-                        </div>
-
-                        {{-- Priority Filter --}}
-                        <div class="space-y-5">
-                            <div class="flex items-center justify-between">
-                                <label class="text-[11px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
-                                    <div class="w-2 h-2 rounded-full bg-teal-500 shadow-sm shadow-teal-500/40"></div>
-                                    Priority Level
-                                </label>
-                                @if($filterPriority)
-                                    <span class="text-[10px] font-black text-teal-600 uppercase bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">{{ $filterPriority }}</span>
-                                @endif
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                @foreach(['' => 'All Status', 'Prioritas' => 'Prioritas', 'Reguler' => 'Reguler', 'Urgent' => 'Urgent'] as $val => $label)
-                                    <button wire:click="$set('filterPriority', '{{ $val }}')" 
-                                            class="px-5 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest border transition-all flex items-center justify-center {{ $filterPriority === (string)$val ? 'bg-[#1a3b34] border-[#1a3b34] text-white shadow-xl shadow-[#1a3b34]/30 scale-[1.02]' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-white hover:border-teal-200 hover:text-teal-600' }}">
-                                        {{ $label }}
-                                    </button>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        {{-- Data Selection Grid --}}
-                        <div class="grid grid-cols-1 gap-6">
-                            {{-- Brand Filter --}}
-                            <div class="space-y-3">
-                                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
-                                    Product Brand
-                                </label>
-                                <div class="relative group">
-                                    <select wire:model.live="filterBrand" class="w-full bg-gray-50 border-gray-100 rounded-2xl py-3.5 pl-5 pr-10 text-[11px] font-bold text-gray-700 appearance-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer">
-                                        <option value="">All Brands</option>
-                                        @foreach($availableBrands as $brand)
-                                            <option value="{{ $brand }}">{{ $brand }}</option>
-                                        @endforeach
-                                    </select>
-                                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Type Filter --}}
-                            <div class="space-y-3">
-                                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
-                                    Shoe Category
-                                </label>
-                                <div class="relative group">
-                                    <select wire:model.live="filterType" class="w-full bg-gray-50 border-gray-100 rounded-2xl py-3.5 pl-5 pr-10 text-[11px] font-bold text-gray-700 appearance-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer">
-                                        <option value="">All Types</option>
-                                        @foreach($availableTypes as $type)
-                                            <option value="{{ $type }}">{{ $type }}</option>
-                                        @endforeach
-                                    </select>
-                                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="relative">
+                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari SPK atau Customer..." 
+                           class="pl-10 pr-4 py-2.5 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl focus:ring-2 focus:ring-amber-500/20 shadow-sm w-64 font-bold text-slate-700 dark:text-slate-200">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Metrics Row --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {{-- Total Queue --}}
-            <div class="bg-[#1a3b34] rounded-[2rem] p-8 text-white shadow-xl shadow-teal-900/10 relative overflow-hidden group">
-                <div class="relative z-10">
-                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300/80 mb-2">Total Queue</p>
-                    <div class="flex items-baseline gap-2">
-                        <h2 class="text-4xl font-black tabular-nums">{{ number_format($totalCount) }}</h2>
-                        <span class="text-xs font-bold text-teal-400/80 flex items-center gap-1">Live</span>
+        {{-- Interactive Stage Status Cards --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div wire:click="$set('activeTab', 'ready')" class="cursor-pointer p-5 rounded-2xl border transition-all {{ $activeTab == 'ready' ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-lg shadow-amber-500/20 scale-[1.02]' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-amber-400' }}">
+                <span class="text-[10px] font-black uppercase tracking-wider opacity-80 block mb-1">1. Antrean Sortir</span>
+                <div class="flex items-baseline justify-between">
+                    <h3 class="text-3xl font-black tabular-nums">{{ number_format($readyCount) }}</h3>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-black/10">PREP Completed</span>
+                </div>
+            </div>
+
+            <div wire:click="$set('activeTab', 'waiting')" class="cursor-pointer p-5 rounded-2xl border transition-all {{ $activeTab == 'waiting' ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-600/20 scale-[1.02]' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-purple-400' }}">
+                <span class="text-[10px] font-black uppercase tracking-wider opacity-80 block mb-1">2. Rak Tunggu Belanja (Finlog)</span>
+                <div class="flex items-baseline justify-between">
+                    <h3 class="text-3xl font-black tabular-nums">{{ number_format($waitingCount) }}</h3>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-white/20">REST API / Webhook</span>
+                </div>
+            </div>
+
+            <div wire:click="$set('activeTab', 'priority')" class="cursor-pointer p-5 rounded-2xl border transition-all {{ $activeTab == 'priority' ? 'bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-600/20 scale-[1.02]' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-rose-400' }}">
+                <span class="text-[10px] font-black uppercase tracking-wider opacity-80 block mb-1">3. OTO & Fast Track</span>
+                <div class="flex items-baseline justify-between">
+                    <h3 class="text-3xl font-black tabular-nums">{{ number_format($totalCount - $readyCount - $waitingCount) }}</h3>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-white/20">Parallel Bypass</span>
+                </div>
+            </div>
+
+            <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">4. Total Unit Aktif</span>
+                <div class="flex items-baseline justify-between">
+                    <h3 class="text-3xl font-black tabular-nums">{{ number_format($totalCount) }}</h3>
+                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Live Intake</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- KPI Metrics Row --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Throughput Harian</span>
+                        <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">{{ $dailyThroughput }}</span>
+                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 ml-1">SPK hari ini</span>
                     </div>
                 </div>
             </div>
 
-            {{-- Ready --}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 flex flex-col justify-between relative group">
-                <div>
-                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Ready</p>
-                    <h2 class="text-4xl font-black text-[#1a3b34] tabular-nums">{{ number_format($readyCount) }}</h2>
-                </div>
-                <div class="mt-4">
-                    <span class="inline-flex items-center px-3 py-1 bg-green-50 text-[10px] font-black uppercase tracking-widest text-[#22AF85] rounded-lg">ALLOCATED</span>
-                </div>
-            </div>
-
-            {{-- Waiting (Stock Shortage) --}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 flex flex-col justify-between relative group">
-                <div>
-                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Stock Shortage</p>
-                    <h2 class="text-4xl font-black text-[#1a3b34] tabular-nums">{{ number_format($waitingCount) }}</h2>
-                </div>
-                <div class="mt-4">
-                    <span class="inline-flex items-center px-3 py-1 bg-amber-50 text-[10px] font-black uppercase tracking-widest text-amber-600 rounded-lg">WAITING ACTION</span>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Rata-rata Lead Time</span>
+                        <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">{{ $avgLeadTimeHours }}</span>
+                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 ml-1">jam di Sortir</span>
+                    </div>
                 </div>
             </div>
 
-            {{-- Empty Materials (Friction Zone) --}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 flex flex-col justify-between relative group border-l-4 border-l-red-400">
-                <div>
-                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-red-400 mb-2">Needs Material Data</p>
-                    <h2 class="text-4xl font-black text-red-600 tabular-nums">{{ number_format($needsRequestCount) }}</h2>
-                </div>
-                <div class="mt-4">
-                    <span class="inline-flex items-center px-3 py-1 bg-red-50 text-[10px] font-black uppercase tracking-widest text-red-600 rounded-lg">EMPTY INPUT</span>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl {{ $bottleneckCount > 5 ? 'bg-rose-100 dark:bg-rose-900/40' : 'bg-amber-100 dark:bg-amber-900/40' }} flex items-center justify-center {{ $bottleneckCount > 5 ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Bottleneck Aktif</span>
+                        <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">{{ $bottleneckCount }}</span>
+                        <span class="text-[10px] font-bold {{ $bottleneckCount > 5 ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400' }} ml-1">FU + Belanja</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- Tab Controls & List Header --}}
-        <div class="flex flex-col sm:flex-row items-center justify-between border-b border-gray-200 mb-8 gap-4">
-            <div class="flex gap-8">
-                <button wire:click="$set('activeTab', 'ready')" 
-                        class="pb-4 px-1 relative transition-all group {{ $activeTab === 'ready' ? 'text-[#1a3b34]' : 'text-gray-400 hover:text-gray-600' }}">
-                    <span class="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                        Siap Produksi
-                        <span class="text-[10px] px-2 py-0.5 rounded-md {{ $activeTab === 'ready' ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-400' }}">
-                            {{ number_format($readyOrders->total()) }}
-                        </span>
-                    </span>
-                    @if($activeTab === 'ready') <div class="absolute bottom-0 left-0 w-full h-[3px] bg-teal-500 rounded-t-full"></div> @endif
-                </button>
-                <button wire:click="$set('activeTab', 'waiting')" 
-                        class="pb-4 px-1 relative transition-all group {{ $activeTab === 'waiting' ? 'text-[#1a3b34]' : 'text-gray-400 hover:text-gray-600' }}">
-                    <span class="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                        In Procurement
-                        <span class="text-[10px] px-2 py-0.5 rounded-md {{ $activeTab === 'waiting' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400' }}">
-                            {{ number_format($waitingCount) }}
-                        </span>
-                    </span>
-                    @if($activeTab === 'waiting') <div class="absolute bottom-0 left-0 w-full h-[3px] bg-amber-500 rounded-t-full"></div> @endif
-                </button>
-                <button wire:click="$set('activeTab', 'needs_request')" 
-                        class="pb-4 px-1 relative transition-all group {{ $activeTab === 'needs_request' ? 'text-[#1a3b34]' : 'text-gray-400 hover:text-gray-600' }}">
-                    <span class="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                        Belum Request
-                        <span class="text-[10px] px-2 py-0.5 rounded-md {{ $activeTab === 'needs_request' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-400' }}">
-                            {{ number_format($needsRequestCount) }}
-                        </span>
-                    </span>
-                    @if($activeTab === 'needs_request') <div class="absolute bottom-0 left-0 w-full h-[3px] bg-red-500 rounded-t-full"></div> @endif
-                </button>
-            </div>
-            <div x-data="{ open: false }" class="relative pb-4">
-                <button @click="open = !open" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#1a3b34] transition-colors">
-                    Sorted by: <span class="text-gray-900">{{ collect([
-                        'priority_newest' => 'Newest Priority',
-                        'newest_spk' => 'Newest SPK',
-                        'oldest_spk' => 'Oldest SPK',
-                        'spk_asc' => 'SPK Number (A-Z)'
-                    ])->get($sortBy) }}</span>
-                    <svg class="w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 4.5h18m-18 5h10m-10 5h6"></path></svg>
-                </button>
-
-                <div x-show="open" x-cloak @click.away="open = false" 
-                     x-transition:enter="transition ease-out duration-100"
-                     x-transition:enter-start="opacity-0 scale-95"
-                     x-transition:enter-end="opacity-100 scale-100"
-                     class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 p-2 overflow-hidden">
-                    @foreach([
-                        'priority_newest' => 'Newest Priority',
-                        'newest_spk' => 'Newest SPK',
-                        'oldest_spk' => 'Oldest SPK',
-                        'spk_asc' => 'SPK Number (A-Z)'
-                    ] as $val => $label)
-                        <button wire:click="$set('sortBy', '{{ $val }}')" @click="open = false" 
-                                class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {{ $sortBy === $val ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-50' }}">
-                            {{ $label }}
-                            @if($sortBy === $val)
-                                <svg class="w-4 h-4 text-teal-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                            @endif
-                        </button>
-                    @endforeach
+        {{-- Rack Capacity Visualization --}}
+        @if($racks->isNotEmpty())
+        <div x-data="{ showRacks: false }" class="mb-8">
+            <button @click="showRacks = !showRacks" class="w-full flex items-center justify-between bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-amber-400 transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-sm">🗄️</div>
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Indikator Kapasitas Rak ({{ $racks->count() }} Rak Aktif)</span>
+                    @php $overCapRacks = $racks->where('is_over', true)->count(); @endphp
+                    @if($overCapRacks > 0)
+                    <span class="px-2 py-0.5 bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-lg border border-rose-200 dark:border-rose-800">{{ $overCapRacks }} OVER CAPACITY</span>
+                    @endif
                 </div>
-            </div>
-        </div>
+                <svg :class="showRacks ? 'rotate-180' : ''" class="w-4 h-4 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
 
-        {{-- Main Grid --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            @php 
-                $currentOrders = match($activeTab) {
-                    'ready' => $readyOrders,
-                    'waiting' => $waitingOrders,
-                    'needs_request' => $needsRequestOrders,
-                    default => $readyOrders
-                }; 
-            @endphp
-            
-              @forelse($currentOrders as $order)
-                @php
-                    $isSlaViolated = $order->isSortirSlaViolated();
+            <div x-show="showRacks" x-transition class="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                @foreach($racks as $rack)
+                @php 
+                    $util = $rack['utilization'];
+                    $barColor = $util >= 100 ? 'bg-rose-500' : ($util >= 80 ? 'bg-amber-500' : 'bg-emerald-500');
+                    $borderColor = $util >= 100 ? 'border-rose-300 dark:border-rose-700' : 'border-slate-200 dark:border-slate-700';
                 @endphp
-                <div class="{{ $isSlaViolated ? 'bg-red-50/90 border-red-400 border-l-[12px] border-l-red-600' : ($order->fast_track_status === 'yes' ? 'bg-orange-50/90 border-orange-300 border-l-[12px] border-l-orange-500' : 'bg-white border-gray-100') }} rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col sm:flex-row border">
-                    {{-- Visual Left Side --}}
-                    <div class="w-full sm:w-[220px] bg-black relative flex items-center justify-center overflow-hidden min-h-[220px]">
-                        @if($order->spk_cover_photo_url)
-                            <img src="{{ $order->spk_cover_photo_url }}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" alt="Item Photo">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                        @else
-                            <div class="absolute inset-0 bg-gradient-to-br from-gray-800 to-black opacity-60"></div>
-                            <svg class="w-16 h-16 text-white/5 relative z-10" fill="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                        @endif
-                        
-                        <div class="absolute top-4 left-4 {{ $isSlaViolated ? 'bg-red-600/90' : ($order->fast_track_status === 'yes' ? 'bg-orange-600/90' : 'bg-white/20') }} backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
-                            <span class="text-[10px] font-black text-white uppercase tracking-widest">{{ $order->spk_number }}</span>
-                        </div>
-
-                        {{-- Hover overlay for quick image view or gallery? --}}
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-800 border {{ $borderColor }} shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-black text-slate-900 dark:text-white uppercase">{{ $rack['rack_code'] }}</span>
+                        <span class="w-2 h-2 rounded-full {{ $rack['is_over'] ? 'bg-rose-500' : 'bg-emerald-500' }}"></span>
                     </div>
-
-                    {{-- Content Right Side --}}
-                    <div class="flex-1 p-8 flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="text-xl font-black text-[#1a3b34] leading-tight group-hover:text-teal-600 transition-colors uppercase">
-                                    {{ $order->customer?->name ?? 'Guest' }} • {{ $order->shoe_type ?? 'Sneakers' }}
-                                </h3>
-                                <div class="flex flex-wrap gap-2 justify-end">
-                                    @if($isSlaViolated)
-                                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black tracking-tighter uppercase bg-red-600 text-white border border-red-700 animate-pulse shadow-sm shadow-red-200">
-                                            ⚠️ SLA SORTIR OVERDUE (TERLAMBAT {{ (int) $order->created_at->diffInDays(now()) - 3 }} HARI)
-                                        </span>
-                                    @endif
-                                    @if($order->fast_track_status === 'yes')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black tracking-tighter uppercase bg-orange-500 text-white border border-orange-660 animate-pulse shadow-sm shadow-orange-200">
-                                            🚀 FAST TRACK
-                                        </span>
-                                    @elseif(!$isSlaViolated)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black tracking-tighter uppercase {{ $order->priority == 'Urgent' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600' }}">
-                                            {{ $order->priority }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-6">
-                                BRAND: <span class="text-gray-600 mr-3 truncate max-w-[120px] inline-block align-bottom">{{ $order->shoe_brand ?? 'N/A' }}</span>
-                                SIZE: <span class="text-gray-600">{{ $order->shoe_size ?? 'N/A' }}</span>
-                            </p>
-
-                            {{-- Progress Bar --}}
-                            <div class="space-y-2 mb-6">
-                                @php
-                                    $totalMats = $order->materials->count();
-                                    $allocatedMats = $order->materials->where('pivot.status', 'ALLOCATED')->count();
-                                    $percent = $totalMats > 0 ? round(($allocatedMats / $totalMats) * 100) : 0;
-                                    $isReady = $totalMats > 0 && $percent == 100;
-                                @endphp
-                                <div class="flex justify-between items-center text-[9px] font-black uppercase tracking-widest mb-1.5">
-                                    <span class="text-gray-400">Material Allocation</span>
-                                    @if($totalMats > 0)
-                                        <span class="{{ $isReady ? 'text-[#22AF85]' : 'text-gray-400' }}">{{ $percent }}% READY</span>
-                                    @else
-                                        <span class="text-red-400">0% INPUT</span>
-                                    @endif
-                                </div>
-                                <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden flex">
-                                    <div class="h-full rounded-full transition-all duration-700 {{ $isReady ? 'bg-[#22AF85]' : 'bg-amber-400' }}" style="width: {{ $percent }}%"></div>
-                                </div>
-                            </div>
-
-                            {{-- Micro-indicators (Technical Accessories T, I, B, O) --}}
-                            <div class="flex items-center gap-4">
-                                <div class="flex gap-1.5">
-                                    @foreach(['tali' => 'T', 'insole' => 'I', 'box' => 'B'] as $field => $label)
-                                        @php
-                                            $status = $order->{"accessories_$field"} ?? 'N';
-                                            // Handle long format from legacy or other modules
-                                            $statusCode = match($status) {
-                                                'Simpan', 'T' => 'T',
-                                                'Susulan', 'S' => 'S',
-                                                default => 'N'
-                                            };
-                                            
-                                            $style = match($statusCode) {
-                                                'T' => 'bg-[#22AF85] text-white shadow-md shadow-[#22AF85]/20',
-                                                'S' => 'bg-[#FFC232] text-white shadow-md shadow-[#FFC232]/20',
-                                                default => 'bg-gray-50 text-gray-400 border border-gray-100'
-                                            };
-                                        @endphp
-                                        <div class="w-8 h-8 rounded-xl flex flex-col items-center justify-center text-[10px] font-black transition-all border {{ $style }}" title="{{ strtoupper($field) }}: {{ $status }}">
-                                            <span class="opacity-50 text-[7px] -mb-1">{{ $label }}</span>
-                                            <span>{{ $statusCode }}</span>
-                                        </div>
-                                    @endforeach
-                                </div>
-                                <div class="h-4 w-px bg-gray-200"></div>
-                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate max-w-[150px]">
-                                    Color: <span class="text-gray-500 font-black">{{ $order->shoe_color ?? '-' }}</span>
-                                </span>
-                            </div>
-                        </div>
-
-                        {{-- Footer Actions --}}
-                        <div class="flex items-center gap-2 mt-8">
-                            <a href="{{ route('sortir.show', $order->id) }}" wire:navigate
-                               class="flex-1 bg-[#1a3b34] hover:bg-teal-800 text-white py-3.5 px-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal-900/10">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                Check Detail
-                            </a>
-                            
-                            
-                            @if($activeTab === 'waiting')
-                                @php
-                                    $hasActivePO = $order->materialRequests->whereIn('status', ['PENDING', 'APPROVED', 'PURCHASED'])->isNotEmpty();
-                                @endphp
-
-                                @if(!$hasActivePO)
-                                    <button wire:click="requestMaterial({{ $order->id }})" wire:loading.attr="disabled"
-                                            class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3.5 px-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-900/20">
-                                        <svg wire:loading.remove wire:target="requestMaterial({{ $order->id }})" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
-                                        <svg wire:loading wire:target="requestMaterial({{ $order->id }})" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                        Ajukan ke Purchasing
-                                    </button>
-                                @else
-                                    <div class="flex-1 bg-gray-50 border border-gray-100 text-gray-400 py-3.5 px-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-default">
-                                        <svg class="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        PO Dikirim
-                                    </div>
-                                @endif
-                            @endif
-
-                            @if(in_array(auth()->user()->role, ['admin', 'owner', 'production_manager']))
-                                <button wire:click="bypassSingle({{ $order->id }})" wire:confirm="Kirim order #{{ $order->spk_number }} langsung ke Produksi?"
-                                        class="p-4 bg-white border border-gray-100 text-gray-400 hover:text-teal-600 hover:border-teal-100 hover:bg-teal-50 rounded-2xl transition-all shadow-sm"
-                                        title="Bypass to Production">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
-                                </button>
-                            @endif
-
-                            {{-- Follow Up / Report Issue --}}
-                            <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-report-modal', { detail: {{ $order->id }} }))" 
-                                    class="p-4 bg-amber-50 border border-amber-100 text-amber-600 hover:text-amber-700 hover:bg-amber-100 rounded-2xl transition-all shadow-sm"
-                                    title="Lapor / Follow Up">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            </button>
-                        </div>
+                    <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden mb-1.5">
+                        <div class="h-full {{ $barColor }} rounded-full transition-all" style="width: {{ min($util, 100) }}%"></div>
                     </div>
+                    <div class="flex items-baseline justify-between">
+                        <span class="text-[10px] font-bold text-slate-500">{{ $rack['current_count'] }}/{{ $rack['capacity'] }}</span>
+                        <span class="text-[10px] font-black {{ $rack['is_over'] ? 'text-rose-600' : 'text-slate-400' }}">{{ $util }}%</span>
+                    </div>
+                    @if($rack['workshop_zone'])
+                    <span class="text-[9px] font-bold text-indigo-500 block mt-1">{{ $rack['workshop_zone'] }}</span>
+                    @endif
                 </div>
-            @empty
-                <div class="lg:col-span-2 py-32 flex flex-col items-center justify-center bg-white rounded-[2rem] border-2 border-dashed border-gray-100 italic">
-                    <svg class="w-16 h-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                    <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">No active orders in this queue</p>
-                </div>
-            @endforelse
+                @endforeach
+            </div>
         </div>
+        @endif
 
-        {{-- Pagination --}}
-        <div class="mt-12">
-            {{ $currentOrders->links() }}
+        {{-- SPK List Table --}}
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            @php
+                $orderList = match($activeTab) {
+                    'ready' => $readyOrders ?? collect([]),
+                    'waiting' => $waitingOrders ?? collect([]),
+                    'priority' => $priorityOrders ?? collect([]),
+                    default => $allSortirOrders ?? collect([]),
+                };
+                $waitingIds = $activeTab === 'waiting' ? $orderList->pluck('id')->map(fn($id) => (string)$id)->toArray() : [];
+            @endphp
+
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-700/50">
+                <div>
+                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>DAFTAR ANTREAN SPK SORTIR — {{ strtoupper($activeTab) }}</span>
+                    </h3>
+                    <span class="text-xs font-bold text-slate-500">Klik baris untuk buka klasifikasi & validasi material</span>
+                </div>
+
+                @if($activeTab === 'waiting')
+                    <div class="flex items-center gap-2">
+                        @if(count($selectedWaitingItems) > 0)
+                            <button type="button" wire:click="openBulkPengajuanModal" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-indigo-500/20 transition-all active:scale-95 flex items-center gap-2">
+                                <span>📋 Buat 1 Pengajuan Belanja Gabungan ({{ count($selectedWaitingItems) }} SPK Ditandai) ➔</span>
+                            </button>
+                        @else
+                            <button type="button" wire:click="openBulkPengajuanModal" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-400 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-not-allowed" title="Centang SPK terlebih dahulu pada tabel di bawah">
+                                <span>📋 Buat Pengajuan Belanja Gabungan (Centang SPK)</span>
+                            </button>
+                        @endif
+                    </div>
+                @endif
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                    <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-400 text-xs uppercase border-b border-slate-100 dark:border-slate-700">
+                        <tr>
+                            @if($activeTab === 'waiting')
+                            <th class="px-4 py-3.5 text-center w-12 bg-indigo-50/50 dark:bg-indigo-950/20">
+                                <div class="flex items-center justify-center gap-1">
+                                    <input type="checkbox" wire:click="toggleSelectWaitingAll({{ json_encode($waitingIds) }})" 
+                                           {{ count($waitingIds) > 0 && collect($waitingIds)->every(fn($id) => in_array($id, $selectedWaitingItems)) ? 'checked' : '' }}
+                                           class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                                </div>
+                            </th>
+                            @endif
+                            <th class="px-6 py-3.5">Nomor SPK</th>
+                            <th class="px-6 py-3.5">Customer & Sepatu</th>
+                            <th class="px-6 py-3.5 text-center">Klasifikasi Sortir</th>
+                            @if($activeTab === 'waiting')
+                            <th class="px-6 py-3.5 text-center">Status Material</th>
+                            @endif
+                            <th class="px-6 py-3.5 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        @forelse($orderList as $order)
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40 transition {{ in_array((string)$order->id, $selectedWaitingItems) ? 'bg-indigo-50/40 dark:bg-indigo-950/30' : '' }}">
+                                @if($activeTab === 'waiting')
+                                <td class="px-4 py-4 text-center bg-indigo-50/30 dark:bg-indigo-950/10">
+                                    <input type="checkbox" value="{{ $order->id }}" wire:model.live="selectedWaitingItems" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                                </td>
+                                @endif
+                                <td class="px-6 py-4 font-mono font-bold text-slate-900 dark:text-white">
+                                    {{ $order->spk_number }}
+                                    @if($order->has_active_oto)
+                                        <span class="ml-2 px-2 py-0.5 bg-amber-500 text-slate-950 text-[10px] font-black rounded">OTO</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="font-bold text-slate-800 dark:text-white block">{{ $order->customer_name }}</span>
+                                    <span class="text-xs text-slate-500">{{ $order->shoe_brand }} - {{ $order->shoe_type }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    @php
+                                        // Pre-compute material status so we can use it in the classification column
+                                        $matCountEarly  = $order->materials->count();
+                                        $hasRequestedEarly = $order->materials->contains(fn($m) => ($m->pivot->status ?? '') === 'REQUESTED');
+                                        $hasAllocatedEarly  = $order->materials->contains(fn($m) => in_array($m->pivot->status ?? '', ['ALLOCATED', 'RECEIVED']));
+
+                                        if ($hasRequestedEarly) {
+                                            $matStatusEarly = 'requested';
+                                        } elseif ($hasAllocatedEarly) {
+                                            $matStatusEarly = 'ready';
+                                        } elseif ($order->perlu_belanja === null && $matCountEarly === 0) {
+                                            $matStatusEarly = 'unvalidated';
+                                        } else {
+                                            $matStatusEarly = 'no_material';
+                                        }
+                                    @endphp
+                                    @if($order->perlu_bongkar !== null && $order->perlu_belanja !== null)
+                                        <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                            {{-- Badge Bongkar --}}
+                                            @if($order->perlu_bongkar)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border border-orange-200 dark:border-orange-700">
+                                                    🔨 Bongkar
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-700/60 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
+                                                    🔨 Tdk Bongkar
+                                                </span>
+                                            @endif
+
+                                            {{-- Badge Belanja — disembunyikan jika Material sudah Siap --}}
+                                            @if($matStatusEarly !== 'ready')
+                                                @if($order->perlu_belanja)
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
+                                                        🛒 Belanja
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-700/60 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
+                                                        🛒 Tdk Belanja
+                                                    </span>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200">
+                                            ⏳ Belum Diisi
+                                        </span>
+                                    @endif
+                                </td>
+                                @if($activeTab === 'waiting')
+                                <td class="px-6 py-4 text-center">
+                                    @php
+                                        // Reuse $matStatusEarly already computed in the Klasifikasi column above
+                                        $matStatus = $matStatusEarly;
+                                    @endphp
+
+                                    @if($matStatus === 'requested')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
+                                            🛒 Menunggu Belanja Finlog
+                                        </span>
+                                    @elseif($matStatus === 'ready')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+                                            ✅ Material Siap
+                                        </span>
+                                    @elseif($matStatus === 'unvalidated')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+                                            ⏳ Belum Divalidasi
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-500 dark:bg-slate-700/60 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
+                                            ℹ️ Tidak Butuh Material
+                                        </span>
+                                    @endif
+                                </td>
+                                @endif
+                                <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
+                                    @if($activeTab === 'waiting')
+                                    @php
+                                        $hasActiveReq = $order->materialRequests
+                                            ? $order->materialRequests->whereIn('status', ['PENDING','APPROVED','PURCHASED'])->count() > 0
+                                            : false;
+                                    @endphp
+                                    @if(!$hasActiveReq)
+                                    <button type="button" wire:click="openPengajuanModal({{ $order->id }})" class="px-3 py-2 bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 font-bold text-xs rounded-xl transition inline-flex items-center gap-1">
+                                        📋 Buat Pengajuan
+                                    </button>
+                                    @else
+                                    <span class="px-3 py-2 bg-purple-100 text-purple-700 font-bold text-xs rounded-xl inline-flex items-center gap-1">
+                                        🛒 Sudah Diajukan
+                                    </span>
+                                    @endif
+                                    @endif
+                                    <button type="button" @click="window.dispatchEvent(new CustomEvent('open-report-modal', { detail: { id: {{ $order->id }} } }))" class="px-3 py-2 bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-200 font-bold text-xs rounded-xl transition inline-flex items-center gap-1">
+                                        ⚠️ Lapor Kendala / FU
+                                    </button>
+                                    <a href="{{ route('sortir.show', $order->id) }}" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl shadow-sm transition inline-flex items-center gap-1">
+                                        Proses Sortir ➔
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ $activeTab === 'waiting' ? 5 : 4 }}" class="px-6 py-12 text-center text-slate-400 text-xs">
+                                    Tidak ada antrean SPK pada kategori ini saat ini.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    {{-- REPORT ISSUE MODAL --}}
+    {{-- MASTER REPORT MODAL COMPONENT --}}
     <x-report-modal />
+
+    {{-- MODAL: Buat Pengajuan Belanja Finlog --}}
+    @if($showPengajuanModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4" x-data x-init="$nextTick(() => document.body.style.overflow='hidden')" x-destroy="document.body.style.overflow=''">
+        {{-- Backdrop --}}
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" wire:click="closePengajuanModal"></div>
+
+        {{-- Modal Panel --}}
+        <div class="relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-indigo-50 dark:bg-indigo-950/30">
+                <div>
+                    <h3 class="text-sm font-black text-indigo-900 dark:text-indigo-200">📋 Buat Pengajuan Belanja Finlog</h3>
+                    <p class="text-xs text-indigo-600 dark:text-indigo-400 mt-0.5">SPK: <span class="font-mono font-bold">{{ $pengajuanSpkNumber }}</span></p>
+                </div>
+                <button wire:click="closePengajuanModal" class="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                    ✕
+                </button>
+            </div>
+
+            {{-- Body --}}
+            <div class="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                {{-- Material List --}}
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Daftar Material yang Diajukan</p>
+                    @if(empty($pengajuanMaterials))
+                        <div class="py-6 text-center text-slate-400 text-xs bg-slate-50 dark:bg-slate-700/30 rounded-xl">
+                            ⚠️ Tidak ada material REQUESTED untuk SPK ini.
+                        </div>
+                    @else
+                        <div class="space-y-2">
+                            @foreach($pengajuanMaterials as $mat)
+                            <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-700/40 rounded-xl px-4 py-2.5">
+                                <div>
+                                    <span class="text-xs font-bold text-slate-800 dark:text-white block">{{ $mat['name'] }}</span>
+                                    <span class="text-[10px] text-slate-400 block">{{ $mat['sub_category'] }}</span>
+                                    @if(!empty($mat['spk_number']))
+                                        <span class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-black rounded-md border border-indigo-200 dark:border-indigo-800">
+                                            📦 SPK #{{ $mat['spk_number'] }} — {{ $mat['customer_name'] ?? '' }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs font-black text-indigo-600 dark:text-indigo-400">{{ $mat['quantity'] }} {{ $mat['unit'] }}</span>
+                                    @if(($mat['price'] ?? 0) > 0)
+                                    <span class="text-[10px] text-slate-400 block">~Rp {{ number_format($mat['price'] * $mat['quantity'], 0, ',', '.') }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Total Estimasi --}}
+                        @php
+                            $totalEstimasi = collect($pengajuanMaterials)->sum(fn($m) => ($m['price'] ?? 0) * ($m['quantity'] ?? 1));
+                        @endphp
+                        @if($totalEstimasi > 0)
+                        <div class="mt-3 flex justify-between items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                            <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300">Total Estimasi Biaya</span>
+                            <span class="text-sm font-black text-indigo-800 dark:text-indigo-200">Rp {{ number_format($totalEstimasi, 0, ',', '.') }}</span>
+                        </div>
+                        @endif
+                    @endif
+                </div>
+
+                {{-- Notes --}}
+                <div>
+                    <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1.5">Catatan (opsional)</label>
+                    <textarea wire:model="pengajuanNotes" rows="2" placeholder="Mis: warna khusus, ukuran, spesifikasi tambahan..." class="w-full text-sm border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"></textarea>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                <button wire:click="closePengajuanModal" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">
+                    Batal
+                </button>
+                <button wire:click="submitPengajuan" wire:loading.attr="disabled" @disabled(empty($pengajuanMaterials)) class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2">
+                    <span wire:loading.remove wire:target="submitPengajuan">📤 Kirim ke Finlog</span>
+                    <span wire:loading wire:target="submitPengajuan">⏳ Memproses...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>

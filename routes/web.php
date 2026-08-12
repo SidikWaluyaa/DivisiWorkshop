@@ -288,8 +288,19 @@ Route::middleware('auth')->group(function () {
         });
         
         Route::middleware('access:preparation')->group(function () {
+            Route::get('/{id}/receive', [WorkshopManifestController::class, 'receiveForm'])->name('receive.form');
             Route::post('/{id}/receive', [WorkshopManifestController::class, 'receive'])->name('receive');
         });
+    });
+
+    // Surat Jalan Handover (FR-10.1)
+    Route::prefix('surat-jalan')->name('surat-jalan.')->group(function () {
+        Route::get('/', [App\Http\Controllers\SuratJalanController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\SuratJalanController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\SuratJalanController::class, 'store'])->name('store');
+        Route::get('/{id}', [App\Http\Controllers\SuratJalanController::class, 'show'])->name('show');
+        Route::get('/{id}/print', [App\Http\Controllers\SuratJalanController::class, 'print'])->name('print');
+        Route::post('/{id}/receive', [App\Http\Controllers\SuratJalanController::class, 'markAsReceived'])->name('receive');
     });
 
 
@@ -351,6 +362,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/skip-to-production', [SortirController::class, 'skipToProduction'])->name('skip-production');
         Route::post('/bulk-skip-to-production', [SortirController::class, 'bulkSkipToProduction'])->name('bulk-skip-production');
         Route::post('/bulk-update', [SortirController::class, 'bulkUpdate'])->name('bulk-update');
+
+        // Surat Jalan (Print-friendly Delivery Note)
+        Route::get('/{id}/surat-jalan', [App\Http\Controllers\Workshop\SuratJalanController::class, 'show'])->name('surat-jalan');
     });
 
     // Production
@@ -750,7 +764,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/', \App\Livewire\Procurement\Index::class)->name('index');
         Route::get('/create', \App\Livewire\Procurement\Create::class)->name('create');
         Route::get('/{id}', \App\Livewire\Procurement\Show::class)->name('show');
-        
+        Route::get('/{materialRequest}/print', [App\Http\Controllers\MaterialRequestController::class, 'print'])->name('print');
+
         // Legacy actions (Still handled by Controller if needed, or moved to Livewire)
         Route::post('/{materialRequest}/approve', [App\Http\Controllers\MaterialRequestController::class, 'approve'])->name('approve');
         Route::post('/{materialRequest}/reject', [App\Http\Controllers\MaterialRequestController::class, 'reject'])->name('reject');
