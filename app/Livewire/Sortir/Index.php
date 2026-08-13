@@ -498,7 +498,11 @@ class Index extends Component
         $materialService->autoAllocateStock();
 
         // Fetch Lists for Filters
-        $baseQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value);
+        $baseQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+            ->whereDoesntHave('logs', function($lq) {
+                $lq->where('step', 'SORTIR')
+                   ->where('action', 'CLASSIFICATION_COMPLETED');
+            });
         
         $availableBrands = (clone $baseQuery)
             ->distinct()
@@ -514,11 +518,19 @@ class Index extends Component
 
         // 1. All Sortir Queue (Base)
         $allSortirQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+            ->whereDoesntHave('logs', function($lq) {
+                $lq->where('step', 'SORTIR')
+                   ->where('action', 'CLASSIFICATION_COMPLETED');
+            })
             ->with(['customer', 'services', 'materials', 'cxIssues', 'logs']);
         $allSortirOrders = $this->applyFilters(clone $allSortirQuery)->paginate(20, ['*'], 'allPage');
 
         // 2. Priority & Fast Track Queue
         $priorityQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+            ->whereDoesntHave('logs', function($lq) {
+                $lq->where('step', 'SORTIR')
+                   ->where('action', 'CLASSIFICATION_COMPLETED');
+            })
             ->where(function($q) {
                 $q->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO'])
                   ->orWhere('fast_track_status', 'yes')
@@ -529,6 +541,10 @@ class Index extends Component
 
         // 3. Waiting Finlog Belanja Queue
         $waitingQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+            ->whereDoesntHave('logs', function($lq) {
+                $lq->where('step', 'SORTIR')
+                   ->where('action', 'CLASSIFICATION_COMPLETED');
+            })
             ->where(function($q) {
                 $q->where('perlu_belanja', true)
                   ->orWhereHas('materials', fn($m) => $m->where('work_order_materials.status', 'REQUESTED'));
@@ -538,6 +554,10 @@ class Index extends Component
 
         // 4. Ready / Standard Sortir Queue (exclude waiting orders)
         $readyQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+            ->whereDoesntHave('logs', function($lq) {
+                $lq->where('step', 'SORTIR')
+                   ->where('action', 'CLASSIFICATION_COMPLETED');
+            })
             ->where(function($q) {
                 $q->where('perlu_belanja', '!=', true)
                   ->orWhereNull('perlu_belanja');
@@ -547,18 +567,9 @@ class Index extends Component
         $readyOrders = $this->applyFilters(clone $readyQuery)->paginate(20, ['*'], 'readyPage');
 
         // Metric calculations
-        $totalCount = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)->count();
-        $waitingCount = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
-            ->where(function($q) {
-                $q->where('perlu_belanja', true)
-                  ->orWhereHas('materials', fn($m) => $m->where('work_order_materials.status', 'REQUESTED'));
-            })->count();
-        $priorityCount = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
-            ->where(function($q) {
-                $q->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO'])
-                  ->orWhere('fast_track_status', 'yes')
-                  ->orWhere('has_active_oto', true);
-            })->count();
+        $totalCount = (clone $baseQuery)->count();
+        $waitingCount = (clone $waitingQuery)->count();
+        $priorityCount = (clone $priorityQuery)->count();
         $readyCount = $totalCount - $waitingCount;
 
         // ═══ KPI Metrics ═══

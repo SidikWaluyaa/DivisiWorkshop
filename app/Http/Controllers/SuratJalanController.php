@@ -41,7 +41,7 @@ class SuratJalanController extends Controller
         // Fetch candidate SPKs based on transfer type
         $availableOrders = collect();
         if ($jenis === 'sortir_to_produksi') {
-            $availableOrders = WorkOrder::where('status', \App\Enums\WorkOrderStatus::PRODUCTION)
+            $availableOrders = WorkOrder::whereIn('status', [\App\Enums\WorkOrderStatus::SORTIR, \App\Enums\WorkOrderStatus::PRODUCTION])
                 ->whereHas('logs', function($lq) {
                     $lq->where('step', 'SORTIR')
                        ->where('action', 'CLASSIFICATION_COMPLETED');
@@ -50,11 +50,10 @@ class SuratJalanController extends Controller
                     $q->where('jenis_serah_terima', 'sortir_to_produksi');
                 })->get();
         } elseif ($jenis === 'produksi_to_post_qc') {
-            $availableOrders = WorkOrder::where('status', \App\Enums\WorkOrderStatus::PRODUCTION)
-                ->where(function($q) {
-                    $q->whereNotNull('prod_sol_completed_at')
-                      ->orWhereNotNull('prod_upper_completed_at')
-                      ->orWhereNotNull('prod_cleaning_completed_at');
+            $availableOrders = WorkOrder::whereIn('status', [\App\Enums\WorkOrderStatus::PRODUCTION, \App\Enums\WorkOrderStatus::QC])
+                ->whereHas('logs', function($lq) {
+                    $lq->where('step', 'PRODUCTION')
+                       ->where('action', 'PRODUCTION_APPROVED');
                 })
                 ->whereDoesntHave('suratJalanItems.suratJalan', function($q) {
                     $q->where('jenis_serah_terima', 'produksi_to_post_qc');

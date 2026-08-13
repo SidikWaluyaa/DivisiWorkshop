@@ -293,6 +293,9 @@ Route::middleware('auth')->group(function () {
         });
     });
 
+    // Gudang Outbound Receipt (Penerimaan QC ke Gudang Utama)
+    Route::get('/gudang/outbound-receipt', \App\Livewire\Gudang\OutboundReceiptIndex::class)->name('gudang.outbound-receipt');
+
     // Surat Jalan Handover (FR-10.1)
     Route::prefix('surat-jalan')->name('surat-jalan.')->group(function () {
         Route::get('/', [App\Http\Controllers\SuratJalanController::class, 'index'])->name('index');
@@ -381,6 +384,10 @@ Route::middleware('auth')->group(function () {
     // QC
     Route::prefix('qc')->name('qc.')->middleware('access:qc')->group(function () {
         Route::get('/', \App\Livewire\Qc\QcIndex::class)->lazy()->name('index');
+        Route::get('/outbond', \App\Livewire\Qc\OutboundIndex::class)->lazy()->name('outbound');
+        Route::get('/outbond/create', [App\Http\Controllers\OutboundController::class, 'create'])->name('outbound.create');
+        Route::get('/outbond/{id}', [App\Http\Controllers\OutboundController::class, 'show'])->name('outbound.show');
+        Route::get('/outbond/{id}/print', [App\Http\Controllers\OutboundController::class, 'print'])->name('outbound.print');
         Route::get('/{id}', [QCController::class, 'show'])->name('show');
         Route::post('/{id}/update-station', [QCController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/update', [QCController::class, 'update'])->name('update');

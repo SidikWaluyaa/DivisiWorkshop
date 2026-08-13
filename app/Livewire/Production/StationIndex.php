@@ -18,8 +18,8 @@ class StationIndex extends Component
     use WithPagination;
     use HasStationTracking;
 
-    #[Url(except: 'sol')]
-    public $activeTab = 'sol';
+    #[Url(except: 'reparasi')]
+    public $activeTab = 'reparasi';
 
     #[Url(except: '')]
     public $search = '';
@@ -69,22 +69,141 @@ class StationIndex extends Component
     #[Computed]
     public function techs()
     {
+        $allTechs = User::where('role', 'technician')->select('id', 'name')->orderBy('name', 'asc')->get();
+
         return [
-            'sol' => User::where('role', 'technician')->where('specialization', 'Sol Repair')->select('id', 'name')->get(),
-            'upper' => User::where('role', 'technician')->where('specialization', 'Upper Repair')->select('id', 'name')->get(),
-            'treatment' => User::where('role', 'technician')->whereIn('specialization', ['Washing', 'Repaint', 'Treatment', 'Clean Up'])->select('id', 'name')->get(),
+            'sol' => $allTechs,
+            'upper' => $allTechs,
+            'treatment' => $allTechs,
+            'all' => $allTechs,
         ];
+    }
+
+    #[Url(except: 'all')]
+    public $substate = 'all';
+
+    public function setSubstate($substate)
+    {
+        $this->substate = $substate;
+        $this->resetPage();
     }
 
     #[Computed]
     public function counts()
     {
+        $baseQuery = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+            ->whereDoesntHave('logs', function($lq) {
+                $lq->where('step', 'PRODUCTION')
+                   ->where('action', 'PRODUCTION_APPROVED');
+            });
+
+        $reviewCount = (clone $baseQuery)->productionReview()->count();
+        $totalProduction = (clone $baseQuery)->count();
+        $reparasiCount = max(0, $totalProduction - $reviewCount);
+
+        $reparasiQuery = (clone $baseQuery)->where(function ($q) {
+            $q->whereHas('workOrderServices')
+              ->where(function ($sq) {
+                  $sq->where(function ($ssq) {
+                      $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%'))
+                          ->whereNull('prod_sol_completed_at');
+                  })
+                  ->orWhere(function ($ssq) {
+                      $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Upper%'))
+                          ->whereNull('prod_upper_completed_at');
+                  })
+                  ->orWhere(function ($ssq) {
+                      $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'not like', '%Sol%')->where('category_name', 'not like', '%Upper%'))
+                          ->whereNull('prod_cleaning_completed_at');
+                  });
+              });
+        });
+
+        $inProgressCount = (clone $reparasiQuery)->where(function($q) {
+            $q->where(function($sq) {
+                $sq->whereNotNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
+            })
+            ->orWhere(function($sq) {
+                $sq->whereNotNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
+            })
+            ->orWhere(function($sq) {
+                $sq->whereNotNull('prod_cleaning_started_at')->whereNull('prod_cleaning_completed_at');
+            });
+        })->count();
+
+        $queuedCount = max(0, $reparasiCount - $inProgressCount);
+
         return [
-            'sol' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionSol()->whereNull('prod_sol_completed_at')->count(),
-            'upper' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionUpper()->whereNull('prod_upper_completed_at')->count(),
-            'treatment' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionTreatment()->whereNull('prod_cleaning_completed_at')->count(),
-            'review' => WorkOrder::productionReview()->count(),
+            'reparasi' => $reparasiCount,
+            'review' => $reviewCount,
+            'in_progress' => $inProgressCount,
+            'queued' => $queuedCount,
         ];
+    }
+
+    public function updateTechnician($id, $type, $techId)
+    {
+        $order = WorkOrder::find($id);
+        if (!$order) return;
+
+        try {
+            $columnPrefix = $type;
+            $oldTechId = $order->{"{$columnPrefix}_by"};
+            $oldTechName = $oldTechId ? User::find($oldTechId)?->name : 'Kosong';
+
+            $order->{"{$columnPrefix}_by"} = $techId ? (int)$techId : null;
+            $order->save();
+
+            $techName = $techId ? User::find($techId)?->name : 'Dihapus';
+            $stationLabel = $this->formatStationName($type);
+
+            // Audit trail log
+            $order->logs()->create([
+                'user_id'     => Auth::id(),
+                'step'        => 'PRODUCTION',
+                'action'      => 'TECHNICIAN_UPDATED',
+                'description' => "Teknisi {$stationLabel} diubah dari [{$oldTechName}] ke [{$techName}].",
+            ]);
+
+            $this->dispatch('swal:toast', icon: 'success', title: "Teknisi {$stationLabel} diubah ke {$techName}");
+        } catch (\Exception $e) {
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
+        }
+    }
+
+    public function updateTechnicianWithReason($id, $type, $techId, $reason)
+    {
+        $order = WorkOrder::find($id);
+        if (!$order) return;
+
+        if (empty(trim($reason)) || mb_strlen(trim($reason)) < 5) {
+            $this->dispatch('swal:toast', icon: 'warning', title: 'Alasan override wajib diisi minimal 5 karakter.');
+            return;
+        }
+
+        try {
+            $columnPrefix = $type;
+            $oldTechId = $order->{"{$columnPrefix}_by"};
+            $oldTechName = $oldTechId ? User::find($oldTechId)?->name : 'Kosong';
+
+            $order->{"{$columnPrefix}_by"} = $techId ? (int)$techId : null;
+            $order->save();
+
+            $techName = $techId ? User::find($techId)?->name : 'Dihapus';
+            $stationLabel = $this->formatStationName($type);
+
+            // Audit trail log with mandatory reason
+            $order->logs()->create([
+                'user_id'     => Auth::id(),
+                'step'        => 'PRODUCTION',
+                'action'      => 'TECHNICIAN_OVERRIDE',
+                'description' => "[OVERRIDE] Teknisi {$stationLabel} diubah dari [{$oldTechName}] ke [{$techName}] saat stasiun sudah berjalan. Alasan: {$reason}",
+            ]);
+
+            $this->dispatch('swal:toast', icon: 'success', title: "Override berhasil — Teknisi {$stationLabel} diubah ke {$techName}");
+        } catch (\Exception $e) {
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
+        }
     }
 
     public function updateStation($id, $type, $action, $techId = null, $finishedAt = null)
@@ -130,25 +249,72 @@ class StationIndex extends Component
         }
 
         $workflow = app(\App\Services\WorkflowService::class);
-        $type = match($this->activeTab) {
-            'sol' => 'prod_sol',
-            'upper' => 'prod_upper',
-            'treatment' => 'prod_cleaning',
-            default => null
-        };
 
-        if ($action !== 'approve' && !$type) {
-            $this->dispatch('swal:toast', icon: 'error', title: 'Tipe stasiun tidak valid untuk aksi ini');
-            return;
-        }
+        if ($action === 'finish_active') {
+            $successCount = 0;
+            $skippedCount = 0;
+            foreach ($this->selectedItems as $id) {
+                try {
+                    $order = WorkOrder::find($id);
+                    if (!$order) continue;
 
-        $successCount = 0;
-        foreach ($this->selectedItems as $id) {
-            try {
-                $order = WorkOrder::find($id);
-                if (!$order) continue;
+                    $hasSol = $order->workOrderServices->contains(fn($s) => in_array($s->category_name, ['Sol']));
+                    $hasUpper = $order->workOrderServices->contains(fn($s) => in_array($s->category_name, ['Upper']));
+                    $hasTreatment = $order->workOrderServices->contains(fn($s) => in_array($s->category_name, ['Repaint', 'Cleaning', 'Treatment', 'Whitening']));
 
-                if ($action === 'approve') {
+                    $processed = false;
+
+                    // 1. Soling (Sol)
+                    if ($hasSol && !$order->prod_sol_completed_at) {
+                        if ($order->prod_sol_by) {
+                            $this->handleStationUpdate($order, 'prod_sol', 'finish', Auth::id(), null, WorkOrderStatus::PRODUCTION->value);
+                            $processed = true;
+                        }
+                    }
+
+                    // 2. Upper (only if not locked: Soling completed or not required)
+                    $isUpperLocked = $hasSol && !$order->prod_sol_completed_at;
+                    if ($hasUpper && !$order->prod_upper_completed_at && !$isUpperLocked) {
+                        if ($order->prod_upper_by) {
+                            $this->handleStationUpdate($order, 'prod_upper', 'finish', Auth::id(), null, WorkOrderStatus::PRODUCTION->value);
+                            $processed = true;
+                        }
+                    }
+
+                    // 3. Treatment (only if not locked: Soling & Upper completed or not required)
+                    $isTreatmentLocked = ($hasSol && !$order->prod_sol_completed_at) || ($hasUpper && !$order->prod_upper_completed_at);
+                    if ($hasTreatment && !$order->prod_cleaning_completed_at && !$isTreatmentLocked) {
+                        if ($order->prod_cleaning_by) {
+                            $this->handleStationUpdate($order, 'prod_cleaning', 'finish', Auth::id(), null, WorkOrderStatus::PRODUCTION->value);
+                            $processed = true;
+                        }
+                    }
+
+                    if ($processed) {
+                        $order->save();
+                        $successCount++;
+                    } else {
+                        $skippedCount++;
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Bulk Finish Error (#$id): " . $e->getMessage());
+                }
+            }
+
+            $this->selectedItems = [];
+            unset($this->orders);
+            $msg = "$successCount stasiun SPK berhasil diselesaikan.";
+            if ($skippedCount > 0) {
+                $msg .= " ($skippedCount SPK belum ada teknisi / terkunci urutan)";
+            }
+            $this->dispatch('swal:toast', icon: 'success', title: $msg);
+        } elseif ($action === 'approve') {
+            $successCount = 0;
+            foreach ($this->selectedItems as $id) {
+                try {
+                    $order = WorkOrder::find($id);
+                    if (!$order) continue;
+
                     if (Auth::user()->can('approveProduction', $order)) {
                         if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
                             $targetStatus = $order->previous_status;
@@ -161,32 +327,54 @@ class StationIndex extends Component
                                 $order->is_revising = false;
                                 $order->save();
                             }
-                            $workflow->updateStatus($order, WorkOrderStatus::QC, 'Bulk approval from Production.');
+                            $order->update([
+                                'current_location' => 'Produksi (Siap Handover)',
+                            ]);
+                            $order->logs()->create([
+                                'user_id' => Auth::id(),
+                                'step' => 'PRODUCTION',
+                                'action' => 'PRODUCTION_APPROVED',
+                                'description' => 'Produksi selesai & disetujui Admin. Siap serah terima ke QC via Surat Jalan.',
+                            ]);
                         }
                         $successCount++;
                     }
-                } else {
-                    if (Auth::user()->can('updateProduction', $order)) {
-                        $this->handleStationUpdate(
-                            $order, 
-                            $type, 
-                            $action === 'assign' ? 'start' : $action, 
-                            Auth::id(), 
-                            $techId, 
-                            WorkOrderStatus::PRODUCTION->value
-                        );
-                        $order->save();
-                        $successCount++;
-                    }
+                } catch (\Exception $e) {
+                    Log::error("Bulk Action Error (#$id): " . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                Log::error("Bulk Action Error (#$id): " . $e->getMessage());
             }
+
+            $this->selectedItems = [];
+            unset($this->orders);
+            $this->dispatch('swal:toast', icon: 'success', title: "$successCount SPK berhasil diapprove di Produksi.");
+        }
+    }
+
+    public function autoAssignUnassignedTechnicians()
+    {
+        $unassignedOrders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION)
+            ->where(function($q) {
+                $q->whereNull('prod_sol_by')
+                  ->orWhereNull('prod_upper_by')
+                  ->orWhereNull('prod_cleaning_by');
+            })
+            ->get();
+
+        if ($unassignedOrders->isEmpty()) {
+            $this->dispatch('swal:toast', icon: 'info', title: 'Seluruh SPK aktif di Produksi sudah terisi teknisi.');
+            return;
         }
 
-        $this->selectedItems = [];
+        $service = app(\App\Services\TechnicianAssignmentService::class);
+        $assignedCount = 0;
+
+        foreach ($unassignedOrders as $order) {
+            $service->autoAssignProductionTechnicians($order);
+            $assignedCount++;
+        }
+
         unset($this->orders);
-        $this->dispatch('swal:toast', icon: 'success', title: "$successCount item berhasil diproses");
+        $this->dispatch('swal:toast', icon: 'success', title: "Auto-assign berhasil! $assignedCount SPK telah ditugaskan ke teknisi.");
     }
 
     public function performApprove($id, \App\Services\WorkflowService $workflow)
@@ -213,7 +401,15 @@ class StationIndex extends Component
                     $order->is_revising = false;
                     $order->save();
                 }
-                $workflow->updateStatus($order, WorkOrderStatus::QC, 'Produksi selesai & disetujui Admin.');
+                $order->update([
+                    'current_location' => 'Produksi (Siap Handover)',
+                ]);
+                $order->logs()->create([
+                    'user_id' => Auth::id(),
+                    'step' => 'PRODUCTION',
+                    'action' => 'PRODUCTION_APPROVED',
+                    'description' => 'Produksi selesai & disetujui Admin. Siap serah terima ke QC via Surat Jalan.',
+                ]);
             }
 
             unset($this->orders);
@@ -248,7 +444,15 @@ class StationIndex extends Component
                         $order->is_revising = false;
                         $order->save();
                     }
-                    $workflow->updateStatus($order, WorkOrderStatus::QC, 'Produksi selesai & disetujui Admin.');
+                    $order->update([
+                        'current_location' => 'Produksi (Siap Handover)',
+                    ]);
+                    $order->logs()->create([
+                        'user_id' => Auth::id(),
+                        'step' => 'PRODUCTION',
+                        'action' => 'PRODUCTION_APPROVED',
+                        'description' => 'Produksi selesai & disetujui Admin. Siap serah terima ke QC via Surat Jalan.',
+                    ]);
                 }
                 $successCount++;
             } catch (\Exception $e) {
@@ -260,11 +464,37 @@ class StationIndex extends Component
         $this->dispatch('swal:toast', icon: 'success', title: "$successCount antrean berhasil disetujui");
     }
 
+    protected function autoAssignUnassignedOrders()
+    {
+        try {
+            $techService = app(\App\Services\TechnicianAssignmentService::class);
+            $unassignedOrders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+                ->whereDoesntHave('logs', function($lq) {
+                    $lq->where('step', 'PRODUCTION')
+                       ->where('action', 'PRODUCTION_APPROVED');
+                })
+                ->where(function($q) {
+                    $q->whereNull('prod_sol_by')
+                      ->orWhereNull('prod_upper_by')
+                      ->orWhereNull('prod_cleaning_by');
+                })
+                ->get();
+
+            foreach ($unassignedOrders as $order) {
+                $techService->autoAssignProductionTechnicians($order);
+            }
+        } catch (\Exception $e) {
+            Log::error("Auto assign production error: " . $e->getMessage());
+        }
+    }
+
     #[Computed]
     public function orders()
     {
+        $this->autoAssignUnassignedOrders();
+
         $query = WorkOrder::query()
-            ->with(['customer', 'workOrderServices', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'cxIssues', 'photos', 'invoice', 'logs']);
+            ->with(['customer', 'workOrderServices', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions']);
 
         // Search Filter
         if ($this->search) {
@@ -275,35 +505,88 @@ class StationIndex extends Component
             });
         }
 
-        // Base Filter: Only show items in PRODUCTION status
-        $query->where('status', WorkOrderStatus::PRODUCTION->value);
+        // Base Filter: Only show items in PRODUCTION status (that are not yet approved for QC)
+        $query->where('status', WorkOrderStatus::PRODUCTION->value)
+            ->whereDoesntHave('logs', function($lq) {
+                $lq->where('step', 'PRODUCTION')
+                   ->where('action', 'PRODUCTION_APPROVED');
+            });
 
         // Tab Filter
-        if ($this->activeTab !== 'review') {
-            $query->where(function($q) {
-                if ($this->activeTab === 'sol') {
-                    $q->productionSol()->whereNull('prod_sol_completed_at');
-                } elseif ($this->activeTab === 'upper') {
-                    $q->productionUpper()->whereNull('prod_upper_completed_at');
-                } elseif ($this->activeTab === 'treatment') {
-                    $q->productionTreatment()->whereNull('prod_cleaning_completed_at');
-                }
+        if ($this->activeTab === 'review') {
+            $query->productionReview();
+        } else {
+            // Tab 'reparasi' (Not in review, meaning at least one required stasiun is not completed)
+            $query->where(function ($q) {
+                $q->whereHas('workOrderServices')
+                  ->where(function ($sq) {
+                      $sq->where(function ($ssq) {
+                          $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'like', '%Sol%'); })
+                              ->whereNull('prod_sol_completed_at');
+                      })
+                      ->orWhere(function ($ssq) {
+                          $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'like', '%Upper%'); })
+                              ->whereNull('prod_upper_completed_at');
+                      })
+                      ->orWhere(function ($ssq) {
+                          $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'not like', '%Sol%')->where('category_name', 'not like', '%Upper%'); })
+                              ->whereNull('prod_cleaning_completed_at');
+                      });
+                  });
             });
+        }
+
+        // Substate Filter for Reparasi Tab
+        if ($this->activeTab === 'reparasi' && $this->substate !== 'all') {
+            if ($this->substate === 'in_progress') {
+                $query->where(function($q) {
+                    $q->where(function($sq) {
+                        $sq->whereNotNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
+                    })
+                    ->orWhere(function($sq) {
+                        $sq->whereNotNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
+                    })
+                    ->orWhere(function($sq) {
+                        $sq->whereNotNull('prod_cleaning_started_at')->whereNull('prod_cleaning_completed_at');
+                    });
+                });
+            } elseif ($this->substate === 'queued') {
+                $query->where(function($q) {
+                    $q->where(function($sq) {
+                        $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%'))
+                           ->whereNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
+                    })
+                    ->orWhere(function($sq) {
+                        $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Upper%'))
+                           ->whereNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
+                    })
+                    ->orWhere(function($sq) {
+                        $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'not like', '%Sol%')->where('category_name', 'not like', '%Upper%'))
+                           ->whereNull('prod_cleaning_started_at')->whereNull('prod_cleaning_completed_at');
+                    });
+                });
+            }
         }
 
         // Only In Progress Filter
         if ($this->onlyInProgress && $this->activeTab !== 'review') {
-            $suffix = match($this->activeTab) {
-                'sol' => 'prod_sol',
-                'upper' => 'prod_upper',
-                'treatment' => 'prod_cleaning',
-                default => null
-            };
-            if ($suffix) {
-                $query->whereNotNull("{$suffix}_by")
-                      ->whereNotNull("{$suffix}_started_at")
-                      ->whereNull("{$suffix}_completed_at");
-            }
+            $query->where(function($q) {
+                $q->where(function($sq) {
+                    $sq->whereNotNull('prod_sol_by')
+                       ->whereNotNull('prod_sol_started_at')
+                       ->whereNull('prod_sol_completed_at');
+                })
+                ->orWhere(function($sq) {
+                    $sq->whereNotNull('prod_upper_by')
+                       ->whereNotNull('prod_upper_started_at')
+                       ->whereNull('prod_upper_completed_at');
+                })
+                ->orWhere(function($sq) {
+                    $sq->whereNotNull('prod_cleaning_by')
+                       ->whereNotNull('prod_cleaning_started_at')
+                       ->whereNull('prod_cleaning_completed_at');
+                });
+            });
         }
 
         // Priority Filter
@@ -316,28 +599,20 @@ class StationIndex extends Component
         }
 
         // Technician Filter
-        if ($this->technicianFilter !== 'all' && $this->activeTab !== 'review') {
-            $column = match($this->activeTab) {
-                'upper' => 'prod_upper_by',
-                'treatment' => 'prod_cleaning_by',
-                default => 'prod_sol_by'
-            };
-            $query->where($column, $this->technicianFilter);
+        if ($this->technicianFilter !== 'all') {
+            $query->where(function($q) {
+                $q->where('prod_sol_by', $this->technicianFilter)
+                  ->orWhere('prod_upper_by', $this->technicianFilter)
+                  ->orWhere('prod_cleaning_by', $this->technicianFilter);
+            });
         }
 
         // Apply Sorting
-        // 1. Prioritize Started Items (Items that are currently being worked on)
-        $startedColumn = match($this->activeTab) {
-            'sol' => 'prod_sol_started_at',
-            'upper' => 'prod_upper_started_at',
-            'treatment' => 'prod_cleaning_started_at',
-            default => null
-        };
-        
         $query->orderByRaw("CASE WHEN EXISTS (SELECT 1 FROM cx_issues WHERE cx_issues.work_order_id = work_orders.id AND cx_issues.status = 'RESOLVED') THEN 0 ELSE 1 END");
         $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END");
-        if ($startedColumn) {
-            $query->orderByRaw("CASE WHEN $startedColumn IS NOT NULL THEN 0 ELSE 1 END");
+        
+        if ($this->activeTab !== 'review') {
+            $query->orderByRaw("CASE WHEN prod_sol_started_at IS NOT NULL OR prod_upper_started_at IS NOT NULL OR prod_cleaning_started_at IS NOT NULL THEN 0 ELSE 1 END");
         }
 
         // 2. Then by Priority

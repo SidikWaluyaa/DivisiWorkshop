@@ -584,8 +584,10 @@ class Detail extends Component
                 return redirect()->route('sortir.index')->with('info', "Klasifikasi OK & Pengajuan Belanja Finlog berhasil dibuat! SPK berada di Rak Tunggu Belanja.");
             }
 
-            // 4. Routing: Material Siap atau Perlu Belanja = False -> Transition status to PRODUCTION & Ready for Surat Jalan
-            $workflow->updateStatus($this->order, WorkOrderStatus::PRODUCTION, 'Sortir & Klasifikasi Selesai. SPK Siap Diterbitkan Surat Jalan ke Produksi.');
+            // 4. Routing: Material Siap atau Perlu Belanja = False -> Keep status as SORTIR, ready for Surat Jalan
+            $this->order->update([
+                'current_location' => 'Sortir (Siap Handover)',
+            ]);
 
             $belanjaNote = $isMaterialReady
                 ? 'Material sudah ALLOCATED (override)'

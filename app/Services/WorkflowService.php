@@ -306,14 +306,22 @@ class WorkflowService
                 WorkOrderStatus::BATAL
             ],
             WorkOrderStatus::QC->value => [
+                WorkOrderStatus::STAGING_OUTBOUND,
                 WorkOrderStatus::SELESAI,
                 WorkOrderStatus::PRODUCTION, // Revisi (Return to Prod)
                 WorkOrderStatus::PREPARATION, // Revisi (Return to Prep)
                 WorkOrderStatus::REVISI,
                 WorkOrderStatus::BATAL
             ],
+            WorkOrderStatus::STAGING_OUTBOUND->value => [
+                WorkOrderStatus::SELESAI,
+                WorkOrderStatus::QC,
+                WorkOrderStatus::PRODUCTION,
+                WorkOrderStatus::BATAL
+            ],
             WorkOrderStatus::SELESAI->value => [
                 WorkOrderStatus::DIANTAR, // Delivery
+                WorkOrderStatus::STAGING_OUTBOUND,
                 WorkOrderStatus::QC, // Re-open if customer complains
                 WorkOrderStatus::PREPARATION, // Upsell (Tambah Layanan) -> Back to Prep
                 WorkOrderStatus::REVISI, // Technical Revision

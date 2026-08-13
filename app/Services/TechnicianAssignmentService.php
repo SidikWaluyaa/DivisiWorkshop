@@ -68,33 +68,112 @@ class TechnicianAssignmentService
     {
         $workOrder->loadMissing('workOrderServices.service');
 
-        foreach ($workOrder->workOrderServices as $woService) {
-            if ($woService->technician_id) {
-                continue; // Skip if already manually assigned
-            }
+        $hasSol = $workOrder->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'sol') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'sol'));
+        $hasUpper = $workOrder->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'upper') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'upper'));
+        $hasTreatment = $workOrder->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'clean') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'wash') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'treatment') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'repaint') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'whitening') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'clean') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'treatment'));
 
-            $category = strtolower($woService->category_name ?? $woService->service?->category ?? '');
-            $serviceName = strtolower($woService->service?->name ?? '');
+        if (!$hasSol && !$hasUpper) {
+            $hasTreatment = true;
+        }
 
-            // Find matching technician
-            $tech = $this->findBestAvailableTechnicianForCategory($category, $serviceName);
+        $updates = [];
 
+        // 1. Soling (Only assign if station is required and currently NULL)
+        if ($hasSol && !$workOrder->prod_sol_by) {
+            $tech = $this->findBestAvailableTechnicianForCategory('sol', 'soling');
             if ($tech) {
-                $woService->update(['technician_id' => $tech->id]);
-                
-                // Map to legacy WorkOrder columns for backward compatibility
-                if (str_contains($category, 'sol')) {
-                    $workOrder->update(['prod_sol_by' => $tech->id]);
-                } elseif (str_contains($category, 'upper')) {
-                    $workOrder->update(['prod_upper_by' => $tech->id]);
-                } elseif (str_contains($category, 'clean') || str_contains($category, 'wash')) {
-                    $workOrder->update(['prod_cleaning_by' => $tech->id]);
-                } else {
-                    $workOrder->update(['technician_production_id' => $tech->id]);
+                $updates['prod_sol_by'] = $tech->id;
+                foreach ($workOrder->workOrderServices as $woService) {
+                    $cat = strtolower($woService->category_name ?? $woService->service?->category ?? '');
+                    $sName = strtolower($woService->service?->name ?? '');
+                    if (str_contains($cat, 'sol') || str_contains($sName, 'sol')) {
+                        $woService->update(['technician_id' => $tech->id]);
+                    }
                 }
-
-                Log::info("Auto-assigned Production Service '{$woService->service?->name}' for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
+                Log::info("Auto-assigned Soling for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
             }
+        }
+
+        // 2. Upper (Only assign if station is required and currently NULL)
+        if ($hasUpper && !$workOrder->prod_upper_by) {
+            $tech = $this->findBestAvailableTechnicianForCategory('upper', 'upper');
+            if ($tech) {
+                $updates['prod_upper_by'] = $tech->id;
+                foreach ($workOrder->workOrderServices as $woService) {
+                    $cat = strtolower($woService->category_name ?? $woService->service?->category ?? '');
+                    $sName = strtolower($woService->service?->name ?? '');
+                    if (str_contains($cat, 'upper') || str_contains($cat, 'jahit') || str_contains($sName, 'upper') || str_contains($sName, 'jahit')) {
+                        $woService->update(['technician_id' => $tech->id]);
+                    }
+                }
+                Log::info("Auto-assigned Upper for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
+            }
+        }
+
+        // 3. Treatment (Only assign if station is required and currently NULL)
+        if ($hasTreatment && !$workOrder->prod_cleaning_by) {
+            $tech = $this->findBestAvailableTechnicianForCategory('clean', 'treatment');
+            if ($tech) {
+                $updates['prod_cleaning_by'] = $tech->id;
+                foreach ($workOrder->workOrderServices as $woService) {
+                    $woService->update(['technician_id' => $tech->id]);
+                }
+                Log::info("Auto-assigned Treatment for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
+            }
+        }
+
+        if (!empty($updates)) {
+            $workOrder->update($updates);
+        }
+    }
+
+    /**
+     * Auto-assign technicians for all stations in QC stage based on specialization & workload.
+     * Skips stations that already have a technician assigned.
+     */
+    public function autoAssignQcTechnicians(WorkOrder $workOrder): void
+    {
+        $updates = [];
+
+        $workOrder->loadMissing('workOrderServices.service');
+        $hasJahitQc = $workOrder->workOrderServices->contains(fn($s) => 
+            \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'sol') || 
+            \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'sol') ||
+            \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'upper') || 
+            \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'upper') ||
+            \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'jahit') || 
+            \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'jahit')
+        );
+
+        // 1. QC Jahit (Only assign if required by services and currently NULL)
+        if ($hasJahitQc && !$workOrder->qc_jahit_by) {
+            $tech = $this->findBestAvailableTechnicianForCategory('jahit', 'jahit');
+            if ($tech) {
+                $updates['qc_jahit_by'] = $tech->id;
+                Log::info("Auto-assigned QC Jahit for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
+            }
+        }
+
+        // 2. QC Cleanup (Only assign if currently NULL)
+        if (!$workOrder->qc_cleanup_by) {
+            $tech = $this->findBestAvailableTechnicianForCategory('clean', 'cleanup');
+            if ($tech) {
+                $updates['qc_cleanup_by'] = $tech->id;
+                Log::info("Auto-assigned QC Cleanup for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
+            }
+        }
+
+        // 3. QC Final (Only assign if currently NULL)
+        if (!$workOrder->qc_final_by) {
+            $tech = $this->findBestAvailableTechnicianForCategory('qc', 'final');
+            if ($tech) {
+                $updates['qc_final_by'] = $tech->id;
+                Log::info("Auto-assigned QC Final for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
+            }
+        }
+
+        if (!empty($updates)) {
+            $workOrder->update($updates);
         }
     }
 
@@ -113,8 +192,10 @@ class TechnicianAssignmentService
             $keyword = 'Jahit';
         } elseif (str_contains($category, 'repaint') || str_contains($serviceName, 'repaint')) {
             $keyword = 'Repaint';
-        } elseif (str_contains($category, 'clean') || str_contains($category, 'wash')) {
+        } elseif (str_contains($category, 'clean') || str_contains($category, 'wash') || str_contains($category, 'treatment') || str_contains($category, 'whitening') || str_contains($serviceName, 'treatment') || str_contains($serviceName, 'clean')) {
             $keyword = 'Clean Up';
+        } elseif (str_contains($category, 'qc') || str_contains($serviceName, 'qc') || str_contains($serviceName, 'final')) {
+            $keyword = 'QC';
         }
 
         // Query candidate technicians

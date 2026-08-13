@@ -14,6 +14,7 @@ enum WorkOrderStatus: string
     case SORTIR = 'SORTIR'; // Material check
     case PRODUCTION = 'PRODUCTION';
     case QC = 'QC';
+    case STAGING_OUTBOUND = 'STAGING_OUTBOUND';
     case SELESAI = 'SELESAI';
     case REVISI = 'REVISI';
     case DIANTAR = 'DIANTAR'; // If delivery is needed
@@ -46,6 +47,7 @@ enum WorkOrderStatus: string
             self::SORTIR => 'Sortir & Material',
             self::PRODUCTION => 'Production',
             self::QC => 'Quality Control',
+            self::STAGING_OUTBOUND => 'Staging Outbound',
             self::SELESAI => 'Selesai',
             self::REVISI => 'Sedang Direvisi',
             self::DIANTAR => 'Sedang Diantar',

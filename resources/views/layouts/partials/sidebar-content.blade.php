@@ -267,7 +267,7 @@
     {{-- 2. DIVISI GUDANG --}}
     @can('access-gudang')
     <div x-data="{ 
-            open: localStorage.getItem('sb_gudang') === 'true' || {{ request()->routeIs('admin.supply-chain.*') || request()->routeIs('material-requests.*') || request()->routeIs('admin.materials.*') || request()->routeIs('admin.purchases.*') || request()->routeIs('storage.*') || request()->routeIs('assessment.*') ? 'true' : 'false' }},
+            open: localStorage.getItem('sb_gudang') === 'true' || {{ request()->routeIs('admin.supply-chain.*') || request()->routeIs('material-requests.*') || request()->routeIs('admin.materials.*') || request()->routeIs('admin.purchases.*') || request()->routeIs('storage.*') || request()->routeIs('assessment.*') || request()->routeIs('finish.*') || request()->routeIs('shipping.*') || request()->routeIs('admin.custom-label.*') || request()->routeIs('gudang.outbound-receipt') ? 'true' : 'false' }},
             toggle() {
                 this.open = !this.open;
                 localStorage.setItem('sb_gudang', this.open);
@@ -297,6 +297,26 @@
         </button>
 
         <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
+
+        {{-- Penerimaan Outbound (QC to Gudang) --}}
+        <a href="{{ route('gudang.outbound-receipt') }}" 
+           class="nav-item {{ request()->routeIs('gudang.outbound-receipt') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-amber-500/10 bg-amber-500/5 hover:bg-amber-500/20"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-amber-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-amber-400">Penerimaan Outbound</span>
+            
+            @php $pendingOutboundCount = \App\Models\WorkshopManifest::where('manifest_number', 'like', 'MNF-OUT-%')->where('status', 'SENT')->count(); @endphp
+            @if($pendingOutboundCount > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-amber-500 text-slate-950 shadow-sm animate-pulse">
+                    {{ $pendingOutboundCount }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 border border-white rounded-full animate-pulse"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-amber-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Penerimaan QC</span>
+        </a>
 
 
 
@@ -469,6 +489,49 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">R. Manual</span>
         </a>
         @endif
+
+        {{-- Gudang Finish --}}
+        @if(Auth::user()->hasAccess('finish') || Auth::user()->hasAccess('gudang'))
+        <a href="{{ route('finish.index') }}" 
+           class="nav-item {{ request()->routeIs('finish.index') || request()->routeIs('finish.show') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-emerald-400 font-bold">Finish</span>
+            
+            @if(isset($sidebarCounts['finish']) && $sidebarCounts['finish'] > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-sm">
+                    {{ $sidebarCounts['finish'] }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-emerald-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">G. Finish</span>
+        </a>
+        @endif
+
+        {{-- Pengiriman --}}
+        <a href="{{ route('shipping.index') }}" 
+           class="nav-item {{ request()->routeIs('shipping.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-blue-400 font-bold">Pengiriman</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengiriman</span>
+        </a>
+
+        {{-- Custom Label Generator --}}
+        <a href="{{ route('admin.custom-label.index') }}" 
+           class="nav-item {{ request()->routeIs('admin.custom-label.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/10 bg-teal-500/5 hover:bg-teal-500/20"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-teal-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-teal-400">Label Custom</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Label Custom</span>
+        </a>
         </div>
     </div>
     @endcan
@@ -702,27 +765,26 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">QC</span>
         </a>
-        @endif
 
-        {{-- 6. Gudang Finish --}}
-        @if(Auth::user()->hasAccess('finish'))
-        <a href="{{ route('finish.index') }}" 
-           class="nav-item {{ request()->routeIs('finish.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+        <a href="{{ route('qc.outbound') }}" 
+           class="nav-item {{ request()->routeIs('qc.outbound') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-blue-500/10 bg-blue-500/5 hover:bg-blue-500/15"
            :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+            <svg class="nav-icon flex-shrink-0 text-blue-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"></path>
             </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-emerald-400 font-bold">Finish</span>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-blue-400 font-bold">Staging &amp; Manifest Outbound</span>
             
-            @if(isset($sidebarCounts['finish']) && $sidebarCounts['finish'] > 0)
-                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-sm">
-                    {{ $sidebarCounts['finish'] }}
+            @php $stagingCount = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::STAGING_OUTBOUND)->count(); @endphp
+            @if($stagingCount > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm">
+                    {{ $stagingCount }}
                 </span>
-                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-emerald-500 border border-white rounded-full"></span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-blue-500 border border-white rounded-full animate-pulse"></span>
             @endif
 
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">G. Finish</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Outbound</span>
         </a>
+        @endif
 
         {{-- 6.1 Revisi Teknik --}}
         @if(Auth::user()->hasAccess('finish'))
@@ -766,29 +828,6 @@
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-yellow-400 font-bold">List Garansi</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">List Garansi</span>
-        </a>
-        @endif
-
-        {{-- 7. Pengiriman --}}
-        <a href="{{ route('shipping.index') }}" 
-           class="nav-item {{ request()->routeIs('shipping.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-blue-400 font-bold">Pengiriman</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengiriman</span>
-        </a>
-
-        {{-- Custom Label Generator --}}
-        <a href="{{ route('admin.custom-label.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.custom-label.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/10 bg-teal-500/5 hover:bg-teal-500/20"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0 text-teal-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-teal-400">Label Custom</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Label Custom</span>
         </a>
         @endif
         </div>

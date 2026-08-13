@@ -113,7 +113,10 @@ class WorkshopManifestController extends Controller
 
     public function show($id)
     {
-        $manifest = WorkshopManifest::with(['workOrders', 'dispatcher', 'receiver'])->findOrFail($id);
+        $manifest = WorkshopManifest::with(['workOrders.customer', 'workOrders.workOrderServices.service', 'dispatcher', 'receiver'])->findOrFail($id);
+        if (str_starts_with($manifest->manifest_number, 'MNF-OUT-')) {
+            return view('qc.outbound.show', compact('manifest'));
+        }
         return view('manifest.show', compact('manifest'));
     }
 
