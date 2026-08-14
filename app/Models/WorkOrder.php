@@ -138,6 +138,7 @@ class WorkOrder extends Model
         'accessories_other',
         'warehouse_qc_status',
         'warehouse_qc_notes',
+        'suggested_services',
         'warehouse_qc_by',
         'warehouse_qc_at',
         'technician_notes', // Technical Instructions from Assessment
@@ -221,6 +222,7 @@ class WorkOrder extends Model
         'qc_final_started_at' => 'datetime',
         'qc_final_completed_at' => 'datetime',
         'accessories_data' => 'array',
+        'suggested_services' => 'array',
         'reception_qc_passed' => 'boolean',
         'warehouse_qc_at' => 'datetime',
         'finance_entry_at' => 'datetime',

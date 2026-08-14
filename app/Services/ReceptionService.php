@@ -295,7 +295,10 @@ class ReceptionService
                 
                 'reception_qc_passed' => $passed,
                 'warehouse_qc_status' => $passed ? 'lolos' : 'reject',
-                'warehouse_qc_notes' => $passed ? null : ($data['reception_rejection_reason'] ?? null),
+                'warehouse_qc_notes' => !empty($data['warehouse_qc_notes']) ? $data['warehouse_qc_notes'] : ($passed ? null : ($data['reception_rejection_reason'] ?? null)),
+                'suggested_services' => !empty($data['suggested_services']) || !empty($data['recommended_services']) 
+                    ? array_values(array_filter(array_merge((array)($data['recommended_services'] ?? []), (array)($data['suggested_services'] ?? [])))) 
+                    : null,
                 
                 'technician_notes' => $data['technician_notes'] ?? null,
                 'warehouse_qc_by' => Auth::id(),

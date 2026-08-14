@@ -759,7 +759,9 @@ class ReceptionController extends Controller
             ],
             'reception_qc_passed' => 'required|boolean',
             'reception_rejection_reason' => 'required_if:reception_qc_passed,0|nullable|string',
+            'warehouse_qc_notes' => 'nullable|string|max:1000',
             'suggested_services' => 'nullable|array',
+            'recommended_services' => 'nullable|array',
             'evidence_photos.*' => 'image|max:10240', // Max 10MB per photo
             'technician_notes' => 'nullable|string',
             'shoe_brand' => 'nullable|string|max:255',
