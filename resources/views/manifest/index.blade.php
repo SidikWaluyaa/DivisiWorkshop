@@ -1,175 +1,251 @@
-<x-app-layout>
-<div class="py-12 bg-gray-50/50 min-h-screen">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+<x-dynamic-component :component="$layout ?? 'app-layout'">
+<div class="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
+    
+    {{-- Header Bar --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-xl">
+        <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-teal-900/20 flex-shrink-0">
+                📦
+            </div>
             <div>
-                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Logistik <span class="text-[#22AF85]">Manifest</span></h1>
-                <p class="text-sm text-gray-500 mt-1 font-medium italic">Manajemen pengiriman batch antar gudang & workshop</p>
-            </div>
-            <div class="flex space-x-3">
-                <a href="{{ route('manifest.create') }}" class="inline-flex items-center px-6 py-3 bg-[#FFC232] border border-transparent rounded-xl font-bold text-sm text-gray-900 uppercase tracking-widest hover:bg-[#e6af2e] focus:outline-none focus:ring-2 focus:ring-[#FFC232] focus:ring-offset-2 transition-all shadow-lg shadow-yellow-200/50">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Buat Pengiriman
-                </a>
+                <h1 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                    Logistik <span class="text-[#22AF85]">Manifest Inbound</span>
+                </h1>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    Manajemen pengiriman batch &amp; serah terima sepatu dari Toko/Gudang ke Workshop
+                </p>
             </div>
         </div>
 
-        <!-- Notifications -->
-        @if(session('success'))
-        <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3">
-            <div class="p-2 rounded-full bg-emerald-100">
-                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        @unless(optional(Auth::user())->role === 'admin_workshop' || optional(Auth::user())->role === 'technician')
+        <div class="flex items-center gap-3">
+            <a href="{{ route('manifest.create') }}" class="inline-flex items-center px-5 py-2.5 bg-[#FFC232] hover:bg-[#e6af2e] text-slate-950 font-black text-xs rounded-2xl uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 active:scale-95">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
                 </svg>
-            </div>
-            <p class="text-emerald-800 font-medium">{{ session('success') }}</p>
+                Buat Pengiriman
+            </a>
         </div>
-        @endif
-        @if(session('error'))
-        <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3">
-            <div class="p-2 rounded-full bg-red-100">
-                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </div>
-            <p class="text-red-800 font-medium">{{ session('error') }}</p>
-        </div>
-        @endif
+        @endunless
+    </div>
 
-        <!-- Layered Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group hover:border-[#22AF85]/30 transition-all duration-300">
-                <div class="flex items-center">
-                    <div class="p-4 rounded-xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-[#22AF85]/10 group-hover:text-[#22AF85]">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-5">
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Manifest OTW</p>
-                        <p class="text-2xl font-black text-gray-900 mt-1">{{ $manifests->where('status', 'SENT')->count() }}</p>
-                    </div>
+    {{-- Notifications --}}
+    @if(session('success'))
+    <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-3">
+        <span class="text-lg">✅</span>
+        <p>{{ session('success') }}</p>
+    </div>
+    @endif
+    @if(session('error'))
+    <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center gap-3">
+        <span class="text-lg">⚠️</span>
+        <p>{{ session('error') }}</p>
+    </div>
+    @endif
+
+    {{-- Filter Tabs & Stats Bar --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="{{ route('manifest.index', array_filter(['status' => 'SENT', 'mode' => request('mode')])) }}" 
+           class="p-5 rounded-3xl border transition-all flex items-center justify-between shadow-lg
+           {{ request('status') === 'SENT' ? 'bg-amber-500/10 border-amber-500/40 text-amber-400' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:border-slate-700' }}">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                    🚚
                 </div>
-                <div class="text-xs font-bold text-[#22AF85] bg-[#22AF85]/5 px-2 py-1 rounded">ACTIVE</div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group hover:border-[#22AF85]/30 transition-all duration-300">
-                <div class="flex items-center">
-                    <div class="p-4 rounded-xl bg-emerald-50 text-[#22AF85]">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-5">
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Manifest Selesai</p>
-                        <p class="text-2xl font-black text-gray-900 mt-1">{{ $manifests->where('status', 'RECEIVED')->count() }}</p>
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Dalam Pengiriman</div>
+                    <div class="text-xl font-black text-slate-900 dark:text-white mt-0.5">
+                        {{ $manifests->where('status', 'SENT')->count() }} Batch
                     </div>
                 </div>
             </div>
+            <span class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-amber-400 text-slate-950 uppercase animate-pulse">SENT</span>
+        </a>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group hover:border-[#22AF85]/30 transition-all duration-300">
-                <div class="flex items-center">
-                    <div class="p-4 rounded-xl bg-amber-50 text-[#FFC232]">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-5">
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Item Terkirim</p>
-                        <p class="text-2xl font-black text-gray-900 mt-1">{{ $manifests->sum('work_orders_count') }}</p>
+        <a href="{{ route('manifest.index', array_filter(['status' => 'RECEIVED', 'mode' => request('mode')])) }}" 
+           class="p-5 rounded-3xl border transition-all flex items-center justify-between shadow-lg
+           {{ request('status') === 'RECEIVED' ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:border-slate-700' }}">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                    ✅
+                </div>
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Sudah Diterima</div>
+                    <div class="text-xl font-black text-slate-900 dark:text-white mt-0.5">
+                        {{ $manifests->where('status', 'RECEIVED')->count() }} Batch
                     </div>
                 </div>
             </div>
+            <span class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">RECEIVED</span>
+        </a>
+
+        <a href="{{ route('manifest.index', array_filter(['mode' => request('mode')])) }}" 
+           class="p-5 rounded-3xl border transition-all flex items-center justify-between shadow-lg
+           {{ !request('status') ? 'bg-teal-500/10 border-teal-500/40 text-teal-400' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:border-slate-700' }}">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold">
+                    📋
+                </div>
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Semua Manifest</div>
+                    <div class="text-xl font-black text-slate-900 dark:text-white mt-0.5">
+                        {{ $manifests->total() }} Record
+                    </div>
+                </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-slate-800 text-slate-300 uppercase">ALL</span>
+        </a>
+    </div>
+
+    {{-- Main Content Table / Cards --}}
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl overflow-hidden">
+        
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+            <h2 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                Daftar Manifest Inbound
+            </h2>
+            <span class="text-xs font-bold text-slate-400">
+                Menampilkan {{ $manifests->count() }} dari {{ $manifests->total() }} Manifest
+            </span>
         </div>
 
-        <!-- Content Card -->
-        <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-            <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm">
-                <h2 class="text-lg font-bold text-gray-800">Daftar Pengiriman Barang</h2>
-                <div class="text-xs font-bold text-gray-400">Total: {{ $manifests->total() }} Records</div>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-100">
-                    <thead>
-                        <tr class="bg-gray-50/50">
-                            <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No. Manifest</th>
-                            <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Logistik Info</th>
-                            <th class="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Batch Size</th>
-                            <th class="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Status</th>
-                            <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50">
-                        @forelse($manifests as $manifest)
-                        <tr class="hover:bg-[#22AF85]/[0.02] transition-colors group">
-                            <td class="px-8 py-6 whitespace-nowrap">
-                                <span class="text-sm font-black text-[#22AF85] tracking-tight">{{ $manifest->manifest_number }}</span>
-                                <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">Generated Auto</div>
-                            </td>
-                            <td class="px-6 py-6 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-xs">
-                                        {{ strtoupper(substr($manifest->dispatcher->name, 0, 1)) }}
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-bold text-gray-800">{{ $manifest->dispatcher->name }}</p>
-                                        <p class="text-[11px] text-gray-400 mt-0.5">{{ $manifest->dispatched_at->format('d M Y • H:i') }}</p>
-                                    </div>
+        {{-- Desktop Table (≥ 768px) --}}
+        <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                        <th class="py-4 px-6">No. Manifest</th>
+                        <th class="py-4 px-6">Pengirim &amp; Waktu</th>
+                        <th class="py-4 px-6 text-center">Jumlah SPK</th>
+                        <th class="py-4 px-6 text-center">Status</th>
+                        <th class="py-4 px-6 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                    @forelse($manifests as $manifest)
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            {{-- No Manifest --}}
+                            <td class="py-4 px-6 whitespace-nowrap">
+                                <div class="font-mono font-black text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 px-3 py-1 rounded-xl inline-flex items-center gap-1.5 shadow-sm">
+                                    <span>📄 {{ $manifest->manifest_number }}</span>
                                 </div>
                             </td>
-                            <td class="px-6 py-6 whitespace-nowrap text-center">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700 text-xs font-black">
-                                    {{ $manifest->work_orders_count }} Pasang
+
+                            {{-- Pengirim & Waktu --}}
+                            <td class="py-4 px-6 whitespace-nowrap">
+                                <div class="font-black text-slate-900 dark:text-white leading-tight">
+                                    {{ $manifest->dispatcher->name ?? 'Gudang/Toko Utama' }}
+                                </div>
+                                <div class="text-[11px] text-slate-400 font-semibold mt-0.5">
+                                    {{ $manifest->created_at->format('d M Y, H:i') }}
+                                </div>
+                            </td>
+
+                            {{-- Jumlah SPK --}}
+                            <td class="py-4 px-6 text-center whitespace-nowrap">
+                                <span class="px-3 py-1 rounded-xl text-xs font-black bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-teal-600 dark:text-teal-300">
+                                    {{ $manifest->work_orders_count }} SPK
                                 </span>
                             </td>
-                            <td class="px-6 py-6 whitespace-nowrap text-center">
+
+                            {{-- Status --}}
+                            <td class="py-4 px-6 text-center whitespace-nowrap">
                                 @if($manifest->status === 'SENT')
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-tighter">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2 animate-pulse"></span>
-                                        In-Transit
+                                    <span class="px-3 py-1 rounded-xl text-[10px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 uppercase tracking-wider inline-flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                                        Dalam Pengiriman
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black bg-[#22AF85]/10 text-[#22AF85] border border-[#22AF85]/20 uppercase tracking-tighter">
-                                        <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                        Diterima
+                                    <span class="px-3 py-1 rounded-xl text-[10px] font-black bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 uppercase tracking-wider inline-flex items-center gap-1">
+                                        ✓ Diterima
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-8 py-6 whitespace-nowrap text-right">
-                                <a href="{{ route('manifest.show', $manifest->id) }}" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-[#22AF85] hover:border-[#22AF85] transition-all group-hover:shadow-md">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                    </svg>
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="px-8 py-20 text-center">
-                                <div class="bg-gray-50/50 inline-flex p-8 rounded-full mb-4">
-                                    <svg class="w-12 h-12 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                                    </svg>
-                                </div>
-                                <h3 class="text-sm font-bold text-gray-900">Belum ada manifest</h3>
-                                <p class="text-xs text-gray-400 mt-1 max-w-xs mx-auto">Silakan buat pengiriman baru untuk melacak perpindahan sepatu dari gudang ke workshop.</p>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
 
-            @if($manifests->hasPages())
-            <div class="px-8 py-6 bg-gray-50/50 border-t border-gray-100">
-                {{ $manifests->links() }}
-            </div>
-            @endif
+                            {{-- Aksi --}}
+                            <td class="py-4 px-6 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('manifest.show', array_filter([$manifest->id, 'mode' => request('mode')])) }}" 
+                                       class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all">
+                                        Detail
+                                    </a>
+
+                                    @if($manifest->status === 'SENT')
+                                        <a href="{{ route('manifest.receive', array_filter([$manifest->id, 'mode' => request('mode')])) }}" 
+                                           class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-900/20 active:scale-95 transition-all">
+                                            📥 Terima Inbound
+                                        </a>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="py-12 text-center text-slate-400 font-bold">
+                                Tidak ada manifest inbound yang ditemukan.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
+
+        {{-- Mobile Cards (< 768px) --}}
+        <div class="md:hidden divide-y divide-slate-200 dark:divide-slate-800">
+            @forelse($manifests as $manifest)
+                <div class="p-4 space-y-3 bg-white dark:bg-slate-900">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono font-black text-amber-500 dark:text-amber-400 text-xs bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2.5 py-1 rounded-xl">
+                            📄 {{ $manifest->manifest_number }}
+                        </span>
+                        <span class="px-2.5 py-0.5 rounded-xl text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-teal-600 dark:text-teal-300">
+                            {{ $manifest->work_orders_count }} SPK
+                        </span>
+                    </div>
+
+                    <div class="text-xs">
+                        <div class="font-bold text-slate-900 dark:text-white">Pengirim: {{ $manifest->dispatcher->name ?? 'Gudang/Toko Utama' }}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">{{ $manifest->created_at->format('d M Y, H:i') }}</div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/60">
+                        <div>
+                            @if($manifest->status === 'SENT')
+                                <span class="px-2 py-0.5 rounded-lg text-[9px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">
+                                    Dalam Pengiriman
+                                </span>
+                            @else
+                                <span class="px-2 py-0.5 rounded-lg text-[9px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">
+                                    ✓ Diterima
+                                </span>
+                            @endif
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('manifest.show', array_filter([$manifest->id, 'mode' => request('mode')])) }}" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-300 font-bold text-xs border border-slate-700">
+                                Detail
+                            </a>
+                            @if($manifest->status === 'SENT')
+                                <a href="{{ route('manifest.receive', array_filter([$manifest->id, 'mode' => request('mode')])) }}" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs shadow-md">
+                                    📥 Terima
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="p-8 text-center text-slate-400 text-xs font-bold">
+                    Tidak ada manifest inbound yang ditemukan.
+                </div>
+            @endforelse
+        </div>
+
+        @if($manifests->hasPages())
+        <div class="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+            {{ $manifests->links() }}
+        </div>
+        @endif
     </div>
+
 </div>
-</x-app-layout>
+</x-dynamic-component>

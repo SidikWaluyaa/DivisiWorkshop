@@ -77,6 +77,6 @@ class Index extends Component
 
         return view('livewire.warehouse.disbursement.index', [
             'disbursements' => $disbursements
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }

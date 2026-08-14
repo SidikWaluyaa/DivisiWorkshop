@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-workshop-pwa-layout>
     <x-slot name="header">
         <div class="flex items-center gap-4">
             <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm shadow-sm border border-white/30">
@@ -460,4 +460,4 @@
             });
         }
     </script>
-</x-app-layout>
+</x-workshop-pwa-layout>

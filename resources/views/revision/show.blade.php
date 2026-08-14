@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-workshop-pwa-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center gap-4">
             <div class="flex items-center gap-4">
@@ -157,4 +157,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-workshop-pwa-layout>

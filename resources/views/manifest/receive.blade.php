@@ -1,11 +1,11 @@
-<x-app-layout>
+<x-dynamic-component :component="$layout ?? 'app-layout'">
 <div class="py-12 bg-slate-50 dark:bg-slate-950 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {{-- Header Section --}}
         <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             <div>
-                <a href="{{ route('manifest.show', $manifest->id) }}" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-teal-500 transition-colors mb-3 group">
+                <a href="{{ route('manifest.show', [$manifest->id, 'mode' => request('mode') ?? 'pwa']) }}" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-teal-500 transition-colors mb-3 group">
                     <svg class="w-4 h-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
@@ -180,7 +180,7 @@
                             Terima & Mulai Prep
                         </button>
                         
-                        <a href="{{ route('manifest.show', $manifest->id) }}" class="w-full flex items-center justify-center py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-350 font-bold text-xs uppercase tracking-widest rounded-2xl transition-all">
+                        <a href="{{ route('manifest.show', [$manifest->id, 'mode' => request('mode') ?? 'pwa']) }}" class="w-full flex items-center justify-center py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-350 font-bold text-xs uppercase tracking-widest rounded-2xl transition-all">
                             Batal
                         </a>
                     </div>
@@ -192,4 +192,4 @@
 
     </div>
 </div>
-</x-app-layout>
+</x-dynamic-component>

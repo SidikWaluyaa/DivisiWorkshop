@@ -34,7 +34,15 @@ class WorkshopManifestController extends Controller
         $manifests = $query->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('manifest.index', compact('manifests'));
+        $isWorkshopUser = request('mode') === 'pwa' || 
+            request()->is('workshop/*') || 
+            (Auth::check() && (
+                Auth::user()->role === 'admin_workshop' || 
+                Auth::user()->role === 'technician'
+            ));
+        $layout = $isWorkshopUser ? 'workshop-pwa-layout' : 'app-layout';
+
+        return view('manifest.index', compact('manifests', 'layout'));
     }
 
     public function create(Request $request)
@@ -114,10 +122,18 @@ class WorkshopManifestController extends Controller
     public function show($id)
     {
         $manifest = WorkshopManifest::with(['workOrders.customer', 'workOrders.workOrderServices.service', 'dispatcher', 'receiver'])->findOrFail($id);
+        $isWorkshopUser = request('mode') === 'pwa' || 
+            request()->is('workshop/*') || 
+            (Auth::check() && (
+                Auth::user()->role === 'admin_workshop' || 
+                Auth::user()->role === 'technician'
+            ));
+        $layout = $isWorkshopUser ? 'workshop-pwa-layout' : 'app-layout';
+
         if (str_starts_with($manifest->manifest_number, 'MNF-OUT-')) {
-            return view('qc.outbound.show', compact('manifest'));
+            return view('qc.outbound.show', compact('manifest', 'layout'));
         }
-        return view('manifest.show', compact('manifest'));
+        return view('manifest.show', compact('manifest', 'layout'));
     }
 
     public function receiveForm($id)
@@ -162,11 +178,14 @@ class WorkshopManifestController extends Controller
             }
         }
 
+        $layout = 'workshop-pwa-layout';
+
         return view('manifest.receive', compact(
             'manifest', 
             'candidates_washing', 
             'candidates_sol', 
-            'candidates_upper'
+            'candidates_upper',
+            'layout'
         ));
     }
 
@@ -218,7 +237,7 @@ class WorkshopManifestController extends Controller
                 }
             }
 
-            return redirect()->route('manifest.index')->with('success', "Manifest #{$manifest->manifest_number} berhasil diterima dan teknisi prep telah ditugaskan.");
+            return redirect()->route('manifest.index', array_filter(['status' => 'SENT', 'mode' => $request->query('mode') ?? 'pwa']))->with('success', "Manifest #{$manifest->manifest_number} berhasil diterima dan teknisi prep telah ditugaskan.");
         });
     }
 }

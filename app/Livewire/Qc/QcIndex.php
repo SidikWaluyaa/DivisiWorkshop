@@ -390,6 +390,6 @@ class QcIndex extends Component
     {
         return view('livewire.qc.qc-index', [
             'orders' => $this->orders
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }

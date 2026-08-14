@@ -1,21 +1,21 @@
-<x-app-layout>
-<div class="py-12 bg-gray-50/50 min-h-screen">
+<x-dynamic-component :component="$layout ?? 'app-layout'">
+<div class="py-12 bg-gray-50/50 dark:bg-slate-950 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
-                <a href="{{ route('manifest.index') }}" class="inline-flex items-center text-sm font-bold text-gray-400 hover:text-[#22AF85] transition-colors mb-4 group">
+                <a href="{{ route('manifest.index', array_filter(['status' => 'SENT', 'mode' => request('mode') ?? ($layout === 'workshop-pwa-layout' ? 'pwa' : null)])) }}" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-[#22AF85] transition-colors mb-4 group">
                     <svg class="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
                     Kembali ke Daftar
                 </a>
-                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Detail <span class="text-[#22AF85]">Manifest</span></h1>
-                <p class="text-sm text-gray-500 mt-1 font-black uppercase tracking-[0.2em]">{{ $manifest->manifest_number }}</p>
+                <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Detail <span class="text-[#22AF85]">Manifest</span></h1>
+                <p class="text-sm text-slate-400 dark:text-slate-400 mt-1 font-black uppercase tracking-[0.2em]">{{ $manifest->manifest_number }}</p>
             </div>
             
             <div class="flex items-center space-x-4">
                 @if($manifest->status === 'SENT')
-                    <a href="{{ route('manifest.receive.form', $manifest->id) }}" class="inline-flex items-center px-8 py-4 bg-[#FFC232] border border-transparent rounded-2xl font-black text-sm text-gray-900 uppercase tracking-[0.2em] hover:bg-[#e6af2e] shadow-lg shadow-yellow-200/50 transition-all active:scale-95">
+                    <a href="{{ route('manifest.receive.form', [$manifest->id, 'mode' => 'pwa']) }}" class="inline-flex items-center px-8 py-4 bg-[#FFC232] border border-transparent rounded-2xl font-black text-sm text-gray-900 uppercase tracking-[0.2em] hover:bg-[#e6af2e] shadow-lg shadow-yellow-200/50 transition-all active:scale-95">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                         </svg>
@@ -278,4 +278,4 @@
         }
     }
 </style>
-</x-app-layout>
+</x-dynamic-component>

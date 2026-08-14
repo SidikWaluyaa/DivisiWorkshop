@@ -296,6 +296,8 @@ Route::middleware('auth')->group(function () {
     // Gudang Outbound Receipt (Penerimaan QC ke Gudang Utama)
     Route::get('/gudang/outbound-receipt', \App\Livewire\Gudang\OutboundReceiptIndex::class)->name('gudang.outbound-receipt');
 
+
+
     // Surat Jalan Handover (FR-10.1)
     Route::prefix('surat-jalan')->name('surat-jalan.')->group(function () {
         Route::get('/', [App\Http\Controllers\SuratJalanController::class, 'index'])->name('index');

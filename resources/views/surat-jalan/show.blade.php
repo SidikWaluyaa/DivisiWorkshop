@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-workshop-pwa-layout>
     <x-slot name="header">
         <h2 class="font-black text-xl text-slate-800 dark:text-white leading-tight flex items-center gap-2">
             <span>📄</span> Detail Surat Jalan: {{ $suratJalan->nomor_surat }}
@@ -153,4 +153,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-workshop-pwa-layout>

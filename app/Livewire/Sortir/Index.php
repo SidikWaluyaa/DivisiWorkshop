@@ -621,6 +621,6 @@ class Index extends Component
             'bottleneckCount' => $bottleneckCount,
             // Rack Capacity
             'racks' => $racks,
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }

@@ -698,7 +698,7 @@ class Detail extends Component
             'services' => $services,
             'bongkarSolTechs' => $bongkarSolTechs,
             'bongkarUpperTechs' => $bongkarUpperTechs,
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 
     public function requestMaterial(MaterialManagementService $service)

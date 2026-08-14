@@ -122,6 +122,6 @@ class Index extends Component
 
         return view('livewire.procurement.index', [
             'requests' => $requests
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }

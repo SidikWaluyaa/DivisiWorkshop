@@ -633,6 +633,6 @@ class StationIndex extends Component
     {
         return view('livewire.production.station-index', [
             'orders' => $this->orders
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }

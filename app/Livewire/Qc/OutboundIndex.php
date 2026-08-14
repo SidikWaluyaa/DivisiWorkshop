@@ -223,6 +223,6 @@ class OutboundIndex extends Component
         return view('livewire.qc.outbound-index', [
             'stagingOrders' => $this->stagingOrders,
             'manifests'     => $this->outboundManifests,
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }

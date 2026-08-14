@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-workshop-pwa-layout>
     <div class="min-h-screen bg-[#F9FAFB] dark:bg-gray-900">
         {{-- Header Section --}}
         <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
@@ -761,4 +761,4 @@
         </form>
     </x-modal>
     @endforeach
-</x-app-layout>
+</x-workshop-pwa-layout>

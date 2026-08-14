@@ -253,6 +253,6 @@ class Create extends Component
 
     public function render()
     {
-        return view('livewire.procurement.create')->layout('layouts.app');
+        return view('livewire.procurement.create')->layout('layouts.workshop-pwa');
     }
 }

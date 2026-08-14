@@ -542,6 +542,6 @@ class PrepIndex extends Component
     {
         return view('livewire.preparation.prep-index', [
             'orders' => $this->orders
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }

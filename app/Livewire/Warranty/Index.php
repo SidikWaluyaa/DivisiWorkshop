@@ -425,6 +425,6 @@ class Index extends Component
             'availablePics' => $availablePics,
             'availableCategories' => $availableCategories,
             'stats' => $this->stats,
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }
