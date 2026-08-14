@@ -31,9 +31,9 @@ if (file_exists($envPath)) {
 // Configuration
 $valid_token = $env['SYNC_API_TOKEN'] ?? 'SECRET_TOKEN_12345'; 
 $db_host = $env['DB_HOST'] ?? '127.0.0.1';
-$db_user = $env['DB_USERNAME'] ?? 'root';
-$db_pass = $env['DB_PASSWORD'] ?? '';
-$db_name = $env['DB_DATABASE'] ?? 'sistem_workshop';
+$db_user = $env['DB_USERNAME'] ?? 'sql_info_shoewor';
+$db_pass = $env['DB_PASSWORD'] ?? '16d2a1344b13c';
+$db_name = $env['DB_DATABASE'] ?? 'sql_info_shoewor';
 
 // Set Headers
 header('Content-Type: application/json');

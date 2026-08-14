@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,11 +12,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('work_orders', function (Blueprint $table) {
-            if (!Schema::hasColumn('work_orders', 'suggested_services')) {
+        $hasColumn = function($table, $column) {
+            return DB::table('information_schema.columns')
+                ->where('table_schema', DB::getDatabaseName())
+                ->where('table_name', $table)
+                ->where('column_name', $column)
+                ->exists();
+        };
+
+        if (!$hasColumn('work_orders', 'suggested_services')) {
+            Schema::table('work_orders', function (Blueprint $table) {
                 $table->text('suggested_services')->nullable()->after('warehouse_qc_notes');
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -23,10 +32,18 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('work_orders', function (Blueprint $table) {
-            if (Schema::hasColumn('work_orders', 'suggested_services')) {
+        $hasColumn = function($table, $column) {
+            return DB::table('information_schema.columns')
+                ->where('table_schema', DB::getDatabaseName())
+                ->where('table_name', $table)
+                ->where('column_name', $column)
+                ->exists();
+        };
+
+        if ($hasColumn('work_orders', 'suggested_services')) {
+            Schema::table('work_orders', function (Blueprint $table) {
                 $table->dropColumn('suggested_services');
-            }
-        });
+            });
+        }
     }
 };
