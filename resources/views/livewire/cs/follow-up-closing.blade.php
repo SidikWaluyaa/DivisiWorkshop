@@ -124,11 +124,23 @@
                                     {{-- Issue Details --}}
                                     <td class="px-6 py-4 align-top">
                                         @if($openIssue)
-                                            <div class="flex items-center gap-2 mb-3">
-                                                <span class="text-[9px] uppercase font-black tracking-widest px-1.5 py-0.5 rounded border bg-red-100 text-red-700 border-red-200">
-                                                    📦 GUDANG QC REJECT
-                                                </span>
-                                                <span class="text-[9px] uppercase font-bold text-gray-400">Pemeriksa: {{ $reporter }}</span>
+                                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-[9px] uppercase font-black tracking-widest px-2 py-0.5 rounded-md border bg-red-100 text-red-700 border-red-200">
+                                                        📦 GUDANG QC REJECT
+                                                    </span>
+                                                    <span class="text-[9px] uppercase font-bold text-gray-500">Pemeriksa: {{ $reporter }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-1.5">
+                                                    <a href="{{ route('reception.qc-reject-report', $order->spk_number) }}" target="_blank" 
+                                                       class="inline-flex items-center gap-1 text-[9px] bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 rounded-md border border-red-200/60 font-black transition-colors shadow-sm">
+                                                        📄 Laporan QC Reject ↗
+                                                    </a>
+                                                    <a href="{{ url('/admin/orders/' . $order->id) }}" target="_blank" 
+                                                       class="inline-flex items-center gap-1 text-[9px] bg-gray-50 hover:bg-gray-100 text-gray-600 px-2 py-1 rounded-md border border-gray-200/60 font-bold transition-colors shadow-sm">
+                                                        🔍 Detail SPK ↗
+                                                    </a>
+                                                </div>
                                             </div>
 
                                             <div class="space-y-3">
@@ -225,16 +237,18 @@
 
                                                 {{-- Evidence Photos --}}
                                                 @if($openIssue->photo_urls && count($openIssue->photo_urls) > 0)
-                                                    <div>
-                                                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Foto Bukti Fisik:</div>
+                                                    <div class="pt-2 border-t border-gray-100">
+                                                        <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                                                            <span>📷</span> FOTO BUKTI FISIK REJECT:
+                                                        </div>
                                                         <div class="flex flex-wrap gap-2">
                                                             @foreach($openIssue->photo_urls as $photoUrl)
                                                                 @if($photoUrl)
-                                                                    <a href="{{ route('cx-issues.report', $order->spk_number) }}" target="_blank" class="block relative group overflow-hidden rounded-lg border border-gray-200 shadow-sm transition-all hover:scale-105 active:scale-95">
+                                                                    <a href="{{ $photoUrl }}" target="_blank" class="block relative group overflow-hidden rounded-xl border border-gray-200 shadow-sm transition-all hover:scale-105 active:scale-95">
                                                                         <img src="{{ $photoUrl }}" alt="QC Reject Evidence" class="w-16 h-16 object-cover bg-gray-50">
                                                                         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity">
-                                                                            <span class="text-white text-[9px] font-black uppercase tracking-wider">Laporan</span>
-                                                                            <span class="text-teal-400 text-[8px] font-bold">Buka ↗</span>
+                                                                            <span class="text-white text-[8px] font-black uppercase tracking-wider">Buka Foto</span>
+                                                                            <span class="text-teal-400 text-[8px] font-bold">🔍 ↗</span>
                                                                         </div>
                                                                     </a>
                                                                 @endif
@@ -243,11 +257,52 @@
                                                     </div>
                                                 @endif
 
-                                                {{-- Recommended/Suggested Services --}}
-                                                @if($openIssue->recommended_services)
-                                                    <div class="pt-2 border-t border-gray-50">
-                                                        <div class="text-[10px] font-black text-teal-600 uppercase tracking-widest mb-1">Rekomendasi Tambahan Layanan dari Gudang:</div>
-                                                        <div class="text-xs text-gray-600 font-bold bg-teal-50/50 p-2.5 rounded-lg border border-teal-100 leading-relaxed whitespace-pre-line">{{ $openIssue->recommended_services }}</div>
+                                                {{-- Recommended & Suggested Services from cx_issues --}}
+                                                @php
+                                                    // Recommended Services
+                                                    $recText = trim($openIssue->recommended_services ?? '');
+                                                    if (empty($recText)) {
+                                                        $recArr = array_filter([
+                                                            !empty($openIssue->rec_service_1) ? "1. " . $openIssue->rec_service_1 : null,
+                                                            !empty($openIssue->rec_service_2) ? "2. " . $openIssue->rec_service_2 : null,
+                                                        ]);
+                                                        if (!empty($recArr)) {
+                                                            $recText = implode("\n", $recArr);
+                                                        }
+                                                    }
+
+                                                    // Suggested / Optional Services
+                                                    $sugText = trim($openIssue->suggested_services ?? '');
+                                                    if (empty($sugText)) {
+                                                        $sugArr = array_filter([
+                                                            !empty($openIssue->sug_service_1) ? "1. " . $openIssue->sug_service_1 : null,
+                                                            !empty($openIssue->sug_service_2) ? "2. " . $openIssue->sug_service_2 : null,
+                                                        ]);
+                                                        if (!empty($sugArr)) {
+                                                            $sugText = implode("\n", $sugArr);
+                                                        }
+                                                    }
+                                                @endphp
+
+                                                @if(!empty($recText) || !empty($sugText))
+                                                    <div class="pt-2 border-t border-gray-100 space-y-2">
+                                                        @if(!empty($recText))
+                                                            <div>
+                                                                <div class="text-[10px] font-black text-[#22AF85] uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                                                                    <span>💎</span> REKOMENDASI TAMBAHAN LAYANAN DARI GUDANG:
+                                                                </div>
+                                                                <div class="text-xs text-gray-700 font-bold bg-[#22AF85]/5 p-3 rounded-xl border border-[#22AF85]/20 leading-relaxed whitespace-pre-line shadow-sm">{{ $recText }}</div>
+                                                            </div>
+                                                        @endif
+
+                                                        @if(!empty($sugText))
+                                                            <div>
+                                                                <div class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                                                                    <span>✨</span> SARAN LAYANAN TAMBAHAN (OPSIONAL):
+                                                                </div>
+                                                                <div class="text-xs text-gray-700 font-bold bg-amber-50/60 p-3 rounded-xl border border-amber-200/60 leading-relaxed whitespace-pre-line shadow-sm">{{ $sugText }}</div>
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 @endif
                                             </div>

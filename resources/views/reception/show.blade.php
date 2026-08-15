@@ -613,8 +613,8 @@
                 </div>
 
                 {{-- Section 4: QC Gatekeeper --}}
-                <div class="bg-gray-900 rounded-2xl p-8 mb-8 relative overflow-hidden shadow-2xl">
-                    <div class="absolute top-0 right-0 p-8 opacity-10 text-[#FFC232]">
+                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-8 opacity-5 text-[#22AF85]">
                         <svg class="w-48 h-48 rotate-12" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd"
                                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -622,9 +622,9 @@
                         </svg>
                     </div>
 
-                    <h3 class="text-xl font-black text-white mb-8 flex items-center gap-3 relative z-10">
+                    <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3 relative z-10">
                         <span
-                            class="w-10 h-10 bg-[#FFC232] text-gray-900 rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#FFC232]/30">4</span>
+                            class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">4</span>
                         QC GATEKEEPER (PEMERIKSAAN AWAL)
                     </h3>
 
@@ -634,9 +634,9 @@
                                 <input type="radio" name="reception_qc_passed" value="1" x-model="qcPassed"
                                     class="peer sr-only">
                                 <div
-                                    class="text-center p-8 rounded-2xl border-2 border-gray-800 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85]/10 text-gray-500 peer-checked:text-[#22AF85] transition-all font-black shadow-lg group-hover:bg-gray-800/50 flex flex-col justify-center items-center gap-4">
-                                    <div class="p-3 rounded-full bg-gray-800 peer-checked:bg-[#22AF85] transition-all">
-                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor"
+                                    class="text-center p-8 rounded-2xl border-2 border-gray-100 peer-checked:border-[#22AF85] peer-checked:bg-[#22AF85]/5 text-gray-400 peer-checked:text-[#22AF85] transition-all font-black shadow-sm group-hover:border-[#22AF85]/30 flex flex-col justify-center items-center gap-4">
+                                    <div class="p-3 rounded-full bg-gray-100 peer-checked:bg-[#22AF85] transition-all">
+                                        <svg class="w-8 h-8 text-gray-400 peer-checked:text-white" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                                                 d="M5 13l4 4L19 7"></path>
@@ -649,9 +649,9 @@
                                 <input type="radio" name="reception_qc_passed" value="0" x-model="qcPassed"
                                     class="peer sr-only">
                                 <div
-                                    class="text-center p-8 rounded-2xl border-2 border-gray-800 peer-checked:border-red-500 peer-checked:bg-red-500/10 text-gray-500 peer-checked:text-red-500 transition-all font-black shadow-lg group-hover:bg-gray-800/50 flex flex-col justify-center items-center gap-4">
-                                    <div class="p-3 rounded-full bg-gray-800 peer-checked:bg-red-500 transition-all">
-                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor"
+                                    class="text-center p-8 rounded-2xl border-2 border-gray-100 peer-checked:border-red-500 peer-checked:bg-red-50 text-gray-400 peer-checked:text-red-500 transition-all font-black shadow-sm group-hover:border-red-300 flex flex-col justify-center items-center gap-4">
+                                    <div class="p-3 rounded-full bg-gray-100 peer-checked:bg-red-500 transition-all">
+                                        <svg class="w-8 h-8 text-gray-400 peer-checked:text-white" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                                                 d="M6 18L18 6M6 6l12 12"></path>
@@ -662,48 +662,63 @@
                             </label>
                         </div>
 
+                        {{-- QC Passed Notes (Catatan Gudang Opsional) --}}
+                        <div x-show="qcPassed == '1'" x-transition class="mt-4 bg-[#22AF85]/10 p-5 rounded-2xl border border-[#22AF85]/20">
+                            <label class="flex items-center gap-2 text-xs font-black text-[#22AF85] mb-2 uppercase tracking-widest">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                <span>Catatan QC Gudang (Opsional)</span>
+                            </label>
+                            <input type="text" name="warehouse_qc_notes" value="{{ old('warehouse_qc_notes', $order->warehouse_qc_notes) }}"
+                                   placeholder="Masukkan catatan pemeriksaan fisik gudang jika ada (misal: aksesoris lengkap, tali ori bawaan)..."
+                                   class="w-full bg-white border border-gray-200 text-gray-900 rounded-xl py-3.5 px-4 text-sm font-bold focus:ring-[#22AF85] focus:border-[#22AF85] shadow-sm">
+                        </div>
+
                         {{-- Rejection Reason --}}
                         <div x-show="qcPassed == '0'" x-transition
-                            class="mt-6 bg-red-500/10 p-6 rounded-2xl border border-red-500/20" style="display: none;">
+                            class="mt-6 bg-red-50 p-6 rounded-2xl border border-red-200" style="display: none;">
                             <div class="space-y-6">
                                 <div>
-                                    <label class="block text-sm font-black text-red-400 mb-4 uppercase tracking-widest">Alasan Penolakan (Wajib)</label>
+                                    <label class="block text-sm font-black text-red-600 mb-4 uppercase tracking-widest">Alasan Penolakan (Wajib)</label>
                                     <div class="space-y-3">
-                                        <div class="flex items-stretch shadow-lg">
-                                            <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
-                                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider">1. Upper</span>
+                                        <div class="flex items-stretch shadow-sm">
+                                            <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-600 uppercase tracking-wider">1. Upper</span>
                                             </div>
                                             <input type="text" name="desc_upper" x-model="descUpper" 
                                                 placeholder="Detail kondisi bagian atas sepatu..."
-                                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
+                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
                                         </div>
 
-                                        <div class="flex items-stretch shadow-lg">
-                                            <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
-                                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider">2. Sol</span>
+                                        <div class="flex items-stretch shadow-sm">
+                                            <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-600 uppercase tracking-wider">2. Sol</span>
                                             </div>
                                             <input type="text" name="desc_sol" x-model="descSol" 
                                                 placeholder="Detail kondisi bagian sol/bawah..."
-                                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
+                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
                                         </div>
 
-                                        <div class="flex items-stretch shadow-lg">
-                                            <div class="w-32 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
-                                                <span class="text-[9px] font-black text-red-500/80 uppercase tracking-wider text-center leading-tight">3. Kondisi<br>Bawaan</span>
+                                        <div class="flex items-stretch shadow-sm">
+                                            <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-600 uppercase tracking-wider text-center leading-tight">3. Kondisi<br>Bawaan</span>
                                             </div>
                                             <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" 
                                                 placeholder="Detail kondisi bawaan lainnya..."
-                                                class="flex-1 bg-gray-800 border-gray-700 text-white rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
+                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
                                         </div>
                                         
                                         <input type="hidden" name="reception_rejection_reason" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                 {{-- Structured Service Input (Recommended & Optional) --}}
-                                 <div class="space-y-4">
-                                     <div>
-                                         <label class="block text-sm font-black text-blue-400 mb-4 uppercase tracking-widest">Saran Layanan (Rekomendasi)</label>
+                        {{-- Structured Service Input (Recommended & Optional) --}}
+                        <div x-show="qcPassed == '1' || qcPassed == '0'" x-transition class="mt-4 p-6 rounded-2xl border transition-all" :class="qcPassed == '1' ? 'bg-[#22AF85]/5 border-[#22AF85]/20' : 'bg-gray-50 border-gray-200'">
+                            <div>
+                                <label class="block text-sm font-black mb-4 uppercase tracking-widest transition-colors" :class="qcPassed == '1' ? 'text-[#22AF85]' : 'text-blue-600'">Saran Layanan (Rekomendasi)</label>
                                          <div class="space-y-4">
                                              {{-- Recommended Service 1 --}}
                                              <div class="relative" @click.away="recService1Open = false">
@@ -711,7 +726,7 @@
                                                      <div class="flex gap-2">
                                                          <div class="flex-1 min-w-[120px]">
                                                              <select x-model="recService1Category" @change="onSuggestionCategoryChange('rec', 1)"
-                                                                 class="w-full bg-gray-900 border-gray-700 rounded-xl px-4 py-3.5 text-sm font-bold text-gray-300 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-600">
+                                                                 class="w-full bg-white border-gray-200 rounded-xl px-4 py-3.5 text-sm font-bold text-gray-800 focus:ring-[#22AF85] focus:border-[#22AF85] shadow-sm">
                                                                  <option value="">-- Kategori --</option>
                                                                  <template x-for="cat in uniqueCategories" :key="cat">
                                                                      <option :value="cat" x-text="cat"></option>
@@ -719,32 +734,32 @@
                                                              </select>
                                                          </div>
                                                          <div class="flex-[2] relative">
-                                                            <div class="flex items-stretch shadow-lg group">
-                                                                <div class="w-24 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
-                                                                    <span class="text-[9px] font-black text-blue-500/80 uppercase tracking-wider leading-tight">1. Rec<br>Svc</span>
+                                                            <div class="flex items-stretch shadow-sm group">
+                                                                <div class="w-24 flex-shrink-0 bg-gray-50 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                                    <span class="text-[9px] font-black text-[#22AF85] uppercase tracking-wider leading-tight">1. Rec<br>Svc</span>
                                                                 </div>
                                                                 <input type="text" x-model="recService1Search" 
                                                                     @focus="recService1Open = true"
                                                                     @input="updateServiceValue('rec', 1)"
                                                                     :disabled="!recService1Category"
                                                                     placeholder="Cari atau nama jasa..."
-                                                                    class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500 font-bold text-sm py-3.5 px-4 disabled:opacity-50">
+                                                                    class="flex-1 bg-white border-gray-200 text-gray-900 focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-sm py-3.5 px-4 disabled:opacity-50">
                                                                 <input type="number" x-model="recService1Price"
                                                                     @input="updateServiceValue('rec', 1)"
                                                                     placeholder="Harga"
-                                                                    class="w-36 bg-gray-900 border-y border-r border-gray-700 text-blue-400 rounded-r-xl focus:ring-blue-500 focus:border-blue-500 font-black text-sm py-3.5 px-4 text-right">
+                                                                    class="w-36 bg-gray-50 border-y border-r border-gray-200 text-[#22AF85] rounded-r-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-black text-sm py-3.5 px-4 text-right">
                                                             </div>
                                                             <div x-show="recService1Open && recService1Category"
                                                                 x-transition
-                                                                class="absolute left-0 right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
+                                                                class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
                                                                 <template x-for="service in getFilteredServices(recService1Category, recService1Search)">
                                                                     <div @click="selectService('rec', 1, service)" 
-                                                                        class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center group">
-                                                                        <span class="text-sm font-bold text-gray-300 group-hover:text-amber-400" x-text="service.name"></span>
-                                                                        <span class="text-xs font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                                                        class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 flex justify-between items-center group">
+                                                                        <span class="text-sm font-bold text-gray-800 group-hover:text-[#22AF85]" x-text="service.name"></span>
+                                                                        <span class="text-xs font-black text-[#22AF85]" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
                                                                     </div>
                                                                 </template>
-                                                                <div x-show="recService1Search" class="px-4 py-2 bg-gray-800/50 border-t border-gray-700 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">
+                                                                <div x-show="recService1Search" class="px-4 py-2 bg-gray-50 border-t border-gray-200 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">
                                                                     ✏️ Layanan Kustom Terdeteksi
                                                                 </div>
                                                             </div>
@@ -760,7 +775,7 @@
                                                      <div class="flex gap-2">
                                                          <div class="flex-1 min-w-[120px]">
                                                              <select x-model="recService2Category" @change="onSuggestionCategoryChange('rec', 2)"
-                                                                 class="w-full bg-gray-900 border-gray-700 rounded-xl px-4 py-3.5 text-sm font-bold text-gray-300 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-600">
+                                                                 class="w-full bg-white border-gray-200 rounded-xl px-4 py-3.5 text-sm font-bold text-gray-800 focus:ring-[#22AF85] focus:border-[#22AF85] shadow-sm">
                                                                  <option value="">-- Kategori --</option>
                                                                  <template x-for="cat in uniqueCategories" :key="cat">
                                                                      <option :value="cat" x-text="cat"></option>
@@ -768,32 +783,32 @@
                                                              </select>
                                                          </div>
                                                          <div class="flex-[2] relative">
-                                                            <div class="flex items-stretch shadow-lg group">
-                                                                <div class="w-24 flex-shrink-0 bg-gray-900 border-y border-l border-gray-700 rounded-l-xl flex items-center px-4">
-                                                                    <span class="text-[9px] font-black text-blue-500/80 uppercase tracking-wider leading-tight">2. Rec<br>Svc</span>
+                                                            <div class="flex items-stretch shadow-sm group">
+                                                                <div class="w-24 flex-shrink-0 bg-gray-50 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                                    <span class="text-[9px] font-black text-[#22AF85] uppercase tracking-wider leading-tight">2. Rec<br>Svc</span>
                                                                 </div>
                                                                 <input type="text" x-model="recService2Search" 
                                                                     @focus="recService2Open = true"
                                                                     @input="updateServiceValue('rec', 2)"
                                                                     :disabled="!recService2Category"
                                                                     placeholder="Cari atau nama jasa..."
-                                                                    class="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500 font-bold text-sm py-3.5 px-4 disabled:opacity-50">
+                                                                    class="flex-1 bg-white border-gray-200 text-gray-900 focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-sm py-3.5 px-4 disabled:opacity-50">
                                                                 <input type="number" x-model="recService2Price"
                                                                     @input="updateServiceValue('rec', 2)"
                                                                     placeholder="Harga"
-                                                                    class="w-36 bg-gray-900 border-y border-r border-gray-700 text-blue-400 rounded-r-xl focus:ring-blue-500 focus:border-blue-500 font-black text-sm py-3.5 px-4 text-right">
+                                                                    class="w-36 bg-gray-50 border-y border-r border-gray-200 text-[#22AF85] rounded-r-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-black text-sm py-3.5 px-4 text-right">
                                                             </div>
                                                             <div x-show="recService2Open && recService2Category"
                                                                 x-transition
-                                                                class="absolute left-0 right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
+                                                                class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto">
                                                                 <template x-for="service in getFilteredServices(recService2Category, recService2Search)">
                                                                     <div @click="selectService('rec', 2, service)" 
-                                                                        class="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center group">
-                                                                        <span class="text-sm font-bold text-gray-300 group-hover:text-amber-400" x-text="service.name"></span>
-                                                                        <span class="text-xs font-black text-amber-500/80" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
+                                                                        class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 flex justify-between items-center group">
+                                                                        <span class="text-sm font-bold text-gray-800 group-hover:text-[#22AF85]" x-text="service.name"></span>
+                                                                        <span class="text-xs font-black text-[#22AF85]" x-text="'Rp ' + parseInt(service.price).toLocaleString()"></span>
                                                                     </div>
                                                                 </template>
-                                                                <div x-show="recService2Search" class="px-4 py-2 bg-gray-800/50 border-t border-gray-700 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">
+                                                                <div x-show="recService2Search" class="px-4 py-2 bg-gray-50 border-t border-gray-200 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">
                                                                     ✏️ Layanan Kustom Terdeteksi
                                                                 </div>
                                                             </div>
@@ -805,7 +820,8 @@
                                          </div>
                                      </div>
 
-                                     <div>
+                                     {{-- Optional Services (Only shown when Reject) --}}
+                                     <div x-show="qcPassed == '0'">
                                          <label class="block text-sm font-black text-amber-400 mb-4 uppercase tracking-widest">Saran Layanan (Opsional)</label>
                                          <div class="space-y-4">
                                              {{-- Optional Service 1 --}}
@@ -909,7 +925,7 @@
                                      </div>
 
                                      <p class="text-[10px] text-gray-400 mt-2 italic px-1 font-medium">
-                                         * <span class="text-blue-500 font-bold">Recommended</span> (💎) layanan wajib. <span class="text-amber-500 font-bold">Optional</span> (✨) saran tambahan.
+                                         * <span class="text-[#22AF85] font-bold">Recommended</span> (💎) Rekomendasi tambahan jasa.
                                      </p>
 
                                      {{-- Backwards Compatibility for Old Columns --}}
@@ -927,111 +943,112 @@
                                      </template>
                                  </div>
 
-                                {{-- Evidence Photos (Camera Capture System) --}}
-                                <div x-data="cameraCapture()" class="space-y-4">
-                                    <label class="block text-sm font-black text-red-400 uppercase tracking-widest">
-                                        Foto Bukti Kondisi (Wajib jika reject)
-                                    </label>
+                        {{-- Evidence Photos & Rejection Warning (Only when Reject) --}}
+                        <div x-show="qcPassed == '0'" x-transition class="mt-6 bg-red-500/10 p-6 rounded-2xl border border-red-500/20">
+                            {{-- Evidence Photos (Camera Capture System) --}}
+                            <div x-data="cameraCapture()" class="space-y-4">
+                                <label class="block text-sm font-black text-red-400 uppercase tracking-widest">
+                                    Foto Bukti Kondisi (Wajib jika reject)
+                                </label>
 
-                                    {{-- Button to Open Camera On-Demand --}}
-                                    <div x-show="!isCameraOpen" class="flex flex-col mb-4">
-                                        <button type="button" @click="openCamera()" 
-                                                class="w-full sm:w-auto px-6 py-4 bg-gray-800 hover:bg-gray-700 text-white font-black rounded-xl border border-gray-600 shadow-sm transition-all flex items-center justify-center gap-3">
-                                            <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                            BUKA KAMERA (OPSIONAL)
+                                {{-- Button to Open Camera On-Demand --}}
+                                <div x-show="!isCameraOpen" class="flex flex-col mb-4">
+                                    <button type="button" @click="openCamera()" 
+                                            class="w-full sm:w-auto px-6 py-4 bg-gray-800 hover:bg-gray-700 text-white font-black rounded-xl border border-gray-600 shadow-sm transition-all flex items-center justify-center gap-3">
+                                        <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        BUKA KAMERA (OPSIONAL)
+                                    </button>
+                                    <p class="text-[10px] text-gray-500 mt-2 italic">* Hanya buka kamera jika barang direject dan butuh bukti foto cacat.</p>
+                                </div>
+
+                                {{-- Camera & Canvas Container --}}
+                                <template x-if="isCameraOpen">
+                                    <div class="relative w-full max-w-lg mx-auto overflow-hidden bg-black rounded-xl border-2 border-gray-700 shadow-xl" style="aspect-ratio: 3/4;">
+                                        
+                                        {{-- Close Camera Button --}}
+                                        <button type="button" @click="closeCamera()" x-show="!isDrawing"
+                                                class="absolute top-4 right-4 z-20 p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-full backdrop-blur-sm transition-all">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                                         </button>
-                                        <p class="text-[10px] text-gray-500 mt-2 italic">* Hanya buka kamera jika barang direject dan butuh bukti foto cacat.</p>
+
+                                        {{-- 1. Live Video Feed --}}
+                                        <video x-ref="videoElement" autoplay playsinline class="absolute inset-0 w-full h-full object-cover" x-show="streamActive && !isDrawing"></video>
+
+                                    {{-- 2. Interactive Canvas for Drawing --}}
+                                    <canvas x-ref="canvasElement" class="absolute inset-0 w-full h-full object-cover cursor-crosshair touch-none" 
+                                            x-show="isDrawing"
+                                            @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseleave="stopDrawing"
+                                            @touchstart.prevent="startDrawing" @touchmove.prevent="draw" @touchend.prevent="stopDrawing"></canvas>
+
+                                    {{-- Camera Controls Overlay --}}
+                                    <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-center items-center gap-4">
+                                        
+                                        {{-- Camera Switch Button --}}
+                                        <button type="button" @click="switchCamera()" x-show="!isDrawing"
+                                                class="p-3 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full backdrop-blur-sm transition-all">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                        </button>
+
+                                        {{-- Capture Button --}}
+                                        <button type="button" @click="captureImage()" x-show="!isDrawing"
+                                                class="w-16 h-16 bg-white border-4 border-gray-300 rounded-full hover:bg-gray-200 hover:scale-105 shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all">
+                                        </button>
+
+                                        {{-- Drawing Controls --}}
+                                        <template x-if="isDrawing">
+                                            <div class="flex gap-2 w-full justify-between items-center">
+                                                <button type="button" @click="retakePhoto()"
+                                                        class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-colors">
+                                                    Ulang
+                                                </button>
+                                                <button type="button" @click="savePhoto()"
+                                                        class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-black uppercase tracking-widest rounded-lg transition-colors shadow-lg shadow-red-500/30">
+                                                    Simpan
+                                                </button>
+                                            </div>
+                                        </template>
                                     </div>
 
-                                    {{-- Camera & Canvas Container --}}
-                                    <template x-if="isCameraOpen">
-                                        <div class="relative w-full max-w-lg mx-auto overflow-hidden bg-black rounded-xl border-2 border-gray-700 shadow-xl" style="aspect-ratio: 3/4;">
-                                            
-                                            {{-- Close Camera Button --}}
-                                            <button type="button" @click="closeCamera()" x-show="!isDrawing"
-                                                    class="absolute top-4 right-4 z-20 p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-full backdrop-blur-sm transition-all">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                            </button>
-
-                                            {{-- 1. Live Video Feed --}}
-                                            <video x-ref="videoElement" autoplay playsinline class="absolute inset-0 w-full h-full object-cover" x-show="streamActive && !isDrawing"></video>
-
-                                        {{-- 2. Interactive Canvas for Drawing --}}
-                                        <canvas x-ref="canvasElement" class="absolute inset-0 w-full h-full object-cover cursor-crosshair touch-none" 
-                                                x-show="isDrawing"
-                                                @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseleave="stopDrawing"
-                                                @touchstart.prevent="startDrawing" @touchmove.prevent="draw" @touchend.prevent="stopDrawing"></canvas>
-
-                                        {{-- Camera Controls Overlay --}}
-                                        <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-center items-center gap-4">
-                                            
-                                            {{-- Camera Switch Button --}}
-                                            <button type="button" @click="switchCamera()" x-show="!isDrawing"
-                                                    class="p-3 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full backdrop-blur-sm transition-all">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                            </button>
-
-                                            {{-- Capture Button --}}
-                                            <button type="button" @click="captureImage()" x-show="!isDrawing"
-                                                    class="w-16 h-16 bg-white border-4 border-gray-300 rounded-full hover:bg-gray-200 hover:scale-105 shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all">
-                                            </button>
-
-                                            {{-- Drawing Controls --}}
-                                            <template x-if="isDrawing">
-                                                <div class="flex gap-2 w-full justify-between items-center">
-                                                    <button type="button" @click="retakePhoto()"
-                                                            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-colors">
-                                                        Ulang
-                                                    </button>
-                                                    <button type="button" @click="savePhoto()"
-                                                            class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-black uppercase tracking-widest rounded-lg transition-colors shadow-lg shadow-red-500/30">
-                                                        Simpan
-                                                    </button>
-                                                </div>
-                                            </template>
-                                        </div>
-
-                                        {{-- Loading Overlay --}}
-                                        <div x-show="isLoading" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center backdrop-blur-sm z-10">
-                                            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-400 mb-2"></div>
-                                            <span class="text-xs text-amber-400 font-bold uppercase tracking-widest">Memproses...</span>
-                                        </div>
+                                    {{-- Loading Overlay --}}
+                                    <div x-show="isLoading" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center backdrop-blur-sm z-10">
+                                        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-400 mb-2"></div>
+                                        <span class="text-xs text-amber-400 font-bold uppercase tracking-widest">Memproses...</span>
                                     </div>
-                                    </template>
+                                </div>
+                                </template>
 
-                                    {{-- Thumbnail Gallery --}}
-                                    <div x-show="photos.length > 0" class="pt-4 border-t border-gray-800">
-                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
-                                            Foto Tersimpan (<span x-text="photos.length"></span>)
-                                        </label>
-                                        <div class="flex flex-wrap gap-3">
-                                            <template x-for="(photo, index) in photos" :key="index">
-                                                <div class="relative group w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-700 shadow-md">
-                                                    <img :src="photo.dataUrl" class="w-full h-full object-cover">
-                                                    <button type="button" @click="removePhoto(index)"
-                                                            class="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-80 hover:opacity-100 transition-opacity">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                    </button>
-                                                </div>
-                                            </template>
-                                        </div>
+                                {{-- Thumbnail Gallery --}}
+                                <div x-show="photos.length > 0" class="pt-4 border-t border-gray-800">
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                        Foto Tersimpan (<span x-text="photos.length"></span>)
+                                    </label>
+                                    <div class="flex flex-wrap gap-3">
+                                        <template x-for="(photo, index) in photos" :key="index">
+                                            <div class="relative group w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-700 shadow-md">
+                                                <img :src="photo.dataUrl" class="w-full h-full object-cover">
+                                                <button type="button" @click="removePhoto(index)"
+                                                        class="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-80 hover:opacity-100 transition-opacity">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+                                        </template>
                                     </div>
-
-                                    {{-- Hidden input to store generated File objects to submit to backend --}}
-                                    <input type="file" name="evidence_photos[]" id="camera_hidden_input" multiple class="hidden">
-                                    
-                                    <p class="text-[10px] text-gray-500 mt-1 italic">* Jepret dan beri coretan area yang rusak sebelum disimpan.</p>
-
                                 </div>
 
-                                <div class="flex items-center gap-2 pt-4 text-red-500 text-[10px] font-black uppercase tracking-widest border-t border-red-500/20 mt-4">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                        </path>
-                                    </svg>
-                                    Order akan ditahan untuk konfirmasi CS
-                                </div>
+                                {{-- Hidden input to store generated File objects to submit to backend --}}
+                                <input type="file" name="evidence_photos[]" id="camera_hidden_input" multiple class="hidden">
+                                
+                                <p class="text-[10px] text-gray-500 mt-1 italic">* Jepret dan beri coretan area yang rusak sebelum disimpan.</p>
+
+                            </div>
+
+                            <div class="flex items-center gap-2 pt-4 text-red-500 text-[10px] font-black uppercase tracking-widest border-t border-red-500/20 mt-4">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                    </path>
+                                </svg>
+                                Order akan ditahan untuk konfirmasi CS
                             </div>
                         </div>
                     </div>
