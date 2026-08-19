@@ -122,6 +122,7 @@ Route::middleware('auth')->group(function () {
             Route::get('services/template', [App\Http\Controllers\Admin\ServiceController::class, 'downloadTemplate'])->name('services.template');
             Route::post('services/import', [App\Http\Controllers\Admin\ServiceController::class, 'import'])->name('services.import');
             Route::get('services/batch-edit', \App\Livewire\Admin\ServiceBatchEdit::class)->name('services.batch-edit');
+            Route::get('technician-skills', \App\Livewire\Admin\TechnicianSkillMatrix::class)->name('technician-skills');
             Route::resource('services', App\Http\Controllers\Admin\ServiceController::class);
         });
 
@@ -375,6 +376,7 @@ Route::middleware('auth')->group(function () {
     // Production
     Route::prefix('production')->name('production.')->middleware('access:production')->group(function () {
         Route::get('/', \App\Livewire\Production\StationIndex::class)->lazy()->name('index');
+        Route::get('/technician-assistant', \App\Livewire\Production\TechnicianAssistant::class)->name('technician-assistant');
         Route::post('/{id}/update-station', [ProductionController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/finish', [ProductionController::class, 'finish'])->name('finish');
         Route::post('/{id}/approve', [ProductionController::class, 'approve'])->name('approve');
@@ -433,6 +435,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{revision}', [App\Http\Controllers\RevisionController::class, 'show'])->name('show');
         Route::post('/{workOrder}/request', [App\Http\Controllers\RevisionController::class, 'request'])->name('request');
         Route::post('/{revision}/complete', [App\Http\Controllers\RevisionController::class, 'complete'])->name('complete');
+        Route::post('/{revision}/loss', [App\Http\Controllers\RevisionController::class, 'updateLoss'])->name('update-loss');
         Route::delete('/{revision}', [App\Http\Controllers\RevisionController::class, 'destroy'])->name('destroy');
     });
 

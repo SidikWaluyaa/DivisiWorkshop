@@ -59,9 +59,14 @@ class OutboundIndex extends Component
     public function stagingOrders()
     {
         $query = WorkOrder::query()
-            ->with(['customer', 'workOrderServices', 'cxIssues', 'photos', 'revisions'])
+            ->with(['customer', 'workOrderServices', 'cxIssues', 'photos', 'revisions', 'workshopManifest'])
             ->where('status', WorkOrderStatus::STAGING_OUTBOUND)
-            ->whereNull('workshop_manifest_id');
+            ->where(function($q) {
+                $q->whereNull('workshop_manifest_id')
+                  ->orWhereHas('workshopManifest', function($mq) {
+                      $mq->where('manifest_number', 'not like', 'MNF-OUT-%');
+                  });
+            });
 
         if ($this->search) {
             $query->where(function($q) {

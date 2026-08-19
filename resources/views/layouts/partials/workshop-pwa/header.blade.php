@@ -15,13 +15,12 @@
 
             {{-- Brand Logo --}}
             <a href="{{ route('workshop.dashboard-v2') }}" class="flex items-center gap-2.5 group">
-                <div class="w-9 h-9 rounded-xl bg-[#22AF85] flex items-center justify-center text-white font-black text-lg shadow-md shadow-[#22AF85]/30 group-hover:scale-105 transition-transform">
-                    W
+                <div class="w-9 h-9 rounded-xl bg-white p-1 flex items-center justify-center border border-slate-200 shadow-md shadow-slate-900/10 group-hover:scale-105 transition-transform">
+                    <img src="{{ asset('images/logo.png') }}" alt="ShoeWorkshop Logo" class="w-full h-full object-contain">
                 </div>
                 <div class="hidden xs:block">
-                    <div class="flex items-center gap-1.5">
-                        <span class="font-black text-sm text-[#0F172A] tracking-tight">ShoeWorkshop</span>
-                        <span class="px-1.5 py-0.2 bg-[#FFC232] text-slate-950 font-black text-[9px] rounded-md shadow-sm uppercase tracking-wider">PWA</span>
+                    <div class="font-black text-sm text-[#0F172A] tracking-tight">
+                        ShoeWorkshop
                     </div>
                     <p class="text-[9px] font-bold text-slate-400 -mt-0.5">Mobile-First Workshop System</p>
                 </div>

@@ -116,6 +116,16 @@ class MaterialManagementService
 
             $request->update(['total_estimated_cost' => $totalCost]);
 
+            // Dispatch to Finlog API to populate finlog_request_id
+            try {
+                app(\App\Services\FinlogApiService::class)->sendPurchaseRequest($request);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("FinlogApiService dispatch error for Request #{$request->id}: " . $e->getMessage());
+                if (!$request->finlog_request_id) {
+                    $request->update(['finlog_request_id' => 'FLG-' . \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(8))]);
+                }
+            }
+
             return $request;
         });
     }
@@ -159,6 +169,16 @@ class MaterialManagementService
             }
 
             $request->update(['total_estimated_cost' => $totalCost]);
+
+            // Dispatch to Finlog API to populate finlog_request_id
+            try {
+                app(\App\Services\FinlogApiService::class)->sendPurchaseRequest($request);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("FinlogApiService dispatch error for PO Request #{$request->id}: " . $e->getMessage());
+                if (!$request->finlog_request_id) {
+                    $request->update(['finlog_request_id' => 'FLG-' . \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(8))]);
+                }
+            }
 
             return $request;
         });

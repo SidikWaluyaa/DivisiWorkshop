@@ -19,7 +19,7 @@
          x-transition:leave="transition ease-in duration-200 transform"
          x-transition:leave-start="translate-y-0"
          x-transition:leave-end="translate-y-full"
-         class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-4 border-[#22AF85] rounded-t-3xl p-6 text-slate-800 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+         class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-4 border-[#FFC232] rounded-t-3xl p-6 text-slate-800 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
         
         {{-- Handle Bar --}}
         <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto -mt-2 mb-4"></div>

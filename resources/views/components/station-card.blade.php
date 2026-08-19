@@ -663,7 +663,8 @@
                                                 <th class="text-left py-1 pr-3 font-black text-gray-400 uppercase tracking-wider">#</th>
                                                 <th class="text-left py-1 pr-3 font-black text-gray-400 uppercase tracking-wider">Asal Revisi</th>
                                                 <th class="text-left py-1 pr-3 font-black text-gray-400 uppercase tracking-wider">Stage QC</th>
-                                                <th class="text-left py-1 font-black text-gray-400 uppercase tracking-wider">Tanggal</th>
+                                                <th class="text-left py-1 pr-3 font-black text-gray-400 uppercase tracking-wider">Tanggal</th>
+                                                <th class="text-right py-1 font-black text-rose-500 uppercase tracking-wider">Est. Kerugian</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -686,8 +687,11 @@
                                                             {{ $rev->qc_stage }}
                                                         </span>
                                                     </td>
-                                                    <td class="py-1 font-semibold text-gray-500 dark:text-gray-400">
+                                                    <td class="py-1 pr-3 font-semibold text-gray-500 dark:text-gray-400">
                                                         {{ $rev->created_at ? $rev->created_at->translatedFormat('d M Y') : '-' }}
+                                                    </td>
+                                                    <td class="py-1 text-right font-black text-rose-600 dark:text-rose-400">
+                                                        {{ isset($rev->loss_amount) && $rev->loss_amount > 0 ? 'Rp ' . number_format($rev->loss_amount, 0, ',', '.') : '-' }}
                                                     </td>
                                                 </tr>
                                             @endforeach

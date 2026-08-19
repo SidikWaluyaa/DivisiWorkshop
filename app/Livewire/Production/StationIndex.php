@@ -69,12 +69,17 @@ class StationIndex extends Component
     #[Computed]
     public function techs()
     {
-        $allTechs = User::where('role', 'technician')->select('id', 'name')->orderBy('name', 'asc')->get();
+        $allTechs = User::where('role', 'technician')
+            ->select('id', 'name', 'station', 'specialization')
+            ->orderBy('name', 'asc')
+            ->get();
 
         return [
-            'sol' => $allTechs,
-            'upper' => $allTechs,
-            'treatment' => $allTechs,
+            'sol' => $allTechs->filter(fn($u) => $u->station === 'SOLING' || empty($u->station)),
+            'upper' => $allTechs->filter(fn($u) => $u->station === 'UPPER' || empty($u->station)),
+            'treatment' => $allTechs->filter(fn($u) => $u->station === 'TREATMENT' || empty($u->station)),
+            'prep' => $allTechs->filter(fn($u) => $u->station === 'PREPARATION'),
+            'qc' => $allTechs->filter(fn($u) => $u->station === 'QC'),
             'all' => $allTechs,
         ];
     }
@@ -356,7 +361,10 @@ class StationIndex extends Component
             ->where(function($q) {
                 $q->whereNull('prod_sol_by')
                   ->orWhereNull('prod_upper_by')
-                  ->orWhereNull('prod_cleaning_by');
+                  ->orWhereNull('prod_cleaning_by')
+                  ->orWhereNull('prod_sol_started_at')
+                  ->orWhereNull('prod_upper_started_at')
+                  ->orWhereNull('prod_cleaning_started_at');
             })
             ->get();
 
@@ -369,12 +377,24 @@ class StationIndex extends Component
         $assignedCount = 0;
 
         foreach ($unassignedOrders as $order) {
-            $service->autoAssignProductionTechnicians($order);
+            $service->autoAssignProductionTechnicians($order, true);
             $assignedCount++;
         }
 
         unset($this->orders);
-        $this->dispatch('swal:toast', icon: 'success', title: "Auto-assign berhasil! $assignedCount SPK telah ditugaskan ke teknisi.");
+        $this->dispatch('swal:toast', icon: 'success', title: "Auto-assign berhasil! $assignedCount SPK telah disesuaikan dengan skill teknisi.");
+    }
+
+    public function autoAssignSingleOrder($orderId)
+    {
+        $order = WorkOrder::find($orderId);
+        if (!$order) return;
+
+        $service = app(\App\Services\TechnicianAssignmentService::class);
+        $service->autoAssignProductionTechnicians($order, true);
+
+        unset($this->orders);
+        $this->dispatch('swal:toast', icon: 'success', title: "Auto-assign SPK #{$order->spk_number} berhasil disesuaikan dengan skill & stasiun teknisi.");
     }
 
     public function performApprove($id, \App\Services\WorkflowService $workflow)

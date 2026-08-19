@@ -26,6 +26,12 @@ class Index extends Component
     public $activeTab = 'active'; // 'active', 'history', or 'tracking'
     public $trackingSlaDays = 10; // Dynamic SLA threshold in days (default 10)
 
+    // Workshop Loss Fields
+    public $loss_amount = 0;
+    public $loss_category = 'REWORK_LABOR';
+    public $loss_description = '';
+    public $responsible_party = '';
+
     // Real-time Filters
     public $dateFrom = '';
     public $dateTo = '';
@@ -137,16 +143,20 @@ class Index extends Component
 
 
         WorkOrderWarranty::create([
-            'work_order_id' => $wo->id,
+            'work_order_id'      => $wo->id,
             'garansi_spk_number' => $garansiSpk,
-            'description' => $this->description,
-            'photos' => $photoPaths,
-            'status' => 'OPEN',
-            'created_by' => Auth::id()
+            'description'        => $this->description,
+            'photos'             => $photoPaths,
+            'status'             => 'OPEN',
+            'loss_amount'        => is_numeric($this->loss_amount) ? floatval($this->loss_amount) : 0,
+            'loss_category'      => $this->loss_category ?: 'REWORK_LABOR',
+            'loss_description'   => $this->loss_description ?: $this->description,
+            'responsible_party'  => $this->responsible_party ?: 'Workshop Garansi',
+            'created_by'         => Auth::id()
         ]);
 
         $this->showCreateModal = false;
-        $this->reset(['searchSpk', 'step', 'selectedWorkOrderId', 'description', 'photos']);
+        $this->reset(['searchSpk', 'step', 'selectedWorkOrderId', 'description', 'photos', 'loss_amount', 'loss_category', 'loss_description', 'responsible_party']);
         session()->flash('success', 'Laporan garansi berhasil dibuat! Nomor SPK-nya: ' . $garansiSpk . '. Silahkan upload foto hasil perbaikan di stasiun FINISH.');
     }
 
@@ -156,8 +166,12 @@ class Index extends Component
         if (!$warranty) return;
 
         $this->editingWarrantyId = $id;
-        $this->description = $warranty->description;
-        $this->existingPhotos = $warranty->photos ?? [];
+        $this->description        = $warranty->description;
+        $this->existingPhotos     = $warranty->photos ?? [];
+        $this->loss_amount        = $warranty->loss_amount ?? 0;
+        $this->loss_category      = $warranty->loss_category ?? 'REWORK_LABOR';
+        $this->loss_description   = $warranty->loss_description ?? '';
+        $this->responsible_party  = $warranty->responsible_party ?? '';
         $this->photos = [];
         $this->showEditModal = true;
     }
@@ -186,8 +200,12 @@ class Index extends Component
         }
 
         $warranty->update([
-            'description' => $this->description,
-            'photos' => $photoPaths,
+            'description'       => $this->description,
+            'photos'            => $photoPaths,
+            'loss_amount'       => is_numeric($this->loss_amount) ? floatval($this->loss_amount) : 0,
+            'loss_category'      => $this->loss_category ?: 'REWORK_LABOR',
+            'loss_description'   => $this->loss_description ?: $this->description,
+            'responsible_party'  => $this->responsible_party ?: 'Workshop Garansi',
         ]);
 
         // Sync to Rework WorkOrder Notes if exists

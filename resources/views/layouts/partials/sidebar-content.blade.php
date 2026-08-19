@@ -930,19 +930,6 @@
         </a>
         @endif
 
-        {{-- Service Master Data --}}
-        @if(Auth::user()->hasAccess('admin.services'))
-        <a href="{{ route('admin.services.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.services.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Manajemen Layanan</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Layanan</span>
-        </a>
-        @endif
-
         {{-- Promo Management --}}
         @if(Auth::user()->hasAccess('admin.promotions'))
         <a href="{{ route('admin.promotions.index') }}" 
@@ -1007,17 +994,7 @@
         </a>
         @endif
 
-        @if(Auth::user()->hasAccess('admin.performance'))
-        <a href="{{ route('admin.performance.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.performance.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Performa</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Performa</span>
-        </a>
-        @endif
+
 
         @if(Auth::user()->hasAccess('admin.performance'))
         <a href="{{ route('admin.kpi.index') }}" 

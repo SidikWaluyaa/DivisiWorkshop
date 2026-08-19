@@ -256,7 +256,7 @@ class QcIndex extends Component
         }
     }
 
-    public function performRevision($id, $reason = 'Revisi dari QC Akhir')
+    public function performRevision($id, $reason = 'Revisi dari QC Akhir', $lossAmount = 0, $lossCategory = null, $lossDescription = null, $responsibleParty = null)
     {
         $order = WorkOrder::find($id);
         if ($order) {
@@ -268,22 +268,31 @@ class QcIndex extends Component
                 $order->is_revising = true;
                 $order->save();
 
-                // Create WorkOrderRevision log
+                $lossAmt = is_numeric($lossAmount) ? floatval($lossAmount) : 0;
+
+                // Create WorkOrderRevision log with loss tracking
                 \App\Models\WorkOrderRevision::create([
-                    'work_order_id' => $order->id,
-                    'status'        => 'OPEN',
-                    'origin_status' => 'POST_QC',
-                    'qc_stage'      => 'AKHIR',
-                    'reason'        => $reason,
-                    'created_by'    => Auth::id(),
+                    'work_order_id'     => $order->id,
+                    'status'            => 'OPEN',
+                    'origin_status'     => 'POST_QC',
+                    'qc_stage'          => 'AKHIR',
+                    'reason'            => $reason,
+                    'description'       => $reason,
+                    'loss_amount'       => $lossAmt,
+                    'loss_category'     => $lossCategory ?: 'REWORK_LABOR',
+                    'loss_description'  => $lossDescription ?: $reason,
+                    'responsible_party' => $responsibleParty ?: 'QC/Teknisi',
+                    'created_by'        => Auth::id(),
                 ]);
+
+                $logLossInfo = $lossAmt > 0 ? " (Est. Kerugian: Rp " . number_format($lossAmt, 0, ',', '.') . ")" : "";
 
                 // Record audit log
                 $order->logs()->create([
                     'user_id'     => Auth::id(),
                     'step'        => 'QC',
                     'action'      => 'REVISION_REQUESTED',
-                    'description' => "Revisi QC Akhir: {$reason}",
+                    'description' => "Revisi QC Akhir: {$reason}{$logLossInfo}",
                 ]);
 
                 unset($this->orders);

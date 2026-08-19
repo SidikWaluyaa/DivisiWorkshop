@@ -63,6 +63,17 @@ class WorkflowService
                     'resolved_at' => now(),
                     'resolution_notes' => 'Diselesaikan otomatis karena status SPK telah berlanjut ke ' . $newStatus->value
                 ]);
+
+            // Auto-complete open WorkOrderRevision records if order reaches SELESAI or STAGING_OUTBOUND
+            if (in_array($newStatus, [WorkOrderStatus::SELESAI, WorkOrderStatus::STAGING_OUTBOUND, WorkOrderStatus::HISTORY, WorkOrderStatus::DIANTAR])) {
+                \App\Models\WorkOrderRevision::where('work_order_id', $workOrder->id)
+                    ->where('status', 'OPEN')
+                    ->update([
+                        'status'      => 'FINISHED',
+                        'resolved_by' => $userId ?: Auth::id(),
+                        'finished_at' => now(),
+                    ]);
+            }
             
             // 3. Dispatch Event
             $this->dispatchUpdateEvent($workOrder, $oldStatusObj, $newStatus, $note, $userId);
@@ -104,12 +115,21 @@ class WorkflowService
     /**
      * Move the order back to a previous stage for revision.
      */
-    public function revise(WorkOrder $workOrder, WorkOrderStatus $targetStatus, string $reason, array $stationsToReset = [], $photoPaths = null): void
-    {
-        DB::transaction(function () use ($workOrder, $targetStatus, $reason, $stationsToReset, $photoPaths) {
-            $oldStatus = $workOrder->status;
-            
-            // Normalize photoPaths to array
+    public function revise(
+        WorkOrder $workOrder, 
+        WorkOrderStatus $targetStatus, 
+        string $reason = '', 
+        array $stationsToReset = [], 
+        array $photoPaths = [],
+        float $lossAmount = 0.0,
+        ?string $lossCategory = null,
+        ?string $lossDescription = null,
+        ?string $responsibleParty = null
+    ) {
+        $oldStatus = $workOrder->status;
+
+        DB::transaction(function () use ($workOrder, $targetStatus, $reason, $stationsToReset, $photoPaths, $oldStatus, $lossAmount, $lossCategory, $lossDescription, $responsibleParty) {
+            // Ensure $photoPaths is an array
             if (is_string($photoPaths)) {
                 $photoPaths = [$photoPaths];
             } elseif (is_null($photoPaths)) {
@@ -123,7 +143,6 @@ class WorkflowService
             $workOrder->current_location = $this->getDefaultLocationForStatus($targetStatus);
 
             // 2. Reset specific stations if requested
-            // stationsToReset format: ['prep_washing', 'prod_sol', etc]
             foreach ($stationsToReset as $station) {
                 $workOrder->{"{$station}_completed_at"} = null;
             }
@@ -135,14 +154,18 @@ class WorkflowService
             $qcStage = in_array($oldStatusValue, ['POST', 'FINISH', 'POST_QC']) ? 'AKHIR' : 'PRODUKSI';
 
             \App\Models\WorkOrderRevision::create([
-                'work_order_id' => $workOrder->id,
-                'description' => $reason,
-                'photo_path' => $photoPaths[0] ?? null,
-                'photo_paths' => $photoPaths,
-                'status' => 'OPEN',
-                'origin_status' => $oldStatusValue,
-                'qc_stage' => $qcStage,
-                'created_by' => Auth::id() ?? 1,
+                'work_order_id'     => $workOrder->id,
+                'description'       => $reason,
+                'photo_path'        => $photoPaths[0] ?? null,
+                'photo_paths'       => $photoPaths,
+                'status'            => 'OPEN',
+                'origin_status'     => $oldStatusValue,
+                'qc_stage'          => $qcStage,
+                'loss_amount'       => $lossAmount,
+                'loss_category'     => $lossCategory,
+                'loss_description'  => $lossDescription,
+                'responsible_party' => $responsibleParty,
+                'created_by'        => Auth::id() ?? 1,
             ]);
 
             // Count revisions for this specific stage

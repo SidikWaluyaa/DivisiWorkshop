@@ -23,35 +23,61 @@ class FinlogApiService
      */
     public function sendPurchaseRequest(MaterialRequest $materialRequest): array
     {
-        $materialRequest->loadMissing(['workOrder', 'requestedBy', 'items.material']);
+        $materialRequest->loadMissing(['workOrder', 'requestedBy', 'items.material', 'items.workOrder']);
 
         $idempotencyKey = (string) Str::uuid();
         $requestId = (string) Str::uuid();
 
+        // Extract unique list of SPKs in this material request
+        $spkList = collect();
+        if ($materialRequest->work_order_id && $materialRequest->workOrder) {
+            $spkList->push([
+                'work_order_id' => $materialRequest->work_order_id,
+                'spk_number'    => $materialRequest->workOrder->spk_number,
+            ]);
+        }
+
+        foreach ($materialRequest->items as $item) {
+            if ($item->workOrder) {
+                $spkList->push([
+                    'work_order_id' => $item->work_order_id,
+                    'spk_number'    => $item->workOrder->spk_number,
+                ]);
+            }
+        }
+        $spkList = $spkList->unique('work_order_id')->values();
+
         $payload = [
-            'request_number' => $materialRequest->request_number,
-            'work_order_id' => $materialRequest->work_order_id,
-            'spk_number' => $materialRequest->workOrder?->spk_number,
-            'type' => $materialRequest->type ?? 'SHOPPING',
-            'requested_by' => [
+            'request_number'        => $materialRequest->request_number,
+            'is_batch'              => $spkList->count() > 1,
+            'total_spks'            => $spkList->count(),
+            'spk_list'              => $spkList->toArray(),
+            'primary_work_order_id' => $materialRequest->work_order_id,
+            'primary_spk_number'    => $materialRequest->workOrder?->spk_number,
+            'type'                  => $materialRequest->type ?? 'SHOPPING',
+            'requested_by'          => [
                 'user_id' => $materialRequest->requested_by,
-                'name' => $materialRequest->requestedBy?->name ?? 'Staff Sortir',
-                'role' => $materialRequest->requestedBy?->role ?? 'staff_sortir',
+                'name'    => $materialRequest->requestedBy?->name ?? 'Staff Sortir',
+                'role'    => $materialRequest->requestedBy?->role ?? 'staff_sortir',
             ],
-            'items' => $materialRequest->items->map(function ($item) {
+            'items'                 => $materialRequest->items->map(function ($item) {
                 return [
-                    'material_id' => $item->material_id,
-                    'material_name' => $item->material?->name ?? 'Material',
-                    'specification' => $item->notes ?? '',
-                    'quantity' => (float) $item->quantity,
-                    'unit' => $item->unit ?? 'pcs',
+                    'item_id'         => $item->id,
+                    'work_order_id'   => $item->work_order_id,
+                    'spk_number'      => $item->workOrder?->spk_number,
+                    'material_id'     => $item->material_id,
+                    'material_name'   => $item->material?->name ?? $item->material_name ?? 'Material',
+                    'specification'   => $item->specification ?? $item->notes ?? '',
+                    'quantity'        => (float) $item->quantity,
+                    'unit'            => $item->unit ?? 'pasang',
                     'estimated_price' => (float) ($item->estimated_price ?? 0),
+                    'subtotal'        => (float) ($item->quantity * ($item->estimated_price ?? 0)),
                 ];
             })->toArray(),
-            'total_estimated_cost' => (float) $materialRequest->total_estimated_cost,
-            'notes' => $materialRequest->notes,
-            'callback_webhook_url' => url('/api/v1/webhooks/finlog/purchase-status'),
-            'requested_at' => $materialRequest->created_at?->toIso8601String() ?? now()->toIso8601String(),
+            'total_estimated_cost'  => (float) $materialRequest->total_estimated_cost,
+            'notes'                 => $materialRequest->notes,
+            'callback_webhook_url'  => url('/api/v1/webhooks/finlog/purchase-status'),
+            'requested_at'          => $materialRequest->created_at?->toIso8601String() ?? now()->toIso8601String(),
         ];
 
         try {

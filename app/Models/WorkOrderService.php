@@ -18,6 +18,9 @@ class WorkOrderService extends Pivot
         'custom_service_name',
         'category_name',
         'service_details',
+        'started_at',
+        'completed_at',
+        'actual_duration_minutes',
         'notes',
         'created_by'
     ];
@@ -25,6 +28,8 @@ class WorkOrderService extends Pivot
     protected $casts = [
         'service_details' => 'array',
         'cost' => 'decimal:2',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function service()

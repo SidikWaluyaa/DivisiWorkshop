@@ -5,41 +5,48 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderService;
+use App\Models\Service;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\ProductionStationHelper;
 
 class TechnicianAssignmentService
 {
     /**
-     * Auto-assign prep (washing) technician evenly based on workload (FR-1.1)
+     * Excluded non-repair staff (PIC Material)
      */
-    public function autoAssignPrepWashing(WorkOrder $workOrder): ?User
+    protected array $excludedSpecs = ['PIC Material Sol', 'PIC Material Upper', 'PIC Material', 'PIC MATERIAL SOL', 'PIC MATERIAL UPPER'];
+
+    /**
+     * Auto-assign prep (washing) technician evenly based on workload
+     */
+    public function autoAssignPrepWashing(WorkOrder $workOrder, bool $forceReassign = false): ?User
     {
-        if ($workOrder->prep_washing_by) {
-            return User::find($workOrder->prep_washing_by);
+        if ($workOrder->prep_washing_by && !$forceReassign && !$workOrder->prep_washing_started_at) {
+            $existing = User::find($workOrder->prep_washing_by);
+            if ($existing && !str_contains($existing->name, 'Dr. Shoe')) {
+                return $existing;
+            }
         }
 
-        // Find active technicians in 'sortir' pool specialized in Cuci/Washing or support
+        // Candidates: Active technicians with station = 'PREPARATION' or specialization Washing/Cuci
         $candidates = User::where('is_active', true)
+            ->where('role', 'technician')
             ->where(function ($q) {
-                $q->where('role', 'technician')
-                  ->orWhere('role', 'pic');
+                $q->where('station', 'PREPARATION')
+                  ->orWhere('specialization', 'like', '%Cuci%')
+                  ->orWhere('specialization', 'like', '%Washing%');
             })
-            ->where(function ($q) {
-                $q->where('workshop_pool', 'sortir')
-                  ->orWhereNull('workshop_pool');
-            })
-            ->where(function ($q) {
-                $q->where('specialization', 'like', '%Cuci%')
-                  ->orWhere('specialization', 'like', '%Washing%')
-                  ->orWhere('is_support', true)
-                  ->orWhereNull('specialization');
-            })
+            ->whereNotIn('specialization', $this->excludedSpecs)
+            ->where('name', 'not like', '%Dr. Shoe%')
             ->get();
 
         if ($candidates->isEmpty()) {
-            // Fallback to any active technician
-            $candidates = User::where('role', 'technician')->where('is_active', true)->get();
+            $candidates = User::where('role', 'technician')
+                ->where('is_active', true)
+                ->whereNotIn('specialization', $this->excludedSpecs)
+                ->where('name', 'not like', '%Dr. Shoe%')
+                ->get();
         }
 
         if ($candidates->isEmpty()) {
@@ -62,15 +69,15 @@ class TechnicianAssignmentService
     }
 
     /**
-     * Auto-assign technicians for all services in Production stage based on specialization & workload (FR-5.1)
+     * Auto-assign technicians for all services in Production stage based on station & technician_services skill mapping
      */
-    public function autoAssignProductionTechnicians(WorkOrder $workOrder): void
+    public function autoAssignProductionTechnicians(WorkOrder $workOrder, bool $forceReassign = false): void
     {
-        $workOrder->loadMissing('workOrderServices.service');
+        $workOrder->loadMissing(['workOrderServices.service', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy']);
 
-        $hasSol = $workOrder->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'sol') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'sol'));
-        $hasUpper = $workOrder->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'upper') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'upper'));
-        $hasTreatment = $workOrder->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'clean') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'wash') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'treatment') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'repaint') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'whitening') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'clean') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'treatment'));
+        $hasSol = $workOrder->workOrderServices->contains(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'SOLING');
+        $hasUpper = $workOrder->workOrderServices->contains(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'UPPER');
+        $hasTreatment = $workOrder->workOrderServices->contains(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'TREATMENT');
 
         if (!$hasSol && !$hasUpper) {
             $hasTreatment = true;
@@ -78,15 +85,21 @@ class TechnicianAssignmentService
 
         $updates = [];
 
-        // 1. Soling (Only assign if station is required and currently NULL)
-        if ($hasSol && !$workOrder->prod_sol_by) {
-            $tech = $this->findBestAvailableTechnicianForCategory('sol', 'soling');
+        // Helper check for unstarted / placeholder tech
+        $isDrShoeSol = str_contains($workOrder->prodSolBy?->name ?? '', 'Dr. Shoe');
+        $isDrShoeUpper = str_contains($workOrder->prodUpperBy?->name ?? '', 'Dr. Shoe');
+        $isDrShoeClean = str_contains($workOrder->prodCleaningBy?->name ?? '', 'Dr. Shoe');
+
+        // 1. Soling Station
+        if ($hasSol && (!$workOrder->prod_sol_by || $isDrShoeSol || (!$workOrder->prod_sol_started_at && $forceReassign))) {
+            $solServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'SOLING');
+            $serviceIds = $solServices->pluck('service_id')->filter()->toArray();
+
+            $tech = $this->findBestTechnicianForStationAndServices('SOLING', $serviceIds);
             if ($tech) {
                 $updates['prod_sol_by'] = $tech->id;
-                foreach ($workOrder->workOrderServices as $woService) {
-                    $cat = strtolower($woService->category_name ?? $woService->service?->category ?? '');
-                    $sName = strtolower($woService->service?->name ?? '');
-                    if (str_contains($cat, 'sol') || str_contains($sName, 'sol')) {
+                foreach ($solServices as $woService) {
+                    if (!$woService->started_at) {
                         $woService->update(['technician_id' => $tech->id]);
                     }
                 }
@@ -94,15 +107,16 @@ class TechnicianAssignmentService
             }
         }
 
-        // 2. Upper (Only assign if station is required and currently NULL)
-        if ($hasUpper && !$workOrder->prod_upper_by) {
-            $tech = $this->findBestAvailableTechnicianForCategory('upper', 'upper');
+        // 2. Upper Station
+        if ($hasUpper && (!$workOrder->prod_upper_by || $isDrShoeUpper || (!$workOrder->prod_upper_started_at && $forceReassign))) {
+            $upperServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'UPPER');
+            $serviceIds = $upperServices->pluck('service_id')->filter()->toArray();
+
+            $tech = $this->findBestTechnicianForStationAndServices('UPPER', $serviceIds);
             if ($tech) {
                 $updates['prod_upper_by'] = $tech->id;
-                foreach ($workOrder->workOrderServices as $woService) {
-                    $cat = strtolower($woService->category_name ?? $woService->service?->category ?? '');
-                    $sName = strtolower($woService->service?->name ?? '');
-                    if (str_contains($cat, 'upper') || str_contains($cat, 'jahit') || str_contains($sName, 'upper') || str_contains($sName, 'jahit')) {
+                foreach ($upperServices as $woService) {
+                    if (!$woService->started_at) {
                         $woService->update(['technician_id' => $tech->id]);
                     }
                 }
@@ -110,13 +124,18 @@ class TechnicianAssignmentService
             }
         }
 
-        // 3. Treatment (Only assign if station is required and currently NULL)
-        if ($hasTreatment && !$workOrder->prod_cleaning_by) {
-            $tech = $this->findBestAvailableTechnicianForCategory('clean', 'treatment');
+        // 3. Treatment Station
+        if ($hasTreatment && (!$workOrder->prod_cleaning_by || $isDrShoeClean || (!$workOrder->prod_cleaning_started_at && $forceReassign))) {
+            $treatmentServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'TREATMENT');
+            $serviceIds = $treatmentServices->pluck('service_id')->filter()->toArray();
+
+            $tech = $this->findBestTechnicianForStationAndServices('TREATMENT', $serviceIds);
             if ($tech) {
                 $updates['prod_cleaning_by'] = $tech->id;
                 foreach ($workOrder->workOrderServices as $woService) {
-                    $woService->update(['technician_id' => $tech->id]);
+                    if (!$woService->started_at) {
+                        $woService->update(['technician_id' => $tech->id]);
+                    }
                 }
                 Log::info("Auto-assigned Treatment for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
             }
@@ -128,47 +147,44 @@ class TechnicianAssignmentService
     }
 
     /**
-     * Auto-assign technicians for all stations in QC stage based on specialization & workload.
-     * Skips stations that already have a technician assigned.
+     * Auto-assign technicians for all stations in QC stage
      */
-    public function autoAssignQcTechnicians(WorkOrder $workOrder): void
+    public function autoAssignQcTechnicians(WorkOrder $workOrder, bool $forceReassign = false): void
     {
         $updates = [];
+        $workOrder->loadMissing(['workOrderServices.service', 'qcJahitBy', 'qcCleanupBy', 'qcFinalBy']);
 
-        $workOrder->loadMissing('workOrderServices.service');
         $hasJahitQc = $workOrder->workOrderServices->contains(fn($s) => 
-            \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'sol') || 
-            \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'sol') ||
-            \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'upper') || 
-            \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'upper') ||
-            \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'jahit') || 
-            \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'jahit')
+            str_contains(strtolower($s->category_name ?? ''), 'sol') || 
+            str_contains(strtolower($s->service?->name ?? ''), 'sol') ||
+            str_contains(strtolower($s->category_name ?? ''), 'upper') || 
+            str_contains(strtolower($s->service?->name ?? ''), 'upper') ||
+            str_contains(strtolower($s->category_name ?? ''), 'jahit') || 
+            str_contains(strtolower($s->service?->name ?? ''), 'jahit')
         );
 
-        // 1. QC Jahit (Only assign if required by services and currently NULL)
-        if ($hasJahitQc && !$workOrder->qc_jahit_by) {
-            $tech = $this->findBestAvailableTechnicianForCategory('jahit', 'jahit');
+        $isDrShoeJahit = str_contains($workOrder->qcJahitBy?->name ?? '', 'Dr. Shoe');
+        $isDrShoeCleanup = str_contains($workOrder->qcCleanupBy?->name ?? '', 'Dr. Shoe');
+        $isDrShoeFinal = str_contains($workOrder->qcFinalBy?->name ?? '', 'Dr. Shoe');
+
+        if ($hasJahitQc && (!$workOrder->qc_jahit_by || $isDrShoeJahit || (!$workOrder->qc_jahit_started_at && $forceReassign))) {
+            $tech = $this->findBestTechnicianForStationAndServices('QC', []);
             if ($tech) {
                 $updates['qc_jahit_by'] = $tech->id;
-                Log::info("Auto-assigned QC Jahit for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
             }
         }
 
-        // 2. QC Cleanup (Only assign if currently NULL)
-        if (!$workOrder->qc_cleanup_by) {
-            $tech = $this->findBestAvailableTechnicianForCategory('clean', 'cleanup');
+        if (!$workOrder->qc_cleanup_by || $isDrShoeCleanup || (!$workOrder->qc_cleanup_started_at && $forceReassign)) {
+            $tech = $this->findBestTechnicianForStationAndServices('QC', []);
             if ($tech) {
                 $updates['qc_cleanup_by'] = $tech->id;
-                Log::info("Auto-assigned QC Cleanup for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
             }
         }
 
-        // 3. QC Final (Only assign if currently NULL)
-        if (!$workOrder->qc_final_by) {
-            $tech = $this->findBestAvailableTechnicianForCategory('qc', 'final');
+        if (!$workOrder->qc_final_by || $isDrShoeFinal || (!$workOrder->qc_final_started_at && $forceReassign)) {
+            $tech = $this->findBestTechnicianForStationAndServices('QC', []);
             if ($tech) {
                 $updates['qc_final_by'] = $tech->id;
-                Log::info("Auto-assigned QC Final for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
             }
         }
 
@@ -178,119 +194,109 @@ class TechnicianAssignmentService
     }
 
     /**
-     * Find best available technician for a given service category based on specialization and lowest workload
+     * Find best available technician using users.station AND technician_services skill matrix
      */
-    public function findBestAvailableTechnicianForCategory(string $category, string $serviceName = ''): ?User
+    public function findBestTechnicianForStationAndServices(string $stationCode, array $serviceIds = []): ?User
     {
-        // Category keyword mapping
-        $keyword = 'General';
-        if (str_contains($category, 'sol') || str_contains($serviceName, 'sol')) {
-            $keyword = 'Soling';
-        } elseif (str_contains($category, 'upper') || str_contains($serviceName, 'upper')) {
-            $keyword = 'Upper';
-        } elseif (str_contains($category, 'jahit') || str_contains($serviceName, 'jahit')) {
-            $keyword = 'Jahit';
-        } elseif (str_contains($category, 'repaint') || str_contains($serviceName, 'repaint')) {
-            $keyword = 'Repaint';
-        } elseif (str_contains($category, 'clean') || str_contains($category, 'wash') || str_contains($category, 'treatment') || str_contains($category, 'whitening') || str_contains($serviceName, 'treatment') || str_contains($serviceName, 'clean')) {
-            $keyword = 'Clean Up';
-        } elseif (str_contains($category, 'qc') || str_contains($serviceName, 'qc') || str_contains($serviceName, 'final')) {
-            $keyword = 'QC';
-        }
+        $query = User::where('is_active', true)
+            ->where('role', 'technician')
+            ->whereNotIn('specialization', $this->excludedSpecs)
+            ->where('name', 'not like', '%Dr. Shoe%');
 
-        // Query candidate technicians
-        $candidates = User::where('is_active', true)
-            ->where(function ($q) {
-                $q->where('role', 'technician')
-                  ->orWhere('role', 'pic');
-            })
-            ->where(function ($q) use ($keyword) {
-                $q->where('specialization', 'like', "%{$keyword}%")
-                  ->orWhere('is_support', true)
-                  ->orWhereNull('specialization');
-            })
-            ->get();
+        // 1. Try finding technicians explicitly mapped to any of the serviceIds via technician_services
+        if (!empty($serviceIds)) {
+            $skilledCandidates = (clone $query)->whereHas('services', function ($sq) use ($serviceIds) {
+                $sq->whereIn('services.id', $serviceIds);
+            })->get();
 
-        if ($candidates->isEmpty()) {
-            $candidates = User::where('role', 'technician')->where('is_active', true)->get();
-        }
-
-        if ($candidates->isEmpty()) {
-            return null;
-        }
-
-        // Calculate workload and return technician with fewest active assigned services
-        return $candidates->sortBy(function ($tech) {
-            $workload = WorkOrderService::where('technician_id', $tech->id)
-                ->where('status', '!=', 'completed')
-                ->count();
-
-            // Support technicians given slight priority if equal
-            if ($tech->is_support) {
-                $workload += 0.5;
+            if ($skilledCandidates->isNotEmpty()) {
+                return $this->pickLowestWorkloadTechnician($skilledCandidates);
             }
+        }
 
-            return $workload;
+        // 2. Fallback to technicians with matching station
+        $stationCandidates = (clone $query)->where('station', $stationCode)->get();
+        if ($stationCandidates->isNotEmpty()) {
+            return $this->pickLowestWorkloadTechnician($stationCandidates);
+        }
+
+        // 3. Fallback to any active technician
+        $allCandidates = $query->get();
+        if ($allCandidates->isNotEmpty()) {
+            return $this->pickLowestWorkloadTechnician($allCandidates);
+        }
+
+        return null;
+    }
+
+    /**
+     * Pick technician with lowest active workload
+     */
+    protected function pickLowestWorkloadTechnician($candidates): ?User
+    {
+        return $candidates->sortBy(function ($tech) {
+            return WorkOrderService::where('technician_id', $tech->id)
+                ->where('status', '!=', 'COMPLETED')
+                ->count();
         })->first();
     }
 
     /**
-     * Get list of qualified technicians for a specific station/category (FR-5.8)
+     * Get list of qualified technicians for a specific station
      */
     public function getQualifiedTechnicians(string $category)
     {
-        $categoryLower = strtolower($category);
+        $categoryUpper = strtoupper($category);
+        $stationCode = 'TREATMENT';
+
+        if (str_contains($categoryUpper, 'SOL')) {
+            $stationCode = 'SOLING';
+        } elseif (str_contains($categoryUpper, 'UPPER') || str_contains($categoryUpper, 'JAHIT')) {
+            $stationCode = 'UPPER';
+        } elseif (str_contains($categoryUpper, 'PREP') || str_contains($categoryUpper, 'WASH')) {
+            $stationCode = 'PREPARATION';
+        } elseif (str_contains($categoryUpper, 'QC')) {
+            $stationCode = 'QC';
+        }
 
         return User::where('is_active', true)
-            ->where(function ($q) {
-                $q->where('role', 'technician')
-                  ->orWhere('role', 'pic');
+            ->where('role', 'technician')
+            ->where(function ($q) use ($stationCode) {
+                $q->where('station', $stationCode)
+                  ->orWhereNull('station');
             })
-            ->where(function ($q) use ($categoryLower) {
-                $q->where('specialization', 'like', "%{$categoryLower}%")
-                  ->orWhere('is_support', true)
-                  ->orWhereNull('specialization');
-            })
-            ->select('id', 'name', 'specialization', 'workshop_pool', 'is_support')
+            ->whereNotIn('specialization', $this->excludedSpecs)
+            ->where('name', 'not like', '%Dr. Shoe%')
+            ->orderBy('name')
             ->get();
     }
 
     /**
-     * Get candidates for prep washing
+     * Get candidate technicians for Prep Washing (Preparation Station)
      */
     public static function getPrepWashingCandidates()
     {
-        $candidates = User::where('is_active', true)
+        return User::where('is_active', true)
+            ->where('role', 'technician')
             ->where(function ($q) {
-                $q->where('role', 'technician')
-                  ->orWhere('role', 'pic');
+                $q->where('station', 'PREPARATION')
+                  ->orWhere('specialization', 'like', '%Cuci%')
+                  ->orWhere('specialization', 'like', '%Washing%');
             })
-            ->where(function ($q) {
-                $q->where('workshop_pool', 'sortir')
-                  ->orWhereNull('workshop_pool');
-            })
-            ->where(function ($q) {
-                $q->where('specialization', 'like', '%Cuci%')
-                  ->orWhere('specialization', 'like', '%Washing%')
-                  ->orWhere('is_support', true)
-                  ->orWhereNull('specialization');
-            })
+            ->whereNotIn('specialization', ['PIC Material Sol', 'PIC Material Upper', 'PIC Material', 'PIC MATERIAL SOL', 'PIC MATERIAL UPPER'])
+            ->where('name', 'not like', '%Dr. Shoe%')
             ->get();
-
-        if ($candidates->isEmpty()) {
-            $candidates = User::where('role', 'technician')->where('is_active', true)->get();
-        }
-        return $candidates;
     }
 
     /**
-     * Get recommended prep washing technician for an order based on lowest workload
+     * Get recommended prep washing technician for a work order
      */
-    public function getRecommendedPrepWashingTechnician(WorkOrder $workOrder, $candidates = null)
+    public function getRecommendedPrepWashingTechnician(WorkOrder $order, $candidates = null): ?User
     {
-        if (!$candidates) {
+        if (!$candidates || $candidates->isEmpty()) {
             $candidates = self::getPrepWashingCandidates();
         }
+
         if ($candidates->isEmpty()) {
             return null;
         }

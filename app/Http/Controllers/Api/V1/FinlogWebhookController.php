@@ -77,39 +77,34 @@ class FinlogWebhookController extends Controller
                 $materialRequest->update(['status' => $targetStatus]);
             }
 
-            // FR-4.6: Auto-Otomasi status SPK saat "material_received"
-            if ($status === 'material_received' && $workOrderId) {
-                $workOrder = WorkOrder::find($workOrderId);
-                if ($workOrder) {
-                    // Update material arrival date
+            // Flag material arrival on related WorkOrders, requiring manual staff verification button to push to Production
+            if ($status === 'material_received') {
+                $workOrdersToFlag = collect();
+                if ($materialRequest) {
+                    $materialRequest->loadMissing('items.workOrder');
+                    foreach ($materialRequest->items as $item) {
+                        if ($item->workOrder) {
+                            $workOrdersToFlag->push($item->workOrder);
+                        }
+                    }
+                }
+                if ($workOrderId && $workOrdersToFlag->where('id', $workOrderId)->isEmpty()) {
+                    $wo = WorkOrder::find($workOrderId);
+                    if ($wo) $workOrdersToFlag->push($wo);
+                }
+
+                foreach ($workOrdersToFlag->unique('id') as $workOrder) {
                     $workOrder->material_arrival_date = now();
                     $workOrder->save();
 
-                    // Use WorkflowService for proper status transition with audit trail
-                    try {
-                        $workflow = app(\App\Services\WorkflowService::class);
-                        $workflow->updateStatus(
-                            $workOrder,
-                            WorkOrderStatus::PRODUCTION,
-                            "Material Diterima dari Finlog (Event: {$eventId}, Req: {$finlogRequestId}). SPK otomatis berlanjut ke OTW Produksi."
-                        );
-                    } catch (\Exception $e) {
-                        // If transition validation fails, log and continue gracefully
-                        Log::warning("FR-4.6: WorkflowService transition failed for WO #{$workOrder->id}: " . $e->getMessage());
-                        
-                        // Fallback: direct status update with log
-                        $workOrder->status = WorkOrderStatus::PRODUCTION;
-                        $workOrder->save();
-                        
-                        $workOrder->logs()->create([
-                            'user_id' => 1,
-                            'step' => 'SORTIR_BELANJA',
-                            'action' => 'AUTO_FORWARD_PRODUKSI',
-                            'description' => "Material Diterima dari Finlog (Event: {$eventId}, Req: {$finlogRequestId}). SPK otomatis berlanjut ke OTW Produksi (fallback).",
-                        ]);
-                    }
+                    $workOrder->logs()->create([
+                        'user_id' => 1,
+                        'step' => 'SORTIR_BELANJA',
+                        'action' => 'FINLOG_MATERIAL_ARRIVED',
+                        'description' => "Material pengajuan Finlog (#{$finlogRequestId}) telah tiba di Workshop. Menunggu verifikasi fisik & konfirmasi tombol 'Terima Material' oleh staff.",
+                    ]);
 
-                    Log::info("FR-4.6 Triggered: WorkOrder #{$workOrder->id} ({$workOrder->spk_number}) auto-forwarded to Production.");
+                    Log::info("Finlog Webhook: WorkOrder #{$workOrder->id} ({$workOrder->spk_number}) material arrived. Awaiting manual staff confirmation.");
                 }
             }
         });

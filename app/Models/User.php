@@ -24,6 +24,7 @@ class User extends Authenticatable
         'role',
         'is_active',
         'specialization',
+        'station',
         'workshop_pool',
         'availability_status',
         'is_support',
@@ -139,5 +140,10 @@ class User extends Authenticatable
     public function warrantiesFinished()
     {
         return $this->hasMany(WorkOrderWarranty::class, 'finished_by');
+    }
+
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'technician_services')->withTimestamps();
     }
 }

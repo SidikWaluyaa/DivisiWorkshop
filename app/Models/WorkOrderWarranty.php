@@ -12,6 +12,10 @@ class WorkOrderWarranty extends Model
         'description',
         'penggunaan',
         'status',
+        'loss_amount',
+        'loss_category',
+        'loss_description',
+        'responsible_party',
         'created_by',
         'finished_by',
         'finished_at',
@@ -21,6 +25,7 @@ class WorkOrderWarranty extends Model
     protected $casts = [
         'finished_at' => 'datetime',
         'photos' => 'array',
+        'loss_amount' => 'decimal:2',
     ];
 
     public function workOrder()

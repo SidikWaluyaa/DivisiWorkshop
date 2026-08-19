@@ -293,7 +293,22 @@ class QCController extends Controller
                 }
             }
             
-            $this->workflow->revise($order, $targetStatus, $request->reason, $stations, $photoPaths);
+            $lossAmount = $request->input('loss_amount', 0);
+            $lossCategory = $request->input('loss_category');
+            $lossDescription = $request->input('loss_description');
+            $responsibleParty = $request->input('responsible_party');
+
+            $this->workflow->revise(
+                $order, 
+                $targetStatus, 
+                $request->reason, 
+                $stations, 
+                $photoPaths,
+                is_numeric($lossAmount) ? floatval($lossAmount) : 0.0,
+                $lossCategory,
+                $lossDescription,
+                $responsibleParty
+            );
 
             return redirect()->route('qc.index')->with('warning', 'Order dikembalikan ke ' . $targetStatus->label() . '.');
 
