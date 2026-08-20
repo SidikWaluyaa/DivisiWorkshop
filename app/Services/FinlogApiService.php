@@ -19,14 +19,11 @@ class FinlogApiService
     }
 
     /**
-     * Submit Surat Pengajuan Belanja to Finlog via REST API (FR-4.3, SRS §6.1)
+     * Build standard JSON Payload array for Finlog Purchase Request
      */
-    public function sendPurchaseRequest(MaterialRequest $materialRequest): array
+    public function buildPayload(MaterialRequest $materialRequest): array
     {
         $materialRequest->loadMissing(['workOrder', 'requestedBy', 'items.material', 'items.workOrder']);
-
-        $idempotencyKey = (string) Str::uuid();
-        $requestId = (string) Str::uuid();
 
         // Extract unique list of SPKs in this material request
         $spkList = collect();
@@ -47,7 +44,7 @@ class FinlogApiService
         }
         $spkList = $spkList->unique('work_order_id')->values();
 
-        $payload = [
+        return [
             'request_number'        => $materialRequest->request_number,
             'is_batch'              => $spkList->count() > 1,
             'total_spks'            => $spkList->count(),
@@ -79,17 +76,31 @@ class FinlogApiService
             'callback_webhook_url'  => url('/api/v1/webhooks/finlog/purchase-status'),
             'requested_at'          => $materialRequest->created_at?->toIso8601String() ?? now()->toIso8601String(),
         ];
+    }
+
+    /**
+     * Submit Surat Pengajuan Belanja to Finlog via REST API (FR-4.3, SRS §6.1)
+     */
+    public function sendPurchaseRequest(MaterialRequest $materialRequest): array
+    {
+        $payload = $this->buildPayload($materialRequest);
+
+        // Use request_number as deterministic Idempotency Key to guarantee anti-duplication
+        $idempotencyKey = $materialRequest->request_number;
+        $requestId = (string) Str::uuid();
 
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->token,
-                'Idempotency-Key' => $idempotencyKey,
-                'X-Source-System' => 'workshop-app',
-                'X-Request-Id' => $requestId,
-                'Accept' => 'application/json',
-            ])->post($this->baseUrl . '/purchase-requests', $payload);
+            $response = Http::timeout(10)
+                ->retry(3, 1000, throw: false)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $this->token,
+                    'Idempotency-Key' => $idempotencyKey,
+                    'X-Source-System' => 'workshop-app',
+                    'X-Request-Id' => $requestId,
+                    'Accept' => 'application/json',
+                ])->post($this->baseUrl . '/purchase-requests', $payload);
 
-            if ($response->successful()) {
+            if ($response->successful() || $response->status() === 409) {
                 $responseData = $response->json();
                 $finlogRequestId = $responseData['data']['finlog_request_id'] ?? ('FLG-' . Str::upper(Str::random(8)));
 
@@ -97,15 +108,20 @@ class FinlogApiService
                     'finlog_request_id' => $finlogRequestId,
                 ]);
 
-                Log::info("Successfully sent MaterialRequest #{$materialRequest->id} to Finlog. Finlog ID: {$finlogRequestId}");
+                $logMsg = $response->status() === 409
+                    ? "MaterialRequest #{$materialRequest->id} already exists in Finlog (409 Conflict). Linked to Finlog ID: {$finlogRequestId}"
+                    : "Successfully sent MaterialRequest #{$materialRequest->id} to Finlog. Finlog ID: {$finlogRequestId}";
+
+                Log::info($logMsg);
 
                 return [
                     'success' => true,
+                    'is_duplicate_handled' => $response->status() === 409,
                     'finlog_request_id' => $finlogRequestId,
                     'data' => $responseData,
                 ];
             } else {
-                Log::error("Finlog API error for MaterialRequest #{$materialRequest->id}: " . $response->body());
+                Log::error("Finlog API error (HTTP {$response->status()}) for MaterialRequest #{$materialRequest->id}: " . $response->body());
                 return [
                     'success' => false,
                     'error' => $response->body(),

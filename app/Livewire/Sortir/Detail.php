@@ -548,40 +548,19 @@ class Detail extends Component
             $isMaterialReady = $hasAllocatedMaterial && !$hasRequestedMaterial;
 
             if ($this->perlu_belanja && !$isMaterialReady) {
-                // Jalur belanja: ada material REQUESTED dan perlu_belanja = true
-                $requestedMaterials = $this->order->materials()
-                    ->wherePivot('status', 'REQUESTED')
-                    ->get();
-
-                if ($requestedMaterials->isNotEmpty()) {
-                    $existingReq = $this->order->materialRequests()
-                        ->whereIn('status', ['PENDING', 'APPROVED', 'PURCHASED'])
-                        ->exists();
-
-                    if (!$existingReq) {
-                        $items = $requestedMaterials->map(fn($m) => [
-                            'material' => $m,
-                            'quantity' => $m->pivot->quantity,
-                            'work_order_id' => $this->order->id,
-                        ])->toArray();
-
-                        $materialService->createShoppingRequest(
-                            $items,
-                            $this->order->id,
-                            null,
-                            "Pengajuan belanja otomatis saat penyelesaian klasifikasi Sortir — SPK #{$this->order->spk_number}"
-                        );
-                    }
-                }
+                // Jalur belanja: Tahan di Rak Tunggu Belanja untuk Pengajuan Belanja Gabungan (Batch)
+                $this->order->update([
+                    'current_location' => 'Rak Tunggu Belanja',
+                ]);
 
                 $this->order->logs()->create([
                     'user_id' => Auth::id(),
                     'step' => 'SORTIR_BELANJA',
                     'action' => 'HELD_FOR_MATERIALS',
-                    'description' => "Klasifikasi Sortir disimpan. SPK ditahan di Rak Tunggu Belanja dan Pengajuan Finlog telah dibuat/diproses.",
+                    'description' => "Klasifikasi Sortir disimpan. SPK ditahan di Rak Tunggu Belanja untuk diajukan secara Batch/Gabungan.",
                 ]);
 
-                return redirect()->route('sortir.index')->with('info', "Klasifikasi OK & Pengajuan Belanja Finlog berhasil dibuat! SPK berada di Rak Tunggu Belanja.");
+                return redirect()->route('sortir.index')->with('info', "Klasifikasi OK! SPK ditahan di Rak Tunggu Belanja. Silakan lakukan Pengajuan Belanja Gabungan dari Tab Waiting Belanja.");
             }
 
             // 4. Routing: Material Siap atau Perlu Belanja = False -> Keep status as SORTIR, ready for Surat Jalan

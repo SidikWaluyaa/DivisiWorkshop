@@ -256,4 +256,16 @@ class MaterialRequestController extends Controller
             return redirect()->back()->with('error', 'Gagal membuat PO: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Return raw Finlog JSON Payload for a Material Request
+     */
+    public function json($id)
+    {
+        $materialRequest = MaterialRequest::findOrFail($id);
+        $finlogService = app(\App\Services\FinlogApiService::class);
+        $payload = $finlogService->buildPayload($materialRequest);
+
+        return response()->json($payload, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
 }

@@ -776,6 +776,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', \App\Livewire\Procurement\Index::class)->name('index');
         Route::get('/create', \App\Livewire\Procurement\Create::class)->name('create');
         Route::get('/{id}', \App\Livewire\Procurement\Show::class)->name('show');
+        Route::get('/{id}/json', [App\Http\Controllers\MaterialRequestController::class, 'json'])->name('json');
         Route::get('/{materialRequest}/print', [App\Http\Controllers\MaterialRequestController::class, 'print'])->name('print');
 
         // Legacy actions (Still handled by Controller if needed, or moved to Livewire)

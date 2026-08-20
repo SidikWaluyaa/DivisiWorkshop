@@ -41,7 +41,8 @@
                     @php
                         $statusColor = match($materialRequest->status) {
                             'PENDING' => 'bg-amber-500',
-                            'APPROVED', 'PURCHASED' => 'bg-[#22AF85]',
+                            'APPROVED', 'PURCHASED' => 'bg-emerald-600',
+                            'RECEIVED' => 'bg-blue-600',
                             'REJECTED', 'CANCELLED' => 'bg-rose-500',
                             default => 'bg-gray-400'
                         };
@@ -57,6 +58,13 @@
         </div>
 
         <div class="flex items-center gap-3">
+            {{-- Tombol JSON Finlog --}}
+            <a href="{{ route('material-requests.json', $materialRequest->id) }}" target="_blank"
+               class="px-5 py-3 bg-indigo-600 text-white text-sm font-black rounded-xl hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-sm shadow-indigo-500/20">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                Lihat Data JSON
+            </a>
+
             {{-- Tombol Print (selalu tampil) --}}
             <a href="{{ route('material-requests.print', $materialRequest->id) }}" target="_blank"
                class="px-5 py-3 bg-slate-800 text-white text-sm font-black rounded-xl hover:bg-slate-900 transition-all flex items-center gap-2 shadow-sm">
@@ -88,6 +96,15 @@
                         Mark as Purchased
                     </button>
                 @endcan
+            @endif
+
+            @if(in_array($materialRequest->status, ['PURCHASED', 'RECEIVED', 'APPROVED']))
+                <button wire:click="verifyAndReceiveMaterial" wire:loading.attr="disabled" 
+                        class="px-6 py-3 bg-[#22AF85] text-white text-sm font-black rounded-xl hover:bg-emerald-600 shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2 border-none active:scale-95">
+                    <svg wire:loading.remove class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <span wire:loading class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    Terima &amp; Verifikasi Material
+                </button>
             @endif
         </div>
     </div>

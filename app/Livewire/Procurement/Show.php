@@ -139,6 +139,56 @@ class Show extends Component
         $this->dispatch('notify', type: 'info', message: 'Pengajuan material dibatalkan.');
     }
 
+    public function verifyAndReceiveMaterial()
+    {
+        DB::transaction(function () {
+            // 1. Update MaterialRequest status
+            $this->materialRequest->update(['status' => 'RECEIVED']);
+
+            // 2. Identify all related WorkOrders
+            $workOrders = collect();
+            if ($this->materialRequest->work_order_id && $this->materialRequest->workOrder) {
+                $workOrders->push($this->materialRequest->workOrder);
+            }
+
+            foreach ($this->materialRequest->items as $item) {
+                if ($item->workOrder) {
+                    $workOrders->push($item->workOrder);
+                }
+            }
+
+            // 3. Process each WorkOrder to set arrival date & advance status to Production
+            $workflow = app(\App\Services\WorkflowService::class);
+
+            foreach ($workOrders->unique('id') as $order) {
+                $order->material_arrival_date = now();
+                $order->save();
+
+                try {
+                    $workflow->updateStatus(
+                        $order,
+                        \App\Enums\WorkOrderStatus::PRODUCTION,
+                        "Material pengajuan (#{$this->materialRequest->request_number}) diverifikasi & diterima fisik oleh " . Auth::user()->name . ". SPK dilanjutkan ke Stasiun Produksi."
+                    );
+                } catch (\Exception $e) {
+                    // Fallback direct update
+                    $order->status = \App\Enums\WorkOrderStatus::PRODUCTION;
+                    $order->save();
+
+                    $order->logs()->create([
+                        'user_id' => Auth::id(),
+                        'step' => 'SORTIR_BELANJA',
+                        'action' => 'MATERIAL_RECEIVED_VERIFIED',
+                        'description' => "Material pengajuan (#{$this->materialRequest->request_number}) diverifikasi & diterima fisik oleh " . Auth::user()->name . ". SPK dilanjutkan ke Stasiun Produksi (fallback).",
+                    ]);
+                }
+            }
+        });
+
+        $this->loadRequest();
+        $this->dispatch('notify', type: 'success', message: 'Material berhasil diverifikasi & SPK terkait otomatis dilanjutkan ke Stasiun Produksi!');
+    }
+
     public function render()
     {
         return view('livewire.procurement.show')->layout('layouts.workshop-pwa');

@@ -39,4 +39,10 @@ return [
         'support_number' => env('WHATSAPP_SUPPORT_NUMBER', '628123456789'),
     ],
 
+    'finlog' => [
+        'base_url' => env('FINLOG_BASE_URL', 'https://finlog.shoeworkshop.id'),
+        'bearer_token' => env('FINLOG_BEARER_TOKEN', 'mock_token_finlog_secret_2026'),
+        'webhook_secret' => env('FINLOG_WEBHOOK_SECRET', 'secret_finlog_webhook_key_2026'),
+    ],
+
 ];
