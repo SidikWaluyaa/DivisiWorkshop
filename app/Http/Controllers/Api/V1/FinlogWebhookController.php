@@ -18,14 +18,25 @@ class FinlogWebhookController extends Controller
     public function handle(Request $request)
     {
         $payload = $request->all();
+        $data = $payload['data'] ?? $payload;
+
         $eventId = $request->header('X-Finlog-Event-Id') ?? ($payload['event_id'] ?? null);
         $signature = $request->header('X-Finlog-Signature');
 
+        $requestNumber   = $data['request_number'] ?? null;
+        $finlogRequestId = $data['finlog_request_id'] ?? null;
+        $workOrderId     = $data['primary_work_order_id'] ?? ($data['work_order_id'] ?? null);
+        $status          = $data['status'] ?? null;
+        $rejectionReason = $data['rejection_reason'] ?? null;
+
         Log::info('Finlog Webhook Received:', [
-            'event_id' => $eventId,
-            'status' => $payload['status'] ?? null,
-            'work_order_id' => $payload['work_order_id'] ?? null,
-            'finlog_request_id' => $payload['finlog_request_id'] ?? null,
+            'event_id'          => $eventId,
+            'event'             => $payload['event'] ?? 'status_updated',
+            'status'            => $status,
+            'request_number'    => $requestNumber,
+            'finlog_request_id' => $finlogRequestId,
+            'work_order_id'     => $workOrderId,
+            'rejection_reason'  => $rejectionReason,
         ]);
 
         // Optional HMAC signature check if secret is configured
@@ -38,18 +49,20 @@ class FinlogWebhookController extends Controller
             }
         }
 
-        $finlogRequestId = $payload['finlog_request_id'] ?? null;
-        $workOrderId = $payload['work_order_id'] ?? null;
-        $status = $payload['status'] ?? null;
-
         // Map Finlog status to material_requests enum status
         $statusMap = [
-            'submitted' => 'PENDING',
-            'approved' => 'APPROVED',
-            'rejected' => 'REJECTED',
-            'purchased' => 'PURCHASED',
+            'submitted'         => 'PENDING',
+            'pending'           => 'PENDING',
+            'approved'          => 'APPROVED',
+            'purchased'         => 'PURCHASED',
+            'in_transit'        => 'PURCHASED',
+            'shipping'          => 'PURCHASED',
+            'shipped'           => 'PURCHASED',
             'material_received' => 'RECEIVED',
-            'cancelled' => 'CANCELLED',
+            'delivered'         => 'RECEIVED',
+            'received'          => 'RECEIVED',
+            'rejected'          => 'REJECTED',
+            'cancelled'         => 'CANCELLED',
         ];
 
         $targetStatus = $statusMap[$status] ?? null;
@@ -57,14 +70,17 @@ class FinlogWebhookController extends Controller
         if (!$targetStatus) {
             return response()->json([
                 'received' => true,
-                'message' => 'Ignored unknown status: ' . $status,
+                'message'  => 'Ignored unknown status: ' . $status,
             ]);
         }
 
-        DB::transaction(function () use ($finlogRequestId, $workOrderId, $targetStatus, $status, $payload, $eventId) {
-            // Find material request by finlog_request_id or work_order_id
+        DB::transaction(function () use ($requestNumber, $finlogRequestId, $workOrderId, $targetStatus, $status, $rejectionReason) {
+            // Find material request by request_number, finlog_request_id, or work_order_id
             $materialRequest = null;
-            if ($finlogRequestId) {
+            if ($requestNumber) {
+                $materialRequest = MaterialRequest::where('request_number', $requestNumber)->first();
+            }
+            if (!$materialRequest && $finlogRequestId) {
                 $materialRequest = MaterialRequest::where('finlog_request_id', $finlogRequestId)->first();
             }
             if (!$materialRequest && $workOrderId) {
@@ -74,7 +90,25 @@ class FinlogWebhookController extends Controller
             }
 
             if ($materialRequest) {
-                $materialRequest->update(['status' => $targetStatus]);
+                $updateData = ['status' => $targetStatus];
+                if ($finlogRequestId && empty($materialRequest->finlog_request_id)) {
+                    $updateData['finlog_request_id'] = $finlogRequestId;
+                }
+                if ($rejectionReason && $targetStatus === 'REJECTED') {
+                    $updateData['notes'] = "Ditolak Finlog: " . $rejectionReason;
+                }
+
+                $materialRequest->update($updateData);
+
+                // Audit log for WorkOrders
+                if ($materialRequest->work_order_id && $materialRequest->workOrder) {
+                    $materialRequest->workOrder->logs()->create([
+                        'step'        => 'PROCUREMENT',
+                        'action'      => 'FINLOG_STATUS_UPDATED',
+                        'user_id'     => null,
+                        'description' => "Status Finlog diperbarui menjadi {$targetStatus}" . ($rejectionReason ? " (Alasan: {$rejectionReason})" : ""),
+                    ]);
+                }
             }
 
             // Flag material arrival on related WorkOrders, requiring manual staff verification button to push to Production

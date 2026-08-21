@@ -19,9 +19,14 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <a href="{{ route('qc.index') }}" class="px-4 py-2.5 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:hover:bg-gray-600 text-slate-700 dark:text-gray-200 text-xs font-bold rounded-xl transition-all flex items-center gap-2">
+                <a href="{{ route('qc.outbound.create') }}" wire:navigate 
+                   class="px-5 py-3 bg-[#FFC232] text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl hover:shadow-lg hover:shadow-[#FFC232]/20 transition-all flex items-center gap-2 border-none active:scale-95">
+                    <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+                    Buat Manifest Outbound
+                </a>
+                <a href="{{ route('qc.index') }}" class="px-4 py-3 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:hover:bg-gray-600 text-slate-700 dark:text-gray-200 text-xs font-bold rounded-2xl transition-all flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
-                    Kembali ke Dashboard QC
+                    Kembali
                 </a>
             </div>
         </div>
@@ -85,139 +90,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- SECTION 1: STAGING OUTBOUND (SPK Lolos QC Akhir) --}}
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-slate-200 dark:border-gray-700 overflow-hidden">
-            <div class="p-6 border-b border-slate-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-3 h-3 rounded-full bg-teal-500 animate-pulse"></div>
-                    <div>
-                        <h2 class="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">Daftar Antrean Staging Outbound</h2>
-                        <p class="text-xs text-slate-500 dark:text-gray-400">Pilih satu atau banyak SPK untuk diterbitkan dalam satu Manifest Outbound</p>
-                    </div>
-                </div>
-
-                {{-- Filter & Search Controls --}}
-                <div class="flex flex-wrap items-center gap-3">
-                    <div class="relative">
-                        <input type="text" 
-                               wire:model.live.debounce.300ms="search" 
-                               placeholder="Cari SPK / Customer / Sepatu..." 
-                               class="text-xs border border-slate-300 dark:border-gray-600 rounded-xl pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-gray-750 text-slate-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 outline-none w-64 shadow-sm">
-                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    </div>
-
-                    <select wire:model.live="priority" class="text-xs font-semibold border border-slate-300 dark:border-gray-600 rounded-xl px-3 py-2.5 bg-slate-50 dark:bg-gray-750 text-slate-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 outline-none shadow-sm cursor-pointer">
-                        <option value="all">Semua Prioritas</option>
-                        <option value="urgent">Urgent / OTO / Express</option>
-                        <option value="regular">Regular</option>
-                    </select>
-                </div>
-            </div>
-
-            {{-- Optional Manifest Notes Bar --}}
-            @if(count($selectedItems) > 0)
-                <div class="px-6 py-3.5 bg-teal-50/80 dark:bg-teal-950/40 border-b border-teal-200 dark:border-teal-900/50 flex flex-col md:flex-row items-start md:items-center gap-3">
-                    <span class="text-xs font-black text-teal-900 dark:text-teal-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                        Catatan Manifest:
-                    </span>
-                    <input type="text" 
-                           wire:model="manifestNotes" 
-                           placeholder="Tambahkan catatan opsional pengiriman dispatcher..." 
-                           class="text-xs border border-teal-300 dark:border-teal-700 rounded-xl px-4 py-2 bg-white dark:bg-gray-800 text-slate-900 dark:text-gray-100 w-full focus:ring-2 focus:ring-teal-500 outline-none shadow-sm">
-                </div>
-            @endif
-
-            {{-- Staging Table --}}
-            <div class="w-full">
-                <table class="w-full divide-y divide-slate-200 dark:divide-gray-700 text-left table-auto">
-                    <thead class="bg-slate-50 dark:bg-gray-750 text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-wider">
-                        <tr>
-                            <th class="px-4 py-3.5 text-center w-12">
-                                <input type="checkbox" wire:model.live="selectAll" class="w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500 cursor-pointer">
-                            </th>
-                            <th class="px-4 py-3.5 text-center w-10">NO</th>
-                            <th class="px-4 py-3.5 whitespace-nowrap">NOMOR SPK</th>
-                            <th class="px-4 py-3.5 whitespace-nowrap">PELANGGAN &amp; SEPATU</th>
-                            <th class="px-4 py-3.5 whitespace-nowrap">STATUS &amp; PRIORITAS</th>
-                            <th class="px-4 py-3.5 whitespace-nowrap">RINCIAN LAYANAN JASA</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-gray-800 bg-white dark:bg-gray-800 text-xs">
-                        @forelse($this->stagingOrders as $idx => $order)
-                            <tr class="hover:bg-slate-50/80 dark:hover:bg-gray-750/50 transition-colors">
-                                <td class="px-4 py-4 text-center">
-                                    <input type="checkbox" value="{{ $order->id }}" wire:model.live="selectedItems" class="w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500 cursor-pointer">
-                                </td>
-                                <td class="px-4 py-4 text-center font-bold text-slate-400">{{ $idx + 1 }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap">
-                                    <span class="font-mono font-black text-slate-900 dark:text-white bg-slate-100 dark:bg-gray-700 px-2.5 py-1 rounded-lg text-xs border border-slate-200 dark:border-gray-600 inline-block">
-                                        {{ $order->spk_number }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap">
-                                    <div class="font-black text-slate-900 dark:text-white">{{ $order->customer_name }}</div>
-                                    <div class="text-[10px] font-semibold text-slate-500 dark:text-gray-400 mt-0.5">{{ $order->shoe_brand }} - {{ $order->shoe_type }}</div>
-                                </td>
-                                <td class="px-4 py-4 whitespace-nowrap">
-                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                        <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-                                            LOLOS QC
-                                        </span>
-                                        @php
-                                            $prio = $order->priority ?? 'Regular';
-                                            $isUrg = in_array($prio, ['Prioritas', 'Urgent', 'Express', 'OTO']);
-                                        @endphp
-                                        <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider
-                                            {{ $isUrg ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' }}">
-                                            {{ $prio }}
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-4">
-                                    <div class="flex flex-wrap gap-1">
-                                        @foreach($order->workOrderServices as $svc)
-                                            <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
-                                                {{ $svc->custom_service_name ?? ($svc->service ? $svc->service->name : 'Layanan') }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-slate-400 italic">
-                                    Tidak ada SPK di Staging Outbound saat ini. SPK yang Lolos QC Akhir di tab "Siap Selesai" akan otomatis muncul di sini.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {{-- FLOATING BATCH MANIFEST ACTION BAR --}}
-        @if(count($selectedItems) > 0)
-            <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-slate-900/95 dark:bg-gray-800/95 backdrop-blur-xl border border-slate-700 text-white px-6 py-3.5 rounded-3xl shadow-2xl flex items-center gap-6 animate-bounce-short">
-                <div class="flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-full bg-teal-500 text-slate-900 font-black text-xs flex items-center justify-center">
-                        {{ count($selectedItems) }}
-                    </span>
-                    <div>
-                        <p class="text-xs font-black text-white">SPK Terpilih</p>
-                        <p class="text-[9px] text-slate-300">Siap Diterbitkan Manifest</p>
-                    </div>
-                </div>
-
-                <button wire:click="createManifest"
-                        wire:confirm="Buat Manifest Outbound untuk {{ count($selectedItems) }} SPK terpilih?"
-                        class="px-6 py-2.5 bg-[#22AF85] hover:bg-emerald-600 text-white font-black text-xs rounded-2xl shadow-lg transition-all active:scale-95 flex items-center gap-2 cursor-pointer uppercase tracking-wider whitespace-nowrap">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    Terbitkan Manifest Outbound
-                </button>
-            </div>
-        @endif
 
         {{-- SECTION 2: RIWAYAT MANIFEST OUTBOUND --}}
         <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-slate-200 dark:border-gray-700 overflow-hidden">

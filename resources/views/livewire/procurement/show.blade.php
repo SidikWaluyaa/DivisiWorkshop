@@ -41,15 +41,28 @@
                     @php
                         $statusColor = match($materialRequest->status) {
                             'PENDING' => 'bg-amber-500',
-                            'APPROVED', 'PURCHASED' => 'bg-emerald-600',
-                            'RECEIVED' => 'bg-blue-600',
+                            'APPROVED', 'PURCHASED' => 'bg-blue-600',
+                            'RECEIVED' => 'bg-[#22AF85]',
                             'REJECTED', 'CANCELLED' => 'bg-rose-500',
                             default => 'bg-gray-400'
                         };
+                        $statusLabel = match($materialRequest->status) {
+                            'PENDING' => 'Menunggu Approval Finlog',
+                            'APPROVED', 'PURCHASED' => 'Dalam Pengiriman (Finlog)',
+                            'RECEIVED' => 'Bahan Baku Tiba di Workshop',
+                            'REJECTED' => 'Ditolak',
+                            'CANCELLED' => 'Dibatalkan',
+                            default => $materialRequest->status
+                        };
                     @endphp
                     <span class="px-3 py-1 rounded-lg {{ $statusColor }} text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-{{ str_starts_with($statusColor, 'bg-') ? substr($statusColor, 3) : $statusColor }}/20">
-                        {{ $materialRequest->status }}
+                        {{ $statusLabel }}
                     </span>
+                    @if($materialRequest->finlog_request_id)
+                        <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-black uppercase tracking-widest">
+                            Finlog Ref: {{ $materialRequest->finlog_request_id }}
+                        </span>
+                    @endif
                 </div>
                 <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
                     {{ $materialRequest->type == 'SHOPPING' ? 'Shopping Request' : 'Production PO' }} • {{ $materialRequest->created_at->format('d M Y, H:i') }}

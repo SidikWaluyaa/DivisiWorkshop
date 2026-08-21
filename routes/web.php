@@ -389,7 +389,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('qc')->name('qc.')->middleware('access:qc')->group(function () {
         Route::get('/', \App\Livewire\Qc\QcIndex::class)->lazy()->name('index');
         Route::get('/outbond', \App\Livewire\Qc\OutboundIndex::class)->lazy()->name('outbound');
-        Route::get('/outbond/create', [App\Http\Controllers\OutboundController::class, 'create'])->name('outbound.create');
+        Route::get('/outbond/create', \App\Livewire\Qc\OutboundCreate::class)->name('outbound.create');
         Route::get('/outbond/{id}', [App\Http\Controllers\OutboundController::class, 'show'])->name('outbound.show');
         Route::get('/outbond/{id}/print', [App\Http\Controllers\OutboundController::class, 'print'])->name('outbound.print');
         Route::get('/{id}', [QCController::class, 'show'])->name('show');
