@@ -49,6 +49,9 @@ class FinlogWebhookController extends Controller
             }
         }
 
+        // Convert status to lowercase for case-insensitive mapping
+        $statusKey = $status ? strtolower($status) : null;
+
         // Map Finlog status to material_requests enum status
         $statusMap = [
             'submitted'         => 'PENDING',
@@ -65,7 +68,7 @@ class FinlogWebhookController extends Controller
             'cancelled'         => 'CANCELLED',
         ];
 
-        $targetStatus = $statusMap[$status] ?? null;
+        $targetStatus = $statusMap[$statusKey] ?? null;
 
         if (!$targetStatus) {
             return response()->json([

@@ -98,7 +98,7 @@ class FinlogApiService
                     'X-Source-System' => 'workshop-app',
                     'X-Request-Id' => $requestId,
                     'Accept' => 'application/json',
-                ])->post($this->baseUrl . '/purchase-requests', $payload);
+                ])->post(rtrim($this->baseUrl, '/') . '/purchase-requests', $payload);
 
             if ($response->successful() || $response->status() === 409) {
                 $responseData = $response->json();
