@@ -203,6 +203,10 @@ class WorkOrder extends Model
                     ->withTimestamps();
     }
 
+    public function materialRequestItems(): HasMany
+    {
+        return $this->hasMany(MaterialRequestItem::class, 'work_order_id');
+    }
 
     protected $casts = [
         'status' => WorkOrderStatus::class, // Enum Casting

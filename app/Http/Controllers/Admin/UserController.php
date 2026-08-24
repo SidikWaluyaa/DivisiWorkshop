@@ -90,13 +90,17 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Hanya administrator utama (admin@workshop.com) yang dapat membuat akun Owner.');
         }
 
+        $specialization = in_array($request->role, ['technician', 'pic']) ? $request->specialization : null;
+        $station = $this->determineStationFromSpecialization($specialization);
+
         $newUser = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'role' => $request->role,
             'is_active' => $request->boolean('is_active'),
-            'specialization' => in_array($request->role, ['technician', 'pic']) ? $request->specialization : null,
+            'specialization' => $specialization,
+            'station' => $station,
             'workshop_pool' => $request->workshop_pool,
             'availability_status' => $request->availability_status ?? 'tersedia',
             'is_support' => $request->boolean('is_support'),
@@ -194,13 +198,17 @@ class UserController extends Controller
             ));
         }
 
+        $specialization = in_array($targetRole, ['technician', 'pic']) ? $request->specialization : null;
+        $station = $this->determineStationFromSpecialization($specialization);
+
         $data = [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'role' => $targetRole,
             'is_active' => $request->boolean('is_active'),
-            'specialization' => in_array($targetRole, ['technician', 'pic']) ? $request->specialization : null,
+            'specialization' => $specialization,
+            'station' => $station,
             'workshop_pool' => $request->workshop_pool,
             'availability_status' => $request->availability_status ?? 'tersedia',
             'is_support' => $request->boolean('is_support'),
@@ -227,6 +235,34 @@ class UserController extends Controller
         }
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui.');
+    }
+
+    /**
+     * Map technician specialization to workshop station automatically
+     */
+    private function determineStationFromSpecialization(?string $specialization): ?string
+    {
+        if (!$specialization) return null;
+
+        $spec = strtolower(trim($specialization));
+
+        if (in_array($spec, ['washing', 'persiapan (cuci)', 'bongkar sol', 'bongkar upper', 'prep sol', 'prep upper', 'preparation'])) {
+            return 'PREPARATION';
+        }
+        if (in_array($spec, ['reparasi sol', 'sol repair', 'pic material sol', 'soling'])) {
+            return 'SOLING';
+        }
+        if (in_array($spec, ['reparasi upper', 'upper repair', 'pic material upper', 'repaint', 'jahit', 'upper'])) {
+            return 'UPPER';
+        }
+        if (in_array($spec, ['reparasi treatment', 'treatment', 'clean up', 'cleaning'])) {
+            return 'TREATMENT';
+        }
+        if (in_array($spec, ['qc jahit', 'qc cleanup', 'qc final', 'pic qc', 'qc'])) {
+            return 'QC';
+        }
+
+        return null;
     }
 
     public function destroy(User $user)

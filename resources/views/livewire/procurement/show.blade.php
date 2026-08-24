@@ -1,22 +1,4 @@
-<div class="procurement-show-root min-h-screen bg-[#FDFDFD] pb-12">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        
-        :root {
-            --primary-green: #22AF85;
-            --accent-yellow: #FFC232;
-        }
-
-        .procurement-show-root {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f9fafb; transition: all 0.3s; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--primary-green); }
-    </style>
-
+<div class="procurement-show-root min-h-screen bg-slate-50/60 dark:bg-slate-900 pb-16">
     {{-- Dynamic Notifications --}}
     <div x-data="{ show: false, message: '', type: 'success' }" 
          x-on:notify.window="show = true; message = $event.detail.message; type = $event.detail.type; setTimeout(() => show = false, 3000)"
@@ -29,208 +11,184 @@
         </div>
     </div>
 
-    {{-- Detail Header --}}
-    <div class="bg-white border-b border-gray-100 px-8 py-6 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-        <div class="flex items-center gap-6">
-            <a href="{{ route('material-requests.index') }}" wire:navigate class="p-2.5 bg-gray-50 border border-gray-200 text-gray-400 hover:text-[#22AF85] rounded-xl transition-all">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            </a>
-            <div>
-                <div class="flex items-center gap-3">
-                    <h1 class="text-2xl font-black text-gray-900 tracking-tight">{{ $materialRequest->request_number }}</h1>
-                    @php
-                        $statusColor = match($materialRequest->status) {
-                            'PENDING' => 'bg-amber-500',
-                            'APPROVED', 'PURCHASED' => 'bg-blue-600',
-                            'RECEIVED' => 'bg-[#22AF85]',
-                            'REJECTED', 'CANCELLED' => 'bg-rose-500',
-                            default => 'bg-gray-400'
-                        };
-                        $statusLabel = match($materialRequest->status) {
-                            'PENDING' => 'Menunggu Approval Finlog',
-                            'APPROVED', 'PURCHASED' => 'Dalam Pengiriman (Finlog)',
-                            'RECEIVED' => 'Bahan Baku Tiba di Workshop',
-                            'REJECTED' => 'Ditolak',
-                            'CANCELLED' => 'Dibatalkan',
-                            default => $materialRequest->status
-                        };
-                    @endphp
-                    <span class="px-3 py-1 rounded-lg {{ $statusColor }} text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-{{ str_starts_with($statusColor, 'bg-') ? substr($statusColor, 3) : $statusColor }}/20">
-                        {{ $statusLabel }}
-                    </span>
-                    @if($materialRequest->finlog_request_id)
-                        <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-black uppercase tracking-widest">
-                            Finlog Ref: {{ $materialRequest->finlog_request_id }}
+    {{-- Detail Header Bar --}}
+    <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-700/80 px-4 sm:px-8 py-5 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <a href="{{ route('material-requests.index') }}" wire:navigate 
+                   class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                </a>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight font-mono">{{ $materialRequest->request_number }}</h1>
+                        @php
+                            $statusColor = match($materialRequest->status) {
+                                'PENDING' => 'bg-amber-500',
+                                'APPROVED', 'PURCHASED' => 'bg-blue-600',
+                                'RECEIVED' => 'bg-[#22AF85]',
+                                'REJECTED', 'CANCELLED' => 'bg-rose-500',
+                                default => 'bg-slate-400'
+                            };
+                            $statusLabel = match($materialRequest->status) {
+                                'PENDING' => 'Menunggu Approval Finlog',
+                                'APPROVED', 'PURCHASED' => 'Dalam Pengiriman (Finlog)',
+                                'RECEIVED' => 'Bahan Baku Tiba di Workshop',
+                                'REJECTED' => 'Ditolak',
+                                'CANCELLED' => 'Dibatalkan',
+                                default => $materialRequest->status
+                            };
+                        @endphp
+                        <span class="px-3 py-1 rounded-full {{ $statusColor }} text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
+                            {{ $statusLabel }}
                         </span>
-                    @endif
+                        @if($materialRequest->finlog_request_id)
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 text-[10px] font-black uppercase tracking-wider border border-indigo-200 dark:border-indigo-800">
+                                Ref Finlog: {{ $materialRequest->finlog_request_id }}
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                        {{ $materialRequest->type == 'SHOPPING' ? 'Belanja Umum / Gudang' : 'PO Spesifik SPK' }} • Dibuat: {{ $materialRequest->created_at->format('d M Y, H:i') }}
+                    </p>
                 </div>
-                <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
-                    {{ $materialRequest->type == 'SHOPPING' ? 'Shopping Request' : 'Production PO' }} • {{ $materialRequest->created_at->format('d M Y, H:i') }}
-                </p>
             </div>
-        </div>
 
-        <div class="flex items-center gap-3">
-            {{-- Tombol JSON Finlog --}}
-            <a href="{{ route('material-requests.json', $materialRequest->id) }}" target="_blank"
-               class="px-5 py-3 bg-indigo-600 text-white text-sm font-black rounded-xl hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-sm shadow-indigo-500/20">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                Lihat Data JSON
-            </a>
+            {{-- Action Buttons Header --}}
+            <div class="flex flex-wrap items-center gap-2">
+                {{-- Tombol JSON Finlog --}}
+                <a href="{{ route('material-requests.json', $materialRequest->id) }}" target="_blank"
+                   class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition-all flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    <span>Data JSON</span>
+                </a>
 
-            {{-- Tombol Print (selalu tampil) --}}
-            <a href="{{ route('material-requests.print', $materialRequest->id) }}" target="_blank"
-               class="px-5 py-3 bg-slate-800 text-white text-sm font-black rounded-xl hover:bg-slate-900 transition-all flex items-center gap-2 shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                Cetak Nota
-            </a>
+                {{-- Tombol Cetak Nota --}}
+                <a href="{{ route('material-requests.print', $materialRequest->id) }}" target="_blank"
+                   class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-black rounded-xl transition-all flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    <span>Cetak Nota</span>
+                </a>
 
-             @if($materialRequest->status === 'PENDING')
-                @can('manageInventory', \App\Models\WorkOrder::class)
-                    <button wire:click="approve" wire:loading.attr="disabled" class="px-6 py-3 bg-[#FFC232] text-gray-900 text-sm font-black rounded-xl hover:shadow-lg hover:shadow-[#FFC232]/20 transition-all flex items-center gap-2 border-none">
-                        <svg wire:loading.remove class="w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                        <span wire:loading class="w-4 h-4 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin"></span>
-                        Approve Request
+                @if(in_array($materialRequest->status, ['PURCHASED', 'RECEIVED', 'APPROVED']))
+                    <button type="button" 
+                            wire:click="verifyAndReceiveMaterial" 
+                            wire:loading.attr="disabled" 
+                            class="px-5 py-2.5 bg-[#22AF85] hover:bg-emerald-600 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-500/20 transition-all flex items-center gap-1.5 active:scale-95">
+                        <svg wire:loading.remove class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span wire:loading class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span>Terima &amp; Verifikasi Material</span>
                     </button>
-                    <button wire:click="reject" wire:loading.attr="disabled" class="px-6 py-3 bg-white border border-rose-100 text-rose-600 text-sm font-black rounded-xl hover:bg-rose-50 transition-all shadow-sm">
-                        Reject
-                    </button>
-                @endcan
-                <button wire:click="cancel" class="px-6 py-3 bg-gray-50 border border-gray-200 text-gray-400 text-sm font-bold rounded-xl hover:bg-gray-100 transition-all">
-                    Batalkan
-                </button>
-            @endif
-
-            @if($materialRequest->status === 'APPROVED')
-                @can('manageInventory', \App\Models\WorkOrder::class)
-                    <button wire:click="markAsPurchased" wire:loading.attr="disabled" class="px-6 py-3 bg-[#FFC232] text-gray-900 text-sm font-black rounded-xl hover:shadow-lg hover:shadow-[#FFC232]/20 transition-all flex items-center gap-2 border-none">
-                        <svg wire:loading.remove class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                        <span wire:loading class="w-4 h-4 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin"></span>
-                        Mark as Purchased
-                    </button>
-                @endcan
-            @endif
-
-            @if(in_array($materialRequest->status, ['PURCHASED', 'RECEIVED', 'APPROVED']))
-                <button wire:click="verifyAndReceiveMaterial" wire:loading.attr="disabled" 
-                        class="px-6 py-3 bg-[#22AF85] text-white text-sm font-black rounded-xl hover:bg-emerald-600 shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2 border-none active:scale-95">
-                    <svg wire:loading.remove class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    <span wire:loading class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    Terima &amp; Verifikasi Material
-                </button>
-            @endif
+                @endif
+            </div>
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-8 pt-10">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            {{-- Main Column --}}
-            <div class="lg:col-span-8 space-y-10">
-                {{-- Metadata Grid --}}
-                <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-10">
-                    <h3 class="text-lg font-black text-gray-900 tracking-tight mb-8">Informasi Pengajuan</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                        <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Requested By</span>
-                            <span class="text-base font-bold text-gray-800">{{ $materialRequest->requestedBy->name ?? 'System' }}</span>
-                            <span class="text-xs text-gray-400 font-medium">{{ $materialRequest->requestedBy->email ?? '-' }}</span>
+    {{-- Main Content Grid --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {{-- Left Column: Information Card & Items Table (8 Cols) --}}
+            <div class="lg:col-span-8 space-y-8">
+                {{-- Information Card --}}
+                <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm p-6 sm:p-8">
+                    <h3 class="text-base font-black text-slate-900 dark:text-white tracking-tight mb-6">Informasi Pengajuan Belanja</h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
+                        <div>
+                            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Pemohon (Requested By)</span>
+                            <span class="font-bold text-slate-900 dark:text-white block mt-0.5">{{ $materialRequest->requestedBy->name ?? 'Sistem Workshop' }}</span>
+                            <span class="text-[10px] text-slate-400 font-medium">{{ $materialRequest->requestedBy->email ?? '-' }}</span>
                         </div>
-                        <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Audit Status</span>
+
+                        <div>
+                            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Status Audit Finlog</span>
                             <div class="flex items-center gap-2 mt-1">
-                                <div class="w-2 h-2 rounded-full {{ $statusColor }}"></div>
-                                <span class="text-sm font-black text-gray-700 uppercase tracking-widest">{{ $materialRequest->status }}</span>
+                                <div class="w-2.5 h-2.5 rounded-full {{ $statusColor }}"></div>
+                                <span class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">{{ $statusLabel }}</span>
                             </div>
                         </div>
-                        <div class="flex flex-col gap-1 text-right">
-                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-[0.2em]">Estimated Value</span>
-                            <span class="text-2xl font-black text-[#22AF85]">Rp {{ number_format($materialRequest->total_estimated_cost, 0, ',', '.') }}</span>
+
+                        <div>
+                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-wider block">Estimasi Total Nilai</span>
+                            <span class="text-xl font-black text-[#22AF85] font-mono block mt-0.5">Rp {{ number_format($materialRequest->total_estimated_cost, 0, ',', '.') }}</span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mt-10 pt-10 border-t border-gray-50">
-                        <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Work Order Context</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs mt-6 pt-6 border-t border-slate-100 dark:border-slate-700/80">
+                        <div>
+                            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Konteks SPK</span>
                             @if($materialRequest->work_order_id)
-                                <span class="text-sm font-bold text-gray-800 uppercase">{{ $materialRequest->workOrder->spk_number }}</span>
-                                <span class="text-xs text-gray-400 font-medium">{{ $materialRequest->workOrder->customer_name }}</span>
+                                <span class="font-bold text-slate-900 dark:text-white block mt-0.5">SPK #{{ $materialRequest->workOrder->spk_number }}</span>
+                                <span class="text-[10px] text-slate-400 font-medium">{{ $materialRequest->workOrder->customer_name }}</span>
                             @else
-                                <span class="text-sm font-bold text-gray-400 italic">No WO linked</span>
+                                <span class="font-bold text-[#22AF85] block mt-0.5">{{ $materialRequest->items->pluck('work_order_id')->unique()->filter()->count() }} SPK (Pengajuan Gabungan)</span>
                             @endif
                         </div>
-                        <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Approved At</span>
-                            <span class="text-sm font-bold text-gray-800">{{ $materialRequest->approved_at ? $materialRequest->approved_at->format('d M Y • H:i') : '-' }}</span>
+
+                        <div>
+                            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Disetujui Pada</span>
+                            <span class="font-bold text-slate-900 dark:text-white block mt-0.5">{{ $materialRequest->approved_at ? $materialRequest->approved_at->format('d M Y • H:i') : '-' }}</span>
                             @if($materialRequest->approved_by)
-                                <span class="text-xs text-[#22AF85] font-bold">By {{ $materialRequest->approvedBy->name }}</span>
+                                <span class="text-[10px] text-[#22AF85] font-bold">Oleh: {{ $materialRequest->approvedBy->name }}</span>
                             @endif
                         </div>
-                        <div class="flex flex-col gap-1 text-right">
-                             <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Procurement Type</span>
-                             <span class="text-sm font-bold text-gray-800 uppercase tracking-widest">{{ $materialRequest->type }}</span>
+
+                        <div>
+                            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Jenis Pengadaan</span>
+                            <span class="font-bold text-slate-900 dark:text-white uppercase tracking-wider block mt-0.5">{{ $materialRequest->type }}</span>
                         </div>
                     </div>
 
                     @if($materialRequest->notes)
-                        <div class="mt-10 p-6 bg-gray-50 rounded-2xl border border-gray-100 flex gap-4">
-                            <svg class="w-6 h-6 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                            <p class="text-sm text-gray-600 leading-relaxed italic">"{{ $materialRequest->notes }}"</p>
+                        <div class="mt-6 p-4 bg-slate-50 dark:bg-slate-750 rounded-2xl border border-slate-200/80 dark:border-slate-700 flex gap-3 items-start text-xs">
+                            <svg class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                            <p class="text-slate-600 dark:text-slate-300 font-medium italic leading-relaxed">"{{ $materialRequest->notes }}"</p>
                         </div>
                     @endif
                 </div>
 
                 {{-- Items Table --}}
-                <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
-                    <div class="px-10 py-8 border-b border-gray-100 bg-gray-50/30">
-                        <h3 class="text-lg font-black text-gray-900 tracking-tight">Daftar Material</h3>
+                <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-750">
+                        <h3 class="text-base font-black text-slate-900 dark:text-white">Rincian Material Yang Membutuhkan Pengadaan</h3>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left">
+                        <table class="w-full text-left table-auto">
                             <thead>
-                                <tr class="bg-white">
-                                    <th class="px-10 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Material & Specs</th>
-                                    <th class="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Qty</th>
-                                    <th class="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Price</th>
-                                    <th class="px-10 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Subtotal</th>
+                                <tr class="bg-slate-50/80 dark:bg-slate-700/50 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
+                                    <th class="px-6 py-3.5">Nama Material &amp; Spesifikasi</th>
+                                    <th class="px-4 py-3.5 text-center">Jumlah (Qty)</th>
+                                    <th class="px-4 py-3.5 text-right">Harga Satuan</th>
+                                    <th class="px-6 py-3.5 text-right">Subtotal</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-50">
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60 text-xs font-bold text-slate-800 dark:text-slate-200">
                                 @foreach($materialRequest->items as $item)
                                     @php
                                         $wo = $item->workOrder ?? $materialRequest->workOrder;
                                     @endphp
-                                    <tr class="hover:bg-gray-50/50 transition-colors">
-                                        <td class="px-10 py-6">
-                                            <div class="flex flex-col">
-                                                <span class="text-sm font-black text-gray-800">{{ $item->material_name }}</span>
-                                                <span class="text-xs text-gray-400 mt-0.5">{{ $item->specification ?? 'Standard Specs' }}</span>
-                                                @if($wo)
-                                                    <span class="mt-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-md border border-indigo-100 w-max">
-                                                        <span>📦</span> SPK #{{ $wo->spk_number }} — {{ $wo->customer_name }}
-                                                    </span>
-                                                @endif
-                                            </div>
+                                    <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/40 transition-colors">
+                                        <td class="px-6 py-4">
+                                            <div class="font-black text-slate-900 dark:text-white">{{ $item->material_name }}</div>
+                                            @if($item->specification)
+                                                <div class="text-[10px] text-slate-400 font-semibold mt-0.5">Spesifikasi: {{ $item->specification }}</div>
+                                            @endif
+                                            @if($wo)
+                                                <div class="text-[10px] font-semibold text-[#22AF85] mt-0.5">Untuk SPK #{{ $wo->spk_number }} ({{ $wo->customer_name }})</div>
+                                            @endif
                                         </td>
-                                        <td class="px-6 py-6 text-center">
-                                            <span class="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-black rounded-lg border border-gray-200">
-                                                {{ $item->quantity }} {{ $item->unit ?? 'Unit' }}
-                                            </span>
+                                        <td class="px-4 py-4 text-center font-mono font-black text-slate-900 dark:text-white">
+                                            {{ $item->quantity }} {{ $item->unit ?? 'pcs' }}
                                         </td>
-                                        <td class="px-6 py-6 text-right">
-                                            <span class="text-sm font-bold text-gray-600">Rp {{ number_format($item->estimated_price, 0, ',', '.') }}</span>
+                                        <td class="px-4 py-4 text-right font-mono text-slate-500 dark:text-slate-400">
+                                            Rp {{ number_format($item->estimated_price, 0, ',', '.') }}
                                         </td>
-                                        <td class="px-10 py-6 text-right">
-                                            <span class="text-base font-black text-gray-900">Rp {{ number_format($item->getSubtotal(), 0, ',', '.') }}</span>
+                                        <td class="px-6 py-4 text-right font-mono font-black text-slate-900 dark:text-white">
+                                            Rp {{ number_format($item->estimated_price * $item->quantity, 0, ',', '.') }}
                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
-                            <tfoot>
-                                <tr class="bg-gray-50/50">
-                                    <td colspan="3" class="px-10 py-8 text-right font-black text-gray-500 uppercase tracking-widest text-xs">Total Estimate Value</td>
-                                    <td class="px-10 py-8 text-right font-black text-2xl text-[#22AF85]">Rp {{ number_format($materialRequest->total_estimated_cost, 0, ',', '.') }}</td>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
                 </div>

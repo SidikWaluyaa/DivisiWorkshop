@@ -20,12 +20,14 @@ class TechnicianAssistant extends Component
     public $selectedTechnicianId = null;
     public $stationCategory = 'ALL'; // 'ALL', 'PREPARATION', 'SOLING', 'UPPER', 'TREATMENT', 'QC'
     public $activeTab = 'assigned'; // 'running', 'assigned', 'history'
+    public $historyPeriod = 'all'; // 'today', 'month', 'all'
     public $search = '';
 
     protected $queryString = [
         'selectedTechnicianId' => ['except' => null],
         'stationCategory' => ['except' => 'ALL'],
         'activeTab' => ['except' => 'assigned'],
+        'historyPeriod' => ['except' => 'all'],
         'search' => ['except' => ''],
     ];
 
@@ -82,31 +84,49 @@ class TechnicianAssistant extends Component
                 $spec = trim($tech->specialization ?? '');
                 $specUpper = strtoupper($spec);
 
-                if ($st === 'PREPARATION' || str_contains($specUpper, 'WASH') || str_contains($specUpper, 'CUCI') || str_contains($specUpper, 'PREP')) {
+                if ($st === 'PREPARATION' || str_contains($specUpper, 'WASH') || str_contains($specUpper, 'CUCI') || str_contains($specUpper, 'PREP') || str_contains($specUpper, 'BONGKAR')) {
                     $tech->computed_category = 'PREPARATION';
-                    $tech->category_label = 'Persiapan (Cuci)';
+                    $tech->category_label = '1. Persiapan (Cuci)';
                     $tech->badge_color = 'bg-cyan-500 text-white';
-                    $tech->display_spec = 'Washing & Cuci';
-                } elseif ($st === 'SOLING' || str_contains($specUpper, 'SOL REPAIR') || str_contains($specUpper, 'SOLING') || str_contains($specUpper, 'SOL')) {
+                } elseif ($st === 'SOLING' || str_contains($specUpper, 'SOL')) {
                     $tech->computed_category = 'SOLING';
-                    $tech->category_label = 'Soling (Sol Repair)';
-                    $tech->badge_color = 'bg-amber-500 text-white';
-                    $tech->display_spec = 'Sol Repair';
+                    $tech->category_label = '2. Soling (Reparasi Sol)';
+                    $tech->badge_color = 'bg-amber-500 text-slate-950';
                 } elseif ($st === 'UPPER' || str_contains($specUpper, 'UPPER') || str_contains($specUpper, 'JAHIT')) {
                     $tech->computed_category = 'UPPER';
-                    $tech->category_label = 'Upper & Jahit';
+                    $tech->category_label = '3. Upper & Jahit';
                     $tech->badge_color = 'bg-blue-600 text-white';
-                    $tech->display_spec = str_contains($specUpper, 'JAHIT') ? 'Jahit' : 'Upper Repair';
                 } elseif ($st === 'QC' || str_contains($specUpper, 'QC')) {
                     $tech->computed_category = 'QC';
-                    $tech->category_label = 'Quality Control (QC)';
+                    $tech->category_label = '5. Quality Control (QC)';
                     $tech->badge_color = 'bg-purple-600 text-white';
-                    $tech->display_spec = 'Inspector QC';
                 } else {
                     $tech->computed_category = 'TREATMENT';
-                    $tech->category_label = 'Treatment & Repaint';
+                    $tech->category_label = '4. Treatment & Cleaning';
                     $tech->badge_color = 'bg-[#22AF85] text-white';
-                    $tech->display_spec = !empty($spec) ? $spec : 'Treatment';
+                }
+
+                // Standardized Specialization Display Title
+                if ($specUpper === 'WASHING' || str_contains($specUpper, 'CUCI')) {
+                    $tech->display_spec = '🧼 Washing (Cuci)';
+                } elseif ($specUpper === 'BONGKAR SOL' || $specUpper === 'PREP SOL') {
+                    $tech->display_spec = '👟 Bongkar Sol';
+                } elseif ($specUpper === 'BONGKAR UPPER' || $specUpper === 'PREP UPPER') {
+                    $tech->display_spec = '✂️ Bongkar Upper';
+                } elseif ($specUpper === 'REPARASI SOL' || $specUpper === 'SOL REPAIR') {
+                    $tech->display_spec = '🛠️ Reparasi Sol';
+                } elseif ($specUpper === 'REPARASI UPPER' || $specUpper === 'UPPER REPAIR') {
+                    $tech->display_spec = '🧵 Reparasi Upper';
+                } elseif ($specUpper === 'REPARASI TREATMENT' || str_contains($specUpper, 'TREATMENT') || str_contains($specUpper, 'REPAINT')) {
+                    $tech->display_spec = '✨ Reparasi Treatment';
+                } elseif ($specUpper === 'QC JAHIT' || $specUpper === 'JAHIT') {
+                    $tech->display_spec = '🪡 QC Jahit';
+                } elseif ($specUpper === 'QC CLEANUP' || $specUpper === 'CLEAN UP') {
+                    $tech->display_spec = '🧹 QC Cleanup';
+                } elseif ($specUpper === 'QC FINAL' || str_contains($specUpper, 'QC')) {
+                    $tech->display_spec = '🔍 QC Final';
+                } else {
+                    $tech->display_spec = !empty($spec) ? $spec : 'Teknisi';
                 }
 
                 return $tech;
@@ -229,9 +249,14 @@ class TechnicianAssistant extends Component
         $workOrders = WorkOrder::with(['photos', 'workOrderServices.service'])
             ->where(function ($q) use ($techId) {
                 $q->where('prep_washing_by', $techId)
+                  ->orWhere('prep_sol_by', $techId)
+                  ->orWhere('prep_upper_by', $techId)
                   ->orWhere('prod_sol_by', $techId)
                   ->orWhere('prod_upper_by', $techId)
                   ->orWhere('prod_cleaning_by', $techId)
+                  ->orWhere('qc_jahit_by', $techId)
+                  ->orWhere('qc_cleanup_by', $techId)
+                  ->orWhere('qc_final_by', $techId)
                   ->orWhereHas('workOrderServices', fn($sq) => $sq->where('technician_id', $techId));
             });
 
@@ -249,10 +274,10 @@ class TechnicianAssistant extends Component
         $jobs = collect();
 
         foreach ($wos as $wo) {
-            // Check Washing Station Assignment
+            // Check Prep Washing Station Assignment
             if ($wo->prep_washing_by == $techId) {
                 $jobs->push([
-                    'id' => $wo->id . '_prep',
+                    'id' => $wo->id . '_prep_washing',
                     'work_order_id' => $wo->id,
                     'spk_number' => $wo->spk_number,
                     'customer_name' => $wo->customer_name,
@@ -263,6 +288,44 @@ class TechnicianAssistant extends Component
                     'service_title' => 'Persiapan & Washing',
                     'started_at' => $wo->prep_washing_started_at ? Carbon::parse($wo->prep_washing_started_at) : null,
                     'completed_at' => $wo->prep_washing_completed_at ? Carbon::parse($wo->prep_washing_completed_at) : null,
+                    'wo_status' => is_object($wo->status) ? $wo->status->value : $wo->status,
+                    'workOrder' => $wo,
+                ]);
+            }
+
+            // Check Prep Sol Station Assignment
+            if ($wo->prep_sol_by == $techId) {
+                $jobs->push([
+                    'id' => $wo->id . '_prep_sol',
+                    'work_order_id' => $wo->id,
+                    'spk_number' => $wo->spk_number,
+                    'customer_name' => $wo->customer_name,
+                    'shoe_brand' => $wo->shoe_brand,
+                    'shoe_type' => $wo->shoe_type,
+                    'station_type' => 'prep_sol',
+                    'station_label' => 'Persiapan (Bongkar Sol)',
+                    'service_title' => 'Persiapan Bongkar Sol',
+                    'started_at' => $wo->prep_sol_started_at ? Carbon::parse($wo->prep_sol_started_at) : null,
+                    'completed_at' => $wo->prep_sol_completed_at ? Carbon::parse($wo->prep_sol_completed_at) : null,
+                    'wo_status' => is_object($wo->status) ? $wo->status->value : $wo->status,
+                    'workOrder' => $wo,
+                ]);
+            }
+
+            // Check Prep Upper Station Assignment
+            if ($wo->prep_upper_by == $techId) {
+                $jobs->push([
+                    'id' => $wo->id . '_prep_upper',
+                    'work_order_id' => $wo->id,
+                    'spk_number' => $wo->spk_number,
+                    'customer_name' => $wo->customer_name,
+                    'shoe_brand' => $wo->shoe_brand,
+                    'shoe_type' => $wo->shoe_type,
+                    'station_type' => 'prep_upper',
+                    'station_label' => 'Persiapan (Bongkar Upper)',
+                    'service_title' => 'Persiapan Bongkar Upper',
+                    'started_at' => $wo->prep_upper_started_at ? Carbon::parse($wo->prep_upper_started_at) : null,
+                    'completed_at' => $wo->prep_upper_completed_at ? Carbon::parse($wo->prep_upper_completed_at) : null,
                     'wo_status' => is_object($wo->status) ? $wo->status->value : $wo->status,
                     'workOrder' => $wo,
                 ]);
@@ -320,6 +383,63 @@ class TechnicianAssistant extends Component
                     'service_title' => 'Treatment & Repaint',
                     'started_at' => $wo->prod_cleaning_started_at ? Carbon::parse($wo->prod_cleaning_started_at) : null,
                     'completed_at' => $wo->prod_cleaning_completed_at ? Carbon::parse($wo->prod_cleaning_completed_at) : null,
+                    'wo_status' => is_object($wo->status) ? $wo->status->value : $wo->status,
+                    'workOrder' => $wo,
+                ]);
+            }
+
+            // Check QC Jahit Station Assignment
+            if ($wo->qc_jahit_by == $techId) {
+                $jobs->push([
+                    'id' => $wo->id . '_qc_jahit',
+                    'work_order_id' => $wo->id,
+                    'spk_number' => $wo->spk_number,
+                    'customer_name' => $wo->customer_name,
+                    'shoe_brand' => $wo->shoe_brand,
+                    'shoe_type' => $wo->shoe_type,
+                    'station_type' => 'qc_jahit',
+                    'station_label' => 'QC Jahit',
+                    'service_title' => 'Quality Control Jahit',
+                    'started_at' => $wo->qc_jahit_started_at ? Carbon::parse($wo->qc_jahit_started_at) : null,
+                    'completed_at' => $wo->qc_jahit_completed_at ? Carbon::parse($wo->qc_jahit_completed_at) : null,
+                    'wo_status' => is_object($wo->status) ? $wo->status->value : $wo->status,
+                    'workOrder' => $wo,
+                ]);
+            }
+
+            // Check QC Cleanup Station Assignment
+            if ($wo->qc_cleanup_by == $techId) {
+                $jobs->push([
+                    'id' => $wo->id . '_qc_cleanup',
+                    'work_order_id' => $wo->id,
+                    'spk_number' => $wo->spk_number,
+                    'customer_name' => $wo->customer_name,
+                    'shoe_brand' => $wo->shoe_brand,
+                    'shoe_type' => $wo->shoe_type,
+                    'station_type' => 'qc_cleanup',
+                    'station_label' => 'QC Cleanup',
+                    'service_title' => 'Quality Control Cleanup',
+                    'started_at' => $wo->qc_cleanup_started_at ? Carbon::parse($wo->qc_cleanup_started_at) : null,
+                    'completed_at' => $wo->qc_cleanup_completed_at ? Carbon::parse($wo->qc_cleanup_completed_at) : null,
+                    'wo_status' => is_object($wo->status) ? $wo->status->value : $wo->status,
+                    'workOrder' => $wo,
+                ]);
+            }
+
+            // Check QC Final Station Assignment
+            if ($wo->qc_final_by == $techId) {
+                $jobs->push([
+                    'id' => $wo->id . '_qc_final',
+                    'work_order_id' => $wo->id,
+                    'spk_number' => $wo->spk_number,
+                    'customer_name' => $wo->customer_name,
+                    'shoe_brand' => $wo->shoe_brand,
+                    'shoe_type' => $wo->shoe_type,
+                    'station_type' => 'qc_final',
+                    'station_label' => 'QC Final',
+                    'service_title' => 'Quality Control Final',
+                    'started_at' => $wo->qc_final_started_at ? Carbon::parse($wo->qc_final_started_at) : null,
+                    'completed_at' => $wo->qc_final_completed_at ? Carbon::parse($wo->qc_final_completed_at) : null,
                     'wo_status' => is_object($wo->status) ? $wo->status->value : $wo->status,
                     'workOrder' => $wo,
                 ]);
@@ -382,8 +502,19 @@ class TechnicianAssistant extends Component
 
         $runningCount = $runningJobs->count();
         $assignedCount = $assignedJobs->count();
-        $completedTodayCount = $completedJobs->filter(fn($j) => $j['completed_at']?->isToday())->count();
-        $completedMonthCount = $completedJobs->filter(fn($j) => $j['completed_at']?->isCurrentMonth())->count();
+
+        // Period filtered completed jobs
+        $completedFiltered = match($this->historyPeriod) {
+            'today' => $completedJobs->filter(fn($j) => $j['completed_at']?->isToday()),
+            'month' => $completedJobs->filter(fn($j) => $j['completed_at']?->isCurrentMonth()),
+            default => $completedJobs,
+        };
+
+        $completedUniqueSpkCount = $completedFiltered->pluck('work_order_id')->unique()->count();
+        $completedTotalJasaCount = $completedFiltered->count();
+
+        $completedTodayCount = $completedJobs->filter(fn($j) => $j['completed_at']?->isToday())->pluck('work_order_id')->unique()->count();
+        $completedMonthCount = $completedJobs->filter(fn($j) => $j['completed_at']?->isCurrentMonth())->pluck('work_order_id')->unique()->count();
 
         $avgDuration = 0;
         $completedWithDuration = $completedJobs->filter(fn($j) => $j['started_at'] && $j['completed_at']);
@@ -398,7 +529,7 @@ class TechnicianAssistant extends Component
         } elseif ($this->activeTab === 'assigned') {
             $displayJobs = $assignedJobs;
         } else {
-            $displayJobs = $completedJobs;
+            $displayJobs = $completedFiltered;
         }
 
         return view('livewire.production.technician-assistant', [
@@ -414,6 +545,8 @@ class TechnicianAssistant extends Component
             'assignedCount' => $assignedCount,
             'completedTodayCount' => $completedTodayCount,
             'completedMonthCount' => $completedMonthCount,
+            'completedUniqueSpkCount' => $completedUniqueSpkCount,
+            'completedTotalJasaCount' => $completedTotalJasaCount,
             'avgDuration' => $avgDuration,
             'displayJobs' => $displayJobs,
         ])->layout('layouts.workshop-pwa');

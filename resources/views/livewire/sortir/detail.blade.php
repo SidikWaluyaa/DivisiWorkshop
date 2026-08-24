@@ -497,7 +497,7 @@
                                             @endif
                                         </td>
                                         <td class="py-3.5 px-4 text-right">
-                                            <button wire:click="removeMaterial({{ $id }})" class="text-rose-500 hover:text-rose-700 text-xs font-bold">Hapus</button>
+                                            <button type="button" wire:click="removeMaterial({{ $id }})" class="text-rose-500 hover:text-rose-700 text-xs font-bold">Hapus</button>
                                         </td>
                                     </tr>
                                 @empty
@@ -510,7 +510,7 @@
 
                         <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
                             <span class="text-xs text-slate-500 font-medium">Simpan alokasi stok untuk SPK</span>
-                            <button wire:click="saveMaterials" class="px-6 py-2.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow">
+                            <button type="button" wire:click="saveMaterials" class="px-6 py-2.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow">
                                 Simpan Perubahan Material
                             </button>
                         </div>
@@ -563,7 +563,7 @@
                             <label class="block text-xs font-bold text-rose-600 mb-1">Bypass Servis Alasan Wajib (FR-11.1)</label>
                             <div class="flex gap-2">
                                 <input type="text" wire:model="bypass_reason" placeholder="Ketik alasan bypass di sini (minimal 5 karakter)..." class="flex-1 text-xs rounded-xl border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-                                <button wire:click="bypassSortir" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition">
+                                <button type="button" wire:click="bypassSortir" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition">
                                     Bypass Servis
                                 </button>
                             </div>
@@ -573,20 +573,20 @@
 
                     {{-- Main Actions Row --}}
                     <div class="pt-4 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
-                        <button wire:click="saveDraft" wire:loading.attr="disabled" class="w-full sm:w-auto px-5 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition inline-flex items-center justify-center gap-2">
+                        <button type="button" wire:click="saveDraft" wire:loading.attr="disabled" class="w-full sm:w-auto px-5 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition inline-flex items-center justify-center gap-2">
                             <span wire:loading.remove wire:target="saveDraft">💾 Simpan Draft (Tanpa Pindah Status)</span>
                             <span wire:loading wire:target="saveDraft">⏳ Menyimpan...</span>
                         </button>
 
                         @if(!$isReadyRoute)
                             {{-- Belanja masih diperlukan --}}
-                            <button wire:click="completeSortir" wire:loading.attr="disabled" class="w-full sm:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 transition inline-flex items-center justify-center gap-2">
+                            <button type="button" wire:click="completeSortir" wire:loading.attr="disabled" class="w-full sm:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 transition inline-flex items-center justify-center gap-2">
                                 <span wire:loading.remove wire:target="completeSortir">🛒 Simpan & Buat Pengajuan Belanja Finlog ➔</span>
                                 <span wire:loading wire:target="completeSortir">⏳ Memproses...</span>
                             </button>
                         @else
                             {{-- Material siap / tidak perlu belanja → langsung surat jalan --}}
-                            <button wire:click="completeSortir" wire:loading.attr="disabled" class="w-full sm:w-auto px-6 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition inline-flex items-center justify-center gap-2">
+                            <button type="button" wire:click="completeSortir" wire:loading.attr="disabled" class="w-full sm:w-auto px-6 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition inline-flex items-center justify-center gap-2">
                                 <span wire:loading.remove wire:target="completeSortir">🚀 Selesaikan Klasifikasi (Siap Surat Jalan Produksi) ➔</span>
                                 <span wire:loading wire:target="completeSortir">⏳ Memproses...</span>
                             </button>

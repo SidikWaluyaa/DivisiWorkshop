@@ -14,35 +14,32 @@
         }
     }
 }">
-    {{-- Original Style Header Slot (Inside Component) --}}
+    {{-- Header Banner --}}
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-6">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-gradient-to-r from-teal-600 to-teal-700 p-6 rounded-2xl shadow-lg text-white">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-gradient-to-r from-[#22AF85] to-emerald-700 p-6 rounded-3xl shadow-lg text-white">
             <div class="flex items-center gap-4">
-                <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm shadow-sm border border-white/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
+                <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl shadow-sm border border-white/30">
+                    🧼
                 </div>
-                
-                <div class="flex flex-col">
-                    <h2 class="font-bold text-xl leading-tight tracking-wide">
-                        {{ __('Stasiun Persiapan') }}
+                <div>
+                    <h2 class="font-black text-xl leading-tight tracking-wide">
+                        Stasiun Persiapan (Preparation)
                     </h2>
-                    <div class="text-xs font-medium opacity-90">
-                        Proses Cuci, Bongkar Sol, dan Bongkar Upper
-                    </div>
+                    <p class="text-xs font-semibold opacity-90">
+                        Pengelolaan proses cuci &amp; preparasi bahan baku per batch manifest
+                    </p>
                 </div>
             </div>
 
-            {{-- Search Input --}}
-            <div class="relative group w-full md:w-80">
+            {{-- Search Bar --}}
+            <div class="relative w-full md:w-80">
                 <input type="text" 
                        wire:model.live.debounce.300ms="search"
                        placeholder="Cari SPK / Pelanggan..." 
-                       class="w-full pl-11 pr-4 py-2.5 bg-white/10 border border-white/30 rounded-xl text-sm font-bold text-white placeholder-white/60 focus:ring-2 focus:ring-white/50 focus:bg-white/20 transition-all outline-none">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                       class="w-full pl-11 pr-4 py-2.5 bg-white/10 border border-white/30 rounded-2xl text-xs font-bold text-white placeholder-white/60 focus:ring-2 focus:ring-white/50 focus:bg-white/20 transition-all outline-none">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/60">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </div>
             </div>
@@ -56,7 +53,7 @@
 
 
         {{-- Consolidated Stats Tabs --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {{-- Antrean Prep Stat --}}
             <div wire:click="setTab('queue')"
                  class="group relative overflow-hidden rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] {{ $activeTab === 'queue' ? 'ring-4 ring-teal-400 ring-opacity-50' : 'opacity-85 grayscale-[10%] hover:grayscale-0' }}">
@@ -69,11 +66,33 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
                             </svg>
                         </div>
-                        <div class="text-sm font-black text-white/90 uppercase tracking-widest mb-1">Antrean Preparation</div>
-                        <div class="text-xs text-white/80 font-bold uppercase tracking-wider">Antrean unit aktif</div>
+                        <div class="text-sm font-black text-white/90 uppercase tracking-widest mb-1">📥 Antrean Prep</div>
+                        <div class="text-xs text-white/80 font-bold uppercase tracking-wider">Belum dikerjakan</div>
                     </div>
                     <div class="text-right">
-                        <div class="text-5xl font-black text-white leading-none mb-1">{{ $this->counts['queue'] }}</div>
+                        <div class="text-4xl font-black text-white leading-none mb-1">{{ $this->counts['queue'] }}</div>
+                        <div class="text-[10px] text-white/80 font-bold uppercase tracking-wider">Unit SPK</div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Sedang Dikerjakan Stat --}}
+            <div wire:click="setTab('in_progress')"
+                 class="group relative overflow-hidden rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] {{ $activeTab === 'in_progress' ? 'ring-4 ring-amber-400 ring-opacity-50' : 'opacity-85 grayscale-[10%] hover:grayscale-0' }}">
+                <div class="absolute inset-0 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500"></div>
+                <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
+                <div class="relative z-10 flex justify-between items-center">
+                    <div>
+                        <div class="p-3 bg-white/20 rounded-2xl backdrop-blur-md w-fit mb-3">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="text-sm font-black text-white/90 uppercase tracking-widest mb-1">🏃 Sedang Dikerjakan</div>
+                        <div class="text-xs text-white/80 font-bold uppercase tracking-wider">Lead time berjalan</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl font-black text-white leading-none mb-1">{{ $this->counts['in_progress'] }}</div>
                         <div class="text-[10px] text-white/80 font-bold uppercase tracking-wider">Unit SPK</div>
                     </div>
                 </div>
@@ -91,11 +110,11 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        <div class="text-sm font-black text-white/90 uppercase tracking-widest mb-1">Review Admin</div>
+                        <div class="text-sm font-black text-white/90 uppercase tracking-widest mb-1">👮 Review Admin</div>
                         <div class="text-xs text-white/80 font-bold uppercase tracking-wider">Menunggu persetujuan</div>
                     </div>
                     <div class="text-right">
-                        <div class="text-5xl font-black text-white leading-none mb-1">{{ $this->counts['review'] }}</div>
+                        <div class="text-4xl font-black text-white leading-none mb-1">{{ $this->counts['review'] }}</div>
                         <div class="text-[10px] text-white/80 font-bold uppercase tracking-wider">Unit SPK</div>
                     </div>
                 </div>
@@ -115,16 +134,6 @@
                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-teal-500 focus:border-teal-500 bg-gray-50/50 font-medium transition-all" 
                            placeholder="Cari SPK, Customer, atau Brand...">
                 </div>
-
-                {{-- Status Filter (Hanya Sedang Berjalan) --}}
-                @if($activeTab !== 'review')
-                <div class="w-full xl:w-auto">
-                    <label class="inline-flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50/50 hover:bg-gray-100 cursor-pointer text-xs font-bold uppercase tracking-wider text-gray-700 select-none transition-all w-full xl:w-auto justify-center">
-                        <input type="checkbox" wire:model.live="onlyInProgress" class="w-4 h-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500 cursor-pointer">
-                        <span>🏃 Sedang Berjalan</span>
-                    </label>
-                </div>
-                @endif
 
                 {{-- Priority Filter --}}
                 <div class="w-full xl:w-48">
@@ -156,7 +165,7 @@
                 </div>
 
                 {{-- Reset Button --}}
-                <button wire:click="$set('search', ''); $set('priority', 'all'); $set('technicianFilter', 'all'); $set('sort', 'asc'); $set('onlyInProgress', false);"
+                <button wire:click="$set('search', ''); $set('priority', 'all'); $set('technicianFilter', 'all'); $set('sort', 'asc');"
                         class="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-505 rounded-xl transition-all active:scale-95 w-full xl:w-auto flex justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 </button>
@@ -167,17 +176,20 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[500px]">
             @php
                 $activeTabLabel = match($activeTab) {
-                    'queue' => 'Antrean Preparation (Consolidated)',
-                    'review' => 'Review Admin',
+                    'queue' => 'Antrean Preparation (Belum Dikerjakan)',
+                    'in_progress' => 'Sedang Dikerjakan (Live Lead Time)',
+                    'review' => 'Review Admin (Selesai Washing)',
                     default => ''
                 };
                 $activeTabEmoji = match($activeTab) {
-                    'queue' => '🧼',
+                    'queue' => '📥',
+                    'in_progress' => '🏃',
                     'review' => '👮',
                     default => ''
                 };
                 $activeTabColor = match($activeTab) {
                     'queue' => 'teal',
+                    'in_progress' => 'amber',
                     'review' => 'blue',
                     default => 'gray'
                 };
@@ -194,7 +206,7 @@
                             wire:confirm="Apakah Anda yakin ingin menyetujui seluruh {{ $orders->total() }} antrean di stasiun ini?" 
                             class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-green-100 transition-all active:scale-95">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Approve Semua ({{ $orders->total() }})
+                        Approve Semua ke Sortir ({{ $orders->total() }})
                     </button>
                     @endif
                 @else
@@ -208,7 +220,7 @@
             </div>
 
             <div class="overflow-x-auto relative">
-                {{-- Local Non-Blocking Loading Overlay --}}
+                {{-- Local Loading Overlay --}}
                 <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress" 
                      class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
                     <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
@@ -220,9 +232,9 @@
                         <tr>
                             <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
                             <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Manifest</th>
-                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Catatan</th>
-                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider text-center">Progress Pengerjaan</th>
-                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">Aksi</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Catatan &amp; Waktu Lead Time</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider text-center">Progress SPK</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-44">Aksi Batch</th>
                         </tr>
                     </thead>
                     @forelse($orders as $group)
@@ -230,7 +242,6 @@
                             $groupId = (string)$group->id;
                             $isExpanded = in_array($groupId, $expandedManifests) || !empty($search);
                             
-                            // Calculate progress of prep for SPKs in this group (strictly Cuci/Washing)
                             $totalGroupSPK = $group->work_orders->count();
                             $completedGroupSPK = $group->work_orders->filter(function($wo) {
                                 return !is_null($wo->prep_washing_completed_at);
@@ -238,9 +249,11 @@
                             
                             $progressPercent = $totalGroupSPK > 0 ? round(($completedGroupSPK / $totalGroupSPK) * 100) : 0;
                             $allGroupOrderIds = $group->work_orders->pluck('id')->map(fn($id) => (string)$id)->toArray();
-                            
-                            // Check if all group orders are currently selected
                             $isGroupAllSelected = count($allGroupOrderIds) > 0 && count(array_intersect($selectedItems, $allGroupOrderIds)) === count($allGroupOrderIds);
+
+                            // Lead Time calculations
+                            $earliestStarted = $group->work_orders->pluck('prep_washing_started_at')->filter()->sort()->first();
+                            $latestCompleted = $group->work_orders->pluck('prep_washing_completed_at')->filter()->sort()->last();
                         @endphp
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800" wire:key="group-tbody-{{ $groupId }}">
                             <!-- Row Manifest Utama -->
@@ -262,20 +275,38 @@
                                             </span>
                                             @if($group->created_at)
                                                 <span class="text-[10px] text-gray-400 font-bold mt-0.5">
-                                                    Diterima: {{ \Carbon\Carbon::parse($group->created_at)->translatedFormat('d M Y H:i') }} WIB
+                                                    Masuk: {{ \Carbon\Carbon::parse($group->created_at)->translatedFormat('d M Y H:i') }} WIB
                                                 </span>
                                             @endif
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 italic">
-                                    {{ $group->notes ?? 'Tidak ada catatan.' }}
+                                <td class="px-6 py-4 text-xs text-gray-500 dark:text-gray-400">
+                                    <div class="flex flex-col gap-1">
+                                        <span class="italic text-[11px]">{{ $group->notes ?? 'Tidak ada catatan.' }}</span>
+                                        @if($earliestStarted)
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-mono font-bold border border-amber-200">
+                                                    ⏱️ Mulai: {{ \Carbon\Carbon::parse($earliestStarted)->format('H:i \W\I\B') }}
+                                                </span>
+                                                @if($activeTab === 'in_progress')
+                                                    <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-mono font-bold border border-emerald-200 animate-pulse">
+                                                        ⏳ Berjalan: {{ \Carbon\Carbon::parse($earliestStarted)->locale('id')->diffForHumans(null, true) }}
+                                                    </span>
+                                                @elseif($activeTab === 'review' && $latestCompleted)
+                                                    <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-mono font-bold border border-blue-200">
+                                                        ✅ Selesai dalam: {{ \Carbon\Carbon::parse($earliestStarted)->locale('id')->diffForHumans(\Carbon\Carbon::parse($latestCompleted), true) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col items-center justify-center w-full max-w-[200px] mx-auto">
                                         <div class="flex items-center justify-between w-full text-[10px] font-bold text-teal-700 dark:text-teal-400 mb-1">
                                             <span>Progress</span>
-                                            <span>{{ $completedGroupSPK }} / {{ $totalGroupSPK }} SPK Selesai ({{ $progressPercent }}%)</span>
+                                            <span>{{ $completedGroupSPK }} / {{ $totalGroupSPK }} SPK ({{ $progressPercent }}%)</span>
                                         </div>
                                         <div class="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
                                             <div class="bg-teal-600 h-full rounded-full transition-all duration-300" style="width: {{ $progressPercent }}%"></div>
@@ -283,14 +314,33 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-right whitespace-nowrap flex items-center justify-end gap-2">
-                                    <a href="{{ route('manifest.show', $group->id) }}" target="_blank" @click.stop class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all border border-indigo-200">
-                                        <span>🖨️ Cetak Surat Jalan</span>
-                                    </a>
-                                    <button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-teal-50 text-teal-700 hover:bg-teal-100 transition-all border border-teal-200">
-                                        <svg class="w-4 h-4 transform transition-transform duration-200 @if($isExpanded) rotate-180 @endif" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    @if($activeTab === 'queue')
+                                        <button type="button" 
+                                                wire:click.stop="autoAssignManifestPrep('{{ $groupId }}')" 
+                                                title="Bagi SPK ke teknisi secara adil & merata (Balanced Round-Robin)"
+                                                class="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] shadow-sm transition-all flex items-center gap-1 active:scale-95">
+                                            <span>🤖 Auto Assign</span>
+                                        </button>
+                                        <button type="button" 
+                                                wire:click.stop="startManifestPrep('{{ $groupId }}')" 
+                                                wire:confirm="Mulai pengerjaan cuci untuk seluruh SPK di manifest ini?"
+                                                class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-[10px] shadow-sm transition-all flex items-center gap-1 active:scale-95">
+                                            <span>▶️ Mulai Batch</span>
+                                        </button>
+                                    @elseif($activeTab === 'in_progress')
+                                        <button type="button" 
+                                                wire:click.stop="completeManifestPrep('{{ $groupId }}')" 
+                                                wire:confirm="Selesaikan pengerjaan cuci untuk seluruh SPK di manifest ini?"
+                                                class="px-3 py-1.5 rounded-xl bg-[#22AF85] hover:bg-emerald-600 text-white font-black text-[10px] shadow-sm transition-all flex items-center gap-1 active:scale-95">
+                                            <span>✅ Selesaikan Batch</span>
+                                        </button>
+                                    @endif
+
+                                    <button class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all border border-slate-200">
+                                        <svg class="w-3.5 h-3.5 transform transition-transform duration-200 @if($isExpanded) rotate-180 @endif" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                         </svg>
-                                        <span>{{ $isExpanded ? 'Tutup SPK' : 'Buka SPK' }}</span>
+                                        <span>{{ $isExpanded ? 'Tutup' : 'Lihat SPK' }}</span>
                                     </button>
                                 </td>
                             </tr>

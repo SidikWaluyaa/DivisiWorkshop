@@ -89,9 +89,33 @@
                                 <span class="w-2 h-2 rounded-full bg-[#FFC232] animate-pulse"></span>
                             @endif
                         </div>
+                        @php
+                            $specUpper = strtoupper(trim($tech->specialization ?? $tech->station ?? ''));
+                            if ($specUpper === 'WASHING' || str_contains($specUpper, 'CUCI')) {
+                                $displayTitle = '🧼 Washing (Cuci)';
+                            } elseif ($specUpper === 'BONGKAR SOL' || $specUpper === 'PREP SOL') {
+                                $displayTitle = '👟 Bongkar Sol';
+                            } elseif ($specUpper === 'BONGKAR UPPER' || $specUpper === 'PREP UPPER') {
+                                $displayTitle = '✂️ Bongkar Upper';
+                            } elseif ($specUpper === 'REPARASI SOL' || $specUpper === 'SOL REPAIR' || $specUpper === 'SOLING') {
+                                $displayTitle = '🛠️ Reparasi Sol';
+                            } elseif ($specUpper === 'REPARASI UPPER' || $specUpper === 'UPPER REPAIR' || $specUpper === 'UPPER') {
+                                $displayTitle = '🧵 Reparasi Upper';
+                            } elseif ($specUpper === 'REPARASI TREATMENT' || str_contains($specUpper, 'TREATMENT') || str_contains($specUpper, 'REPAINT')) {
+                                $displayTitle = '✨ Reparasi Treatment';
+                            } elseif ($specUpper === 'QC JAHIT' || $specUpper === 'JAHIT') {
+                                $displayTitle = '🪡 QC Jahit';
+                            } elseif ($specUpper === 'QC CLEANUP' || $specUpper === 'CLEAN UP') {
+                                $displayTitle = '🧹 QC Cleanup';
+                            } elseif ($specUpper === 'QC FINAL' || str_contains($specUpper, 'QC')) {
+                                $displayTitle = '🔍 QC Final';
+                            } else {
+                                $displayTitle = !empty($tech->specialization) ? $tech->specialization : ($tech->station ?: 'Teknisi');
+                            }
+                        @endphp
                         <span class="inline-block text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-md mt-0.5
                             {{ $selectedTechnicianId == $tech->id ? 'bg-slate-950/30 text-white' : 'bg-slate-200 text-slate-700' }}">
-                            {{ $tech->station ?: ($tech->specialization ?: 'TEKNISI') }}
+                            {{ $displayTitle }}
                         </span>
                     </div>
                 </button>

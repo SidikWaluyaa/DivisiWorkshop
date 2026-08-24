@@ -92,6 +92,30 @@ class Detail extends Component
         $this->activeTab = $hasSolService ? 'sol' : 'upper';
     }
 
+    public function updatedPerluBongkar($value)
+    {
+        $this->perlu_bongkar = (bool) $value;
+        $this->order->update(['perlu_bongkar' => $this->perlu_bongkar]);
+        $this->dispatch('notify', type: 'success', message: 'Pilihan Perlu Bongkar berhasil disimpan.');
+    }
+
+    public function updatedPerluBelanja($value)
+    {
+        $this->perlu_belanja = (bool) $value;
+        $this->order->update(['perlu_belanja' => $this->perlu_belanja]);
+        $this->dispatch('notify', type: 'success', message: 'Pilihan Perlu Belanja berhasil disimpan.');
+    }
+
+    public function updatedPicSortirSolId($value)
+    {
+        $this->order->update(['pic_sortir_sol_id' => $value ?: null]);
+    }
+
+    public function updatedPicSortirUpperId($value)
+    {
+        $this->order->update(['pic_sortir_upper_id' => $value ?: null]);
+    }
+
     public function runSelfHealing()
     {
         $materialService = app(MaterialManagementService::class);

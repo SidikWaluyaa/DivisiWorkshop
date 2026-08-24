@@ -166,23 +166,25 @@ class TechnicianAssignmentService
         $isDrShoeJahit = str_contains($workOrder->qcJahitBy?->name ?? '', 'Dr. Shoe');
         $isDrShoeCleanup = str_contains($workOrder->qcCleanupBy?->name ?? '', 'Dr. Shoe');
         $isDrShoeFinal = str_contains($workOrder->qcFinalBy?->name ?? '', 'Dr. Shoe');
+        
+        $isWashingCleanup = in_array($workOrder->qcCleanupBy?->specialization ?? '', ['Washing', 'Cuci']) || ($workOrder->qcCleanupBy?->station === 'PREPARATION');
 
         if ($hasJahitQc && (!$workOrder->qc_jahit_by || $isDrShoeJahit || (!$workOrder->qc_jahit_started_at && $forceReassign))) {
-            $tech = $this->findBestTechnicianForStationAndServices('QC', []);
+            $tech = $this->findBestTechnicianForStationAndServices('QC', [], ['QC Jahit', 'Jahit']);
             if ($tech) {
                 $updates['qc_jahit_by'] = $tech->id;
             }
         }
 
-        if (!$workOrder->qc_cleanup_by || $isDrShoeCleanup || (!$workOrder->qc_cleanup_started_at && $forceReassign)) {
-            $tech = $this->findBestTechnicianForStationAndServices('QC', []);
+        if (!$workOrder->qc_cleanup_by || $isDrShoeCleanup || $isWashingCleanup || (!$workOrder->qc_cleanup_started_at && $forceReassign)) {
+            $tech = $this->findBestTechnicianForStationAndServices('QC', [], ['QC Cleanup', 'Clean Up']);
             if ($tech) {
                 $updates['qc_cleanup_by'] = $tech->id;
             }
         }
 
         if (!$workOrder->qc_final_by || $isDrShoeFinal || (!$workOrder->qc_final_started_at && $forceReassign)) {
-            $tech = $this->findBestTechnicianForStationAndServices('QC', []);
+            $tech = $this->findBestTechnicianForStationAndServices('QC', [], ['QC Final', 'PIC QC']);
             if ($tech) {
                 $updates['qc_final_by'] = $tech->id;
             }
@@ -196,14 +198,22 @@ class TechnicianAssignmentService
     /**
      * Find best available technician using users.station AND technician_services skill matrix
      */
-    public function findBestTechnicianForStationAndServices(string $stationCode, array $serviceIds = []): ?User
+    public function findBestTechnicianForStationAndServices(string $stationCode, array $serviceIds = [], array $specializations = []): ?User
     {
         $query = User::where('is_active', true)
-            ->where('role', 'technician')
+            ->whereIn('role', ['technician', 'pic', 'admin'])
             ->whereNotIn('specialization', $this->excludedSpecs)
             ->where('name', 'not like', '%Dr. Shoe%');
 
-        // 1. Try finding technicians explicitly mapped to any of the serviceIds via technician_services
+        // 1. Try finding technicians by specialization if provided
+        if (!empty($specializations)) {
+            $specCandidates = (clone $query)->whereIn('specialization', $specializations)->get();
+            if ($specCandidates->isNotEmpty()) {
+                return $this->pickLowestWorkloadTechnician($specCandidates);
+            }
+        }
+
+        // 2. Try finding technicians explicitly mapped to any of the serviceIds via technician_services
         if (!empty($serviceIds)) {
             $skilledCandidates = (clone $query)->whereHas('services', function ($sq) use ($serviceIds) {
                 $sq->whereIn('services.id', $serviceIds);
@@ -214,13 +224,13 @@ class TechnicianAssignmentService
             }
         }
 
-        // 2. Fallback to technicians with matching station
+        // 3. Fallback to technicians with matching station
         $stationCandidates = (clone $query)->where('station', $stationCode)->get();
         if ($stationCandidates->isNotEmpty()) {
             return $this->pickLowestWorkloadTechnician($stationCandidates);
         }
 
-        // 3. Fallback to any active technician
+        // 4. Fallback to any active technician
         $allCandidates = $query->get();
         if ($allCandidates->isNotEmpty()) {
             return $this->pickLowestWorkloadTechnician($allCandidates);

@@ -145,20 +145,36 @@ class QCController extends Controller
             'all' => ($activeTab === 'all') ? $orders : collect([]),
         ];
 
-        // Fetch Technicians by Specialization (select only needed columns)
-        $techs = [
-            'jahit' => User::where('role', 'technician')->where('specialization', 'Jahit')->where('is_active', true)->select('id', 'name', 'specialization')->get(),
-            'cleanup' => User::where('role', 'technician')->whereIn('specialization', ['Clean Up', 'Washing'])->where('is_active', true)->select('id', 'name', 'specialization')->get(),
-            'final' => User::where('role', 'technician')->where('specialization', 'PIC QC')->where('is_active', true)->select('id', 'name', 'specialization')->get(),
-        ];
+        // Fetch Technicians by Specialization & Station with Multi-Tier Fallback
+        $allActiveTechs = User::where('is_active', true)->whereIn('role', ['technician', 'admin'])->select('id', 'name', 'specialization')->get();
 
-        // Fallback if empty specializations found
-        if ($techs['jahit']->isEmpty()) $techs['jahit'] = User::where('role', 'technician')->where('is_active', true)->get();
-        if ($techs['cleanup']->isEmpty()) $techs['cleanup'] = User::where('role', 'technician')->where('is_active', true)->get();
-        if ($techs['final']->isEmpty()) $techs['final'] = User::where('role', 'technician')->where('is_active', true)->get();
-        
-        // Add 'all' key for when activeTab is 'all'
-        $techs['all'] = User::where('role', 'technician')->where('is_active', true)->select('id', 'name', 'specialization')->get();
+        $jahit = User::where('is_active', true)
+            ->where(function($q) {
+                $q->whereIn('specialization', ['QC Jahit', 'Jahit'])
+                  ->orWhere('station', 'QC');
+            })->select('id', 'name', 'specialization')->get();
+        if ($jahit->isEmpty()) $jahit = $allActiveTechs;
+
+        $cleanup = User::where('is_active', true)
+            ->where(function($q) {
+                $q->whereIn('specialization', ['QC Cleanup', 'Clean Up', 'Washing'])
+                  ->orWhere('station', 'QC');
+            })->select('id', 'name', 'specialization')->get();
+        if ($cleanup->isEmpty()) $cleanup = $allActiveTechs;
+
+        $final = User::where('is_active', true)
+            ->where(function($q) {
+                $q->whereIn('specialization', ['QC Final', 'PIC QC'])
+                  ->orWhere('station', 'QC');
+            })->select('id', 'name', 'specialization')->get();
+        if ($final->isEmpty()) $final = $allActiveTechs;
+
+        $techs = [
+            'jahit' => $jahit,
+            'cleanup' => $cleanup,
+            'final' => $final,
+            'all' => $allActiveTechs,
+        ];
 
         // Columns
         $startedAtColumns = [

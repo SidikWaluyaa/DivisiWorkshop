@@ -256,7 +256,7 @@
                           </svg>
                       </button>
                   </div>          @else
-              @if(strpos($type, 'prep_queue') !== false)
+              @if(str_starts_with($type, 'prep_') && !$isReviewTab)
                   {{-- Column 5: Progress Tugas Prep --}}
                   <td class="px-6 py-4" @click.stop>
                       <div class="flex flex-col gap-1.5 min-w-[200px]">
@@ -264,13 +264,37 @@
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
                               <span class="font-bold text-gray-500 uppercase">Cuci:</span>
                               @if($order->prep_washing_completed_at)
-                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prep_washing_completed_at->format('d M H:i') }}">✓ {{ $order->prepWashingBy->name ?? '-' }}</span>
-                              @elseif($order->prep_washing_started_at)
-                                  <span class="text-blue-600 font-bold bg-blue-50/50 px-1.5 py-0.5 rounded text-[10px] animate-pulse">🏃 {{ $order->prepWashingBy->name ?? '-' }}</span>
-                              @elseif($order->prep_washing_by)
-                                  <span class="text-slate-650 font-bold bg-slate-50/50 px-1.5 py-0.5 rounded text-[10px]">👤 {{ $order->prepWashingBy->name ?? '-' }}</span>
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prep_washing_completed_at->format('d M H:i') }}">✓ {{ $order->prepWashingBy->name ?? 'Selesai' }}</span>
                               @else
-                                  <span class="text-gray-400 italic text-[10px]">Belum ditugaskan</span>
+                                  <div class="flex items-center gap-1">
+                                      @php
+                                          $washingStarted = (bool)$order->prep_washing_started_at;
+                                          $washingCurrentTech = $order->prepWashingBy->name ?? 'Kosong';
+                                      @endphp
+                                      <select
+                                          @if($washingStarted)
+                                              @change="
+                                                  const newTechId = $event.target.value;
+                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
+                                                  $event.target.value = '{{ $order->prep_washing_by }}';
+                                                  openOverrideModal({{ $order->id }}, 'prep_washing', newTechId, '{{ addslashes($washingCurrentTech) }}', newTechName, 'Cuci');
+                                              "
+                                          @else
+                                              wire:change="updateTechnician({{ $order->id }}, 'prep_washing', $event.target.value)"
+                                          @endif
+                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-teal-500 cursor-pointer max-w-[110px]">
+                                          <option value="">-- Pilih --</option>
+                                          @php
+                                              $washingTechList = collect($this->techs['washing'] ?? []);
+                                              if ($order->prep_washing_by && $order->prepWashingBy && !$washingTechList->contains('id', $order->prep_washing_by)) {
+                                                  $washingTechList->push($order->prepWashingBy);
+                                              }
+                                          @endphp
+                                          @foreach($washingTechList as $t)
+                                              <option value="{{ $t->id }}" {{ $order->prep_washing_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+                                  </div>
                               @endif
                           </div>
                           {{-- Sol Prep --}}
@@ -279,12 +303,36 @@
                               <span class="font-bold text-orange-500 uppercase">Sol:</span>
                               @if($order->prep_sol_completed_at)
                                   <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prep_sol_completed_at->format('d M H:i') }}">✓ {{ $order->prepSolBy->name ?? '-' }}</span>
-                              @elseif($order->prep_sol_started_at)
-                                  <span class="text-blue-600 font-bold bg-blue-50/50 px-1.5 py-0.5 rounded text-[10px] animate-pulse">🏃 {{ $order->prepSolBy->name ?? '-' }}</span>
-                              @elseif($order->prep_sol_by)
-                                  <span class="text-slate-650 font-bold bg-slate-50/50 px-1.5 py-0.5 rounded text-[10px]">👤 {{ $order->prepSolBy->name ?? '-' }}</span>
                               @else
-                                  <span class="text-gray-400 italic text-[10px]">Belum ditugaskan</span>
+                                  <div class="flex items-center gap-1">
+                                      @php
+                                          $solStarted = (bool)$order->prep_sol_started_at;
+                                          $solCurrentTech = $order->prepSolBy->name ?? 'Kosong';
+                                      @endphp
+                                      <select
+                                          @if($solStarted)
+                                              @change="
+                                                  const newTechId = $event.target.value;
+                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
+                                                  $event.target.value = '{{ $order->prep_sol_by }}';
+                                                  openOverrideModal({{ $order->id }}, 'prep_sol', newTechId, '{{ addslashes($solCurrentTech) }}', newTechName, 'Sol');
+                                              "
+                                          @else
+                                              wire:change="updateTechnician({{ $order->id }}, 'prep_sol', $event.target.value)"
+                                          @endif
+                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-orange-500 cursor-pointer max-w-[110px]">
+                                          <option value="">-- Pilih --</option>
+                                          @php
+                                              $solTechList = collect($this->techs['sol'] ?? []);
+                                              if ($order->prep_sol_by && $order->prepSolBy && !$solTechList->contains('id', $order->prep_sol_by)) {
+                                                  $solTechList->push($order->prepSolBy);
+                                              }
+                                          @endphp
+                                          @foreach($solTechList as $t)
+                                              <option value="{{ $t->id }}" {{ $order->prep_sol_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+                                  </div>
                               @endif
                           </div>
                           @endif
@@ -294,12 +342,36 @@
                               <span class="font-bold text-purple-500 uppercase">Upper:</span>
                               @if($order->prep_upper_completed_at)
                                   <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prep_upper_completed_at->format('d M H:i') }}">✓ {{ $order->prepUpperBy->name ?? '-' }}</span>
-                              @elseif($order->prep_upper_started_at)
-                                  <span class="text-blue-600 font-bold bg-blue-50/50 px-1.5 py-0.5 rounded text-[10px] animate-pulse">🏃 {{ $order->prepUpperBy->name ?? '-' }}</span>
-                              @elseif($order->prep_upper_by)
-                                  <span class="text-slate-650 font-bold bg-slate-50/50 px-1.5 py-0.5 rounded text-[10px]">👤 {{ $order->prepUpperBy->name ?? '-' }}</span>
                               @else
-                                  <span class="text-gray-400 italic text-[10px]">Belum ditugaskan</span>
+                                  <div class="flex items-center gap-1">
+                                      @php
+                                          $upperStarted = (bool)$order->prep_upper_started_at;
+                                          $upperCurrentTech = $order->prepUpperBy->name ?? 'Kosong';
+                                      @endphp
+                                      <select
+                                          @if($upperStarted)
+                                              @change="
+                                                  const newTechId = $event.target.value;
+                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
+                                                  $event.target.value = '{{ $order->prep_upper_by }}';
+                                                  openOverrideModal({{ $order->id }}, 'prep_upper', newTechId, '{{ addslashes($upperCurrentTech) }}', newTechName, 'Upper');
+                                              "
+                                          @else
+                                              wire:change="updateTechnician({{ $order->id }}, 'prep_upper', $event.target.value)"
+                                          @endif
+                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-purple-500 cursor-pointer max-w-[110px]">
+                                          <option value="">-- Pilih --</option>
+                                          @php
+                                              $upperTechList = collect($this->techs['upper'] ?? []);
+                                              if ($order->prep_upper_by && $order->prepUpperBy && !$upperTechList->contains('id', $order->prep_upper_by)) {
+                                                  $upperTechList->push($order->prepUpperBy);
+                                              }
+                                          @endphp
+                                          @foreach($upperTechList as $t)
+                                              <option value="{{ $t->id }}" {{ $order->prep_upper_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+                                  </div>
                               @endif
                           </div>
                           @endif
@@ -496,18 +568,18 @@
                       );
                   @endphp
                   <td class="px-6 py-4" @click.stop>
-                      <div class="flex flex-col gap-1.5 min-w-[220px]">
+                      <div class="flex flex-col gap-1.5 min-w-[240px]">
                           {{-- QC Jahit --}}
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
                               <span class="font-bold text-blue-600 uppercase">Jahit:</span>
                               @if(!$hasJahitQc)
                                   <span class="text-gray-400 text-[10px] italic">Tidak Diperlukan</span>
                               @elseif($order->qc_jahit_completed_at)
-                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_jahit_completed_at->format('d M H:i') }}">Selesai: {{ $order->qcJahitBy->name ?? '-' }}</span>
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_jahit_completed_at->format('d M H:i') }}">✓ {{ $order->qcJahitBy->name ?? '-' }}</span>
                               @else
                                   <div class="flex items-center gap-1">
                                       <select wire:change="updateTechnician({{ $order->id }}, 'qc_jahit', $event.target.value)" 
-                                              class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[110px]">
+                                              class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500/20 cursor-pointer max-w-[125px]">
                                           <option value="">-- Pilih --</option>
                                           @foreach($this->techs['jahit'] ?? [] as $t)
                                               <option value="{{ $t->id }}" {{ $order->qc_jahit_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
@@ -515,9 +587,9 @@
                                       </select>
 
                                       @if($order->qc_jahit_started_at)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesaikan</button>
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
                                       @elseif($order->qc_jahit_by)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'start', {{ $order->qc_jahit_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'start', {{ $order->qc_jahit_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
                                       @endif
                                   </div>
                               @endif
@@ -527,11 +599,11 @@
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
                               <span class="font-bold text-teal-600 uppercase">Cleanup:</span>
                               @if($order->qc_cleanup_completed_at)
-                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_cleanup_completed_at->format('d M H:i') }}">Selesai: {{ $order->qcCleanupBy->name ?? '-' }}</span>
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_cleanup_completed_at->format('d M H:i') }}">✓ {{ $order->qcCleanupBy->name ?? '-' }}</span>
                               @else
                                   <div class="flex items-center gap-1">
                                       <select wire:change="updateTechnician({{ $order->id }}, 'qc_cleanup', $event.target.value)" 
-                                              class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-teal-500 cursor-pointer max-w-[110px]">
+                                              class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:ring-2 focus:ring-teal-500/20 cursor-pointer max-w-[125px]">
                                           <option value="">-- Pilih --</option>
                                           @foreach($this->techs['cleanup'] ?? [] as $t)
                                               <option value="{{ $t->id }}" {{ $order->qc_cleanup_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
@@ -539,9 +611,9 @@
                                       </select>
 
                                       @if($order->qc_cleanup_started_at)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesaikan</button>
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
                                       @elseif($order->qc_cleanup_by)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'start', {{ $order->qc_cleanup_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'start', {{ $order->qc_cleanup_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
                                       @endif
                                   </div>
                               @endif
@@ -551,11 +623,11 @@
                           <div class="flex items-center justify-between text-[11px]">
                               <span class="font-bold text-emerald-600 uppercase">QC Final:</span>
                               @if($order->qc_final_completed_at)
-                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_final_completed_at->format('d M H:i') }}">Selesai: {{ $order->qcFinalBy->name ?? '-' }}</span>
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_final_completed_at->format('d M H:i') }}">✓ {{ $order->qcFinalBy->name ?? '-' }}</span>
                               @else
                                   <div class="flex items-center gap-1">
                                       <select wire:change="updateTechnician({{ $order->id }}, 'qc_final', $event.target.value)" 
-                                              class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-emerald-500 cursor-pointer max-w-[110px]">
+                                              class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer max-w-[125px]">
                                           <option value="">-- Pilih --</option>
                                           @foreach($this->techs['final'] ?? [] as $t)
                                               <option value="{{ $t->id }}" {{ $order->qc_final_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
@@ -563,9 +635,9 @@
                                       </select>
 
                                       @if($order->qc_final_started_at)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesaikan</button>
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
                                       @elseif($order->qc_final_by)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'start', {{ $order->qc_final_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'start', {{ $order->qc_final_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
                                       @endif
                                   </div>
                               @endif
@@ -624,13 +696,23 @@
                   </td>
               @endif
 
-              {{-- Column 7: Toggle Expand --}}
+              {{-- Column 7: Actions & Master Express Pass --}}
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button @click.stop="expanded = !expanded" class="p-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-gray-750 text-teal-600 dark:text-teal-400 transition-colors">
-                      <svg :class="{'rotate-180': expanded}" class="w-5 h-5 transform transition-transform duration-250" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                      </svg>
-                  </button>
+                  <div class="flex items-center justify-end gap-2">
+                      @if($type === 'qc_terpadu' || $type === 'qc_qc')
+                          <button type="button" 
+                                  @click.stop="$wire.expressPass({{ $order->id }})" 
+                                  class="px-3 py-1.5 bg-[#FFC232] hover:bg-amber-400 text-slate-950 font-black text-[11px] rounded-xl shadow-md shadow-amber-500/20 border border-amber-300 transition-all active:scale-95 flex items-center gap-1 cursor-pointer" 
+                                  title="1-Klik Lolos QC 3 Tahap Sekaligus & Pindah ke Siap Selesai">
+                              ⚡ Loloskan QC
+                          </button>
+                      @endif
+                      <button @click.stop="expanded = !expanded" class="p-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-gray-750 text-teal-600 dark:text-teal-400 transition-colors">
+                          <svg :class="{'rotate-180': expanded}" class="w-5 h-5 transform transition-transform duration-250" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                          </svg>
+                      </button>
+                  </div>
               </td>
           @endif
      </tr>
@@ -933,7 +1015,7 @@
                    {{-- Controls / Cover SPK Col --}}
                     <div class="md:col-span-1">
                         @if(!($isReviewTab ?? false))
-                            @if(strpos($type, 'prep_queue') !== false)
+                            @if(str_starts_with($type, 'prep_') && !$isReviewTab)
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between shadow-sm h-fit space-y-4">
                                     <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2 mb-2">
                                         <h4 class="text-xs font-bold text-gray-400 dark:text-gray-555 uppercase tracking-wider">Kontrol Pengerjaan</h4>

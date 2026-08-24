@@ -102,10 +102,35 @@ class PrepIndex extends Component
     #[Computed]
     public function techs()
     {
+        $allActive = User::where('is_active', true)->whereIn('role', ['technician', 'admin'])->select('id', 'name')->get();
+
+        $washing = User::where('is_active', true)
+            ->where(function($q) {
+                $q->whereIn('specialization', ['Washing', 'Persiapan (Cuci)', 'Treatment', 'Clean Up'])
+                  ->orWhere('station', 'PREPARATION');
+            })->select('id', 'name')->get();
+        if ($washing->isEmpty()) $washing = $allActive;
+
+        $sol = User::where('is_active', true)
+            ->where(function($q) {
+                $q->whereIn('specialization', ['Bongkar Sol', 'Prep Sol', 'Sol Repair', 'PIC Material Sol'])
+                  ->orWhere('station', 'PREPARATION')
+                  ->orWhere('station', 'SOLING');
+            })->select('id', 'name')->get();
+        if ($sol->isEmpty()) $sol = $allActive;
+
+        $upper = User::where('is_active', true)
+            ->where(function($q) {
+                $q->whereIn('specialization', ['Bongkar Upper', 'Prep Upper', 'Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])
+                  ->orWhere('station', 'PREPARATION')
+                  ->orWhere('station', 'UPPER');
+            })->select('id', 'name')->get();
+        if ($upper->isEmpty()) $upper = $allActive;
+
         return [
-            'washing' => User::whereIn('specialization', ['Washing', 'Treatment', 'Clean Up'])->select('id', 'name')->get(),
-            'sol' => User::whereIn('specialization', ['Sol Repair', 'PIC Material Sol'])->select('id', 'name')->get(),
-            'upper' => User::whereIn('specialization', ['Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])->select('id', 'name')->get(),
+            'washing' => $washing,
+            'sol' => $sol,
+            'upper' => $upper,
             'review' => User::where('role', 'admin')->select('id', 'name')->get(),
         ];
     }
@@ -115,15 +140,256 @@ class PrepIndex extends Component
     {
         $baseQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION);
 
-        // PREP stage only tracks Washing (Cuci). Bongkar Sol/Upper moved to Sortir.
-        $queueCount = (clone $baseQuery)->whereNull('prep_washing_completed_at')->count();
-
+        // PREP stage: 3 Sub-Tabs
+        $queueCount = (clone $baseQuery)->whereNull('prep_washing_started_at')->count();
+        $inProgressCount = (clone $baseQuery)->whereNotNull('prep_washing_started_at')->whereNull('prep_washing_completed_at')->count();
         $reviewCount = (clone $baseQuery)->whereNotNull('prep_washing_completed_at')->count();
 
         return [
             'queue' => $queueCount,
+            'in_progress' => $inProgressCount,
             'review' => $reviewCount,
         ];
+    }
+
+    /**
+     * Balanced Round-Robin Auto-Assign Technicians to WorkOrders (Cuci, Sol Prep, Upper Prep)
+     */
+    private function distributeTechnicians($orders)
+    {
+        $allActiveTechs = User::where('is_active', true)->whereIn('role', ['technician', 'admin'])->get();
+
+        $washingTechs = User::where('is_active', true)->where(function($q) {
+            $q->whereIn('specialization', ['Washing', 'Persiapan (Cuci)', 'Treatment', 'Clean Up'])->orWhere('station', 'PREPARATION');
+        })->get();
+        if ($washingTechs->isEmpty()) $washingTechs = $allActiveTechs;
+
+        $solTechs = User::where('is_active', true)->where(function($q) {
+            $q->whereIn('specialization', ['Bongkar Sol', 'Prep Sol', 'Sol Repair', 'PIC Material Sol'])->orWhere('station', 'PREPARATION')->orWhere('station', 'SOLING');
+        })->get();
+        if ($solTechs->isEmpty()) $solTechs = $allActiveTechs;
+
+        $upperTechs = User::where('is_active', true)->where(function($q) {
+            $q->whereIn('specialization', ['Bongkar Upper', 'Prep Upper', 'Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])->orWhere('station', 'PREPARATION')->orWhere('station', 'UPPER');
+        })->get();
+        if ($upperTechs->isEmpty()) $upperTechs = $allActiveTechs;
+
+        $assignedCount = 0;
+
+        foreach ($orders as $order) {
+            $updated = false;
+
+            // 1. Auto Assign Washing if unassigned
+            if (!$order->prep_washing_by && $washingTechs->isNotEmpty()) {
+                $order->prep_washing_by = $washingTechs->random()->id;
+                $updated = true;
+            }
+
+            // 2. Auto Assign Sol Prep if required & unassigned
+            if ($order->needs_prep_sol && !$order->prep_sol_by && $solTechs->isNotEmpty()) {
+                $order->prep_sol_by = $solTechs->random()->id;
+                $updated = true;
+            }
+
+            // 3. Auto Assign Upper Prep if required & unassigned
+            if ($order->needs_prep_upper && !$order->prep_upper_by && $upperTechs->isNotEmpty()) {
+                $order->prep_upper_by = $upperTechs->random()->id;
+                $updated = true;
+            }
+
+            if ($updated) {
+                $order->save();
+                $assignedCount++;
+
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $order->id,
+                    'user_id' => Auth::id() ?? 1,
+                    'action' => 'prep_auto_assign',
+                    'description' => 'Auto-assign teknisi Preparation (Cuci / Sol / Upper)',
+                    'step' => WorkOrderStatus::PREPARATION->value
+                ]);
+            }
+        }
+
+        return $assignedCount;
+    }
+
+    public function startPrepWashing($id)
+    {
+        $order = WorkOrder::find($id);
+        if (!$order) return;
+
+        try {
+            $now = \Illuminate\Support\Carbon::now();
+            $authId = Auth::id() ?? 1;
+
+            if (!$order->prep_washing_started_at) {
+                if (!$order->prep_washing_by) {
+                    $this->distributeTechnicians([$order]);
+                }
+
+                $order->prep_washing_started_at = $now;
+                $order->prep_washing_by = $order->prep_washing_by ?? $authId;
+                
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $order->id,
+                    'user_id' => $order->prep_washing_by,
+                    'action' => 'prep_washing_start',
+                    'description' => 'Mulai pengerjaan Prep Washing',
+                    'step' => WorkOrderStatus::PREPARATION->value
+                ]);
+                $order->save();
+            }
+
+            unset($this->orders);
+            $this->dispatch('swal:toast', icon: 'success', title: 'Pengerjaan Cuci dimulai!');
+        } catch (\Throwable $e) {
+            Log::error('Start Prep Error: ' . $e->getMessage());
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
+        }
+    }
+
+    public function autoAssignManifestPrep($manifestId)
+    {
+        try {
+            $ordersQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION);
+            if ($manifestId === 'orphan') {
+                $ordersQuery->whereNull('workshop_manifest_id');
+            } else {
+                $ordersQuery->where('workshop_manifest_id', $manifestId);
+            }
+
+            $allOrders = $ordersQuery->get();
+            $ordersToAssign = $allOrders->filter(function($o) {
+                return !$o->prep_washing_by || ($o->needs_prep_sol && !$o->prep_sol_by) || ($o->needs_prep_upper && !$o->prep_upper_by);
+            });
+
+            if ($ordersToAssign->isEmpty()) {
+                $this->dispatch('swal:toast', icon: 'info', title: 'Seluruh SPK & sub-tugas di Manifest ini sudah memiliki teknisi!');
+                return;
+            }
+
+            $count = $this->distributeTechnicians($ordersToAssign);
+            unset($this->orders);
+            $this->dispatch('swal:toast', icon: 'success', title: "$count SPK berhasil ditugaskan teknisi (Auto-Assign Preparation)!");
+        } catch (\Throwable $e) {
+            Log::error('Auto Assign Manifest Error: ' . $e->getMessage());
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
+        }
+    }
+
+    public function autoAssignSelectedPrep()
+    {
+        if (empty($this->selectedItems)) {
+            $this->dispatch('swal:toast', icon: 'warning', title: 'Pilih SPK terlebih dahulu');
+            return;
+        }
+
+        try {
+            $orders = WorkOrder::whereIn('id', $this->selectedItems)
+                ->where('status', WorkOrderStatus::PREPARATION)
+                ->get();
+
+            $count = $this->distributeTechnicians($orders);
+            $this->selectedItems = [];
+            $this->selectAll = false;
+            unset($this->orders);
+
+            $this->dispatch('swal:toast', icon: 'success', title: "$count SPK berhasil ditugaskan teknisi secara otomatis!");
+        } catch (\Throwable $e) {
+            Log::error('Auto Assign Selected Error: ' . $e->getMessage());
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
+        }
+    }
+
+    public function startManifestPrep($manifestId)
+    {
+        try {
+            $now = \Illuminate\Support\Carbon::now();
+            $authId = Auth::id() ?? 1;
+
+            $ordersQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION)
+                ->whereNull('prep_washing_started_at');
+
+            if ($manifestId === 'orphan') {
+                $ordersQuery->whereNull('workshop_manifest_id');
+            } else {
+                $ordersQuery->where('workshop_manifest_id', $manifestId);
+            }
+
+            $orders = $ordersQuery->get();
+
+            // Auto-assign any unassigned SPKs using Balanced Round-Robin algorithm
+            $unassignedOrders = $orders->filter(function($o) {
+                return !$o->prep_washing_by || ($o->needs_prep_sol && !$o->prep_sol_by) || ($o->needs_prep_upper && !$o->prep_upper_by);
+            });
+            if ($unassignedOrders->isNotEmpty()) {
+                $this->distributeTechnicians($unassignedOrders);
+            }
+
+            $count = 0;
+            foreach ($orders->fresh() as $order) {
+                $order->prep_washing_started_at = $now;
+                $order->prep_washing_by = $order->prep_washing_by ?? $authId;
+                $order->save();
+
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $order->id,
+                    'user_id' => $order->prep_washing_by,
+                    'action' => 'prep_washing_start',
+                    'description' => 'Mulai pengerjaan Prep Washing (Batch Manifest)',
+                    'step' => WorkOrderStatus::PREPARATION->value
+                ]);
+                $count++;
+            }
+
+            unset($this->orders);
+            $this->dispatch('swal:toast', icon: 'success', title: "$count SPK di Manifest berhasil dimulai & teknisi di-assign!");
+        } catch (\Throwable $e) {
+            Log::error('Start Manifest Prep Error: ' . $e->getMessage());
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
+        }
+    }
+
+    public function completeManifestPrep($manifestId)
+    {
+        try {
+            $now = \Illuminate\Support\Carbon::now();
+            $authId = Auth::id() ?? 1;
+
+            $ordersQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION)
+                ->whereNotNull('prep_washing_started_at')
+                ->whereNull('prep_washing_completed_at');
+
+            if ($manifestId === 'orphan') {
+                $ordersQuery->whereNull('workshop_manifest_id');
+            } else {
+                $ordersQuery->where('workshop_manifest_id', $manifestId);
+            }
+
+            $orders = $ordersQuery->get();
+            $count = 0;
+
+            foreach ($orders as $order) {
+                $order->prep_washing_completed_at = $now;
+                $order->save();
+
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $order->id,
+                    'user_id' => $order->prep_washing_by ?? $authId,
+                    'action' => 'prep_washing_finish',
+                    'description' => 'Selesai pengerjaan Prep Washing (Batch Manifest)',
+                    'step' => WorkOrderStatus::PREPARATION->value
+                ]);
+                $count++;
+            }
+
+            unset($this->orders);
+            $this->dispatch('swal:toast', icon: 'success', title: "$count SPK di Manifest diselesaikan ke Review Admin!");
+        } catch (\Throwable $e) {
+            Log::error('Complete Manifest Prep Error: ' . $e->getMessage());
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
+        }
     }
 
     public function updateStation($id, $type, $action, $techId = null, $finishedAt = null)
@@ -159,7 +425,6 @@ class PrepIndex extends Component
             $now = \Illuminate\Support\Carbon::now();
             $authId = Auth::id() ?? 1;
 
-            // PREP stage: Only Washing (Cuci). Bongkar Sol/Upper handled in Sortir.
             if (!$order->prep_washing_completed_at) {
                 if (!$order->prep_washing_by) {
                     $order->prep_washing_by = $authId;
@@ -172,7 +437,7 @@ class PrepIndex extends Component
                     'work_order_id' => $order->id,
                     'user_id' => $order->prep_washing_by,
                     'action' => 'prep_washing_finish',
-                    'description' => 'Menyelesaikan proses Prep Washing (Selesaikan Semua)',
+                    'description' => 'Menyelesaikan proses Prep Washing',
                     'step' => WorkOrderStatus::PREPARATION->value
                 ]);
             }
@@ -202,7 +467,6 @@ class PrepIndex extends Component
                 $order = WorkOrder::find($id);
                 if (!$order) continue;
 
-                // PREP stage: Only Washing (Cuci)
                 if (!$order->prep_washing_completed_at) {
                     if (!$order->prep_washing_by) {
                         $order->prep_washing_by = $authId;
@@ -215,7 +479,7 @@ class PrepIndex extends Component
                         'work_order_id' => $order->id,
                         'user_id' => $order->prep_washing_by,
                         'action' => 'prep_washing_finish',
-                        'description' => 'Menyelesaikan proses Prep Washing (Bulk Selesaikan Semua)',
+                        'description' => 'Menyelesaikan proses Prep Washing (Bulk)',
                         'step' => WorkOrderStatus::PREPARATION->value
                     ]);
                 }
@@ -253,7 +517,7 @@ class PrepIndex extends Component
                 } else {
                     $updated = false;
 
-                    // 1. Washing Prep
+                    // Washing Prep
                     $washingTechId = $techs['washing'] ?? null;
                     if ($washingTechId) {
                         $this->handleStationUpdate(
@@ -262,34 +526,6 @@ class PrepIndex extends Component
                             $action === 'assign' ? 'start' : $action, 
                             Auth::id(), 
                             $washingTechId, 
-                            WorkOrderStatus::PREPARATION->value
-                        );
-                        $updated = true;
-                    }
-
-                    // 2. Sol Prep
-                    $solTechId = $techs['sol'] ?? null;
-                    if ($solTechId && $order->needs_prep_sol) {
-                        $this->handleStationUpdate(
-                            $order, 
-                            'prep_sol', 
-                            $action === 'assign' ? 'start' : $action, 
-                            Auth::id(), 
-                            $solTechId, 
-                            WorkOrderStatus::PREPARATION->value
-                        );
-                        $updated = true;
-                    }
-
-                    // 3. Upper Prep
-                    $upperTechId = $techs['upper'] ?? null;
-                    if ($upperTechId && $order->needs_prep_upper) {
-                        $this->handleStationUpdate(
-                            $order, 
-                            'prep_upper', 
-                            $action === 'assign' ? 'start' : $action, 
-                            Auth::id(), 
-                            $upperTechId, 
                             WorkOrderStatus::PREPARATION->value
                         );
                         $updated = true;
@@ -415,9 +651,12 @@ class PrepIndex extends Component
             });
         }
 
-        // Tab Filter — PREP stage only tracks Washing (Cuci)
+        // 3 Sub-Tabs Filter for Preparation
         if ($this->activeTab === 'queue') {
-            $woQuery->whereNull('prep_washing_completed_at');
+            $woQuery->whereNull('prep_washing_started_at');
+        } elseif ($this->activeTab === 'in_progress') {
+            $woQuery->whereNotNull('prep_washing_started_at')
+                    ->whereNull('prep_washing_completed_at');
         } elseif ($this->activeTab === 'review') {
             $woQuery->whereNotNull('prep_washing_completed_at');
         }

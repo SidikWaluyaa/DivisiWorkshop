@@ -13,83 +13,65 @@
      class="fixed bottom-6 inset-x-0 z-50 flex justify-center px-4"
      style="display: none;">
     
-    <div wire:ignore.self wire:key="prep-bulk-action-bar" class="bg-white/95 backdrop-blur-md border border-gray-200 shadow-2xl rounded-2xl p-4 w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-4 ring-1 ring-black/5" x-data="{ taskType: 'washing' }">
+    <div wire:ignore.self wire:key="prep-bulk-action-bar" 
+         class="bg-slate-900/95 text-white backdrop-blur-xl border border-slate-700/80 shadow-2xl rounded-3xl p-4 w-full max-w-5xl flex flex-wrap items-center justify-between gap-3 ring-1 ring-white/10">
         
-        <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-lg">
-                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Terpilih</span>
-                <span class="bg-gray-800 text-white px-2 py-0.5 rounded-md font-bold text-sm" x-text="selectedItems.length"></span>
+        {{-- Selected Counter & Cancel Button --}}
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-3.5 py-1.5 rounded-2xl">
+                <span class="text-[11px] font-bold uppercase tracking-wider">Terpilih</span>
+                <span class="bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-full font-black text-xs" x-text="selectedItems.length"></span>
             </div>
-            <button @click="selectedItems = []; selectAll = false" class="text-[10px] font-bold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors uppercase tracking-widest">
-                Batal
+            <button type="button" @click="selectedItems = []; selectAll = false" 
+                    class="text-xs font-bold text-slate-400 hover:text-red-400 hover:bg-white/10 px-3 py-1.5 rounded-xl transition-all uppercase tracking-wider">
+                ✕ Batal
             </button>
         </div>
 
-        <div class="h-8 w-px bg-gray-200 hidden md:block"></div>
-
-        <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide justify-start">
+        {{-- Action Buttons & Selectors (Flex-wrap layout - ZERO horizontal scroll) --}}
+        <div class="flex flex-wrap items-center gap-2.5">
             @if($activeTab !== 'review')
-                {{-- Dropdown Teknisi Cuci --}}
-                <div class="relative shrink-0">
-                    <select id="bulk-tech-washing" style="color: #111827 !important; background-color: #ffffff !important;" class="appearance-none bg-white border border-gray-300 text-gray-900 text-[10px] rounded-lg block w-36 pl-2.5 pr-7 py-2.5 font-bold uppercase shadow-sm cursor-pointer hover:border-blue-300">
-                        <option value="" style="color: #111827 !important; background-color: #ffffff !important;">-- TEKNISI CUCI --</option>
+                {{-- 1. Auto Assign Button (Balanced Round Robin) --}}
+                <button type="button" wire:click="autoAssignSelectedPrep" 
+                        class="bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-600 hover:from-indigo-600 hover:to-pink-700 text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg transition-all flex items-center gap-1.5 active:scale-95 uppercase tracking-wider cursor-pointer"
+                        title="Bagi SPK terpilih ke teknisi cuci secara adil & merata">
+                    <span>🤖 Auto Assign</span>
+                </button>
+
+                <div class="h-6 w-px bg-slate-700 mx-1 hidden sm:block"></div>
+
+                {{-- 2. Dropdown Teknisi Cuci --}}
+                <div class="relative">
+                    <select id="bulk-tech-washing" 
+                            class="appearance-none bg-slate-800 border border-slate-600 text-white text-xs rounded-xl block pl-3 pr-8 py-2 font-bold uppercase shadow-inner cursor-pointer focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                        <option value="">-- TEKNISI CUCI --</option>
                         @foreach($techs['washing'] ?? [] as $t)
-                            <option value="{{ $t->id }}" style="color: #111827 !important; background-color: #ffffff !important;">{{ $t->name }}</option>
+                            <option value="{{ $t->id }}">{{ $t->name }}</option>
                         @endforeach
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </div>
 
-                {{-- Dropdown Teknisi Sol --}}
-                <div class="relative shrink-0">
-                    <select id="bulk-tech-sol" style="color: #111827 !important; background-color: #ffffff !important;" class="appearance-none bg-white border border-gray-300 text-gray-900 text-[10px] rounded-lg block w-36 pl-2.5 pr-7 py-2.5 font-bold uppercase shadow-sm cursor-pointer hover:border-blue-300">
-                        <option value="" style="color: #111827 !important; background-color: #ffffff !important;">-- TEKNISI SOL --</option>
-                        @foreach($techs['sol'] ?? [] as $t)
-                            <option value="{{ $t->id }}" style="color: #111827 !important; background-color: #ffffff !important;">{{ $t->name }}</option>
-                        @endforeach
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                </div>
-
-                {{-- Dropdown Teknisi Upper --}}
-                <div class="relative shrink-0">
-                    <select id="bulk-tech-upper" style="color: #111827 !important; background-color: #ffffff !important;" class="appearance-none bg-white border border-gray-300 text-gray-900 text-[10px] rounded-lg block w-36 pl-2.5 pr-7 py-2.5 font-bold uppercase shadow-sm cursor-pointer hover:border-blue-300">
-                        <option value="" style="color: #111827 !important; background-color: #ffffff !important;">-- TEKNISI UPPER --</option>
-                        @foreach($techs['upper'] ?? [] as $t)
-                            <option value="{{ $t->id }}" style="color: #111827 !important; background-color: #ffffff !important;">{{ $t->name }}</option>
-                        @endforeach
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                </div>
-
+                {{-- 3. Assign & Mulai Button --}}
                 <button type="button" @click="window.submitBulkAssign()" 
-                        class="bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-700 hover:to-indigo-700 text-white px-3 py-2.5 rounded-lg text-[10px] font-black shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-1.5 active:scale-95 uppercase tracking-widest shrink-0 whitespace-nowrap">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        class="bg-[#FFC232] hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-black shadow-lg transition-all flex items-center gap-1.5 active:scale-95 uppercase tracking-wider cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     Assign &amp; Mulai
                 </button>
 
-                <button type="button" @click="window.submitBulkFinish()" 
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 rounded-lg text-[10px] font-black shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-1.5 active:scale-95 uppercase tracking-widest shrink-0 whitespace-nowrap">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    Selesai Tugas
-                </button>
-
+                {{-- 4. Selesaikan Semua Prep Button --}}
                 <button type="button" @click="window.confirmBulkCompleteAll()" 
-                        class="bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-2.5 rounded-lg text-[10px] font-black shadow hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-1.5 active:scale-95 uppercase tracking-widest shrink-0 whitespace-nowrap">
+                        class="bg-[#22AF85] hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg transition-all flex items-center gap-1.5 active:scale-95 uppercase tracking-wider cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Selesaikan Semua Prep
+                    Selesaikan Semua
                 </button>
             @else
                 <button type="button" @click="confirmBulkAction('approve')" 
-                        class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl text-xs font-black shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 active:scale-95 uppercase tracking-widest shrink-0 whitespace-nowrap">
+                        class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-6 py-2.5 rounded-xl text-xs font-black shadow-lg transition-all flex items-center gap-2 active:scale-95 uppercase tracking-wider cursor-pointer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Approve &amp; Sortir Terpilih
+                    Approve &amp; Transfer ke Sortir
                 </button>
             @endif
         </div>

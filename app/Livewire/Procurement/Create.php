@@ -43,15 +43,26 @@ class Create extends Component
 
     public function loadPendingOrders()
     {
-        // Get SPKs that are in SORTIR status and have missing materials (REQUESTED)
-        // using the scope we defined earlier
+        // Get active material request IDs in PENDING, APPROVED, PURCHASED
+        $activeRequestIds = MaterialRequest::whereIn('status', ['PENDING', 'APPROVED', 'PURCHASED'])
+            ->pluck('id');
+
+        $activeWorkOrderIdsViaItems = \App\Models\MaterialRequestItem::whereIn('material_request_id', $activeRequestIds)
+            ->whereNotNull('work_order_id')
+            ->pluck('work_order_id');
+
+        $activeWorkOrderIdsDirect = MaterialRequest::whereIn('status', ['PENDING', 'APPROVED', 'PURCHASED'])
+            ->whereNotNull('work_order_id')
+            ->pluck('work_order_id');
+
+        $excludeWorkOrderIds = $activeWorkOrderIdsViaItems->merge($activeWorkOrderIdsDirect)->unique();
+
+        // Get SPKs that need materials AND do NOT have an active request pending approval/purchase
         $this->pendingOrders = WorkOrder::waitingForMaterials()
             ->with(['materials' => function($q) {
                 $q->where('work_order_materials.status', 'REQUESTED');
             }])
-            ->whereDoesntHave('materialRequests', function($q) {
-                $q->whereIn('status', ['PENDING', 'APPROVED', 'PURCHASED']);
-            })
+            ->whereNotIn('id', $excludeWorkOrderIds)
             ->latest()
             ->get();
     }

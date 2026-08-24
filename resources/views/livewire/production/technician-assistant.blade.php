@@ -162,15 +162,24 @@
                 </div>
             </div>
 
-            {{-- Completed Today Card --}}
+            {{-- Completed Jobs Card --}}
             <div class="bg-gradient-to-br from-emerald-500/10 via-emerald-50 to-teal-50/40 p-5 sm:p-6 rounded-3xl border border-emerald-200/80 shadow-xs group hover:shadow-md transition-all">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="text-[10px] sm:text-xs font-black uppercase tracking-wider text-emerald-900">Selesai Hari Ini</span>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-[10px] sm:text-xs font-black uppercase tracking-wider text-emerald-900">
+                        Selesai {{ $historyPeriod === 'today' ? 'Hari Ini' : ($historyPeriod === 'month' ? 'Bulan Ini' : 'Seluruhnya') }}
+                    </span>
                     <span class="text-lg">✅</span>
                 </div>
-                <div class="flex items-baseline gap-2">
-                    <span class="text-3xl sm:text-4xl font-black text-emerald-950 tracking-tight">{{ $completedTodayCount }}</span>
-                    <span class="text-xs font-black text-emerald-700 uppercase tracking-wider">SPK Done</span>
+                <div class="flex items-baseline gap-2 mb-2">
+                    <span class="text-3xl sm:text-4xl font-black text-emerald-950 tracking-tight">{{ $completedUniqueSpkCount }}</span>
+                    <span class="text-xs font-black text-emerald-700 uppercase tracking-wider">SPK DONE</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px] font-bold text-emerald-700 pt-2 border-t border-emerald-200/60">
+                    <span>{{ $completedTotalJasaCount }} Sub-Jasa</span>
+                    <div class="flex items-center gap-1 bg-white/80 rounded-lg p-0.5 border border-emerald-200/80">
+                        <button wire:click="$set('historyPeriod', 'today')" class="px-2 py-0.5 rounded-md text-[9px] font-black {{ $historyPeriod === 'today' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900' }}">Hari Ini</button>
+                        <button wire:click="$set('historyPeriod', 'all')" class="px-2 py-0.5 rounded-md text-[9px] font-black {{ $historyPeriod === 'all' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900' }}">Semua</button>
+                    </div>
                 </div>
             </div>
 
@@ -181,8 +190,8 @@
                     <span class="text-lg">⏱️</span>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span class="text-3xl sm:text-4xl font-black text-white tracking-tight">{{ $avgDuration }}</span>
-                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Menit / Jasa</span>
+                    <span class="text-3xl sm:text-4xl font-black text-[#FFC232] tracking-tight">{{ $avgDuration }}</span>
+                    <span class="text-xs font-black text-slate-300 uppercase tracking-wider">Menit / Jasa</span>
                 </div>
             </div>
         </div>
@@ -190,13 +199,12 @@
 
     {{-- Tabs & Main Content Area --}}
     <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-100 space-y-6">
-        <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 border-b border-slate-100 pb-5">
-            {{-- Modern Tabs Bar --}}
-            <div class="flex bg-slate-100 p-1.5 rounded-2xl gap-1 overflow-x-auto">
+        <div class="bg-white rounded-3xl p-3 border border-slate-200 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between">
+            {{-- Tabs --}}
+            <div class="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-2xl w-full md:w-auto overflow-x-auto">
                 <button wire:click="switchTab('running')" 
                         class="flex-1 px-5 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap flex items-center justify-center gap-2 active:scale-95
-                        {{ $activeTab === 'running' ? 'bg-[#FFC232] text-slate-950 shadow-md font-black' : 'text-slate-600 hover:text-slate-900 font-extrabold' }}">
-                    <span class="w-2 h-2 rounded-full bg-slate-950 animate-pulse"></span>
+                        {{ $activeTab === 'running' ? 'bg-[#22AF85] text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 font-extrabold' }}">
                     <span>Sedang Dikerjakan ({{ $runningCount }})</span>
                 </button>
 
@@ -209,7 +217,7 @@
                 <button wire:click="switchTab('history')" 
                         class="flex-1 px-5 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap flex items-center justify-center gap-2 active:scale-95
                         {{ $activeTab === 'history' ? 'bg-[#FFC232] text-slate-950 shadow-md font-black' : 'text-slate-600 hover:text-slate-900 font-extrabold' }}">
-                    <span>Riwayat Selesai</span>
+                    <span>Riwayat Selesai ({{ $completedUniqueSpkCount }} SPK)</span>
                 </button>
             </div>
 

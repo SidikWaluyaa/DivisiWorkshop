@@ -168,10 +168,33 @@ class ProductionController extends Controller
 
     private function getTechniciansByRole(): array
     {
+        $allActive = User::where('is_active', true)->whereIn('role', ['technician', 'admin'])->select('id', 'name')->get();
+
+        $sol = User::where('is_active', true)
+            ->where(function($q) {
+                $q->whereIn('specialization', ['Reparasi Sol', 'Sol Repair', 'PIC Material Sol'])
+                  ->orWhere('station', 'SOLING');
+            })->select('id', 'name')->get();
+        if ($sol->isEmpty()) $sol = $allActive;
+
+        $upper = User::where('is_active', true)
+            ->where(function($q) {
+                $q->whereIn('specialization', ['Reparasi Upper', 'Upper Repair', 'PIC Material Upper', 'Repaint', 'Jahit'])
+                  ->orWhere('station', 'UPPER');
+            })->select('id', 'name')->get();
+        if ($upper->isEmpty()) $upper = $allActive;
+
+        $treatment = User::where('is_active', true)
+            ->where(function($q) {
+                $q->whereIn('specialization', ['Reparasi Treatment', 'Treatment', 'Repaint', 'Clean Up', 'Washing'])
+                  ->orWhere('station', 'TREATMENT');
+            })->select('id', 'name')->get();
+        if ($treatment->isEmpty()) $treatment = $allActive;
+
         return [
-            'sol' => User::where('role', 'technician')->where('specialization', 'Sol Repair')->where('is_active', true)->select('id', 'name')->get(),
-            'upper' => User::where('role', 'technician')->where('specialization', 'Upper Repair')->where('is_active', true)->select('id', 'name')->get(),
-            'treatment' => User::where('role', 'technician')->whereIn('specialization', ['Washing', 'Repaint', 'Treatment', 'Clean Up'])->where('is_active', true)->select('id', 'name')->get(),
+            'sol' => $sol,
+            'upper' => $upper,
+            'treatment' => $treatment,
         ];
     }
 

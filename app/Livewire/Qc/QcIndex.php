@@ -71,18 +71,52 @@ class QcIndex extends Component
     #[Computed]
     public function techs()
     {
-        $allTechs = User::where('is_active', true)
-            ->where(function($q) {
-                $q->where('role', 'technician')->orWhere('role', 'pic');
-            })
+        $allActiveTechs = User::where('is_active', true)
+            ->whereIn('role', ['technician', 'pic', 'admin'])
+            ->where('name', 'not like', '%Dr. Shoe%')
             ->select('id', 'name', 'specialization')
             ->orderBy('name')
             ->get();
 
+        $jahit = User::where('is_active', true)
+            ->where('name', 'not like', '%Dr. Shoe%')
+            ->where(function($q) {
+                $q->whereIn('specialization', ['QC Jahit', 'Jahit'])
+                  ->orWhere('station', 'QC');
+            })->select('id', 'name', 'specialization')->get();
+        if ($jahit->isEmpty()) $jahit = $allActiveTechs;
+
+        $cleanup = User::where('is_active', true)
+            ->where('name', 'not like', '%Dr. Shoe%')
+            ->where(function($q) {
+                $q->whereIn('specialization', ['QC Cleanup', 'Clean Up'])
+                  ->orWhere(function($sq) {
+                      $sq->where('station', 'QC')
+                        ->whereNotIn('specialization', ['Washing', 'Cuci']);
+                  });
+            })
+            ->whereNotIn('specialization', ['Washing', 'Cuci', 'PIC Material Sol', 'PIC Material Upper', 'PIC Material'])
+            ->where(function($q) {
+                $q->whereNull('station')->orWhere('station', '!=', 'PREPARATION');
+            })
+            ->select('id', 'name', 'specialization')
+            ->orderBy('name')
+            ->get();
+        if ($cleanup->isEmpty()) $cleanup = $allActiveTechs;
+
+        $final = User::where('is_active', true)
+            ->where('name', 'not like', '%Dr. Shoe%')
+            ->where(function($q) {
+                $q->whereIn('specialization', ['QC Final', 'PIC QC'])
+                  ->orWhere('station', 'QC');
+            })->select('id', 'name', 'specialization')->get();
+        if ($final->isEmpty()) $final = $allActiveTechs;
+
         return [
-            'jahit' => $allTechs,
-            'cleanup' => $allTechs,
-            'final' => $allTechs,
+            'jahit' => $jahit,
+            'cleanup' => $cleanup,
+            'final' => $final,
+            'all' => $allActiveTechs,
         ];
     }
 
@@ -137,6 +171,13 @@ class QcIndex extends Component
         $column = "{$type}_by";
         $oldTechName = $order->{$type . 'By'}->name ?? 'Belum ditugaskan';
         $order->{$column} = $techId ?: null;
+
+        // Auto-start timestamp if assigned and not yet started
+        $startedColumn = "{$type}_started_at";
+        if ($techId && isset($order->{$startedColumn}) && !$order->{$startedColumn}) {
+            $order->{$startedColumn} = now();
+        }
+
         $order->save();
 
         $newTechName = $techId ? (User::find($techId)->name ?? '-') : 'Dikosongkan';
@@ -146,20 +187,76 @@ class QcIndex extends Component
             'user_id'     => Auth::id(),
             'step'        => 'QC',
             'action'      => 'TECHNICIAN_ASSIGNED',
-            'description' => "Teknisi stasiun {$type} diubah dari '{$oldTechName}' menjadi '{$newTechName}'",
+            'description' => "Teknisi stasiun {$type} diubah dari '{$oldTechName}' menjadi '{$newTechName}' (Jam mulai diisi otomatis)",
         ]);
 
         unset($this->orders);
-        $this->dispatch('swal:toast', icon: 'success', title: 'Teknisi berhasil diperbarui');
+        $this->dispatch('swal:toast', icon: 'success', title: 'Teknisi & waktu mulai otomatis diperbarui');
+    }
+
+    public function expressPass($id)
+    {
+        $order = WorkOrder::find($id);
+        if (!$order) return;
+
+        try {
+            $now = now();
+            $authId = Auth::id();
+
+            // 1. Pass QC Jahit (if required & incomplete)
+            $needsJahit = $order->hasServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit']);
+            if ($needsJahit && !$order->qc_jahit_completed_at) {
+                if (!$order->qc_jahit_by) $order->qc_jahit_by = $authId;
+                if (!$order->qc_jahit_started_at) $order->qc_jahit_started_at = $now;
+                $order->qc_jahit_completed_at = $now;
+            }
+
+            // 2. Pass QC Cleanup (if incomplete)
+            if (!$order->qc_cleanup_completed_at) {
+                if (!$order->qc_cleanup_by) $order->qc_cleanup_by = $authId;
+                if (!$order->qc_cleanup_started_at) $order->qc_cleanup_started_at = $now;
+                $order->qc_cleanup_completed_at = $now;
+            }
+
+            // 3. Pass QC Final (if incomplete)
+            if (!$order->qc_final_completed_at) {
+                if (!$order->qc_final_by) $order->qc_final_by = $authId;
+                if (!$order->qc_final_started_at) $order->qc_final_started_at = $now;
+                $order->qc_final_completed_at = $now;
+            }
+
+            $order->save();
+
+            // Audit Log
+            $order->logs()->create([
+                'user_id'     => Auth::id(),
+                'step'        => 'QC',
+                'action'      => 'FULL_EXPRESS_PASS',
+                'description' => "1-Click Full Pass QC (3 Tahapan Tuntas). SPK berpindah ke Siap Selesai (Review Admin).",
+            ]);
+
+            unset($this->orders);
+            $this->dispatch('swal:toast', icon: 'success', title: "⚡ SPK {$order->spk_number} Lolos QC 3 Tahap & Pindah ke Siap Selesai!");
+        } catch (\Throwable $e) {
+            Log::error("Express Pass Error (#{$id}): " . $e->getMessage());
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
+        }
     }
 
     public function autoAssignUnassignedTechnicians()
     {
+        $drShoeIds = User::where('name', 'like', '%Dr. Shoe%')->pluck('id')->toArray();
+
         $unassignedOrders = WorkOrder::where('status', WorkOrderStatus::QC)
-            ->where(function($q) {
+            ->where(function($q) use ($drShoeIds) {
                 $q->whereNull('qc_jahit_by')
                   ->orWhereNull('qc_cleanup_by')
                   ->orWhereNull('qc_final_by');
+                if (!empty($drShoeIds)) {
+                    $q->orWhereIn('qc_jahit_by', $drShoeIds)
+                      ->orWhereIn('qc_cleanup_by', $drShoeIds)
+                      ->orWhereIn('qc_final_by', $drShoeIds);
+                }
             })
             ->get();
 
@@ -172,12 +269,12 @@ class QcIndex extends Component
         $assignedCount = 0;
 
         foreach ($unassignedOrders as $order) {
-            $service->autoAssignQcTechnicians($order);
+            $service->autoAssignQcTechnicians($order, true);
             $assignedCount++;
         }
 
         unset($this->orders);
-        $this->dispatch('swal:toast', icon: 'success', title: "Auto-assign berhasil! {$assignedCount} SPK telah diisikan teknisinya (teknisi yang sudah ada dilewati).");
+        $this->dispatch('swal:toast', icon: 'success', title: "Auto-assign berhasil! {$assignedCount} SPK telah diisikan teknisinya secara akurat.");
     }
 
     public function bulkAction($action, $techId = null)
@@ -195,7 +292,7 @@ class QcIndex extends Component
             default => null
         };
 
-        if ($action !== 'approve' && !$type) {
+        if ($action !== 'approve' && $action !== 'express_pass' && !$type) {
             $this->dispatch('swal:toast', icon: 'error', title: 'Tipe stasiun tidak valid');
             return;
         }
@@ -206,7 +303,10 @@ class QcIndex extends Component
                 $order = WorkOrder::find($id);
                 if (!$order) continue;
 
-                if ($action === 'approve') {
+                if ($action === 'express_pass') {
+                    $this->expressPass($id, $type);
+                    $successCount++;
+                } elseif ($action === 'approve') {
                     $workflow->updateStatus($order, WorkOrderStatus::STAGING_OUTBOUND, 'Lolos QC Akhir (Bulk). Pindah ke Staging Outbound.');
                     if ($order->is_revising) {
                         $order->is_revising = false;
@@ -381,7 +481,8 @@ class QcIndex extends Component
             }
         }
 
-        // Sorting
+        // Sorting (In Progress items ALWAYS float to the top)
+        $query->orderByRaw("CASE WHEN (qc_jahit_started_at IS NOT NULL AND qc_jahit_completed_at IS NULL) OR (qc_cleanup_started_at IS NOT NULL AND qc_cleanup_completed_at IS NULL) OR (qc_final_started_at IS NOT NULL AND qc_final_completed_at IS NULL) THEN 0 ELSE 1 END");
         $query->orderByRaw("CASE WHEN EXISTS (SELECT 1 FROM cx_issues WHERE cx_issues.work_order_id = work_orders.id AND cx_issues.status = 'RESOLVED') THEN 0 ELSE 1 END");
         $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END");
         $query->orderByRaw("CASE WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 0 ELSE 1 END");

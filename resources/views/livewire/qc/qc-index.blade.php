@@ -264,6 +264,13 @@
                     </button>
                 </div>
 
+                {{-- Express Pass (1-Click Batch Pass) --}}
+                <button type="button" 
+                        onclick="window.bulkActionQc('express_pass')" 
+                        class="bg-[#FFC232] hover:bg-amber-400 text-slate-950 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 active:scale-95 border border-amber-300">
+                    ⚡ Express Pass (<span x-text="selectedItems.length"></span>)
+                </button>
+
                 {{-- Bulk Finish --}}
                 <button type="button" 
                         onclick="window.bulkActionQc('finish')" 
