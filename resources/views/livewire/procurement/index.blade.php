@@ -155,7 +155,7 @@
                             </div>
 
                             <div class="flex items-center gap-2 w-full sm:w-auto">
-                                @if(in_array($request->status, ['APPROVED', 'PURCHASED', 'RECEIVED']))
+                                @if(!in_array($request->status, ['RECEIVED', 'CANCELLED', 'REJECTED']))
                                     <button type="button" 
                                             wire:click="quickFulfill({{ $request->id }})" 
                                             wire:confirm="Verifikasi & konfirmasi penerimaan fisik bahan baku untuk {{ $request->request_number }}? Stok akan otomatis bertambah dan SPK akan lanjut ke PRODUKSI."
@@ -163,6 +163,11 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                         <span>Terima Barang</span>
                                     </button>
+                                @elseif($request->status === 'RECEIVED')
+                                    <span class="px-3 py-2 rounded-xl bg-emerald-50 text-[#22AF85] font-black text-xs border border-emerald-200 flex items-center gap-1.5 whitespace-nowrap">
+                                        <svg class="w-4 h-4 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        <span>Material Tiba</span>
+                                    </span>
                                 @endif
 
                                 <a href="{{ route('material-requests.show', $request) }}" wire:navigate 
