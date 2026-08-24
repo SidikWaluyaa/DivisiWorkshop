@@ -297,18 +297,22 @@
                                 <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
                                     @if($activeTab === 'waiting')
                                     @php
-                                        $hasActiveReq = $order->materialRequests
-                                            ? $order->materialRequests->whereIn('status', ['PENDING','APPROVED','PURCHASED'])->count() > 0
-                                            : false;
+                                        $activeReq = $order->materialRequests
+                                            ? $order->materialRequests->whereIn('status', ['PENDING','APPROVED','PURCHASED'])->first()
+                                            : null;
                                     @endphp
-                                    @if(!$hasActiveReq)
+                                    @if(!$activeReq)
                                     <button type="button" wire:click="openPengajuanModal({{ $order->id }})" class="px-3 py-2 bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 font-bold text-xs rounded-xl transition inline-flex items-center gap-1">
                                         📋 Buat Pengajuan
                                     </button>
                                     @else
-                                    <span class="px-3 py-2 bg-purple-100 text-purple-700 font-bold text-xs rounded-xl inline-flex items-center gap-1">
-                                        🛒 Sudah Diajukan
-                                    </span>
+                                    <a href="{{ route('material-requests.index') }}" wire:navigate class="px-3 py-2 bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300 hover:bg-purple-200 border border-purple-200 dark:border-purple-800 font-bold text-xs rounded-xl inline-flex items-center gap-1">
+                                        @if($activeReq->status === 'PENDING')
+                                            ⏳ Menunggu Approval Finlog
+                                        @else
+                                            🚚 Dalam Pengiriman (Finlog)
+                                        @endif
+                                    </a>
                                     @endif
                                     @endif
                                     <button type="button" @click="window.dispatchEvent(new CustomEvent('open-report-modal', { detail: { id: {{ $order->id }} } }))" class="px-3 py-2 bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-200 font-bold text-xs rounded-xl transition inline-flex items-center gap-1">

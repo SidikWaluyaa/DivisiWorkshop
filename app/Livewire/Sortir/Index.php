@@ -539,13 +539,7 @@ class Index extends Component
             ->with(['customer', 'services', 'materials', 'cxIssues', 'logs']);
         $priorityOrders = $this->applyFilters(clone $priorityQuery)->paginate(20, ['*'], 'prioPage');
 
-        // Exclude SPKs that ALREADY have an active Material Request pending approval/purchase
-        $activeRequestIds = \App\Models\MaterialRequest::whereIn('status', ['PENDING', 'APPROVED', 'PURCHASED'])->pluck('id');
-        $activeWorkOrderIdsViaItems = \App\Models\MaterialRequestItem::whereIn('material_request_id', $activeRequestIds)->whereNotNull('work_order_id')->pluck('work_order_id');
-        $activeWorkOrderIdsDirect = \App\Models\MaterialRequest::whereIn('status', ['PENDING', 'APPROVED', 'PURCHASED'])->whereNotNull('work_order_id')->pluck('work_order_id');
-        $excludeWorkOrderIds = $activeWorkOrderIdsViaItems->merge($activeWorkOrderIdsDirect)->unique();
-
-        // 3. Waiting Finlog Belanja Queue
+        // 3. Waiting Finlog Belanja Queue (Includes SPKs awaiting PO or currently in-flight with Finlog)
         $waitingQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
             ->whereDoesntHave('logs', function($lq) {
                 $lq->where('step', 'SORTIR')
@@ -553,9 +547,9 @@ class Index extends Component
             })
             ->where(function($q) {
                 $q->where('perlu_belanja', true)
-                  ->orWhereHas('materials', fn($m) => $m->where('work_order_materials.status', 'REQUESTED'));
+                  ->orWhereHas('materials', fn($m) => $m->where('work_order_materials.status', 'REQUESTED'))
+                  ->orWhereHas('materialRequests', fn($mr) => $mr->whereNotIn('status', ['RECEIVED', 'CANCELLED', 'REJECTED']));
             })
-            ->whereNotIn('id', $excludeWorkOrderIds)
             ->with(['customer', 'services', 'materials', 'cxIssues', 'logs', 'materialRequests']);
         $waitingOrders = $this->applyFilters(clone $waitingQuery)->paginate(20, ['*'], 'waitingPage');
 

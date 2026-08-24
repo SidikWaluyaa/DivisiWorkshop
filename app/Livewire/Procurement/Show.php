@@ -162,31 +162,20 @@ class Show extends Component
 
             foreach ($workOrders->unique('id') as $order) {
                 $order->material_arrival_date = now();
+                $order->current_location = 'Sortir (Siap Handover)';
                 $order->save();
 
-                try {
-                    $workflow->updateStatus(
-                        $order,
-                        \App\Enums\WorkOrderStatus::PRODUCTION,
-                        "Material pengajuan (#{$this->materialRequest->request_number}) diverifikasi & diterima fisik oleh " . Auth::user()->name . ". SPK dilanjutkan ke Stasiun Produksi."
-                    );
-                } catch (\Exception $e) {
-                    // Fallback direct update
-                    $order->status = \App\Enums\WorkOrderStatus::PRODUCTION;
-                    $order->save();
-
-                    $order->logs()->create([
-                        'user_id' => Auth::id(),
-                        'step' => 'SORTIR_BELANJA',
-                        'action' => 'MATERIAL_RECEIVED_VERIFIED',
-                        'description' => "Material pengajuan (#{$this->materialRequest->request_number}) diverifikasi & diterima fisik oleh " . Auth::user()->name . ". SPK dilanjutkan ke Stasiun Produksi (fallback).",
-                    ]);
-                }
+                $order->logs()->create([
+                    'user_id' => Auth::id() ?? 1,
+                    'step' => 'SORTIR',
+                    'action' => 'CLASSIFICATION_COMPLETED',
+                    'description' => "Material pengajuan (#{$this->materialRequest->request_number}) diverifikasi & diterima fisik oleh " . Auth::user()->name . ". SPK Siap Surat Jalan (Sortir ➔ Produksi).",
+                ]);
             }
         });
 
         $this->loadRequest();
-        $this->dispatch('notify', type: 'success', message: 'Material berhasil diverifikasi & SPK terkait otomatis dilanjutkan ke Stasiun Produksi!');
+        $this->dispatch('notify', type: 'success', message: 'Material berhasil diverifikasi & SPK siap diserah-terimakan via Surat Jalan (Sortir ➔ Produksi)!');
     }
 
     public function render()

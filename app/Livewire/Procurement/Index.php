@@ -87,29 +87,20 @@ class Index extends Component
 
             foreach ($workOrders->unique('id') as $order) {
                 $order->material_arrival_date = now();
+                $order->current_location = 'Sortir (Siap Handover)';
                 $order->save();
 
-                try {
-                    $workflow->updateStatus(
-                        $order,
-                        \App\Enums\WorkOrderStatus::PRODUCTION,
-                        "Material pengajuan (#{$materialRequest->request_number}) diverifikasi & diterima fisik oleh " . \Illuminate\Support\Facades\Auth::user()->name . ". SPK dilanjutkan ke Stasiun Produksi."
-                    );
-                } catch (\Throwable $e) {
-                    $order->status = \App\Enums\WorkOrderStatus::PRODUCTION;
-                    $order->save();
-
-                    $order->logs()->create([
-                        'user_id' => \Illuminate\Support\Facades\Auth::id(),
-                        'step' => 'SORTIR_BELANJA',
-                        'action' => 'RECEIVE_MATERIAL',
-                        'description' => "Material pengajuan (#{$materialRequest->request_number}) diterima fisik.",
-                    ]);
-                }
+                // Log classification completion & readiness for Surat Jalan (Sortir -> Produksi)
+                $order->logs()->create([
+                    'user_id' => \Illuminate\Support\Facades\Auth::id() ?? 1,
+                    'step' => 'SORTIR',
+                    'action' => 'CLASSIFICATION_COMPLETED',
+                    'description' => "Material pengajuan (#{$materialRequest->request_number}) diverifikasi & diterima fisik. SPK Siap Surat Jalan (Sortir ➔ Produksi).",
+                ]);
             }
         });
 
-        $this->dispatch('notify', type: 'success', message: "Material pengajuan #{$materialRequest->request_number} berhasil diterima fisik & SPK otomatis pindah ke Stasiun Produksi!");
+        $this->dispatch('notify', type: 'success', message: "Material pengajuan #{$materialRequest->request_number} berhasil diterima fisik & SPK siap diserah-terimakan via Surat Jalan!");
     }
 
     public function deleteRequest($id)
