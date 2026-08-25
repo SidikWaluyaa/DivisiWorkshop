@@ -11,45 +11,94 @@
     use App\Models\MaterialMutation;
     use App\Enums\WorkOrderStatus;
     use Illuminate\Support\Facades\Schema;
+    use Illuminate\Support\Facades\Cache;
 
-    $countActiveWorkshop = WorkOrder::whereIn('status', [
-        WorkOrderStatus::SORTIR, 
-        WorkOrderStatus::PREPARATION, 
-        WorkOrderStatus::PRODUCTION, 
-        WorkOrderStatus::QC, 
-        WorkOrderStatus::REVISI
-    ])->count();
+    // Cache sidebar counts for 15 seconds for ultra-fast response
+    $wsCounts = Cache::remember('ws_sidebar_counts', 15, function() {
+        return [
+            'activeWorkshop' => WorkOrder::whereIn('status', [
+                WorkOrderStatus::SORTIR, 
+                WorkOrderStatus::PREPARATION, 
+                WorkOrderStatus::PRODUCTION, 
+                WorkOrderStatus::QC, 
+                WorkOrderStatus::REVISI
+            ])->count(),
+            'fastTrack' => WorkOrder::where('fast_track_status', 'yes')
+                ->whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL])
+                ->count(),
+            'inbound' => WorkshopManifest::where('status', 'SENT')->count(),
+            'prep' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->count(),
+            // 2. Sortir Active WIP (SPK still being sorted, not yet classification completed)
+            'sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)
+                ->whereDoesntHave('logs', function($lq) {
+                    $lq->where('step', 'SORTIR')
+                       ->where('action', 'CLASSIFICATION_COMPLETED');
+                })->count(),
+            // 4. Produksi Active WIP (SPK in production, not yet production approved)
+            'prod' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)
+                ->whereDoesntHave('logs', function($lq) {
+                    $lq->where('step', 'PRODUCTION')
+                       ->where('action', 'PRODUCTION_APPROVED');
+                })->count(),
+            'qc' => WorkOrder::where('status', WorkOrderStatus::QC)->count(),
+            'late' => WorkOrder::productionLate()->whereRaw('DATEDIFF(estimation_date, NOW()) <= 0')->count(),
+            'suratJalan' => SuratJalan::where('status', 'DIKIRIM')->count(),
+            // 3. SJ Sortir -> Produksi Candidates (Completed Sortir ready for Surat Jalan)
+            'suratJalanSortir' => WorkOrder::whereIn('status', [WorkOrderStatus::SORTIR, WorkOrderStatus::PRODUCTION])
+                ->whereHas('logs', function($lq) {
+                    $lq->where('step', 'SORTIR')
+                       ->where('action', 'CLASSIFICATION_COMPLETED');
+                })
+                ->whereDoesntHave('suratJalanItems.suratJalan', function($q) {
+                    $q->where('jenis_serah_terima', 'sortir_to_produksi');
+                })->count(),
+            // 5. SJ Produksi -> QC Candidates (Completed Production ready for Surat Jalan)
+            'suratJalanProd' => WorkOrder::whereIn('status', [WorkOrderStatus::PRODUCTION, WorkOrderStatus::QC])
+                ->whereHas('logs', function($lq) {
+                    $lq->where('step', 'PRODUCTION')
+                       ->where('action', 'PRODUCTION_APPROVED');
+                })
+                ->whereDoesntHave('suratJalanItems.suratJalan', function($q) {
+                    $q->where('jenis_serah_terima', 'produksi_to_post_qc');
+                })->count(),
+            'revisi' => WorkOrderRevision::where('status', 'OPEN')->count(),
+            'garansiActive' => WorkOrderWarranty::count(),
+            'listGaransi' => WorkOrder::whereNotNull('warranty_expires_at')->count(),
+            'materialTotal' => Material::count(),
+            'materialRequests' => Schema::hasTable('material_requests') ? MaterialRequest::where('status', 'PENDING')->count() : 0,
+            'disbursement' => Schema::hasTable('material_disbursements') ? MaterialDisbursement::where('status', 'PENDING')->count() : 0,
+            'mutationsToday' => Schema::hasTable('material_mutations') ? MaterialMutation::whereDate('created_at', today())->count() : 0,
+            'outboundStaging' => WorkOrder::where('status', WorkOrderStatus::STAGING_OUTBOUND)->count(),
+        ];
+    });
 
-    $countFastTrack = WorkOrder::where('fast_track_status', 'yes')
-        ->whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL])
-        ->count();
+    $countActiveWorkshop = $wsCounts['activeWorkshop'];
+    $countFastTrack = $wsCounts['fastTrack'];
+    $countInbound = $wsCounts['inbound'];
+    $countPrep = $wsCounts['prep'];
+    $countSortir = $wsCounts['sortir'];
+    $countProd = $wsCounts['prod'];
+    $countQc = $wsCounts['qc'];
+    $countLate = $wsCounts['late'];
+    $countSuratJalan = $wsCounts['suratJalan'];
+    $countSuratJalanSortir = $wsCounts['suratJalanSortir'];
+    $countSuratJalanProd = $wsCounts['suratJalanProd'];
+    $countRevisi = $wsCounts['revisi'];
+    $countGaransiActive = $wsCounts['garansiActive'];
+    $countListGaransi = $wsCounts['listGaransi'];
+    $countMaterialTotal = $wsCounts['materialTotal'];
+    $countMaterialRequests = $wsCounts['materialRequests'];
+    $countDisbursement = $wsCounts['disbursement'];
+    $countMutationsToday = $wsCounts['mutationsToday'];
+    $countOutboundStaging = $wsCounts['outboundStaging'];
 
-    $countInbound = WorkshopManifest::where('status', 'SENT')->count();
-
-    $countPrep = WorkOrder::where('status', WorkOrderStatus::PREPARATION)->count();
-    $countSortir = WorkOrder::where('status', WorkOrderStatus::SORTIR)->count();
-    $countProd = WorkOrder::where('status', WorkOrderStatus::PRODUCTION)
-        ->whereDoesntHave('logs', function($lq) {
-            $lq->where('step', 'PRODUCTION')
-               ->where('action', 'PRODUCTION_APPROVED');
-        })->count();
-    $countQc = WorkOrder::where('status', WorkOrderStatus::QC)->count();
-
-    $countLate = WorkOrder::productionLate()->whereRaw('DATEDIFF(estimation_date, NOW()) <= 0')->count();
-    $countSuratJalan = SuratJalan::where('status', 'DIKIRIM')->count();
-    $countSuratJalanSortir = SuratJalan::where('status', 'DIKIRIM')->where('jenis_serah_terima', 'sortir_to_produksi')->count();
-    $countSuratJalanProd = SuratJalan::where('status', 'DIKIRIM')->where('jenis_serah_terima', 'produksi_to_post_qc')->count();
-
-    $countRevisi = WorkOrderRevision::where('status', 'OPEN')->count();
-    $countGaransiActive = WorkOrderWarranty::count();
-    $countListGaransi = WorkOrder::whereNotNull('warranty_expires_at')->count();
-
-    $countMaterialTotal = Material::count();
-    $countMaterialRequests = Schema::hasTable('material_requests') ? MaterialRequest::where('status', 'PENDING')->count() : 0;
-    $countDisbursement = Schema::hasTable('material_disbursements') ? MaterialDisbursement::where('status', 'PENDING')->count() : 0;
-    $countMutationsToday = Schema::hasTable('material_mutations') ? MaterialMutation::whereDate('created_at', today())->count() : 0;
-
-    $countOutboundStaging = WorkOrder::where('status', WorkOrderStatus::STAGING_OUTBOUND)->count();
+    $formatNum = function($num) {
+        if ($num >= 1000) {
+            $formatted = number_format($num / 1000, 1);
+            return rtrim(rtrim($formatted, '0'), '.') . 'k';
+        }
+        return (string)$num;
+    };
 @endphp
 
 <aside class="hidden md:flex flex-col fixed inset-y-0 left-0 z-40 bg-[#22AF85] text-white border-r border-emerald-600/40 transition-all duration-300 ease-out shadow-2xl shadow-emerald-950/20 font-sans"
@@ -75,6 +124,7 @@
     <div class="flex-1 overflow-y-auto overflow-x-hidden py-4 sidebar-scroll transition-all duration-300"
          :class="sidebarCollapsed ? 'px-2 space-y-3' : 'px-3 space-y-4'"
          x-data="{
+             openDashboard: {{ request()->routeIs('dashboard', 'workshop.dashboard-v2', 'workshop.fast-track.*', 'internal-tracking.*') ? 'true' : 'false' }},
              openLayanan: {{ request()->routeIs('production.technician-assistant', 'admin.technician-skills', 'admin.services.*', 'admin.performance.*') ? 'true' : 'false' }},
              openUtilitas: {{ request()->routeIs('production.late-info', 'surat-jalan.*') ? 'true' : 'false' }},
              openGaransi: {{ request()->routeIs('revision.*', 'garansi.*', 'finish.list-garansi') ? 'true' : 'false' }},
@@ -88,10 +138,62 @@
          "
          @scroll.passive="sessionStorage.setItem('sidebar_scroll_ws', $el.scrollTop)">
 
-        {{-- 1. UTAMA & DASHBOARD (STATIC) --}}
-        <div class="space-y-1">
+        {{-- 1. DASHBOARD & TRACKING (COLLAPSIBLE ACCORDION) --}}
+        <div>
+            <button @click="openDashboard = !openDashboard" type="button" 
+                    class="w-full text-left px-3 py-2 mb-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-between group cursor-pointer rounded-xl transition-all duration-200 border"
+                    :class="openDashboard ? 'bg-emerald-900/60 border-emerald-400/30 text-white shadow-sm' : 'bg-emerald-800/40 hover:bg-emerald-800/70 border-emerald-500/30 text-emerald-100'"
+                    x-show="!sidebarCollapsed" x-cloak>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <svg class="w-3.5 h-3.5 text-[#FFC232] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                    </svg>
+                    <span class="whitespace-nowrap font-black truncate">Dashboard &amp; Tracking</span>
+                </div>
+                <div class="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                    @if($countActiveWorkshop + $countFastTrack > 0)
+                        <span x-show="!openDashboard" x-cloak class="px-2 py-0.5 min-w-[20px] h-[18px] rounded-full bg-[#FFC232] text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm">
+                            {{ $formatNum($countActiveWorkshop + $countFastTrack) }}
+                        </span>
+                    @endif
+                    <svg class="w-3.5 h-3.5 text-emerald-100 transition-transform duration-300 ease-out" 
+                         :class="openDashboard ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+            </button>
+            <div x-show="sidebarCollapsed" x-cloak class="my-2 border-t border-emerald-600/40"></div>
+
+            <div class="space-y-1" x-show="openDashboard || sidebarCollapsed" x-collapse x-cloak>
+                {{-- Portal Utama Admin General --}}
+                <a href="{{ route('dashboard') }}" 
+                   title="Portal Utama Admin General"
+                   class="flex items-center transition-all duration-200 ease-out group relative font-extrabold text-xs
+                   {{ request()->routeIs('dashboard') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
+                   :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-2xl'">
+                    
+                    @if(request()->routeIs('dashboard'))
+                        <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-slate-950 rounded-r-full shadow-sm" x-show="!sidebarCollapsed"></span>
+                    @endif
+
+                    <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('dashboard') ? 'text-slate-950' : 'text-amber-300 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 00-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1 flex items-center justify-between">
+                        <span>Portal Utama Admin</span>
+                        <span class="px-1.5 py-0.5 bg-slate-950 text-[#FFC232] font-black text-[9px] rounded-md uppercase tracking-wider">PORTAL</span>
+                    </span>
+
+                    {{-- Compact Hover Tooltip --}}
+                    <div x-show="sidebarCollapsed" x-cloak 
+                         class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+                        <span>Portal Utama Admin</span>
+                    </div>
+                </a>
+
+                {{-- Dashboard Utama --}}
             <a href="{{ route('workshop.dashboard-v2') }}" 
-               title="Dashboard Workshop ({{ $countActiveWorkshop }})"
+               title="Dashboard Utama ({{ $countActiveWorkshop }})"
                class="flex items-center transition-all duration-200 ease-out group relative font-extrabold text-xs
                {{ request()->routeIs('workshop.dashboard-v2') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
                :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-2xl'">
@@ -103,7 +205,7 @@
                 <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('workshop.dashboard-v2') ? 'text-slate-950' : 'text-emerald-100 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 00-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                 </svg>
-                <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Dashboard Workshop</span>
+                <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Dashboard Utama</span>
                 @if($countActiveWorkshop > 0)
                     <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black {{ request()->routeIs('workshop.dashboard-v2') ? 'bg-slate-950 text-[#FFC232]' : 'bg-white/20 text-white' }}">
                         {{ $countActiveWorkshop }}
@@ -116,17 +218,102 @@
                 {{-- Compact Hover Tooltip --}}
                 <div x-show="sidebarCollapsed" x-cloak 
                      class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
-                    <span>Dashboard Workshop</span>
+                    <span>Dashboard Utama</span>
                     <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countActiveWorkshop }}</span>
+                </div>
+            </a>
+
+            {{-- Fast Track (Prioritas) --}}
+            <a href="{{ route('workshop.fast-track.index') }}" 
+               title="Fast Track (Prioritas) ({{ $countFastTrack }})"
+               class="flex items-center transition-all duration-200 ease-out group relative font-extrabold text-xs
+               {{ request()->routeIs('workshop.fast-track.*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
+               :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-2xl'">
+                
+                @if(request()->routeIs('workshop.fast-track.*'))
+                    <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-slate-950 rounded-r-full shadow-sm" x-show="!sidebarCollapsed"></span>
+                @endif
+
+                <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('workshop.fast-track.*') ? 'text-slate-950' : 'text-amber-300 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1 flex items-center justify-between">
+                    <span>Fast Track (Prioritas)</span>
+                    <span class="px-1.5 py-0.5 bg-rose-500 text-white font-black text-[9px] rounded-md uppercase tracking-wider animate-pulse">PRIORITY</span>
+                </span>
+                @if($countFastTrack > 0)
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black {{ request()->routeIs('workshop.fast-track.*') ? 'bg-slate-950 text-[#FFC232]' : 'bg-[#FFC232] text-slate-950' }}">
+                        {{ $countFastTrack }}
+                    </span>
+                    <span x-show="sidebarCollapsed" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-slate-950 text-[#FFC232] font-black text-[9px] flex items-center justify-center shadow-sm border-2 border-white">
+                        {{ $countFastTrack }}
+                    </span>
+                @endif
+
+                {{-- Compact Hover Tooltip --}}
+                <div x-show="sidebarCollapsed" x-cloak 
+                     class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
+                    <span>Fast Track (Prioritas)</span>
+                    <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countFastTrack }}</span>
+                </div>
+            </a>
+
+            {{-- Lacak SPK Internal --}}
+            <a href="{{ route('internal-tracking.index') }}" 
+               title="Lacak SPK Internal"
+               class="flex items-center transition-all duration-200 ease-out group relative font-extrabold text-xs
+               {{ request()->routeIs('internal-tracking.index') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
+               :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-2xl'">
+                
+                @if(request()->routeIs('internal-tracking.index'))
+                    <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-slate-950 rounded-r-full shadow-sm" x-show="!sidebarCollapsed"></span>
+                @endif
+
+                <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('internal-tracking.index') ? 'text-slate-950' : 'text-emerald-100 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Lacak SPK Internal</span>
+
+                {{-- Compact Hover Tooltip --}}
+                <div x-show="sidebarCollapsed" x-cloak 
+                     class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
+                    <span>Lacak SPK Internal</span>
+                </div>
+            </a>
+
+            {{-- Lacak Jasa Workshop --}}
+            <a href="{{ route('internal-tracking.services') }}" 
+               title="Lacak Jasa Workshop"
+               class="flex items-center transition-all duration-200 ease-out group relative font-extrabold text-xs
+               {{ request()->routeIs('internal-tracking.services') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
+               :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-2xl'">
+                
+                @if(request()->routeIs('internal-tracking.services'))
+                    <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-slate-950 rounded-r-full shadow-sm" x-show="!sidebarCollapsed"></span>
+                @endif
+
+                <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('internal-tracking.services') ? 'text-slate-950' : 'text-emerald-100 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Lacak Jasa Workshop</span>
+
+                {{-- Compact Hover Tooltip --}}
+                <div x-show="sidebarCollapsed" x-cloak 
+                     class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
+                    <span>Lacak Jasa Workshop</span>
                 </div>
             </a>
         </div>
 
-        {{-- 2. ANTREAN INBOUND (STATIC) --}}
+        {{-- 2. INBOUND WORKSHOP (STATIC) --}}
         <div>
-            <div x-show="!sidebarCollapsed" x-cloak class="px-3 mb-1.5 text-[10px] font-black uppercase text-emerald-100/90 tracking-wider flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#FFC232]"></span>
-                <span>Antrean Inbound</span>
+            <div x-show="!sidebarCollapsed" x-cloak class="px-3 py-2 mb-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-between bg-emerald-800/40 border border-emerald-500/30 rounded-xl text-emerald-100 shadow-sm">
+                <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-[#FFC232] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                    </svg>
+                    <span class="font-black">Inbound Workshop</span>
+                </div>
             </div>
             <div x-show="sidebarCollapsed" x-cloak class="my-2 border-t border-emerald-600/40"></div>
 
@@ -166,11 +353,16 @@
             </div>
         </div>
 
-        {{-- 3. ALUR PROSES PENGERJAAN (STATIC 1 TO 6) --}}
+        {{-- 3. STASIUN PENGERJAAN (STATIC 1 TO 6) --}}
         <div>
-            <div x-show="!sidebarCollapsed" x-cloak class="px-3 mb-1.5 text-[10px] font-black uppercase text-emerald-100/90 tracking-wider flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
-                <span>Alur Proses Pengerjaan</span>
+            <div x-show="!sidebarCollapsed" x-cloak class="px-3 py-2 mb-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-between bg-emerald-800/40 border border-emerald-500/30 rounded-xl text-emerald-100 shadow-sm">
+                <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span class="font-black">Stasiun Pengerjaan</span>
+                </div>
             </div>
             <div x-show="sidebarCollapsed" x-cloak class="my-2 border-t border-emerald-600/40"></div>
 
@@ -207,7 +399,7 @@
 
                 {{-- 2. Sortir --}}
                 <a href="{{ route('sortir.index') }}" 
-                   title="2. Sortir & Klasifikasi ({{ $countSortir }})"
+                   title="2. Sortir & Penilaian ({{ $countSortir }})"
                    class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
                    {{ request()->routeIs('sortir.*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
                    :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
@@ -217,7 +409,7 @@
                     @endif
 
                     <span class="w-5 h-5 rounded-lg {{ request()->routeIs('sortir.*') ? 'bg-slate-950 text-[#FFC232] font-black' : 'bg-white/20 text-white font-black' }} flex items-center justify-center text-[10px] flex-shrink-0">2</span>
-                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Sortir &amp; Klasifikasi</span>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Sortir &amp; Penilaian</span>
                     <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black {{ request()->routeIs('sortir.*') ? 'bg-slate-950 text-[#FFC232]' : 'bg-white/20 text-white' }}">
                         {{ $countSortir }}
                     </span>
@@ -230,14 +422,14 @@
                     {{-- Compact Hover Tooltip --}}
                     <div x-show="sidebarCollapsed" x-cloak 
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
-                        <span>2. Sortir &amp; Klasifikasi</span>
+                        <span>2. Sortir &amp; Penilaian</span>
                         <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countSortir }}</span>
                     </div>
                 </a>
 
                 {{-- 3. Surat Jalan Sortir ke Production --}}
                 <a href="{{ route('surat-jalan.index', ['jenis' => 'sortir_to_produksi']) }}" 
-                   title="3. Surat Jalan Sortir ke Production ({{ $countSuratJalanSortir }})"
+                   title="3. SJ Sortir ke Produksi ({{ $countSuratJalanSortir }})"
                    class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
                    {{ request()->fullUrlIs('*surat-jalan*jenis=sortir_to_produksi*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-emerald-100 hover:bg-white/15 hover:translate-x-1' }}"
                    :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
@@ -247,7 +439,7 @@
                     @endif
 
                     <span class="w-5 h-5 rounded-lg {{ request()->fullUrlIs('*surat-jalan*jenis=sortir_to_produksi*') ? 'bg-slate-950 text-[#FFC232] font-black' : 'bg-white/20 text-white font-black' }} flex items-center justify-center text-[10px] flex-shrink-0">3</span>
-                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1 text-[11px] leading-tight">Surat Jalan Sortir ➔ Prod</span>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1 text-[11px] leading-tight">SJ Sortir ➔ Produksi</span>
                     @if($countSuratJalanSortir > 0)
                         <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black bg-slate-950 text-[#FFC232] shadow-sm animate-pulse">
                             {{ $countSuratJalanSortir }}
@@ -260,7 +452,7 @@
                     {{-- Compact Hover Tooltip --}}
                     <div x-show="sidebarCollapsed" x-cloak 
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
-                        <span>3. Surat Jalan Sortir ➔ Prod</span>
+                        <span>3. SJ Sortir ➔ Produksi</span>
                         <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countSuratJalanSortir }}</span>
                     </div>
                 </a>
@@ -297,7 +489,7 @@
 
                 {{-- 5. Surat Jalan Production ke QC --}}
                 <a href="{{ route('surat-jalan.index', ['jenis' => 'produksi_to_post_qc']) }}" 
-                   title="5. Surat Jalan Production ke QC ({{ $countSuratJalanProd }})"
+                   title="5. SJ Produksi ke QC ({{ $countSuratJalanProd }})"
                    class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
                    {{ request()->fullUrlIs('*surat-jalan*jenis=produksi_to_post_qc*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-emerald-100 hover:bg-white/15 hover:translate-x-1' }}"
                    :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
@@ -307,7 +499,7 @@
                     @endif
 
                     <span class="w-5 h-5 rounded-lg {{ request()->fullUrlIs('*surat-jalan*jenis=produksi_to_post_qc*') ? 'bg-slate-950 text-[#FFC232] font-black' : 'bg-white/20 text-white font-black' }} flex items-center justify-center text-[10px] flex-shrink-0">5</span>
-                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1 text-[11px] leading-tight">Surat Jalan Prod ➔ QC</span>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1 text-[11px] leading-tight">SJ Produksi ➔ QC</span>
                     @if($countSuratJalanProd > 0)
                         <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black bg-slate-950 text-[#FFC232] shadow-sm animate-pulse">
                             {{ $countSuratJalanProd }}
@@ -320,7 +512,7 @@
                     {{-- Compact Hover Tooltip --}}
                     <div x-show="sidebarCollapsed" x-cloak 
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
-                        <span>5. Surat Jalan Prod ➔ QC</span>
+                        <span>5. SJ Produksi ➔ QC</span>
                         <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countSuratJalanProd }}</span>
                     </div>
                 </a>
@@ -357,11 +549,15 @@
             </div>
         </div>
 
-        {{-- 4. ANTREAN OUTBOUND (STATIC) --}}
+        {{-- 4. OUTBOUND WORKSHOP (STATIC) --}}
         <div>
-            <div x-show="!sidebarCollapsed" x-cloak class="px-3 mb-1.5 text-[10px] font-black uppercase text-emerald-100/90 tracking-wider flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#FFC232]"></span>
-                <span>Antrean Outbound</span>
+            <div x-show="!sidebarCollapsed" x-cloak class="px-3 py-2 mb-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-between bg-emerald-800/40 border border-emerald-500/30 rounded-xl text-emerald-100 shadow-sm">
+                <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-[#FFC232] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v1a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                    </svg>
+                    <span class="font-black">Outbound Workshop</span>
+                </div>
             </div>
             <div x-show="sidebarCollapsed" x-cloak class="my-2 border-t border-emerald-600/40"></div>
 
@@ -399,19 +595,24 @@
             </div>
         </div>
 
-        {{-- 5. MANAJEMEN LAYANAN & TEKNISI (COLLAPSIBLE ACCORDION) --}}
+        {{-- 5. LAYANAN & TEKNISI (COLLAPSIBLE ACCORDION - SINGLE LINE) --}}
         <div>
             <button @click="openLayanan = !openLayanan" type="button" 
-                    class="w-full text-left px-3 mb-1.5 text-[10px] font-black uppercase text-[#FFC232] tracking-wider flex items-center justify-between group cursor-pointer hover:text-amber-200 transition-colors"
+                    class="w-full text-left px-3 py-2 mb-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-between group cursor-pointer rounded-xl transition-all duration-200 border"
+                    :class="openLayanan ? 'bg-emerald-900/60 border-emerald-400/30 text-white shadow-sm' : 'bg-emerald-800/40 hover:bg-emerald-800/70 border-emerald-500/30 text-emerald-100'"
                     x-show="!sidebarCollapsed" x-cloak>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#FFC232]"></span>
-                    <span>Manajemen Layanan &amp; Teknisi</span>
+                <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-[#FFC232] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span class="whitespace-nowrap font-black">Layanan &amp; Teknisi</span>
                 </div>
-                <svg class="w-3.5 h-3.5 text-[#FFC232] transition-transform duration-300 ease-out" 
-                     :class="openLayanan ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                </svg>
+                <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-emerald-100 transition-transform duration-300 ease-out" 
+                         :class="openLayanan ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
             </button>
             <div x-show="sidebarCollapsed" x-cloak class="my-2 border-t border-emerald-600/40"></div>
 
@@ -440,9 +641,9 @@
                     </div>
                 </a>
 
-                {{-- Skill & Jasa Teknisi --}}
+                {{-- Skill & Tarif Jasa --}}
                 <a href="{{ route('admin.technician-skills') }}" 
-                   title="Skill & Jasa Teknisi"
+                   title="Skill & Tarif Jasa"
                    class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
                    {{ request()->routeIs('admin.technician-skills') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
                    :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
@@ -455,19 +656,19 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Skill &amp; Jasa Teknisi</span>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Skill &amp; Tarif Jasa</span>
 
                     {{-- Compact Hover Tooltip --}}
                     <div x-show="sidebarCollapsed" x-cloak 
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
-                        <span>Skill &amp; Jasa Teknisi</span>
+                        <span>Skill &amp; Tarif Jasa</span>
                     </div>
                 </a>
 
-                {{-- Manajemen Layanan --}}
+                {{-- Katalog Layanan Master --}}
                 @if(Auth::user()->hasAccess('admin.services'))
                 <a href="{{ route('admin.services.index') }}" 
-                   title="Manajemen Layanan Master"
+                   title="Katalog Layanan Master"
                    class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
                    {{ request()->routeIs('admin.services.*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
                    :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
@@ -479,12 +680,12 @@
                     <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('admin.services.*') ? 'text-slate-950' : 'text-emerald-100' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                     </svg>
-                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Manajemen Layanan</span>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Katalog Layanan Master</span>
 
                     {{-- Compact Hover Tooltip --}}
                     <div x-show="sidebarCollapsed" x-cloak 
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
-                        <span>Manajemen Layanan</span>
+                        <span>Katalog Layanan Master</span>
                     </div>
                 </a>
                 @endif
@@ -516,19 +717,29 @@
             </div>
         </div>
 
-        {{-- 6. UTILITAS & LOGISTIK (COLLAPSIBLE ACCORDION) --}}
+        {{-- 6. LOGISTIK & SURAT JALAN (COLLAPSIBLE ACCORDION) --}}
         <div>
             <button @click="openUtilitas = !openUtilitas" type="button" 
-                    class="w-full text-left px-3 mb-1.5 text-[10px] font-black uppercase text-emerald-100/90 tracking-wider flex items-center justify-between group cursor-pointer hover:text-white transition-colors"
+                    class="w-full text-left px-3 py-2 mb-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-between group cursor-pointer rounded-xl transition-all duration-200 border"
+                    :class="openUtilitas ? 'bg-emerald-900/60 border-emerald-400/30 text-white shadow-sm' : 'bg-emerald-800/40 hover:bg-emerald-800/70 border-emerald-500/30 text-emerald-100'"
                     x-show="!sidebarCollapsed" x-cloak>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
-                    <span>Utilitas &amp; Logistik</span>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <svg class="w-3.5 h-3.5 text-emerald-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="whitespace-nowrap font-black truncate">Logistik &amp; Surat Jalan</span>
                 </div>
-                <svg class="w-3.5 h-3.5 text-emerald-100 transition-transform duration-300 ease-out" 
-                     :class="openUtilitas ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                </svg>
+                <div class="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                    @if($countLate + $countSuratJalan > 0)
+                        <span x-show="!openUtilitas" x-cloak class="px-2 py-0.5 min-w-[20px] h-[18px] rounded-full bg-[#FFC232] text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm">
+                            {{ $formatNum($countLate + $countSuratJalan) }}
+                        </span>
+                    @endif
+                    <svg class="w-3.5 h-3.5 text-emerald-100 transition-transform duration-300 ease-out" 
+                         :class="openUtilitas ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
             </button>
             <div x-show="sidebarCollapsed" x-cloak class="my-2 border-t border-emerald-600/40"></div>
 
@@ -604,16 +815,26 @@
         {{-- 7. REVISI & GARANSI (COLLAPSIBLE ACCORDION) --}}
         <div>
             <button @click="openGaransi = !openGaransi" type="button" 
-                    class="w-full text-left px-3 mb-1.5 text-[10px] font-black uppercase text-emerald-100/90 tracking-wider flex items-center justify-between group cursor-pointer hover:text-white transition-colors"
+                    class="w-full text-left px-3 py-2 mb-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-between group cursor-pointer rounded-xl transition-all duration-200 border"
+                    :class="openGaransi ? 'bg-emerald-900/60 border-emerald-400/30 text-white shadow-sm' : 'bg-emerald-800/40 hover:bg-emerald-800/70 border-emerald-500/30 text-emerald-100'"
                     x-show="!sidebarCollapsed" x-cloak>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#FFC232]"></span>
-                    <span>Revisi &amp; Garansi</span>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <svg class="w-3.5 h-3.5 text-[#FFC232] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 21.48V11.5"/>
+                    </svg>
+                    <span class="whitespace-nowrap font-black truncate">Revisi &amp; Garansi</span>
                 </div>
-                <svg class="w-3.5 h-3.5 text-emerald-100 transition-transform duration-300 ease-out" 
-                     :class="openGaransi ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                </svg>
+                <div class="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                    @if($countRevisi + $countGaransiActive > 0)
+                        <span x-show="!openGaransi" x-cloak class="px-2 py-0.5 min-w-[20px] h-[18px] rounded-full bg-[#FFC232] text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm">
+                            {{ $formatNum($countRevisi + $countGaransiActive) }}
+                        </span>
+                    @endif
+                    <svg class="w-3.5 h-3.5 text-emerald-100 transition-transform duration-300 ease-out" 
+                         :class="openGaransi ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
             </button>
             <div x-show="sidebarCollapsed" x-cloak class="my-2 border-t border-emerald-600/40"></div>
 
@@ -715,19 +936,29 @@
             </div>
         </div>
 
-        {{-- 8. MANAJEMEN MATERIAL WS (COLLAPSIBLE ACCORDION) --}}
+        {{-- 8. STOK & MATERIAL (COLLAPSIBLE ACCORDION - SINGLE LINE) --}}
         <div>
             <button @click="openMaterial = !openMaterial" type="button" 
-                    class="w-full text-left px-3 mb-1.5 text-[10px] font-black uppercase text-emerald-100/90 tracking-wider flex items-center justify-between group cursor-pointer hover:text-white transition-colors"
+                    class="w-full text-left px-3 py-2 mb-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-between group cursor-pointer rounded-xl transition-all duration-200 border"
+                    :class="openMaterial ? 'bg-emerald-900/60 border-emerald-400/30 text-white shadow-sm' : 'bg-emerald-800/40 hover:bg-emerald-800/70 border-emerald-500/30 text-emerald-100'"
                     x-show="!sidebarCollapsed" x-cloak>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
-                    <span>Material Workshop</span>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <svg class="w-3.5 h-3.5 text-emerald-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    <span class="whitespace-nowrap font-black truncate">Stok &amp; Material</span>
                 </div>
-                <svg class="w-3.5 h-3.5 text-emerald-100 transition-transform duration-300 ease-out" 
-                     :class="openMaterial ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                </svg>
+                <div class="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                    @if($countMaterialRequests + $countDisbursement > 0)
+                        <span x-show="!openMaterial" x-cloak class="px-2 py-0.5 min-w-[20px] h-[18px] rounded-full bg-[#FFC232] text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm">
+                            {{ $formatNum($countMaterialRequests + $countDisbursement) }}
+                        </span>
+                    @endif
+                    <svg class="w-3.5 h-3.5 text-emerald-100 transition-transform duration-300 ease-out" 
+                         :class="openMaterial ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
             </button>
             <div x-show="sidebarCollapsed" x-cloak class="my-2 border-t border-emerald-600/40"></div>
 
@@ -767,7 +998,7 @@
 
                 @if(Route::has('material-requests.index'))
                 <a href="{{ route('material-requests.index') }}" 
-                   title="Belanja Material WS ({{ $countMaterialRequests }})"
+                   title="Permintaan Material ({{ $countMaterialRequests }})"
                    class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
                    {{ request()->routeIs('material-requests.*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
                    :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
@@ -779,7 +1010,7 @@
                     <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('material-requests.*') ? 'text-slate-950' : 'text-emerald-100' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/>
                     </svg>
-                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Belanja Material WS</span>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Permintaan Material</span>
                     @if($countMaterialRequests > 0)
                         <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black bg-slate-950 text-[#FFC232] shadow-sm">
                             {{ $countMaterialRequests }}
@@ -792,14 +1023,14 @@
                     {{-- Compact Hover Tooltip --}}
                     <div x-show="sidebarCollapsed" x-cloak 
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
-                        <span>Belanja Material WS</span>
+                        <span>Permintaan Material</span>
                         <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countMaterialRequests }}</span>
                     </div>
                 </a>
                 @endif
 
                 <a href="{{ route('storage.disbursement.index') }}" 
-                   title="Barang Keluar WS ({{ $countDisbursement }})"
+                   title="Pengeluaran Material ({{ $countDisbursement }})"
                    class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
                    {{ request()->routeIs('storage.disbursement.*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
                    :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
@@ -811,7 +1042,7 @@
                     <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('storage.disbursement.*') ? 'text-slate-950' : 'text-emerald-100' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Barang Keluar WS</span>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Pengeluaran Material</span>
                     @if($countDisbursement > 0)
                         <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black bg-slate-950 text-[#FFC232] shadow-sm">
                             {{ $countDisbursement }}
@@ -824,7 +1055,7 @@
                     {{-- Compact Hover Tooltip --}}
                     <div x-show="sidebarCollapsed" x-cloak 
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
-                        <span>Barang Keluar WS</span>
+                        <span>Pengeluaran Material</span>
                         <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countDisbursement }}</span>
                     </div>
                 </a>
