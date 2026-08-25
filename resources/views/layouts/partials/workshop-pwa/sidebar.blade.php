@@ -37,6 +37,8 @@
 
     $countLate = WorkOrder::productionLate()->whereRaw('DATEDIFF(estimation_date, NOW()) <= 0')->count();
     $countSuratJalan = SuratJalan::where('status', 'DIKIRIM')->count();
+    $countSuratJalanSortir = SuratJalan::where('status', 'DIKIRIM')->where('jenis_serah_terima', 'sortir_to_produksi')->count();
+    $countSuratJalanProd = SuratJalan::where('status', 'DIKIRIM')->where('jenis_serah_terima', 'produksi_to_post_qc')->count();
 
     $countRevisi = WorkOrderRevision::where('status', 'OPEN')->count();
     $countGaransiActive = WorkOrderWarranty::count();
@@ -106,6 +108,16 @@
                 @endif
             </a>
 
+            <a href="{{ route('dashboard') }}" 
+               title="Ke Tampilan Umum / Portal Utama Admin"
+               class="flex items-center transition-all group relative font-extrabold text-xs text-emerald-100 hover:text-white hover:bg-white/15 border border-white/20 bg-white/10"
+               :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-2xl'">
+                <svg class="w-5 h-5 flex-shrink-0 text-amber-300 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Portal Utama / Admin</span>
+            </a>
+
             <a href="{{ route('workshop.fast-track.index') }}" 
                title="Fast Track SPK ({{ $countFastTrack }})"
                class="flex items-center transition-all group relative font-extrabold text-xs
@@ -123,6 +135,28 @@
                         {{ $countFastTrack }}
                     </span>
                 @endif
+            </a>
+
+            <a href="{{ route('internal-tracking.index') }}" 
+               title="Internal Tracking SPK"
+               class="flex items-center transition-all group relative font-extrabold text-xs
+               {{ request()->routeIs('internal-tracking.index') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15' }}"
+               :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-2xl'">
+                <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('internal-tracking.index') ? 'text-slate-950' : 'text-emerald-100 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Internal Tracking SPK</span>
+            </a>
+
+            <a href="{{ route('internal-tracking.services') }}" 
+               title="Tracking Jasa Workshop"
+               class="flex items-center transition-all group relative font-extrabold text-xs
+               {{ request()->routeIs('internal-tracking.services') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15' }}"
+               :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-2xl'">
+                <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('internal-tracking.services') ? 'text-slate-950' : 'text-emerald-100 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Tracking Jasa Workshop</span>
             </a>
         </div>
 
@@ -203,13 +237,31 @@
                     @endif
                 </a>
 
-                {{-- 3. Produksi --}}
+                {{-- 3. Surat Jalan Sortir ke Production --}}
+                <a href="{{ route('surat-jalan.index', ['jenis' => 'sortir_to_produksi']) }}" 
+                   title="3. Surat Jalan Sortir ke Production ({{ $countSuratJalanSortir }})"
+                   class="flex items-center transition-all text-xs font-extrabold group relative
+                   {{ request()->fullUrlIs('*surat-jalan*jenis=sortir_to_produksi*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-emerald-100 hover:bg-white/15' }}"
+                   :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
+                    <span class="w-5 h-5 rounded-lg {{ request()->fullUrlIs('*surat-jalan*jenis=sortir_to_produksi*') ? 'bg-slate-950 text-[#FFC232] font-black' : 'bg-white/20 text-white font-black' }} flex items-center justify-center text-[10px] flex-shrink-0">3</span>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1 text-[11px] leading-tight">Surat Jalan Sortir ➔ Prod</span>
+                    @if($countSuratJalanSortir > 0)
+                        <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black bg-slate-950 text-[#FFC232] shadow-sm animate-pulse">
+                            {{ $countSuratJalanSortir }}
+                        </span>
+                        <span x-show="sidebarCollapsed" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-slate-950 text-[#FFC232] font-black text-[9px] flex items-center justify-center shadow-sm border-2 border-white animate-pulse">
+                            {{ $countSuratJalanSortir }}
+                        </span>
+                    @endif
+                </a>
+
+                {{-- 4. Produksi --}}
                 <a href="{{ route('production.index') }}" 
-                   title="3. Produksi Reparasi ({{ $countProd }})"
+                   title="4. Produksi Reparasi ({{ $countProd }})"
                    class="flex items-center transition-all text-xs font-extrabold group relative
                    {{ request()->routeIs('production.index') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15' }}"
                    :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
-                    <span class="w-5 h-5 rounded-lg {{ request()->routeIs('production.index') ? 'bg-slate-950 text-[#FFC232] font-black' : 'bg-white/20 text-white font-black' }} flex items-center justify-center text-[10px] flex-shrink-0">3</span>
+                    <span class="w-5 h-5 rounded-lg {{ request()->routeIs('production.index') ? 'bg-slate-950 text-[#FFC232] font-black' : 'bg-white/20 text-white font-black' }} flex items-center justify-center text-[10px] flex-shrink-0">4</span>
                     <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Produksi (Reparasi)</span>
                     <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black {{ request()->routeIs('production.index') ? 'bg-slate-950 text-[#FFC232]' : 'bg-white/20 text-white' }}">
                         {{ $countProd }}
@@ -221,13 +273,31 @@
                     @endif
                 </a>
 
-                {{-- 4. QC --}}
+                {{-- 5. Surat Jalan Production ke QC --}}
+                <a href="{{ route('surat-jalan.index', ['jenis' => 'produksi_to_post_qc']) }}" 
+                   title="5. Surat Jalan Production ke QC ({{ $countSuratJalanProd }})"
+                   class="flex items-center transition-all text-xs font-extrabold group relative
+                   {{ request()->fullUrlIs('*surat-jalan*jenis=produksi_to_post_qc*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-emerald-100 hover:bg-white/15' }}"
+                   :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
+                    <span class="w-5 h-5 rounded-lg {{ request()->fullUrlIs('*surat-jalan*jenis=produksi_to_post_qc*') ? 'bg-slate-950 text-[#FFC232] font-black' : 'bg-white/20 text-white font-black' }} flex items-center justify-center text-[10px] flex-shrink-0">5</span>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1 text-[11px] leading-tight">Surat Jalan Prod ➔ QC</span>
+                    @if($countSuratJalanProd > 0)
+                        <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black bg-slate-950 text-[#FFC232] shadow-sm animate-pulse">
+                            {{ $countSuratJalanProd }}
+                        </span>
+                        <span x-show="sidebarCollapsed" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-slate-950 text-[#FFC232] font-black text-[9px] flex items-center justify-center shadow-sm border-2 border-white animate-pulse">
+                            {{ $countSuratJalanProd }}
+                        </span>
+                    @endif
+                </a>
+
+                {{-- 6. QC --}}
                 <a href="{{ route('qc.index') }}" 
-                   title="4. Quality Control ({{ $countQc }})"
+                   title="6. Quality Control ({{ $countQc }})"
                    class="flex items-center transition-all text-xs font-extrabold group relative
                    {{ request()->routeIs('qc.index') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15' }}"
                    :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
-                    <span class="w-5 h-5 rounded-lg {{ request()->routeIs('qc.index') ? 'bg-slate-950 text-[#FFC232] font-black' : 'bg-white/20 text-white font-black' }} flex items-center justify-center text-[10px] flex-shrink-0">4</span>
+                    <span class="w-5 h-5 rounded-lg {{ request()->routeIs('qc.index') ? 'bg-slate-950 text-[#FFC232] font-black' : 'bg-white/20 text-white font-black' }} flex items-center justify-center text-[10px] flex-shrink-0">6</span>
                     <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Quality Control (QC)</span>
                     <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black {{ request()->routeIs('qc.index') ? 'bg-slate-950 text-[#FFC232]' : 'bg-white/20 text-white' }}">
                         {{ $countQc }}
@@ -235,6 +305,36 @@
                     @if($countQc > 0)
                         <span x-show="sidebarCollapsed" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-slate-950 text-[#FFC232] font-black text-[9px] flex items-center justify-center shadow-sm border-2 border-white">
                             {{ $countQc }}
+                        </span>
+                    @endif
+                </a>
+            </div>
+        </div>
+
+        {{-- 4. ANTREAN OUTBOUND --}}
+        <div>
+            <div x-show="!sidebarCollapsed" x-cloak class="px-3 mb-1.5 text-[10px] font-black uppercase text-emerald-100/90 tracking-wider flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#FFC232]"></span>
+                <span>Antrean Outbound</span>
+            </div>
+            <div x-show="sidebarCollapsed" x-cloak class="my-2 border-t border-emerald-600/40"></div>
+
+            <div class="space-y-1">
+                <a href="{{ route('qc.outbound') }}" 
+                   title="Staging & Manifest Outbound ({{ $countOutboundStaging }})"
+                   class="flex items-center transition-all text-xs font-extrabold group relative
+                   {{ request()->routeIs('qc.outbound*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15' }}"
+                   :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
+                    <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('qc.outbound*') ? 'text-slate-950' : 'text-emerald-100' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Staging &amp; Manifest Outbound</span>
+                    @if($countOutboundStaging > 0)
+                        <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black bg-slate-950 text-[#FFC232] shadow-sm animate-pulse">
+                            {{ $countOutboundStaging }}
+                        </span>
+                        <span x-show="sidebarCollapsed" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-slate-950 text-[#FFC232] font-black text-[9px] flex items-center justify-center shadow-sm border-2 border-white animate-pulse">
+                            {{ $countOutboundStaging }}
                         </span>
                     @endif
                 </a>
@@ -520,40 +620,19 @@
             </div>
         </div>
 
-        {{-- 8. ANTREAN OUTBOUND --}}
-        <div>
-            <div x-show="!sidebarCollapsed" x-cloak class="px-3 mb-1.5 text-[10px] font-black uppercase text-emerald-100/90 tracking-wider flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#FFC232]"></span>
-                <span>Antrean Outbound</span>
-            </div>
-            <div x-show="sidebarCollapsed" x-cloak class="my-2 border-t border-emerald-600/40"></div>
-
-            <div class="space-y-1">
-                <a href="{{ route('qc.outbound') }}" 
-                   title="Staging & Manifest Outbound ({{ $countOutboundStaging }})"
-                   class="flex items-center transition-all text-xs font-extrabold group relative
-                   {{ request()->routeIs('qc.outbound*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15' }}"
-                   :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
-                    <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('qc.outbound*') ? 'text-slate-950' : 'text-emerald-100' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/>
-                    </svg>
-                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Staging &amp; Manifest Outbound</span>
-                    @if($countOutboundStaging > 0)
-                        <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black bg-slate-950 text-[#FFC232] shadow-sm animate-pulse">
-                            {{ $countOutboundStaging }}
-                        </span>
-                        <span x-show="sidebarCollapsed" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-slate-950 text-[#FFC232] font-black text-[9px] flex items-center justify-center shadow-sm border-2 border-white animate-pulse">
-                            {{ $countOutboundStaging }}
-                        </span>
-                    @endif
-                </a>
-            </div>
-        </div>
-
     </div>
 
     {{-- Bottom Collapse Toggle Bar --}}
-    <div class="p-3 border-t border-emerald-600/40 bg-emerald-800/40 flex items-center justify-between shrink-0">
+    <div class="p-3 border-t border-emerald-600/40 bg-emerald-800/40 flex flex-col gap-2 shrink-0">
+        <a href="{{ route('dashboard') }}" 
+           class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-[#FFC232] hover:bg-amber-300 transition-all text-xs font-black tracking-wider text-slate-950 active:scale-95 shadow-md shadow-emerald-950/30"
+           title="Kembali ke Portal Utama Admin">
+            <svg class="w-4 h-4 flex-shrink-0 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+            </svg>
+            <span x-show="!sidebarCollapsed" x-cloak>Portal Utama Admin</span>
+        </a>
+
         <button @click="sidebarCollapsed = !sidebarCollapsed" 
                 class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all text-xs font-black tracking-wider text-white active:scale-95">
             <svg class="w-4 h-4 transition-transform duration-300" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">

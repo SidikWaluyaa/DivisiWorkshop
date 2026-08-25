@@ -59,13 +59,14 @@
 
         {{-- Right: Quick Tracking & User Profile --}}
         <div class="flex items-center gap-2">
-            {{-- Quick Tracking Search Icon --}}
+            {{-- Quick Tracking Search Button --}}
             <a href="{{ route('internal-tracking.index') }}" 
-               class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-[#22AF85] transition-colors relative group border border-slate-200/80" 
-               title="Lacak SPK Cepat">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+               class="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#22AF85] font-black text-xs transition-all border border-[#22AF85]/30 flex items-center gap-1.5 shadow-2xs active:scale-95" 
+               title="Lacak SPK Cepat (Internal Tracking)">
+                <svg class="w-4 h-4 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
+                <span class="hidden sm:inline-block">Lacak SPK</span>
             </a>
 
             {{-- User Profile Pill --}}

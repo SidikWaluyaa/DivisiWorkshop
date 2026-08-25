@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-workshop-pwa-layout title="Detail Manifest Outbound">
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 
@@ -409,4 +409,4 @@
     </div>
 </div>
 
-</x-app-layout>
+</x-workshop-pwa-layout>

@@ -72,11 +72,6 @@
 
     {{-- FLOATING TOP ACTION BAR (HIDDEN ON PRINT) --}}
     <div class="no-print fixed top-5 left-1/2 transform -translate-x-1/2 z-50 bg-slate-900/95 text-white px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-xl border border-slate-700 flex items-center gap-4">
-        <button onclick="window.history.back()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Kembali
-        </button>
-
         <span class="text-xs font-mono font-bold text-teal-400">#{{ $manifest->manifest_number }}</span>
 
         <button onclick="window.print()" class="px-5 py-2 bg-[#22AF85] hover:bg-emerald-600 text-white text-xs font-black rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2 cursor-pointer uppercase tracking-wider">

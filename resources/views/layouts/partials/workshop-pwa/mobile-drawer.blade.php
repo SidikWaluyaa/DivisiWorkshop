@@ -94,6 +94,9 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                <a href="{{ route('internal-tracking.index') }}" class="p-3 rounded-xl bg-teal-50 text-teal-800 text-xs font-black border border-teal-200 flex items-center justify-between col-span-2">
+                    <span>🔍 Internal Tracking SPK Kilat</span>
+                </a>
                 <a href="{{ route('production.late-info') }}" class="p-3 rounded-xl bg-slate-50 text-[#0F172A] text-xs font-bold border border-slate-200 flex items-center justify-between">
                     <span>⚠️ Info Keterlambatan</span>
                 </a>
@@ -216,5 +219,14 @@
             </div>
         </div>
 
+        {{-- Bottom Portal Switch Button --}}
+        <div class="pt-3 border-t border-slate-100">
+            <a href="{{ route('dashboard') }}" class="p-3.5 rounded-2xl bg-[#FFC232] text-slate-950 flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider shadow-md active:scale-95 transition-all">
+                <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                <span>🏠 Portal Utama Admin</span>
+            </a>
+        </div>
     </div>
 </div>

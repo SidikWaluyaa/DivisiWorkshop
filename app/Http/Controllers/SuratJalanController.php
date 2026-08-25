@@ -16,10 +16,12 @@ class SuratJalanController extends Controller
      */
     public function index(Request $request)
     {
-        $query = SuratJalan::with(['pengirim', 'penerima', 'items.workOrder']);
+        $jenis = $request->get('jenis', 'sortir_to_produksi');
 
-        if ($request->filled('jenis')) {
-            $query->where('jenis_serah_terima', $request->jenis);
+        $query = SuratJalan::with(['pengirim', 'penerima', 'items.workOrder.customer', 'items.workOrder.workOrderServices.service']);
+
+        if (!empty($jenis) && $jenis !== 'all') {
+            $query->where('jenis_serah_terima', $jenis);
         }
 
         if ($request->filled('status')) {
@@ -28,7 +30,52 @@ class SuratJalanController extends Controller
 
         $suratJalanList = $query->latest()->paginate(15);
 
-        return view('surat-jalan.index', compact('suratJalanList'));
+        // Fetch candidate SPKs for this specific transfer type
+        $availableOrders = collect();
+        if ($jenis === 'sortir_to_produksi') {
+            $availableOrders = WorkOrder::whereIn('status', [\App\Enums\WorkOrderStatus::SORTIR, \App\Enums\WorkOrderStatus::PRODUCTION])
+                ->whereHas('logs', function($lq) {
+                    $lq->where('step', 'SORTIR')
+                       ->where('action', 'CLASSIFICATION_COMPLETED');
+                })
+                ->whereDoesntHave('suratJalanItems.suratJalan', function($q) {
+                    $q->where('jenis_serah_terima', 'sortir_to_produksi');
+                })
+                ->with(['customer', 'workOrderServices.service'])
+                ->get();
+        } elseif ($jenis === 'produksi_to_post_qc') {
+            $availableOrders = WorkOrder::whereIn('status', [\App\Enums\WorkOrderStatus::PRODUCTION, \App\Enums\WorkOrderStatus::QC])
+                ->whereHas('logs', function($lq) {
+                    $lq->where('step', 'PRODUCTION')
+                       ->where('action', 'PRODUCTION_APPROVED');
+                })
+                ->whereDoesntHave('suratJalanItems.suratJalan', function($q) {
+                    $q->where('jenis_serah_terima', 'produksi_to_post_qc');
+                })
+                ->with(['customer', 'workOrderServices.service'])
+                ->get();
+        }
+
+        // Compute metrics
+        $baseMetricQuery = SuratJalan::query();
+        if (!empty($jenis) && $jenis !== 'all') {
+            $baseMetricQuery->where('jenis_serah_terima', $jenis);
+        }
+
+        $totalCount = (clone $baseMetricQuery)->count();
+        $dikirimCount = (clone $baseMetricQuery)->where('status', 'DIKIRIM')->count();
+        $diterimaCount = (clone $baseMetricQuery)->where('status', 'DITERIMA')->count();
+        $candidateCount = $availableOrders->count();
+
+        return view('surat-jalan.index', compact(
+            'suratJalanList', 
+            'jenis', 
+            'availableOrders', 
+            'totalCount', 
+            'dikirimCount', 
+            'diterimaCount', 
+            'candidateCount'
+        ));
     }
 
     /**
