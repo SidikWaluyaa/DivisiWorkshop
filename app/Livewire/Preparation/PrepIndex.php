@@ -102,36 +102,34 @@ class PrepIndex extends Component
     #[Computed]
     public function techs()
     {
-        $allActive = User::where('is_active', true)->whereIn('role', ['technician', 'admin'])->select('id', 'name')->get();
+        $baseTechs = User::where('is_active', true)
+            ->whereIn('role', ['technician', 'technician_assistant', 'admin'])
+            ->whereNotIn('specialization', ['PIC Material Sol', 'PIC Material Upper', 'PIC Material'])
+            ->where('name', 'not like', '%Dr. Shoe%');
 
-        $washing = User::where('is_active', true)
-            ->where(function($q) {
-                $q->whereIn('specialization', ['Washing', 'Persiapan (Cuci)', 'Treatment', 'Clean Up'])
-                  ->orWhere('station', 'PREPARATION');
-            })->select('id', 'name')->get();
-        if ($washing->isEmpty()) $washing = $allActive;
+        $washing = (clone $baseTechs)->where(function($q) {
+            $q->where('specialization', 'Washing')
+              ->orWhere('specialization', 'like', '%Cuci%')
+              ->orWhere('station', 'PREPARATION');
+        })->select('id', 'name', 'specialization')->get();
 
-        $sol = User::where('is_active', true)
-            ->where(function($q) {
-                $q->whereIn('specialization', ['Bongkar Sol', 'Prep Sol', 'Sol Repair', 'PIC Material Sol'])
-                  ->orWhere('station', 'PREPARATION')
-                  ->orWhere('station', 'SOLING');
-            })->select('id', 'name')->get();
-        if ($sol->isEmpty()) $sol = $allActive;
+        $sol = (clone $baseTechs)->where(function($q) {
+            $q->where('specialization', 'Bongkar Sol')
+              ->orWhere('specialization', 'like', '%Sol%')
+              ->orWhere('station', 'PREPARATION');
+        })->select('id', 'name', 'specialization')->get();
 
-        $upper = User::where('is_active', true)
-            ->where(function($q) {
-                $q->whereIn('specialization', ['Bongkar Upper', 'Prep Upper', 'Upper Repair', 'Repaint', 'Jahit', 'PIC Material Upper'])
-                  ->orWhere('station', 'PREPARATION')
-                  ->orWhere('station', 'UPPER');
-            })->select('id', 'name')->get();
-        if ($upper->isEmpty()) $upper = $allActive;
+        $upper = (clone $baseTechs)->where(function($q) {
+            $q->where('specialization', 'Bongkar Upper')
+              ->orWhere('specialization', 'like', '%Upper%')
+              ->orWhere('station', 'PREPARATION');
+        })->select('id', 'name', 'specialization')->get();
 
         return [
             'washing' => $washing,
             'sol' => $sol,
             'upper' => $upper,
-            'review' => User::where('role', 'admin')->select('id', 'name')->get(),
+            'review' => User::where('role', 'admin')->where('name', 'not like', '%Dr. Shoe%')->select('id', 'name')->get(),
         ];
     }
 

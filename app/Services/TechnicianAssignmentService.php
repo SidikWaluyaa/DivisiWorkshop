@@ -13,12 +13,13 @@ use App\Helpers\ProductionStationHelper;
 class TechnicianAssignmentService
 {
     /**
-     * Excluded non-repair staff (PIC Material)
+     * Excluded non-repair staff (PIC Material & System Placeholders)
      */
     protected array $excludedSpecs = ['PIC Material Sol', 'PIC Material Upper', 'PIC Material', 'PIC MATERIAL SOL', 'PIC MATERIAL UPPER'];
 
     /**
-     * Auto-assign prep (washing) technician evenly based on workload
+     * 1. STATION PREPARATION: Auto-assign prep (washing/bongkar) technician evenly based on workload
+     * Sub-tasks: Washing (Cuci), Bongkar Sol, Bongkar Upper
      */
     public function autoAssignPrepWashing(WorkOrder $workOrder, bool $forceReassign = false): ?User
     {
@@ -29,20 +30,19 @@ class TechnicianAssignmentService
             }
         }
 
-        // Candidates: Active technicians with station = 'PREPARATION' or specialization Washing/Cuci
+        // Candidates: Active technicians in Station Preparation (Washing, Bongkar Sol, Bongkar Upper)
         $candidates = User::where('is_active', true)
-            ->where('role', 'technician')
+            ->whereIn('role', ['technician', 'technician_assistant'])
             ->where(function ($q) {
                 $q->where('station', 'PREPARATION')
-                  ->orWhere('specialization', 'like', '%Cuci%')
-                  ->orWhere('specialization', 'like', '%Washing%');
+                  ->orWhereIn('specialization', ['Washing', 'Cuci', 'Bongkar Sol', 'Bongkar Upper']);
             })
             ->whereNotIn('specialization', $this->excludedSpecs)
             ->where('name', 'not like', '%Dr. Shoe%')
             ->get();
 
         if ($candidates->isEmpty()) {
-            $candidates = User::where('role', 'technician')
+            $candidates = User::whereIn('role', ['technician', 'technician_assistant'])
                 ->where('is_active', true)
                 ->whereNotIn('specialization', $this->excludedSpecs)
                 ->where('name', 'not like', '%Dr. Shoe%')
@@ -69,7 +69,8 @@ class TechnicianAssignmentService
     }
 
     /**
-     * Auto-assign technicians for all services in Production stage based on station & technician_services skill mapping
+     * 2. STATION PRODUCTION: Auto-assign technicians for all services in Production stage
+     * Sub-tasks: Reparasi Sol (Soling), Reparasi Upper (Upper), Reparasi Treatment (Treatment)
      */
     public function autoAssignProductionTechnicians(WorkOrder $workOrder, bool $forceReassign = false): void
     {
@@ -90,12 +91,12 @@ class TechnicianAssignmentService
         $isDrShoeUpper = str_contains($workOrder->prodUpperBy?->name ?? '', 'Dr. Shoe');
         $isDrShoeClean = str_contains($workOrder->prodCleaningBy?->name ?? '', 'Dr. Shoe');
 
-        // 1. Soling Station
+        // a. Reparasi Sol (Station: SOLING, Spec: Reparasi Sol)
         if ($hasSol && (!$workOrder->prod_sol_by || $isDrShoeSol || (!$workOrder->prod_sol_started_at && $forceReassign))) {
             $solServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'SOLING');
             $serviceIds = $solServices->pluck('service_id')->filter()->toArray();
 
-            $tech = $this->findBestTechnicianForStationAndServices('SOLING', $serviceIds);
+            $tech = $this->findBestTechnicianForStationAndServices('SOLING', $serviceIds, ['Reparasi Sol', 'Sol Repair']);
             if ($tech) {
                 $updates['prod_sol_by'] = $tech->id;
                 foreach ($solServices as $woService) {
@@ -107,12 +108,12 @@ class TechnicianAssignmentService
             }
         }
 
-        // 2. Upper Station
+        // b. Reparasi Upper (Station: UPPER, Spec: Reparasi Upper)
         if ($hasUpper && (!$workOrder->prod_upper_by || $isDrShoeUpper || (!$workOrder->prod_upper_started_at && $forceReassign))) {
             $upperServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'UPPER');
             $serviceIds = $upperServices->pluck('service_id')->filter()->toArray();
 
-            $tech = $this->findBestTechnicianForStationAndServices('UPPER', $serviceIds);
+            $tech = $this->findBestTechnicianForStationAndServices('UPPER', $serviceIds, ['Reparasi Upper', 'Upper Repair']);
             if ($tech) {
                 $updates['prod_upper_by'] = $tech->id;
                 foreach ($upperServices as $woService) {
@@ -124,12 +125,12 @@ class TechnicianAssignmentService
             }
         }
 
-        // 3. Treatment Station
+        // c. Reparasi Treatment (Station: TREATMENT, Spec: Reparasi Treatment)
         if ($hasTreatment && (!$workOrder->prod_cleaning_by || $isDrShoeClean || (!$workOrder->prod_cleaning_started_at && $forceReassign))) {
             $treatmentServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'TREATMENT');
             $serviceIds = $treatmentServices->pluck('service_id')->filter()->toArray();
 
-            $tech = $this->findBestTechnicianForStationAndServices('TREATMENT', $serviceIds);
+            $tech = $this->findBestTechnicianForStationAndServices('TREATMENT', $serviceIds, ['Reparasi Treatment', 'Treatment', 'Repaint']);
             if ($tech) {
                 $updates['prod_cleaning_by'] = $tech->id;
                 foreach ($workOrder->workOrderServices as $woService) {
@@ -147,7 +148,8 @@ class TechnicianAssignmentService
     }
 
     /**
-     * Auto-assign technicians for all stations in QC stage
+     * 3. STATION QC: Auto-assign technicians for all stations in QC stage
+     * Sub-tasks: QC Jahit, QC Cleanup, QC Final
      */
     public function autoAssignQcTechnicians(WorkOrder $workOrder, bool $forceReassign = false): void
     {
@@ -166,9 +168,8 @@ class TechnicianAssignmentService
         $isDrShoeJahit = str_contains($workOrder->qcJahitBy?->name ?? '', 'Dr. Shoe');
         $isDrShoeCleanup = str_contains($workOrder->qcCleanupBy?->name ?? '', 'Dr. Shoe');
         $isDrShoeFinal = str_contains($workOrder->qcFinalBy?->name ?? '', 'Dr. Shoe');
-        
-        $isWashingCleanup = in_array($workOrder->qcCleanupBy?->specialization ?? '', ['Washing', 'Cuci']) || ($workOrder->qcCleanupBy?->station === 'PREPARATION');
 
+        // a. QC Jahit (Spec: QC Jahit)
         if ($hasJahitQc && (!$workOrder->qc_jahit_by || $isDrShoeJahit || (!$workOrder->qc_jahit_started_at && $forceReassign))) {
             $tech = $this->findBestTechnicianForStationAndServices('QC', [], ['QC Jahit', 'Jahit']);
             if ($tech) {
@@ -176,13 +177,15 @@ class TechnicianAssignmentService
             }
         }
 
-        if (!$workOrder->qc_cleanup_by || $isDrShoeCleanup || $isWashingCleanup || (!$workOrder->qc_cleanup_started_at && $forceReassign)) {
+        // b. QC Cleanup (Spec: QC Cleanup)
+        if (!$workOrder->qc_cleanup_by || $isDrShoeCleanup || (!$workOrder->qc_cleanup_started_at && $forceReassign)) {
             $tech = $this->findBestTechnicianForStationAndServices('QC', [], ['QC Cleanup', 'Clean Up']);
             if ($tech) {
                 $updates['qc_cleanup_by'] = $tech->id;
             }
         }
 
+        // c. QC Final (Spec: QC Final)
         if (!$workOrder->qc_final_by || $isDrShoeFinal || (!$workOrder->qc_final_started_at && $forceReassign)) {
             $tech = $this->findBestTechnicianForStationAndServices('QC', [], ['QC Final', 'PIC QC']);
             if ($tech) {
@@ -201,7 +204,7 @@ class TechnicianAssignmentService
     public function findBestTechnicianForStationAndServices(string $stationCode, array $serviceIds = [], array $specializations = []): ?User
     {
         $query = User::where('is_active', true)
-            ->whereIn('role', ['technician', 'pic', 'admin'])
+            ->whereIn('role', ['technician', 'technician_assistant', 'qc'])
             ->whereNotIn('specialization', $this->excludedSpecs)
             ->where('name', 'not like', '%Dr. Shoe%');
 
@@ -247,73 +250,6 @@ class TechnicianAssignmentService
         return $candidates->sortBy(function ($tech) {
             return WorkOrderService::where('technician_id', $tech->id)
                 ->where('status', '!=', 'COMPLETED')
-                ->count();
-        })->first();
-    }
-
-    /**
-     * Get list of qualified technicians for a specific station
-     */
-    public function getQualifiedTechnicians(string $category)
-    {
-        $categoryUpper = strtoupper($category);
-        $stationCode = 'TREATMENT';
-
-        if (str_contains($categoryUpper, 'SOL')) {
-            $stationCode = 'SOLING';
-        } elseif (str_contains($categoryUpper, 'UPPER') || str_contains($categoryUpper, 'JAHIT')) {
-            $stationCode = 'UPPER';
-        } elseif (str_contains($categoryUpper, 'PREP') || str_contains($categoryUpper, 'WASH')) {
-            $stationCode = 'PREPARATION';
-        } elseif (str_contains($categoryUpper, 'QC')) {
-            $stationCode = 'QC';
-        }
-
-        return User::where('is_active', true)
-            ->where('role', 'technician')
-            ->where(function ($q) use ($stationCode) {
-                $q->where('station', $stationCode)
-                  ->orWhereNull('station');
-            })
-            ->whereNotIn('specialization', $this->excludedSpecs)
-            ->where('name', 'not like', '%Dr. Shoe%')
-            ->orderBy('name')
-            ->get();
-    }
-
-    /**
-     * Get candidate technicians for Prep Washing (Preparation Station)
-     */
-    public static function getPrepWashingCandidates()
-    {
-        return User::where('is_active', true)
-            ->where('role', 'technician')
-            ->where(function ($q) {
-                $q->where('station', 'PREPARATION')
-                  ->orWhere('specialization', 'like', '%Cuci%')
-                  ->orWhere('specialization', 'like', '%Washing%');
-            })
-            ->whereNotIn('specialization', ['PIC Material Sol', 'PIC Material Upper', 'PIC Material', 'PIC MATERIAL SOL', 'PIC MATERIAL UPPER'])
-            ->where('name', 'not like', '%Dr. Shoe%')
-            ->get();
-    }
-
-    /**
-     * Get recommended prep washing technician for a work order
-     */
-    public function getRecommendedPrepWashingTechnician(WorkOrder $order, $candidates = null): ?User
-    {
-        if (!$candidates || $candidates->isEmpty()) {
-            $candidates = self::getPrepWashingCandidates();
-        }
-
-        if ($candidates->isEmpty()) {
-            return null;
-        }
-
-        return $candidates->sortBy(function ($tech) {
-            return WorkOrder::where('prep_washing_by', $tech->id)
-                ->whereNull('prep_washing_completed_at')
                 ->count();
         })->first();
     }

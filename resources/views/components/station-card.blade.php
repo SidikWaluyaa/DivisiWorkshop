@@ -286,7 +286,7 @@
                                           <option value="">-- Pilih --</option>
                                           @php
                                               $washingTechList = collect($this->techs['washing'] ?? []);
-                                              if ($order->prep_washing_by && $order->prepWashingBy && !$washingTechList->contains('id', $order->prep_washing_by)) {
+                                              if ($order->prep_washing_by && $order->prepWashingBy && !$washingTechList->contains('id', $order->prep_washing_by) && !str_contains($order->prepWashingBy->name, 'Dr. Shoe')) {
                                                   $washingTechList->push($order->prepWashingBy);
                                               }
                                           @endphp
@@ -324,7 +324,7 @@
                                           <option value="">-- Pilih --</option>
                                           @php
                                               $solTechList = collect($this->techs['sol'] ?? []);
-                                              if ($order->prep_sol_by && $order->prepSolBy && !$solTechList->contains('id', $order->prep_sol_by)) {
+                                              if ($order->prep_sol_by && $order->prepSolBy && !$solTechList->contains('id', $order->prep_sol_by) && !str_contains($order->prepSolBy->name, 'Dr. Shoe')) {
                                                   $solTechList->push($order->prepSolBy);
                                               }
                                           @endphp
@@ -363,7 +363,7 @@
                                           <option value="">-- Pilih --</option>
                                           @php
                                               $upperTechList = collect($this->techs['upper'] ?? []);
-                                              if ($order->prep_upper_by && $order->prepUpperBy && !$upperTechList->contains('id', $order->prep_upper_by)) {
+                                              if ($order->prep_upper_by && $order->prepUpperBy && !$upperTechList->contains('id', $order->prep_upper_by) && !str_contains($order->prepUpperBy->name, 'Dr. Shoe')) {
                                                   $upperTechList->push($order->prepUpperBy);
                                               }
                                           @endphp
@@ -1053,7 +1053,11 @@
                                                             @if($technicians instanceof \Illuminate\Support\Collection || is_array($technicians))
                                                                 @foreach($technicians as $t)
                                                                     @if(is_object($t) && isset($t->id))
-                                                                        <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                                        @php
+                                                                            $poolTag = in_array($t->station ?? '', ['SOLING', 'UPPER', 'TREATMENT']) ? '⚪ Abu' : '🟢 Hijau';
+                                                                            $specTag = $t->specialization ? " - {$t->specialization}" : '';
+                                                                        @endphp
+                                                                        <option value="{{ $t->id }}">{{ $t->name }}{{ $specTag }} ({{ $poolTag }})</option>
                                                                     @endif
                                                                 @endforeach
                                                             @endif

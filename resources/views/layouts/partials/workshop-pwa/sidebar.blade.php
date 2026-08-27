@@ -125,7 +125,7 @@
          :class="sidebarCollapsed ? 'px-2 space-y-3' : 'px-3 space-y-4'"
          x-data="{
              openDashboard: {{ request()->routeIs('dashboard', 'workshop.dashboard-v2', 'workshop.fast-track.*', 'internal-tracking.*') ? 'true' : 'false' }},
-             openLayanan: {{ request()->routeIs('production.technician-assistant', 'admin.technician-skills', 'admin.services.*', 'admin.performance.*') ? 'true' : 'false' }},
+             openLayanan: {{ request()->routeIs('production.technician-assistant', 'admin.technicians.index', 'admin.technician-skills', 'admin.services.*', 'admin.performance.*') ? 'true' : 'false' }},
              openUtilitas: {{ request()->routeIs('production.late-info', 'surat-jalan.*') ? 'true' : 'false' }},
              openGaransi: {{ request()->routeIs('revision.*', 'garansi.*', 'finish.list-garansi') ? 'true' : 'false' }},
              openMaterial: {{ request()->routeIs('admin.materials.*', 'material-requests.*', 'storage.disbursement.*', 'storage.history') ? 'true' : 'false' }}
@@ -638,6 +638,29 @@
                     <div x-show="sidebarCollapsed" x-cloak 
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
                         <span>Asisten Data Teknisi</span>
+                    </div>
+                </a>
+
+                {{-- Manajemen Data Teknisi --}}
+                <a href="{{ route('admin.technicians.index') }}" 
+                   title="Manajemen Data Teknisi"
+                   class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
+                   {{ request()->routeIs('admin.technicians.index') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
+                   :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
+                    
+                    @if(request()->routeIs('admin.technicians.index'))
+                        <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-slate-950 rounded-r-full shadow-sm" x-show="!sidebarCollapsed"></span>
+                    @endif
+
+                    <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('admin.technicians.index') ? 'text-slate-950' : 'text-emerald-100' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Manajemen Data Teknisi</span>
+
+                    {{-- Compact Hover Tooltip --}}
+                    <div x-show="sidebarCollapsed" x-cloak 
+                         class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
+                        <span>Manajemen Data Teknisi</span>
                     </div>
                 </a>
 

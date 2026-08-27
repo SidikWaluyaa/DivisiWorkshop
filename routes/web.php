@@ -123,6 +123,7 @@ Route::middleware('auth')->group(function () {
             Route::post('services/import', [App\Http\Controllers\Admin\ServiceController::class, 'import'])->name('services.import');
             Route::get('services/batch-edit', \App\Livewire\Admin\ServiceBatchEdit::class)->name('services.batch-edit');
             Route::get('technician-skills', \App\Livewire\Admin\TechnicianSkillMatrix::class)->name('technician-skills');
+            Route::get('technicians', \App\Livewire\Admin\TechnicianManagement::class)->name('technicians.index');
             Route::resource('services', App\Http\Controllers\Admin\ServiceController::class);
         });
 
@@ -191,12 +192,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/performance', [App\Http\Controllers\Admin\PerformanceController::class, 'index'])->name('performance.index');
         });
 
-        // System Tools
+        // System Tools (Master Data Kendala & Solusi CX)
         Route::middleware('access:admin.system')->group(function () {
-            Route::get('/system', [App\Http\Controllers\Admin\SystemController::class, 'index'])->name('system.index');
-            Route::post('/system/reset', [App\Http\Controllers\Admin\SystemController::class, 'reset'])->name('system.reset');
-            Route::post('/system/cleanup-orphaned-storage', [App\Http\Controllers\Admin\SystemController::class, 'cleanupOrphanedStorage'])->name('system.cleanup-orphaned-storage');
-
             // Master Data Kendala & Solusi (CX)
             Route::post('master-issues/{id}/toggle', [App\Http\Controllers\Admin\MasterIssueController::class, 'toggleActive'])->name('master-issues.toggle');
             Route::resource('master-issues', App\Http\Controllers\Admin\MasterIssueController::class)->except(['show']);
