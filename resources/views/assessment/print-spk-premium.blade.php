@@ -465,6 +465,71 @@
 
              {{-- BOTTOM TRACKING BOXES --}}
              <div class="mt-auto {{ $servicesCount >= 8 ? 'pt-1.5' : 'pt-3' }} border-t border-gray-100">
+                  {{-- TAMBAH JASA & ITEM OTO (MANUAL / TULIS TANGAN) --}}
+                  <div class="mb-2.5 avoid-break">
+                      <div class="grid grid-cols-2 gap-2.5">
+                          {{-- BOX KIRI: TAMBAH JASA MANUAL --}}
+                          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 shadow-sm">
+                              <div class="flex items-center justify-between mb-1.5">
+                                  <span class="text-[8.5px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                      Tambah Jasa
+                                  </span>
+                                  <span class="text-[7px] font-bold text-slate-400 uppercase tracking-tight">[ Teknisi ]</span>
+                              </div>
+
+                              <table class="w-full border-collapse text-[8.5px]">
+                                  <thead>
+                                      <tr class="bg-slate-200/60 text-slate-700 font-bold uppercase text-[7px] tracking-wider">
+                                          <th class="p-1 border border-slate-300 text-left pl-2">Deskripsi Jasa Tambahan</th>
+                                          <th class="p-1 border border-slate-300 text-center w-1/4">Paraf / QC</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <tr>
+                                          <td class="p-1 border border-dashed border-slate-300 bg-white h-5 text-slate-300 text-[8px] pl-1.5">1.</td>
+                                          <td class="p-1 border border-dashed border-slate-300 bg-white"></td>
+                                      </tr>
+                                      <tr>
+                                          <td class="p-1 border border-dashed border-slate-300 bg-white h-5 text-slate-300 text-[8px] pl-1.5">2.</td>
+                                          <td class="p-1 border border-dashed border-slate-300 bg-white"></td>
+                                      </tr>
+                                  </tbody>
+                              </table>
+                          </div>
+
+                          {{-- BOX KANAN: ITEM OTO / SPAREPART MANUAL --}}
+                          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 shadow-sm">
+                              <div class="flex items-center justify-between mb-1.5">
+                                  <span class="text-[8.5px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                      <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                      Item OTO
+                                  </span>
+                                  <span class="text-[7px] font-bold text-slate-400 uppercase tracking-tight">[ Sparepart ]</span>
+                              </div>
+
+                              <table class="w-full border-collapse text-[8.5px]">
+                                  <thead>
+                                      <tr class="bg-slate-200/60 text-slate-700 font-bold uppercase text-[7px] tracking-wider">
+                                          <th class="p-1 border border-slate-300 text-left pl-2">Deskripsi Sparepart / OTO</th>
+                                          <th class="p-1 border border-slate-300 text-center w-1/4">Paraf / QC</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <tr>
+                                          <td class="p-1 border border-dashed border-slate-300 bg-white h-5 text-slate-300 text-[8px] pl-1.5">1.</td>
+                                          <td class="p-1 border border-dashed border-slate-300 bg-white"></td>
+                                      </tr>
+                                      <tr>
+                                          <td class="p-1 border border-dashed border-slate-300 bg-white h-5 text-slate-300 text-[8px] pl-1.5">2.</td>
+                                          <td class="p-1 border border-dashed border-slate-300 bg-white"></td>
+                                      </tr>
+                                  </tbody>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+
                   <div class="grid grid-cols-3 gap-3">
                        <div class="bg-gray-100/50 rounded-xl {{ $servicesCount >= 8 ? 'p-1.5' : 'p-2.5' }} border border-gray-200/50 flex flex-col justify-between">
                            <p class="text-[8px] font-black text-center text-teal-900 uppercase mb-1">SPK Masuk :</p>
