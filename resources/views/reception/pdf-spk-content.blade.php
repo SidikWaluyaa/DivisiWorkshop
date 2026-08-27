@@ -123,42 +123,101 @@
                 </div>
             @endforeach
 
-            <div style="margin-top: 40px;">
+            {{-- Kolom Tambah Jasa & OTO (Manual / Tulis Tangan) --}}
+            <div style="margin-top: 20px;">
+                <table style="width: 100%; margin-bottom: 4px;">
+                    <tr>
+                        <td style="font-size: 9px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">
+                            TAMBAH JASA & OTO (MANUAL / TULIS TANGAN)
+                        </td>
+                        <td style="text-align: right; font-size: 8px; font-weight: bold; color: #64748b;">
+                            [ ISI OLEH WORKSHOP / TEKNISI ]
+                        </td>
+                    </tr>
+                </table>
+                <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+                    <thead>
+                        <tr style="background-color: #f1f5f9; color: #334155; font-size: 8.5px; text-transform: uppercase; font-weight: bold;">
+                            <th style="padding: 5px 8px; text-align: left; border-bottom: 1px solid #cbd5e1; width: 55%;">Deskripsi Jasa Tambahan / Item OTO</th>
+                            <th style="padding: 5px 8px; text-align: center; border-bottom: 1px solid #cbd5e1; width: 25%;">Biaya / Nominal</th>
+                            <th style="padding: 5px 8px; text-align: center; border-bottom: 1px solid #cbd5e1; width: 20%;">Paraf / PIC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px dotted #cbd5e1; border-right: 1px solid #f1f5f9; vertical-align: bottom; height: 18px;">
+                                <span style="font-size: 9px; color: #cbd5e1; font-weight: bold;">1.</span>
+                            </td>
+                            <td style="padding: 8px; border-bottom: 1px dotted #cbd5e1; border-right: 1px solid #f1f5f9; text-align: left; vertical-align: bottom;">
+                                <span style="font-size: 9px; color: #cbd5e1;">Rp</span>
+                            </td>
+                            <td style="padding: 8px; border-bottom: 1px dotted #cbd5e1; text-align: center; vertical-align: bottom;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px dotted #cbd5e1; border-right: 1px solid #f1f5f9; vertical-align: bottom; height: 18px;">
+                                <span style="font-size: 9px; color: #cbd5e1; font-weight: bold;">2.</span>
+                            </td>
+                            <td style="padding: 8px; border-bottom: 1px dotted #cbd5e1; border-right: 1px solid #f1f5f9; text-align: left; vertical-align: bottom;">
+                                <span style="font-size: 9px; color: #cbd5e1;">Rp</span>
+                            </td>
+                            <td style="padding: 8px; border-bottom: 1px dotted #cbd5e1; text-align: center; vertical-align: bottom;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border-right: 1px solid #f1f5f9; vertical-align: bottom; height: 18px;">
+                                <span style="font-size: 9px; color: #cbd5e1; font-weight: bold;">3.</span>
+                            </td>
+                            <td style="padding: 8px; border-right: 1px solid #f1f5f9; text-align: left; vertical-align: bottom;">
+                                <span style="font-size: 9px; color: #cbd5e1;">Rp</span>
+                            </td>
+                            <td style="padding: 8px; text-align: center; vertical-align: bottom;">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 18px;">
                 <table class="signature-grid">
                     <tr>
-                        <td style="width: 33%; padding: 5px;">
+                        <td style="width: 33%; padding: 3px;">
                             <div class="signature-box">
-                                <div style="font-weight: bold; margin-bottom: 5px;">SPK MASUK</div>
-                                <div style="margin-top: 15px; border-bottom: 1px dotted #ccc; width: 80%; margin-left: 10%;"></div>
+                                <div style="font-weight: bold; margin-bottom: 4px; font-size: 9px;">SPK MASUK :</div>
+                                <div style="margin-top: 15px; border-bottom: 1px dotted #94a3b8; width: 85%; margin-left: 7.5%;"></div>
                             </div>
                         </td>
-                        <td style="width: 33%; padding: 5px;">
+                        <td style="width: 33%; padding: 3px;">
                             <div class="signature-box" style="background-color: #f0fdfa; border-color: #ccfbf1;">
-                                <div style="font-weight: bold; margin-bottom: 5px; color: #134e4a;">ESTIMASI SELESAI</div>
+                                <div style="font-weight: bold; margin-bottom: 4px; color: #134e4a; font-size: 9px;">ESTIMASI SELESAI :</div>
                                 @if($order->invoice && $order->invoice->estimasi_selesai)
-                                    <div style="font-size: 11px; font-weight: bold; text-align: center; color: #111827; margin-top: 5px; text-transform: uppercase;">
+                                    <div style="font-size: 10px; font-weight: bold; text-align: center; color: #111827; margin-top: 4px; text-transform: uppercase;">
                                         {{ \Carbon\Carbon::parse($order->invoice->estimasi_selesai)->translatedFormat('d M Y') }}
                                     </div>
                                 @else
-                                    <div style="margin-top: 15px; border-bottom: 1px dotted #99f6e4; width: 80%; margin-left: 10%;"></div>
+                                    <div style="margin-top: 15px; border-bottom: 1px dotted #99f6e4; width: 85%; margin-left: 7.5%;"></div>
                                 @endif
                             </div>
                         </td>
-                        <td style="width: 33%; padding: 5px;">
+                        <td style="width: 33%; padding: 3px;">
                             <div class="signature-box">
-                                <div style="font-weight: bold; margin-bottom: 5px;">SPK KELUAR</div>
-                                <div style="margin-top: 15px; border-bottom: 1px dotted #ccc; width: 80%; margin-left: 10%;"></div>
+                                <div style="font-weight: bold; margin-bottom: 4px; font-size: 9px;">SPK KELUAR :</div>
+                                <div style="margin-top: 15px; border-bottom: 1px dotted #94a3b8; width: 85%; margin-left: 7.5%;"></div>
                             </div>
                         </td>
                     </tr>
                 </table>
             </div>
 
-            <div style="margin-top: 20px; border: 1px dashed #e2e8f0; border-radius: 8px; padding: 10px; min-height: 120px; position: relative;">
-                <div style="font-size: 9px; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Note</div>
+            {{-- Note / Catatan Tambahan dengan Dotted Lines untuk Tulis Tangan --}}
+            <div style="margin-top: 14px; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 8px 10px; position: relative; background-color: #ffffff;">
+                <div style="font-size: 8.5px; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 4px;">NOTE / CATATAN TAMBAHAN</div>
+                <div style="border-bottom: 1px dotted #cbd5e1; height: 18px;"></div>
+                <div style="border-bottom: 1px dotted #cbd5e1; height: 18px;"></div>
+                <div style="border-bottom: 1px dotted #cbd5e1; height: 18px;"></div>
             </div>
 
-            <div style="margin-top: 30px; text-align: center; opacity: 0.3; font-size: 10px; font-weight: bold; color: #22B086;">
+            <div style="margin-top: 20px; text-align: center; opacity: 0.5; font-size: 9.5px; font-weight: bold; color: #22B086; letter-spacing: 0.5px;">
                 SHOE WORKSHOP PREMIUM - #MORETHANREPAIR
             </div>
         </td>

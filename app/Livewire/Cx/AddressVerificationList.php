@@ -14,6 +14,7 @@ class AddressVerificationList extends Component
     public $search = '';
     public $date_start = '';
     public $date_end = '';
+    public $shipping_status = 'all'; // 'all', 'shipped', 'preparing', 'workshop'
 
     // Modal State properties
     public $showSpkModal = false;
@@ -22,20 +23,36 @@ class AddressVerificationList extends Component
 
     public function openSpkModal($customerId)
     {
-        $customer = Customer::with(['workOrders' => function($q) {
-            $q->whereNotIn('status', ['BATAL', 'SELESAI', 'DIANTAR', 'HISTORY', 'DONASI'])
-              ->orderBy('created_at', 'desc');
+        $customer = Customer::with(['workOrders.shipping' => function($q) {
+            $q->orderBy('created_at', 'desc');
         }])->find($customerId);
 
         if ($customer) {
             $this->selectedCustomerName = $customer->name;
             $this->selectedCustomerSpks = $customer->workOrders->map(function($order) {
+                $shipping = $order->shipping;
+                $statusVal = is_object($order->status) ? $order->status->value : $order->status;
+                
+                // 1. Shipped: Verified or Has Resi or Status DIANTAR
+                $isShipped = ($shipping && (bool)$shipping->is_verified) || !empty($shipping?->resi_pengiriman) || $statusVal === 'DIANTAR';
+
+                // 2. Preparing: Already in shippings table but not yet shipped
+                $isPreparingShipping = !$isShipped && !is_null($shipping);
+
                 return [
                     'id' => $order->id,
                     'spk_number' => $order->spk_number,
                     'shoe_brand' => $order->shoe_brand,
                     'shoe_color' => $order->shoe_color,
                     'status' => is_object($order->status) ? $order->status->label() : $order->status,
+                    'is_shipped' => $isShipped,
+                    'is_preparing_shipping' => $isPreparingShipping,
+                    'shipping_is_verified' => (bool) ($shipping?->is_verified ?? false),
+                    'resi_pengiriman' => $shipping?->resi_pengiriman ?? null,
+                    'ekspedisi' => $shipping?->ekspedisi ?? null,
+                    'target_kirim' => $shipping?->target_kirim ? Carbon::parse($shipping->target_kirim)->format('d/m/Y') : null,
+                    'tanggal_pengiriman' => $shipping?->tanggal_pengiriman ? Carbon::parse($shipping->tanggal_pengiriman)->format('d M Y') : null,
+                    'kategori_pengiriman' => $shipping?->kategori_pengiriman ?? null,
                 ];
             })->toArray();
             $this->showSpkModal = true;
@@ -53,15 +70,22 @@ class AddressVerificationList extends Component
         'search' => ['except' => ''],
         'date_start' => ['except' => ''],
         'date_end' => ['except' => ''],
+        'shipping_status' => ['except' => 'all'],
     ];
 
     public function mount()
     {
         $this->date_start = '';
         $this->date_end = '';
+        $this->shipping_status = 'all';
     }
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingShippingStatus()
     {
         $this->resetPage();
     }
@@ -84,20 +108,20 @@ class AddressVerificationList extends Component
         }
         $this->resetPage();
     }
+
     public function resetFilters()
     {
         $this->search = '';
         $this->date_start = '';
         $this->date_end = '';
+        $this->shipping_status = 'all';
         $this->resetPage();
     }
+
     public function render()
     {
         $query = Customer::query()
-            ->with(['workOrders' => function($q) {
-                $q->whereNotIn('status', ['BATAL', 'SELESAI', 'DIANTAR', 'HISTORY', 'DONASI'])
-                  ->orderBy('created_at', 'desc');
-            }])
+            ->with(['workOrders.shipping'])
             ->where('is_address_verified', 1);
 
         if ($this->search) {
@@ -116,8 +140,29 @@ class AddressVerificationList extends Component
         }
 
         // Default to showing only today's verified addresses if no filters are active
-        if (!$this->search && !$this->date_start && !$this->date_end) {
+        if (!$this->search && !$this->date_start && !$this->date_end && $this->shipping_status === 'all') {
             $query->whereDate('address_verified_at', Carbon::today());
+        }
+
+        // Filter by Detailed Shipping Status
+        if ($this->shipping_status === 'shipped') {
+            $query->whereHas('workOrders', function($woQ) {
+                $woQ->whereHas('shipping', function($shipQ) {
+                    $shipQ->where('is_verified', 1)->orWhereNotNull('resi_pengiriman');
+                })->orWhere('status', 'DIANTAR');
+            });
+        } elseif ($this->shipping_status === 'preparing') {
+            $query->whereHas('workOrders', function($woQ) {
+                $woQ->whereHas('shipping', function($shipQ) {
+                    $shipQ->where('is_verified', 0)->where(function($sq) {
+                        $sq->whereNull('resi_pengiriman')->orWhere('resi_pengiriman', '');
+                    });
+                })->where('status', '!=', 'DIANTAR');
+            });
+        } elseif ($this->shipping_status === 'workshop') {
+            $query->whereHas('workOrders', function($woQ) {
+                $woQ->whereDoesntHave('shipping')->where('status', '!=', 'DIANTAR');
+            });
         }
 
         $customers = $query->orderBy('address_verified_at', 'desc')
