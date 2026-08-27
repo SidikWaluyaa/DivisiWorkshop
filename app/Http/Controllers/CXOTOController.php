@@ -251,6 +251,7 @@ class CXOTOController extends Controller
                         'cost' => $cost,
                         'custom_service_name' => 'OTO: ' . $serviceToAttach->name,
                         'category_name' => $categoryName,
+                        'created_by' => Auth::id() ?? $oto->cx_assigned_to ?? $oto->created_by,
                     ]);
 
                     $cat = strtolower($categoryName);
