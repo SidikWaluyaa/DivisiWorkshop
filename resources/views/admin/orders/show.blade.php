@@ -3227,14 +3227,39 @@
             $serviceName = $s->custom_service_name ?? ($s->service ? $s->service->name : null);
             if ($serviceName) {
                 $log = $order->logs()
-                    ->where(function($q) {
+                    ->where(function($q) use ($serviceName) {
                         $q->where('action', 'SERVICE_ADDED')
-                          ->orWhere('action', 'SERVICE_UPDATED');
+                          ->orWhere('action', 'SERVICE_UPDATED')
+                          ->orWhere('action', 'OTO_ACCEPTED')
+                          ->orWhere('action', 'OTO_CONTACTED');
                     })
                     ->where('description', 'like', '%' . $serviceName . '%')
+                    ->latest()
                     ->first();
+
+                if (!$log && str_contains(strtoupper($serviceName), 'OTO')) {
+                    $log = $order->logs()
+                        ->whereIn('action', ['OTO_ACCEPTED', 'OTO_CONTACTED'])
+                        ->latest()
+                        ->first();
+                }
+
                 if ($log && $log->user) {
                     $creatorName = $log->user->name;
+                }
+            }
+        }
+        // 2b. Jika OTO dan log belum dapat, cari dari relasi otos pada work order
+        if (!$creatorName && str_contains(strtoupper($s->custom_service_name ?? ''), 'OTO')) {
+            $matchingOto = $order->otos->firstWhere('status', 'ACCEPTED') ?? $order->otos->last();
+            if ($matchingOto) {
+                $latestContact = $matchingOto->contactLogs->last();
+                if ($latestContact && $latestContact->contactedBy) {
+                    $creatorName = $latestContact->contactedBy->name;
+                } elseif ($matchingOto->cxAssignedTo) {
+                    $creatorName = $matchingOto->cxAssignedTo->name;
+                } elseif ($matchingOto->creator) {
+                    $creatorName = $matchingOto->creator->name;
                 }
             }
         }
@@ -3246,8 +3271,8 @@
                 $creatorName = $userByCs->name;
             }
         }
-        // 4. Jika masih tidak ada, ambil dari pembuat WorkOrder
-        if (!$creatorName && !empty($order->created_by)) {
+        // 4. Jika masih tidak ada dan BUKAN OTO, ambil dari pembuat WorkOrder
+        if (!$creatorName && !empty($order->created_by) && !str_contains(strtoupper($s->custom_service_name ?? ''), 'OTO')) {
             $orderCreator = \App\Models\User::find($order->created_by);
             if ($orderCreator) {
                 $creatorName = $orderCreator->name;

@@ -24,7 +24,7 @@
                         <span class="text-gray-300 font-light text-2xl">/</span>
                         <span class="text-gray-400 font-medium text-lg">Verified Only</span>
                     </h1>
-                    <p class="text-gray-500 font-medium">Daftar lengkap konsumen yang telah memverifikasi alamat pengiriman mereka secara online.</p>
+                    <p class="text-gray-500 font-medium">Daftar lengkap konsumen yang telah memverifikasi alamat pengiriman mereka secara online beserta status pengirimannya.</p>
                 </div>
 
                 {{-- Stats Floating Cards --}}
@@ -79,6 +79,16 @@
                 </div>
 
                 <div class="flex items-center gap-3 w-full lg:w-auto">
+                    <!-- Shipping Status Filter -->
+                    <div class="relative">
+                        <select wire:model.live="shipping_status" class="bg-gray-50/50 rounded-[2rem] px-5 py-3.5 text-xs font-black text-gray-700 border border-transparent focus:border-emerald-500 focus:ring-0 cursor-pointer shadow-none">
+                            <option value="all">📦 Semua Status Pengiriman</option>
+                            <option value="shipped">🟢 Sudah Dikirim (Verified/Resi)</option>
+                            <option value="preparing">📦 Sedang Disiapkan (Gudang Shipping)</option>
+                            <option value="workshop">🟡 Masih di Workshop</option>
+                        </select>
+                    </div>
+
                     <!-- Date Picker Range (Flatpickr) -->
                     <div wire:ignore class="relative" x-data="{
                         initFlatpickr() {
@@ -121,15 +131,15 @@
                         <div class="flex items-center bg-gray-50/50 rounded-[2rem] px-5 py-3.5 gap-2 border border-transparent focus-within:border-emerald-500 transition-all">
                             <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest mr-1">Filter Tanggal</span>
                             <input x-ref="datePicker" type="text" readonly 
-                                class="bg-transparent border-none focus:ring-0 text-xs font-black text-gray-600 p-0 cursor-pointer w-48 text-center"
+                                class="bg-transparent border-none focus:ring-0 text-xs font-black text-gray-600 p-0 cursor-pointer w-44 text-center"
                                 placeholder="Pilih Rentang Tanggal...">
                         </div>
                     </div>
 
                     <!-- Reset Filter Button -->
-                    @if($search || $date_start || $date_end)
+                    @if($search || $date_start || $date_end || $shipping_status !== 'all')
                         <button wire:click="resetFilters" 
-                            class="px-5 py-3.5 bg-rose-50 hover:bg-rose-105 text-rose-600 font-extrabold text-xs uppercase tracking-widest rounded-[2rem] transition-all flex items-center gap-2 border border-rose-100/50 shadow-sm shrink-0">
+                            class="px-5 py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-xs uppercase tracking-widest rounded-[2rem] transition-all flex items-center gap-2 border border-rose-100/50 shadow-sm shrink-0">
                             🔄 Reset Filter
                         </button>
                     @endif
@@ -180,15 +190,38 @@
                                     <tr class="bg-slate-50/75 border-b border-gray-100 text-gray-400 text-[10px] font-black uppercase tracking-widest">
                                         <th class="py-4 px-6 text-center w-12">No</th>
                                         <th class="py-4 px-6 w-36">Waktu Verifikasi</th>
-                                        <th class="py-4 px-6 w-48">Nama Pelanggan</th>
+                                        <th class="py-4 px-6 w-44">Nama Pelanggan</th>
                                         <th class="py-4 px-6 w-36">No. Telepon</th>
                                         <th class="py-4 px-6">Alamat Pengiriman</th>
-                                        <th class="py-4 px-6 w-36 text-center">SPK Aktif</th>
-                                        <th class="py-4 px-6 w-40 text-center">Aksi</th>
+                                        <th class="py-4 px-6 w-32 text-center">SPK Aktif</th>
+                                        <th class="py-4 px-6 w-52 text-center">Status Pengiriman</th>
+                                        <th class="py-4 px-6 w-32 text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
                                     @foreach($items as $index => $customer)
+                                        @php
+                                            $totalSpk = $customer->workOrders->count();
+                                            
+                                            // Shipped Orders (Verified or Has Resi or DIANTAR)
+                                            $shippedOrders = $customer->workOrders->filter(function($wo) {
+                                                $s = $wo->shipping;
+                                                $statusVal = is_object($wo->status) ? $wo->status->value : $wo->status;
+                                                return ($s && ((bool)$s->is_verified || !empty($s->resi_pengiriman))) || $statusVal === 'DIANTAR';
+                                            });
+
+                                            // Preparing Orders (In shippings table, but not verified yet)
+                                            $preparingOrders = $customer->workOrders->filter(function($wo) use ($shippedOrders) {
+                                                $s = $wo->shipping;
+                                                return !$shippedOrders->contains('id', $wo->id) && !is_null($s);
+                                            });
+
+                                            $shippedCount = $shippedOrders->count();
+                                            $preparingCount = $preparingOrders->count();
+                                            
+                                            $firstPrep = $preparingOrders->first()?->shipping;
+                                            $firstShipped = $shippedOrders->first()?->shipping;
+                                        @endphp
                                         <tr class="hover:bg-slate-50/30 transition-colors text-slate-700">
                                             {{-- No --}}
                                             <td class="py-4 px-6 text-center text-xs font-bold text-gray-400">
@@ -220,13 +253,64 @@
 
                                             {{-- SPK Aktif --}}
                                             <td class="py-4 px-6 text-center text-xs">
-                                                @if($customer->workOrders->isNotEmpty())
+                                                @if($totalSpk > 0)
                                                     <button type="button" wire:click="openSpkModal({{ $customer->id }})" 
                                                         class="underline decoration-dotted cursor-pointer text-emerald-600 hover:text-emerald-700 font-extrabold outline-none focus:outline-none transition-transform hover:scale-105">
-                                                        {{ $customer->workOrders->count() }} SPK
+                                                        {{ $totalSpk }} SPK
                                                     </button>
                                                 @else
                                                     <span class="text-gray-400 font-bold uppercase text-[10px]">-</span>
+                                                @endif
+                                            </td>
+
+                                            {{-- Status Pengiriman (3-Stage Marker with SPK Count & Shipping Date) --}}
+                                            <td class="py-4 px-6 text-center text-xs">
+                                                @if($totalSpk === 0)
+                                                    <span class="text-[10px] text-gray-400 font-bold uppercase">Belum Ada SPK</span>
+                                                @elseif($shippedCount === $totalSpk)
+                                                    <div class="flex flex-col items-center gap-1">
+                                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider border border-emerald-200 shadow-xs">
+                                                            🟢 Sudah Dikirim ({{ $shippedCount }}/{{ $totalSpk }})
+                                                        </span>
+                                                        @if($firstShipped?->tanggal_pengiriman || $firstShipped?->resi_pengiriman)
+                                                            <span class="text-[9.5px] font-mono text-gray-600 font-bold truncate max-w-[170px]" title="Tgl Pengiriman: {{ $firstShipped->tanggal_pengiriman ? $firstShipped->tanggal_pengiriman->format('d M Y') : '-' }}">
+                                                                @if($firstShipped->tanggal_pengiriman)
+                                                                    <span class="text-emerald-700 font-sans font-black">📅 {{ $firstShipped->tanggal_pengiriman->format('d M Y') }}</span>
+                                                                @endif
+                                                                @if($firstShipped->resi_pengiriman)
+                                                                    <span class="text-gray-400">|</span> {{ $firstShipped->ekspedisi ? $firstShipped->ekspedisi . ': ' : '' }}{{ $firstShipped->resi_pengiriman }}
+                                                                @endif
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                @elseif($preparingCount > 0 && $shippedCount === 0)
+                                                    <div class="flex flex-col items-center gap-1">
+                                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-wider border border-blue-200 shadow-xs">
+                                                            📦 Sedang Disiapkan ({{ $preparingCount }}/{{ $totalSpk }})
+                                                        </span>
+                                                        <span class="text-[9px] text-blue-600 font-bold">
+                                                            {{ $firstPrep?->ekspedisi ? $firstPrep->ekspedisi : 'Pengiriman Gudang' }}
+                                                            @if($firstPrep?->tanggal_pengiriman)
+                                                                | <span class="font-mono text-blue-800">📅 {{ $firstPrep->tanggal_pengiriman->format('d M Y') }}</span>
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                @elseif($shippedCount > 0 || $preparingCount > 0)
+                                                    <div class="flex flex-col items-center gap-1">
+                                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-[10px] font-black uppercase tracking-wider border border-teal-200 shadow-xs">
+                                                            🔵 Sebagian Dikirim ({{ $shippedCount + $preparingCount }}/{{ $totalSpk }})
+                                                        </span>
+                                                        <span class="text-[9px] text-teal-600 font-bold">
+                                                            {{ $shippedCount }} Kirim | {{ $preparingCount }} Siap
+                                                        </span>
+                                                    </div>
+                                                @else
+                                                    <div class="flex flex-col items-center gap-1">
+                                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-wider border border-amber-200 shadow-xs">
+                                                            🟡 Masih di Workshop (0/{{ $totalSpk }})
+                                                        </span>
+                                                        <span class="text-[9px] text-amber-600 font-bold">Proses Pengerjaan</span>
+                                                    </div>
                                                 @endif
                                             </td>
 
@@ -258,7 +342,7 @@
                     <div class="text-6xl mb-6">🔍</div>
                     <h3 class="text-2xl font-black text-gray-900 tracking-tight mb-2">Tidak Ada Data</h3>
                     <p class="text-gray-500 font-medium mb-6">Tidak ada alamat terverifikasi yang cocok dengan filter pencarian atau rentang tanggal Anda.</p>
-                    <button wire:click="filterByPreset('all')" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-full shadow-lg shadow-emerald-100 transition-all">
+                    <button wire:click="resetFilters" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-full shadow-lg shadow-emerald-100 transition-all">
                         Reset Filter
                     </button>
                 </div>
@@ -282,38 +366,86 @@
                 {{-- Header --}}
                 <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-slate-50/50">
                     <div>
-                        <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest block mb-1">Active Work Orders</span>
-                        <h3 class="text-2xl font-black text-gray-900 tracking-tight">SPK Aktif: {{ $selectedCustomerName }}</h3>
+                        <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest block mb-1">Customer Work Orders</span>
+                        <h3 class="text-2xl font-black text-gray-900 tracking-tight">SPK Pelanggan: {{ $selectedCustomerName }}</h3>
                     </div>
                     <button type="button" wire:click="closeSpkModal" class="p-2.5 rounded-xl bg-white border border-gray-200/60 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-all shadow-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
-                {{-- Body (List of SPKs) --}}
+                {{-- Body (List of SPKs with Shipping Markers) --}}
                 <div class="p-8 overflow-y-auto space-y-4 flex-1">
                     @forelse($selectedCustomerSpks as $order)
-                        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex items-center justify-between gap-4 hover:border-emerald-200 hover:bg-white transition-all">
-                            <div class="space-y-1.5 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base font-black text-gray-900 font-mono tracking-tight">{{ $order['spk_number'] }}</span>
-                                    <span class="px-2.5 py-0.5 bg-amber-50 border border-amber-100 text-amber-700 text-[8px] font-black rounded uppercase tracking-wider">
-                                        {{ $order['status'] }}
-                                    </span>
+                        <div class="bg-slate-50 border border-slate-200/70 rounded-2xl p-5 hover:border-emerald-200 hover:bg-white transition-all space-y-3">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="space-y-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base font-black text-gray-900 font-mono tracking-tight">{{ $order['spk_number'] }}</span>
+                                        <span class="px-2.5 py-0.5 bg-slate-200 border border-slate-300 text-slate-700 text-[8px] font-black rounded uppercase tracking-wider">
+                                            Status Workshop: {{ $order['status'] }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        Sepatu: <span class="text-gray-800">{{ $order['shoe_brand'] }}</span> ({{ $order['shoe_color'] ?? '-' }})
+                                    </p>
                                 </div>
-                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                    Sepatu: <span class="text-gray-800">{{ $order['shoe_brand'] }}</span> ({{ $order['shoe_color'] ?? '-' }})
-                                </p>
+
+                                <a href="{{ route('admin.orders.shipping-label', $order['id']) }}" target="_blank" 
+                                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-teal-100 shrink-0">
+                                    🖨️ Cetak Label
+                                </a>
                             </div>
 
-                            <a href="{{ route('admin.orders.shipping-label', $order['id']) }}" target="_blank" 
-                                class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-teal-100">
-                                🖨️ Cetak Label
-                            </a>
+                            {{-- 3-Stage Shipping Status Marker Box --}}
+                            @if($order['is_shipped'])
+                                <div class="bg-emerald-50/90 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900 font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider">🟢 SUDAH DIKIRIM</span>
+                                        @if($order['shipping_is_verified'])
+                                            <span class="text-[10px] text-emerald-700 font-bold" title="Telah diverifikasi oleh bagian pengiriman">✅ Verified Shipping</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-[11px] font-mono font-bold text-emerald-800 flex items-center gap-2 flex-wrap">
+                                        @if(!empty($order['tanggal_pengiriman']))
+                                            <span class="bg-emerald-100/80 px-2.5 py-0.5 rounded-lg border border-emerald-300 text-emerald-900 font-sans font-black text-[10px] shadow-2xs">
+                                                📅 {{ $order['tanggal_pengiriman'] }}
+                                            </span>
+                                        @endif
+                                        <span>
+                                            {{ $order['ekspedisi'] ? $order['ekspedisi'] . ' | ' : '' }}Resi: <span class="bg-white px-2 py-0.5 rounded border border-emerald-300 text-emerald-900 font-mono">{{ $order['resi_pengiriman'] ?? '-' }}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            @elseif($order['is_preparing_shipping'])
+                                <div class="bg-blue-50/90 border border-blue-200 rounded-xl p-3 text-xs text-blue-900 font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[9px] font-black uppercase tracking-wider">📦 SEDANG DISIAPKAN</span>
+                                        <span class="text-[10px] text-blue-700 font-bold">Telah Masuk Pengiriman Gudang</span>
+                                    </div>
+                                    <div class="text-[11px] font-bold text-blue-800 flex items-center gap-2 flex-wrap">
+                                        @if(!empty($order['tanggal_pengiriman']))
+                                            <span class="bg-blue-100/80 px-2 py-0.5 rounded-lg border border-blue-300 text-blue-900 font-sans font-black text-[10px]">
+                                                📅 {{ $order['tanggal_pengiriman'] }}
+                                            </span>
+                                        @endif
+                                        <span>
+                                            Ekspedisi: <span class="text-blue-900 font-black">{{ $order['ekspedisi'] ?? 'Anteraja' }}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="bg-amber-50/90 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 font-semibold flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider">🟡 MASIH DI WORKSHOP</span>
+                                        <span class="text-[10px] text-amber-700 font-bold">Sedang Dalam Pengerjaan Teknisi</span>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @empty
                         <div class="text-center py-10">
-                            <p class="text-gray-400 font-bold uppercase tracking-wider text-xs">Tidak ada SPK aktif untuk pelanggan ini.</p>
+                            <p class="text-gray-400 font-bold uppercase tracking-wider text-xs">Tidak ada SPK untuk pelanggan ini.</p>
                         </div>
                     @endforelse
                 </div>

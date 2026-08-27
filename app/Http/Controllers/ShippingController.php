@@ -72,17 +72,33 @@ class ShippingController extends Controller
         // Clean up ekspedisi if kategori is not Ekspedisi
         $ekspedisi = $request->kategori_pengiriman === 'Ekspedisi' ? $request->ekspedisi : null;
 
+        $isVerified = $request->has('is_verified') ? (bool)$request->is_verified : false;
+        $tanggalPengiriman = $request->tanggal_pengiriman;
+
+        // Auto set tanggal_pengiriman to today if verified and tanggal_pengiriman is null/empty
+        if ($isVerified && empty($tanggalPengiriman)) {
+            $tanggalPengiriman = Carbon::today()->toDateString();
+        }
+
         $shipping->update([
-            'is_verified' => $request->has('is_verified') ? $request->is_verified : false,
+            'is_verified' => $isVerified,
             'kategori_pengiriman' => $request->kategori_pengiriman,
             'ekspedisi' => $ekspedisi,
-            'tanggal_pengiriman' => $request->tanggal_pengiriman,
+            'tanggal_pengiriman' => $tanggalPengiriman,
             'pic' => $request->pic,
             'resi_pengiriman' => $request->resi_pengiriman,
         ]);
 
         if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Data pengiriman berhasil diperbarui.']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Data pengiriman berhasil diperbarui.',
+                'tanggal_pengiriman' => $shipping->tanggal_pengiriman ? $shipping->tanggal_pengiriman->format('Y-m-d') : null,
+                'tanggal_pengiriman_formatted' => $shipping->tanggal_pengiriman ? $shipping->tanggal_pengiriman->format('d M Y') : null,
+                'is_verified' => (bool)$shipping->is_verified,
+                'resi_pengiriman' => $shipping->resi_pengiriman,
+                'ekspedisi' => $shipping->ekspedisi,
+            ]);
         }
 
         return redirect()->route('shipping.index')->with('success', 'Data pengiriman berhasil diperbarui.');

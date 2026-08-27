@@ -465,41 +465,64 @@
 
              {{-- BOTTOM TRACKING BOXES --}}
              <div class="mt-auto {{ $servicesCount >= 8 ? 'pt-1.5' : 'pt-3' }} border-t border-gray-100">
-                  <div class="grid grid-cols-3 gap-3">
-                       <div class="bg-gray-100/50 rounded-xl {{ $servicesCount >= 8 ? 'p-1.5' : 'p-2.5' }} border border-gray-200/50 flex flex-col justify-between">
+                  {{-- FULL WIDTH MANUAL CARD: TAMBAH JASA / OTO / REVISI (ULTRA CLEAN OPEN SPACE) --}}
+                  <div class="mb-2 avoid-break">
+                      <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 shadow-sm {{ $servicesCount >= 8 ? 'min-h-[90px]' : 'min-h-[130px]' }} flex flex-col justify-between">
+                          {{-- HEADER --}}
+                          <div class="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-200/80">
+                              <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
+                                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                                  <span class="text-[8.5px] font-black text-slate-800 uppercase tracking-wider whitespace-nowrap">FORM MANUAL</span>
+                                  <span class="text-[7.5px] font-bold text-slate-400 uppercase tracking-tight whitespace-nowrap opacity-75">(CHECKLIST SALAH SATU):</span>
+                              </div>
+                              <div class="flex items-center gap-1.5 shrink-0">
+                                  <span class="text-[8px] font-black text-slate-800 bg-white border border-slate-300 rounded px-1.5 py-0.5 tracking-wider whitespace-nowrap shadow-2xs">☐ TAMBAH JASA</span>
+                                  <span class="text-[8px] font-black text-slate-800 bg-white border border-slate-300 rounded px-1.5 py-0.5 tracking-wider whitespace-nowrap shadow-2xs">☐ OTO</span>
+                                  <span class="text-[8px] font-black text-slate-800 bg-white border border-slate-300 rounded px-1.5 py-0.5 tracking-wider whitespace-nowrap shadow-2xs">☐ REVISI</span>
+                              </div>
+                              <div class="flex items-center gap-1 text-[7.5px] font-bold text-slate-500 uppercase tracking-tight shrink-0 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                                  <span>PIC / CX :</span>
+                                  <span class="w-16 border-b border-dotted border-slate-400 inline-block"></span>
+                              </div>
+                          </div>
+
+                          {{-- ENLARGED CLEAN OPEN AREA FOR FREESTYLE HANDWRITING --}}
+                          <div class="{{ $servicesCount >= 8 ? 'h-12' : 'h-20' }}"></div>
+                      </div>
+                  </div>
+
+                  <div class="grid grid-cols-3 gap-2.5">
+                       <div class="bg-gray-100/50 rounded-xl {{ $servicesCount >= 8 ? 'p-1.5' : 'p-2' }} border border-gray-200/50 flex flex-col justify-between">
                            <p class="text-[8px] font-black text-center text-teal-900 uppercase mb-1">SPK Masuk :</p>
-                           <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
+                           <div class="h-3.5 border-b border-dotted border-gray-300 mt-0.5"></div>
                        </div>
-                       <div class="bg-teal-50 rounded-xl {{ $servicesCount >= 8 ? 'p-1.5' : 'p-2.5' }} border border-teal-100 flex flex-col justify-between">
+                       <div class="bg-teal-50 rounded-xl {{ $servicesCount >= 8 ? 'p-1.5' : 'p-2' }} border border-teal-100 flex flex-col justify-between">
                            <p class="text-[8px] font-black text-center text-teal-900 uppercase mb-1">Estimasi Selesai :</p>
                            @if($order->invoice && $order->invoice->estimasi_selesai)
-                               <div class="text-[11px] font-black text-center text-teal-955 mt-1 uppercase tracking-tight">
+                               <div class="text-[10px] font-black text-center text-teal-955 mt-0.5 uppercase tracking-tight">
                                    {{ \Carbon\Carbon::parse($order->invoice->estimasi_selesai)->translatedFormat('d M Y') }}
                                </div>
                            @else
-                               <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
+                               <div class="h-3.5 border-b border-dotted border-gray-300 mt-0.5"></div>
                            @endif
                        </div>
-                       <div class="bg-gray-100/50 rounded-xl {{ $servicesCount >= 8 ? 'p-1.5' : 'p-2.5' }} border border-gray-200/50 flex flex-col justify-between">
+                       <div class="bg-gray-100/50 rounded-xl {{ $servicesCount >= 8 ? 'p-1.5' : 'p-2' }} border border-gray-200/50 flex flex-col justify-between">
                            <p class="text-[8px] font-black text-center text-teal-900 uppercase mb-1">SPK Keluar :</p>
-                           <div class="h-4 border-b border-dotted border-gray-300 mt-1"></div>
+                           <div class="h-3.5 border-b border-dotted border-gray-300 mt-0.5"></div>
                        </div>
                   </div>
- 
-                  {{-- Note --}}
-                  <div class="bg-white border border-gray-200 rounded-xl p-3 shadow-sm relative {{ $servicesCount >= 8 ? 'min-h-[50px] mt-1' : 'min-h-[100px] mt-2' }}">
+
+                  {{-- Note / Catatan Tambahan --}}
+                  <div class="bg-white border border-gray-200 rounded-xl p-2.5 shadow-sm relative mt-2 {{ $servicesCount >= 8 ? 'min-h-[45px]' : 'min-h-[65px]' }}">
                        <div class="absolute top-1 left-3 text-[8px] font-black text-teal-900 uppercase tracking-widest opacity-50">Note / Catatan Tambahan</div>
                        <div class="mt-2 text-[10px] text-gray-700 leading-relaxed font-medium">
                            @if($order->notes)
                                {{ $order->notes }}
                            @else
                                {{-- Dotted lines for manual writing --}}
-                               <div class="{{ $servicesCount >= 8 ? 'space-y-2 pt-1' : 'space-y-4 pt-2' }} opacity-30">
+                               <div class="{{ $servicesCount >= 8 ? 'space-y-1.5 pt-0.5' : 'space-y-3 pt-1' }} opacity-30">
                                    <div class="border-b border-dashed border-gray-350"></div>
                                    <div class="border-b border-dashed border-gray-350"></div>
-                                   @if($servicesCount < 8)
-                                       <div class="border-b border-dashed border-gray-350"></div>
-                                   @endif
                                </div>
                            @endif
                        </div>
