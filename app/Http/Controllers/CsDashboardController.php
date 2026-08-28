@@ -143,7 +143,12 @@ class CsDashboardController extends Controller
                   });
             });
 
-        $totalIncomingItems = (clone $validWoQuery)->count();
+        $totalIncomingItems = \App\Models\WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$start, $end])
+            ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
+            ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
+            ->count();
+
         if ($totalIncomingItems == 0 && count($allSpkIds) > 0) {
             $totalIncomingItems = \App\Models\CsSpkItem::whereIn('spk_id', $allSpkIds)->count();
         }
