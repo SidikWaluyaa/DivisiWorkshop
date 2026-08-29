@@ -221,19 +221,28 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     @php
-                                        // Pre-compute material status so we can use it in the classification column
-                                        $matCountEarly  = $order->materials->count();
-                                        $hasRequestedEarly = $order->materials->contains(fn($m) => ($m->pivot->status ?? '') === 'REQUESTED');
-                                        $hasAllocatedEarly  = $order->materials->contains(fn($m) => in_array($m->pivot->status ?? '', ['ALLOCATED', 'RECEIVED']));
+                                        $activeReq = $order->materialRequests
+                                            ? $order->materialRequests->whereIn('status', ['PENDING','APPROVED','PURCHASED'])->first()
+                                            : null;
 
-                                        if ($hasRequestedEarly) {
-                                            $matStatusEarly = 'requested';
-                                        } elseif ($hasAllocatedEarly) {
-                                            $matStatusEarly = 'ready';
-                                        } elseif ($order->perlu_belanja === null && $matCountEarly === 0) {
-                                            $matStatusEarly = 'unvalidated';
+                                        $hasReceivedOrArrived = $order->material_arrival_date !== null || $order->materials->contains(fn($m) => ($m->pivot->status ?? '') === 'RECEIVED');
+
+                                        if ($order->perlu_belanja) {
+                                            if ($hasReceivedOrArrived) {
+                                                $matStatus = 'ready';
+                                            } elseif ($activeReq) {
+                                                $matStatus = $activeReq->status === 'PENDING' ? 'pending_finlog' : 'in_shipping';
+                                            } else {
+                                                $matStatus = 'requested';
+                                            }
+                                        } elseif ($order->materials->contains(fn($m) => in_array($m->pivot->status ?? '', ['ALLOCATED', 'RECEIVED']))) {
+                                            $matStatus = 'ready';
+                                        } elseif ($order->perlu_belanja === false) {
+                                            $matStatus = 'ready';
+                                        } elseif ($order->perlu_belanja === null && $order->materials->count() === 0) {
+                                            $matStatus = 'unvalidated';
                                         } else {
-                                            $matStatusEarly = 'no_material';
+                                            $matStatus = 'no_material';
                                         }
                                     @endphp
                                     @if($order->perlu_bongkar !== null && $order->perlu_belanja !== null)
@@ -249,17 +258,15 @@
                                                 </span>
                                             @endif
 
-                                            {{-- Badge Belanja — disembunyikan jika Material sudah Siap --}}
-                                            @if($matStatusEarly !== 'ready')
-                                                @if($order->perlu_belanja)
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
-                                                        🛒 Belanja
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-700/60 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
-                                                        🛒 Tdk Belanja
-                                                    </span>
-                                                @endif
+                                            {{-- Badge Belanja: Selalu tampil --}}
+                                            @if($order->perlu_belanja)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
+                                                    🛒 Belanja
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-700/60 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
+                                                    🛒 Tdk Belanja
+                                                </span>
                                             @endif
                                         </div>
                                     @else
@@ -270,14 +277,17 @@
                                 </td>
                                 @if($activeTab === 'waiting')
                                 <td class="px-6 py-4 text-center">
-                                    @php
-                                        // Reuse $matStatusEarly already computed in the Klasifikasi column above
-                                        $matStatus = $matStatusEarly;
-                                    @endphp
-
                                     @if($matStatus === 'requested')
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
                                             🛒 Menunggu Belanja Finlog
+                                        </span>
+                                    @elseif($matStatus === 'pending_finlog')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+                                            ⏳ Menunggu Approval Finlog
+                                        </span>
+                                    @elseif($matStatus === 'in_shipping')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
+                                            🚚 Dalam Pengiriman Finlog
                                         </span>
                                     @elseif($matStatus === 'ready')
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">

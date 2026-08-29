@@ -49,12 +49,7 @@
             </div>
         @endif
 
-        @php
-            // Hitung status material untuk GATE 3: jika ada yang ALLOCATED/RECEIVED = Material Siap
-            $isMaterialSiap = $order->materials->contains(
-                fn($m) => in_array($m->pivot->status ?? '', ['ALLOCATED', 'RECEIVED'])
-            );
-        @endphp
+
 
         {{-- PROMINENT KLASIFIKASI SORTIR CARD (GATE 3 - FR-3.1) --}}
         <div class="mb-8 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
@@ -96,56 +91,35 @@
                     </div>
                 </div>
 
-                {{-- Perlu Belanja --}}
-                @if($isMaterialSiap)
-                    {{-- Material sudah siap: tampilkan info, sembunyikan radio button --}}
-                    <div class="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-400 dark:border-emerald-700 flex flex-col gap-3">
-                        <div class="flex items-center gap-2">
-                            <span class="text-emerald-700 dark:text-emerald-300 font-black text-sm">✅ 2. Status Belanja Bahan Baku</span>
-                        </div>
-                        <div class="flex items-center gap-3 px-4 py-3 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl border border-emerald-300 dark:border-emerald-700">
-                            <span class="text-2xl">✅</span>
-                            <div>
-                                <p class="text-xs font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Material Siap — Belanja Tidak Diperlukan</p>
-                                <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">Stok material sudah dialokasikan ke SPK ini. Klasifikasi belanja otomatis tidak aktif.</p>
-                            </div>
-                        </div>
+                {{-- Perlu Belanja (Always Interactive) --}}
+                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+                    <label class="block text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">2. Apakah Perlu Belanja Bahan Baku (Finlog)?</label>
+                    <p class="text-xs text-slate-500 mb-4">Pengadaan bahan baku khusus dari supplier eksternal via Finlog.</p>
+                    <div class="flex gap-4">
+                        {{-- Opsi YA --}}
+                        <label class="flex-1 flex items-center justify-center gap-2 p-3.5 rounded-xl border-2 cursor-pointer transition-all text-xs {{ $perlu_belanja ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 ring-2 ring-purple-400/30 font-black shadow-sm' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 font-medium hover:border-slate-300' }}">
+                            <input type="radio" wire:model.live="perlu_belanja" value="1" class="hidden">
+                            <span>🛒 YA (Perlu Belanja)</span>
+                            @if($perlu_belanja)
+                                <span class="ml-1 text-purple-600 font-black">✓</span>
+                            @endif
+                        </label>
+                        {{-- Opsi TIDAK --}}
+                        <label class="flex-1 flex items-center justify-center gap-2 p-3.5 rounded-xl border-2 cursor-pointer transition-all text-xs {{ !$perlu_belanja ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 ring-2 ring-emerald-400/30 font-black shadow-sm' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 font-medium hover:border-slate-300' }}">
+                            <input type="radio" wire:model.live="perlu_belanja" value="0" class="hidden">
+                            <span>✅ TIDAK (Stok Tersedia)</span>
+                            @if(!$perlu_belanja)
+                                <span class="ml-1 text-emerald-600 font-black">✓</span>
+                            @endif
+                        </label>
                     </div>
-                @else
-                    {{-- Material belum siap: tampilkan radio button seperti biasa --}}
-                    <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
-                        <label class="block text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">2. Apakah Perlu Belanja Bahan Baku (Finlog)?</label>
-                        <p class="text-xs text-slate-500 mb-4">Pengadaan bahan baku khusus dari supplier eksternal via Finlog.</p>
-                        <div class="flex gap-4">
-                            {{-- Opsi YA --}}
-                            <label class="flex-1 flex items-center justify-center gap-2 p-3.5 rounded-xl border-2 cursor-pointer transition-all text-xs {{ $perlu_belanja ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 ring-2 ring-purple-400/30 font-black shadow-sm' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 font-medium hover:border-slate-300' }}">
-                                <input type="radio" wire:model.live="perlu_belanja" value="1" class="hidden">
-                                <span>🛒 YA (Perlu Belanja)</span>
-                                @if($perlu_belanja)
-                                    <span class="ml-1 text-purple-600 font-black">✓</span>
-                                @endif
-                            </label>
-                            {{-- Opsi TIDAK --}}
-                            <label class="flex-1 flex items-center justify-center gap-2 p-3.5 rounded-xl border-2 cursor-pointer transition-all text-xs {{ !$perlu_belanja ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 ring-2 ring-emerald-400/30 font-black shadow-sm' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 font-medium hover:border-slate-300' }}">
-                                <input type="radio" wire:model.live="perlu_belanja" value="0" class="hidden">
-                                <span>✅ TIDAK (Stok Tersedia)</span>
-                                @if(!$perlu_belanja)
-                                    <span class="ml-1 text-emerald-600 font-black">✓</span>
-                                @endif
-                            </label>
-                        </div>
-                    </div>
-                @endif
+                </div>
             </div>
 
             {{-- Combination Routing Preview Badge --}}
             <div class="mt-4 p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-800 flex items-center justify-between text-xs">
                 <span class="font-bold text-indigo-900 dark:text-indigo-200">Hasil Rute Pengerjaan (FR-3.3):</span>
-                @if($isMaterialSiap && $perlu_bongkar)
-                    <span class="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold">Bongkar Fisik ➔ Material Siap ➔ OTW Produksi</span>
-                @elseif($isMaterialSiap && !$perlu_bongkar)
-                    <span class="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold">✅ Material Siap ➔ Direct OTW Produksi</span>
-                @elseif($perlu_bongkar && $perlu_belanja)
+                @if($perlu_bongkar && $perlu_belanja)
                     <span class="px-3 py-1 bg-amber-500 text-white rounded-lg font-bold">Bongkar Fisik ➔ Rak Tunggu Belanja Finlog</span>
                 @elseif($perlu_bongkar && !$perlu_belanja)
                     <span class="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold">Bongkar Fisik ➔ Direct OTW Produksi</span>
@@ -491,9 +465,15 @@
                                         </td>
                                         <td class="py-3.5 px-4 text-center">
                                             @if(($data['status'] ?? '') == 'ALLOCATED')
-                                                <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 text-xs font-bold rounded-full">ALLOCATED</span>
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[11px] font-black rounded-full shadow-2xs">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                    <span>TERSEDIA (ALLOCATED)</span>
+                                                </span>
                                             @else
-                                                <span class="px-2.5 py-1 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 text-xs font-bold rounded-full">REQUESTED</span>
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-700 text-[11px] font-black rounded-full shadow-2xs">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                                    <span>PERLU BELANJA (REQUESTED)</span>
+                                                </span>
                                             @endif
                                         </td>
                                         <td class="py-3.5 px-4 text-right">
@@ -526,8 +506,7 @@
 
                     {{-- Dynamic Routing Preview Banner --}}
                     @php
-                        // Jika material sudah ALLOCATED, override rute menjadi Siap Surat Jalan
-                        $isReadyRoute = $isMaterialSiap || !$perlu_belanja;
+                        $isReadyRoute = !$perlu_belanja;
                     @endphp
                     <div class="p-4 rounded-2xl border transition-all {{ $isReadyRoute ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' : 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-200' }}">
                         <div class="flex items-center gap-3">
@@ -536,21 +515,17 @@
                             </div>
                             <div>
                                 <span class="text-xs font-black uppercase tracking-wide block">
-                                    @if($isMaterialSiap)
-                                        ✅ Material Siap — Rute: Siap Surat Jalan (Sortir ➔ Produksi)
-                                    @elseif(!$perlu_belanja)
+                                    @if(!$perlu_belanja)
                                         Rute: Siap Surat Jalan (Sortir ➔ Produksi)
                                     @else
                                         Rute: Rak Tunggu Belanja Finlog
                                     @endif
                                 </span>
                                 <p class="text-[11px] font-medium opacity-90 mt-0.5">
-                                    @if($isMaterialSiap)
-                                        Stok material sudah dialokasikan. SPK akan ditandai <strong>Siap Diterbitkan Surat Jalan</strong> untuk diserah-terimakan ke Tim Produksi.
-                                    @elseif(!$perlu_belanja)
-                                        Klasifikasi OK & material Siap! SPK akan ditandai <strong>Siap Diterbitkan Surat Jalan</strong> untuk diserah-terimakan ke Tim Produksi.
+                                    @if(!$perlu_belanja)
+                                        Klasifikasi OK (Stok Tersedia)! SPK akan ditandai <strong>Siap Diterbitkan Surat Jalan</strong> untuk diserah-terimakan ke Tim Produksi.
                                     @else
-                                        SPK akan dipindahkan ke <strong>Rak Tunggu Belanja</strong>. Jika ada material berstatus REQUESTED, Pengajuan Belanja Finlog akan <strong>otomatis dibuat</strong>.
+                                        SPK akan dipindahkan ke <strong>Rak Tunggu Belanja Finlog</strong>. SPK masuk antrean belanja untuk diproses pengadaan/belanja bahan baku.
                                     @endif
                                 </p>
                             </div>

@@ -121,12 +121,13 @@ class MaterialManagementService
                 app(\App\Services\FinlogApiService::class)->sendPurchaseRequest($request);
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning("FinlogApiService dispatch error for Request #{$request->id}: " . $e->getMessage());
-                if (!$request->finlog_request_id) {
-                    $request->update(['finlog_request_id' => 'FLG-' . \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(8))]);
-                }
             }
 
-            return $request;
+            if (!$request->fresh()->finlog_request_id) {
+                $request->update(['finlog_request_id' => 'FLG-' . date('Ymd') . '-' . \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(4))]);
+            }
+
+            return $request->fresh();
         });
     }
 
@@ -175,12 +176,13 @@ class MaterialManagementService
                 app(\App\Services\FinlogApiService::class)->sendPurchaseRequest($request);
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning("FinlogApiService dispatch error for PO Request #{$request->id}: " . $e->getMessage());
-                if (!$request->finlog_request_id) {
-                    $request->update(['finlog_request_id' => 'FLG-' . \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(8))]);
-                }
             }
 
-            return $request;
+            if (!$request->fresh()->finlog_request_id) {
+                $request->update(['finlog_request_id' => 'FLG-' . date('Ymd') . '-' . \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(4))]);
+            }
+
+            return $request->fresh();
         });
     }
 
@@ -438,11 +440,15 @@ class MaterialManagementService
      */
     public function autoAllocateStock(?int $materialId = null): void
     {
-        // 1. Find all WorkOrder materials in REQUESTED status where stock is actually available
+        // 1. Find all WorkOrder materials in REQUESTED status where stock is actually available (excluding SPKs flagged for Finlog shopping)
         $query = DB::table('work_order_materials')
             ->join('work_orders', 'work_order_materials.work_order_id', '=', 'work_orders.id')
             ->join('materials', 'work_order_materials.material_id', '=', 'materials.id')
             ->where('work_order_materials.status', 'REQUESTED')
+            ->where(function($q) {
+                $q->where('work_orders.perlu_belanja', '!=', true)
+                  ->orWhereNull('work_orders.perlu_belanja');
+            })
             ->whereRaw('materials.stock >= work_order_materials.quantity'); // Only items we can fulfill
 
         if ($materialId) {

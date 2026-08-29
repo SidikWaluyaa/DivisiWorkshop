@@ -48,8 +48,22 @@
                             </span>
                         @endif
                     </div>
+                    @php
+                        $isBulkSpk = $materialRequest->items->pluck('work_order_id')->filter()->unique()->count() > 1;
+                        $hasSpk = $materialRequest->work_order_id || $materialRequest->items->pluck('work_order_id')->filter()->isNotEmpty();
+
+                        if ($materialRequest->type === 'PRODUCTION_PO') {
+                            $typeLabelDetail = '🏭 PO Khusus Produksi';
+                        } elseif ($isBulkSpk) {
+                            $typeLabelDetail = '📦 Belanja Gabungan SPK (Sortir)';
+                        } elseif ($hasSpk) {
+                            $typeLabelDetail = '🛒 Belanja Sortir SPK';
+                        } else {
+                            $typeLabelDetail = '🏬 Restock Gudang Workshop';
+                        }
+                    @endphp
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
-                        {{ $materialRequest->type == 'SHOPPING' ? 'Belanja Umum / Gudang' : 'PO Spesifik SPK' }} • Dibuat: {{ $materialRequest->created_at->format('d M Y, H:i') }}
+                        <span class="font-bold text-slate-700 dark:text-slate-200">{{ $typeLabelDetail }}</span> • Dibuat: {{ $materialRequest->created_at->format('d M Y, H:i') }}
                     </p>
                 </div>
             </div>

@@ -253,4 +253,76 @@ class TechnicianAssignmentService
                 ->count();
         })->first();
     }
+
+    /**
+     * Get candidates for prep washing stage
+     */
+    public static function getPrepWashingCandidates()
+    {
+        $excludedSpecs = ['PIC Material Sol', 'PIC Material Upper', 'PIC Material', 'PIC MATERIAL SOL', 'PIC MATERIAL UPPER'];
+        
+        $candidates = User::where('is_active', true)
+            ->whereIn('role', ['technician', 'technician_assistant'])
+            ->where(function ($q) {
+                $q->where('station', 'PREPARATION')
+                  ->orWhereIn('specialization', ['Washing', 'Cuci', 'Bongkar Sol', 'Bongkar Upper']);
+            })
+            ->whereNotIn('specialization', $excludedSpecs)
+            ->where('name', 'not like', '%Dr. Shoe%')
+            ->get();
+
+        if ($candidates->isEmpty()) {
+            $candidates = User::whereIn('role', ['technician', 'technician_assistant'])
+                ->where('is_active', true)
+                ->whereNotIn('specialization', $excludedSpecs)
+                ->where('name', 'not like', '%Dr. Shoe%')
+                ->get();
+        }
+
+        return $candidates;
+    }
+
+    /**
+     * Get qualified technicians for specific sub-station
+     */
+    public function getQualifiedTechnicians(string $type)
+    {
+        $specializations = match(strtolower($type)) {
+            'sol', 'bongkar_sol', 'soling' => ['Bongkar Sol', 'Reparasi Sol', 'Soling', 'Sol'],
+            'upper', 'bongkar_upper' => ['Bongkar Upper', 'Reparasi Upper', 'Upper'],
+            'washing', 'cuci' => ['Washing', 'Cuci'],
+            default => []
+        };
+
+        $query = User::where('is_active', true)
+            ->whereIn('role', ['technician', 'technician_assistant'])
+            ->whereNotIn('specialization', $this->excludedSpecs)
+            ->where('name', 'not like', '%Dr. Shoe%');
+
+        if (!empty($specializations)) {
+            $specQuery = (clone $query)->whereIn('specialization', $specializations)->get();
+            if ($specQuery->isNotEmpty()) {
+                return $specQuery;
+            }
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Get recommended prep washing technician for an order
+     */
+    public function getRecommendedPrepWashingTechnician(WorkOrder $order, $candidates = null): ?User
+    {
+        $candidates = $candidates ?? self::getPrepWashingCandidates();
+        if ($candidates->isEmpty()) {
+            return null;
+        }
+
+        return $candidates->sortBy(function ($tech) {
+            return WorkOrder::where('prep_washing_by', $tech->id)
+                ->whereNull('prep_washing_completed_at')
+                ->count();
+        })->first();
+    }
 }

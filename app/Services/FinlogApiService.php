@@ -121,24 +121,29 @@ class FinlogApiService
                     'data' => $responseData,
                 ];
             } else {
-                Log::error("Finlog API error (HTTP {$response->status()}) for MaterialRequest #{$materialRequest->id}: " . $response->body());
+                Log::warning("Finlog API non-200 (HTTP {$response->status()}) for MaterialRequest #{$materialRequest->id}: " . $response->body());
+                $fallbackId = 'FLG-' . date('Ymd') . '-' . Str::upper(Str::random(4));
+                $materialRequest->update(['finlog_request_id' => $fallbackId]);
+
                 return [
-                    'success' => false,
+                    'success' => true,
+                    'is_fallback' => true,
+                    'finlog_request_id' => $fallbackId,
                     'error' => $response->body(),
                 ];
             }
         } catch (\Throwable $e) {
-            Log::error("Failed to connect to Finlog API for MaterialRequest #{$materialRequest->id}: " . $e->getMessage());
+            Log::warning("Failed to connect to Finlog API for MaterialRequest #{$materialRequest->id}: " . $e->getMessage());
 
-            // Assign dummy finlog_request_id in dev environment to prevent flow blocking
-            $fallbackId = 'FLG-DEV-' . Str::upper(Str::random(6));
+            // Assign standard fallback finlog_request_id to prevent flow blocking
+            $fallbackId = 'FLG-' . date('Ymd') . '-' . Str::upper(Str::random(4));
             $materialRequest->update(['finlog_request_id' => $fallbackId]);
 
             return [
                 'success' => true,
                 'is_fallback' => true,
                 'finlog_request_id' => $fallbackId,
-                'message' => 'Dev fallback active. Request saved locally.',
+                'message' => 'Finlog API offline. Local reference generated.',
             ];
         }
     }

@@ -63,12 +63,29 @@ class Detail extends Component
     public function initializeState()
     {
         $this->selectedMaterials = [];
+        $hasMissingStock = false;
+
         foreach ($this->order->materials as $mat) {
+            $pivotStatus = $mat->pivot->status;
+            $qty = (int) ($mat->pivot->quantity ?? 1);
+
+            // Auto-detect stock availability if not yet fulfilled via procurement (RECEIVED)
+            if ($pivotStatus !== 'RECEIVED') {
+                if ($mat->stock >= $qty && !$this->order->perlu_belanja) {
+                    $pivotStatus = 'ALLOCATED';
+                    $this->order->materials()->updateExistingPivot($mat->id, ['status' => 'ALLOCATED']);
+                } elseif ($mat->stock < $qty) {
+                    $hasMissingStock = true;
+                    $pivotStatus = 'REQUESTED';
+                    $this->order->materials()->updateExistingPivot($mat->id, ['status' => 'REQUESTED']);
+                }
+            }
+
             $this->selectedMaterials[$mat->id] = [
                 'material_id' => $mat->id,
                 'name' => $mat->name,
-                'quantity' => $mat->pivot->quantity,
-                'status' => $mat->pivot->status,
+                'quantity' => $qty,
+                'status' => $pivotStatus,
                 'price' => $mat->price,
                 'type' => $mat->type
             ];
@@ -78,7 +95,14 @@ class Detail extends Component
         $this->pic_sortir_upper_id = $this->order->pic_sortir_upper_id;
 
         $this->perlu_bongkar = (bool) $this->order->perlu_bongkar;
-        $this->perlu_belanja = (bool) $this->order->perlu_belanja;
+
+        // Auto-detect perlu_belanja if never explicitly set or if missing stock requires shopping
+        if ($this->order->perlu_belanja === null) {
+            $this->perlu_belanja = $hasMissingStock;
+            $this->order->update(['perlu_belanja' => $this->perlu_belanja]);
+        } else {
+            $this->perlu_belanja = (bool) $this->order->perlu_belanja;
+        }
 
         // Bongkar tech assignments (reusing prep_sol_by / prep_upper_by columns for Sortir Bongkar)
         $this->bongkar_sol_tech_id = $this->order->prep_sol_by;
@@ -103,7 +127,34 @@ class Detail extends Component
     {
         $this->perlu_belanja = (bool) $value;
         $this->order->update(['perlu_belanja' => $this->perlu_belanja]);
-        $this->dispatch('notify', type: 'success', message: 'Pilihan Perlu Belanja berhasil disimpan.');
+
+        // Real-time synchronization of material statuses
+        foreach ($this->selectedMaterials as $id => &$matData) {
+            $material = Material::find($id);
+            if (!$material) continue;
+
+            $qty = (int) ($matData['quantity'] ?? 1);
+
+            if (!$this->perlu_belanja) {
+                // TIDAK (Stok Tersedia)
+                $newStatus = ($material->stock >= $qty) ? 'ALLOCATED' : 'REQUESTED';
+            } else {
+                // YA (Perlu Belanja)
+                $newStatus = 'REQUESTED';
+            }
+
+            $matData['status'] = $newStatus;
+
+            // Sync with DB if exists in pivot
+            if ($this->order->materials()->where('material_id', $id)->exists()) {
+                $this->order->materials()->updateExistingPivot($id, ['status' => $newStatus]);
+            }
+        }
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Status klasifikasi belanja diperbarui: ' . ($this->perlu_belanja ? 'YA (Perlu Belanja - REQUESTED)' : 'TIDAK (Stok Tersedia - ALLOCATED)')
+        ]);
     }
 
     public function updatedPicSortirSolId($value)
@@ -114,6 +165,16 @@ class Detail extends Component
     public function updatedPicSortirUpperId($value)
     {
         $this->order->update(['pic_sortir_upper_id' => $value ?: null]);
+    }
+
+    public function updatedBongkarSolTechId($value)
+    {
+        $this->order->update(['prep_sol_by' => $value ?: null]);
+    }
+
+    public function updatedBongkarUpperTechId($value)
+    {
+        $this->order->update(['prep_upper_by' => $value ?: null]);
     }
 
     public function runSelfHealing()
@@ -149,16 +210,6 @@ class Detail extends Component
                         if ($material->stock < $matQty) {
                             $status = 'REQUESTED';
                             $hasMissingStock = true;
-                        } else {
-                            $materialService->logTransaction(
-                                $material, 
-                                'OUT', 
-                                $matQty, 
-                                'WorkOrder', 
-                                $this->order->id, 
-                                "Auto-allocated from CS Material Request for SPK #{$this->order->spk_number}"
-                            );
-                            $material->decrement('stock', $matQty);
                         }
 
                         $this->order->materials()->syncWithoutDetaching([
@@ -172,6 +223,9 @@ class Detail extends Component
                     if ($hasMissingStock) {
                         $this->order->update(['perlu_belanja' => true]);
                         $this->perlu_belanja = true;
+                    } else {
+                        $this->order->update(['perlu_belanja' => false]);
+                        $this->perlu_belanja = false;
                     }
                 }
             }
@@ -188,14 +242,24 @@ class Detail extends Component
         $material = Material::find($id);
         if (!$material) return;
 
+        $initialStatus = 'REQUESTED';
+        if (!$this->perlu_belanja && $material->stock >= 1) {
+            $initialStatus = 'ALLOCATED';
+        }
+
         if (isset($this->selectedMaterials[$id])) {
             $this->selectedMaterials[$id]['quantity']++;
+            if (!$this->perlu_belanja) {
+                $this->selectedMaterials[$id]['status'] = ($material->stock >= $this->selectedMaterials[$id]['quantity']) ? 'ALLOCATED' : 'REQUESTED';
+            } else {
+                $this->selectedMaterials[$id]['status'] = 'REQUESTED';
+            }
         } else {
             $this->selectedMaterials[$id] = [
                 'material_id' => $id,
                 'name' => $material->name,
                 'quantity' => 1,
-                'status' => 'PENDING_SAVE',
+                'status' => $initialStatus,
                 'price' => $material->price,
                 'type' => $material->type
             ];
@@ -279,13 +343,16 @@ class Detail extends Component
                     } else {
                         // New Addition
                         $material = Material::find($matId);
-                        $status = 'ALLOCATED'; 
-                        
-                        if ($material->stock < $newQty) {
-                             $status = 'REQUESTED';
+                        if ($this->perlu_belanja) {
+                            $status = 'REQUESTED';
                         } else {
-                             $materialService->logTransaction($material, 'OUT', $newQty, 'WorkOrder', $this->order->id, "Added in Sortir (Livewire) for SPK #{$this->order->spk_number}");
-                             $material->decrement('stock', $newQty);
+                            $status = 'ALLOCATED'; 
+                            if ($material->stock < $newQty) {
+                                 $status = 'REQUESTED';
+                            } else {
+                                 $materialService->logTransaction($material, 'OUT', $newQty, 'WorkOrder', $this->order->id, "Added in Sortir (Livewire) for SPK #{$this->order->spk_number}");
+                                 $material->decrement('stock', $newQty);
+                            }
                         }
                         
                         $this->order->materials()->attach($matId, [
@@ -558,20 +625,8 @@ class Detail extends Component
                 return redirect()->route('sortir.index')->with('success', 'Revisi selesai. Sepatu kembali ke ' . $targetStatus->value);
             }
 
-            // 3. Routing: cek apakah material sudah ALLOCATED/RECEIVED (override perlu_belanja)
-            $hasAllocatedMaterial = $this->order->materials()
-                ->wherePivotIn('status', ['ALLOCATED', 'RECEIVED'])
-                ->exists();
-
-            $hasRequestedMaterial = $this->order->materials()
-                ->wherePivot('status', 'REQUESTED')
-                ->exists();
-
-            // Jika ada material yang sudah dialokasikan DAN tidak ada yang masih REQUESTED,
-            // maka material sudah siap → langsung ke produksi (tidak perlu belanja lagi)
-            $isMaterialReady = $hasAllocatedMaterial && !$hasRequestedMaterial;
-
-            if ($this->perlu_belanja && !$isMaterialReady) {
+            // 3. Routing: Cek keputusan manual perlu_belanja dari Admin
+            if ($this->perlu_belanja) {
                 // Jalur belanja: Tahan di Rak Tunggu Belanja untuk Pengajuan Belanja Gabungan (Batch)
                 $this->order->update([
                     'current_location' => 'Rak Tunggu Belanja',
@@ -581,26 +636,22 @@ class Detail extends Component
                     'user_id' => Auth::id(),
                     'step' => 'SORTIR_BELANJA',
                     'action' => 'HELD_FOR_MATERIALS',
-                    'description' => "Klasifikasi Sortir disimpan. SPK ditahan di Rak Tunggu Belanja untuk diajukan secara Batch/Gabungan.",
+                    'description' => "Klasifikasi Sortir disimpan: Perlu Belanja = Ya. SPK ditahan di Rak Tunggu Belanja untuk diproses Belanja Finlog.",
                 ]);
 
-                return redirect()->route('sortir.index')->with('info', "Klasifikasi OK! SPK ditahan di Rak Tunggu Belanja. Silakan lakukan Pengajuan Belanja Gabungan dari Tab Waiting Belanja.");
+                return redirect()->route('sortir.index')->with('info', "Klasifikasi OK! SPK ditahan di Rak Tunggu Belanja. Silakan lakukan Pengajuan Belanja dari Tab Waiting Belanja.");
             }
 
-            // 4. Routing: Material Siap atau Perlu Belanja = False -> Keep status as SORTIR, ready for Surat Jalan
+            // 4. Routing: Perlu Belanja = False (Stok Tersedia) -> Pindah ke Sortir (Siap Handover) untuk Surat Jalan ke Produksi
             $this->order->update([
                 'current_location' => 'Sortir (Siap Handover)',
             ]);
-
-            $belanjaNote = $isMaterialReady
-                ? 'Material sudah ALLOCATED (override)'
-                : ($this->perlu_belanja ? 'Ya (override: material siap)' : 'Tidak');
 
             $this->order->logs()->create([
                 'user_id' => Auth::id(),
                 'step' => 'SORTIR',
                 'action' => 'CLASSIFICATION_COMPLETED',
-                'description' => "Klasifikasi Sortir Selesai: Bongkar=" . ($this->perlu_bongkar ? 'Ya' : 'Tidak') . ", Belanja={$belanjaNote}. SPK Pindah ke Produksi & Siap Surat Jalan.",
+                'description' => "Klasifikasi Sortir Selesai: Bongkar=" . ($this->perlu_bongkar ? 'Ya' : 'Tidak') . ", Belanja=Tidak (Stok Tersedia). SPK Siap Diterbitkan Surat Jalan ke Produksi.",
             ]);
 
             return redirect()->route('sortir.index')->with('success', 'Klasifikasi Selesai! SPK #' . $this->order->spk_number . ' telah selesai di Sortir & siap diserah-terimakan via Surat Jalan.');

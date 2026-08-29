@@ -1,9 +1,9 @@
 <div class="procurement-index-root min-h-screen bg-slate-50/60 dark:bg-slate-900 pb-16">
     {{-- Header Section --}}
-    <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-700/80 px-4 sm:px-8 py-5 sticky top-0 z-30 shadow-sm">
+    <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-700/80 px-4 sm:px-8 py-5 sticky top-0 z-30 shadow-xs">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-center gap-4">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#22AF85] to-emerald-400 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-emerald-500/20">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#22AF85] to-emerald-400 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-emerald-500/20 shrink-0">
                     🛍️
                 </div>
                 <div>
@@ -24,9 +24,73 @@
     </div>
 
     {{-- Main Content Container --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 pt-6">
+
+        {{-- Top 4 KPI Summary Cards --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {{-- Card 1: Total Pengajuan --}}
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex items-center gap-4 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 flex items-center justify-center text-xl shrink-0">
+                    📦
+                </div>
+                <div class="min-w-0 flex-1">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Total Pengajuan</span>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span class="text-2xl font-black text-slate-900 dark:text-white">{{ number_format($metrics['total_requests']) }}</span>
+                        <span class="text-xs font-bold text-slate-400">Nota</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-teal-600 dark:text-teal-400 block truncate mt-0.5">Rp {{ number_format($metrics['total_cost'], 0, ',', '.') }}</span>
+                </div>
+            </div>
+
+            {{-- Card 2: Menunggu Approval Finlog --}}
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex items-center gap-4 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center text-xl shrink-0">
+                    ⏳
+                </div>
+                <div class="min-w-0 flex-1">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Menunggu Approval</span>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span class="text-2xl font-black text-amber-500">{{ number_format($metrics['pending_count']) }}</span>
+                        <span class="text-xs font-bold text-slate-400">Pengajuan</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-amber-600/80 dark:text-amber-400/80 block mt-0.5">Proses Finlog</span>
+                </div>
+            </div>
+
+            {{-- Card 3: Dalam Pengiriman --}}
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex items-center gap-4 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl shrink-0">
+                    🚚
+                </div>
+                <div class="min-w-0 flex-1">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Dalam Pengiriman</span>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ number_format($metrics['shipping_count']) }}</span>
+                        <span class="text-xs font-bold text-slate-400">OTW WS</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80 block mt-0.5">Sudah Disetujui</span>
+                </div>
+            </div>
+
+            {{-- Card 4: Bahan Baku Tiba --}}
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex items-center gap-4 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-[#22AF85] flex items-center justify-center text-xl shrink-0">
+                    ✅
+                </div>
+                <div class="min-w-0 flex-1">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Bahan Baku Tiba</span>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span class="text-2xl font-black text-[#22AF85]">{{ number_format($metrics['received_count']) }}</span>
+                        <span class="text-xs font-bold text-slate-400">Diterima</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-emerald-600/80 dark:text-emerald-400/80 block mt-0.5">Stok Terupdate</span>
+                </div>
+            </div>
+        </div>
+
         {{-- Search & Filter Bar --}}
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-700/80 shadow-sm mb-8">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-700/80 shadow-xs mb-6">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 {{-- Search Bar --}}
                 <div class="relative w-full md:w-96">
@@ -41,7 +105,7 @@
 
                 {{-- Status Filter & Indicator --}}
                 <div class="flex items-center gap-3 w-full md:w-auto">
-                    <select wire:model.live="status" class="w-full md:w-auto text-xs font-bold border border-slate-200 dark:border-slate-600 rounded-2xl px-4 py-3 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#22AF85]/30 focus:border-[#22AF85] outline-none cursor-pointer">
+                    <select wire:model.live="status" class="w-full md:w-auto text-xs font-bold border border-slate-200 dark:border-slate-600 rounded-2xl px-4 py-3 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#22AF85]/30 focus:border-[#22AF85] outline-none cursor-pointer shadow-2xs">
                         <option value="all">Semua Status Belanja</option>
                         <option value="PENDING">Menunggu Approval Finlog</option>
                         <option value="APPROVED">Dalam Pengiriman (Finlog)</option>
@@ -59,16 +123,16 @@
             </div>
         </div>
 
-        {{-- Cards List --}}
-        <div class="grid grid-cols-1 gap-5">
+        {{-- Cards List (3-Tier Card System) --}}
+        <div class="space-y-5">
             @forelse($requests as $request)
                 @php
                     $statusColor = match($request->status) {
-                        'PENDING' => 'bg-amber-500',
-                        'APPROVED', 'PURCHASED' => 'bg-blue-600',
-                        'RECEIVED' => 'bg-[#22AF85]',
-                        'REJECTED', 'CANCELLED' => 'bg-rose-500',
-                        default => 'bg-slate-400'
+                        'PENDING' => 'bg-amber-500 text-white',
+                        'APPROVED', 'PURCHASED' => 'bg-blue-600 text-white',
+                        'RECEIVED' => 'bg-[#22AF85] text-white',
+                        'REJECTED', 'CANCELLED' => 'bg-rose-500 text-white',
+                        default => 'bg-slate-400 text-white'
                     };
                     $statusLabel = match($request->status) {
                         'PENDING' => 'Menunggu Approval Finlog',
@@ -78,111 +142,178 @@
                         'CANCELLED' => 'Dibatalkan',
                         default => $request->status
                     };
-                    $typeLabel = match($request->type) {
-                        'SHOPPING' => 'Belanja Umum / Gudang',
-                        'PRODUCTION_PO' => 'PO Spesifik SPK',
-                        default => $request->type
-                    };
+                    $isBulkSpk = $request->items->pluck('work_order_id')->filter()->unique()->count() > 1;
+                    $hasSpk = $request->work_order_id || $request->items->pluck('work_order_id')->filter()->isNotEmpty();
+
+                    if ($request->type === 'PRODUCTION_PO') {
+                        $typeLabel = '🏭 PO Khusus Produksi';
+                        $typeBadgeColor = 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border-sky-200 dark:border-sky-800';
+                    } elseif ($isBulkSpk) {
+                        $typeLabel = '📦 Belanja Gabungan SPK';
+                        $typeBadgeColor = 'bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border-purple-200 dark:border-purple-800';
+                    } elseif ($hasSpk) {
+                        $typeLabel = '🛒 Belanja Sortir SPK';
+                        $typeBadgeColor = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800';
+                    } else {
+                        $typeLabel = '🏬 Restock Gudang Workshop';
+                        $typeBadgeColor = 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600';
+                    }
+                    $materialNames = $request->items->map(function($i) {
+                        return $i->material->name ?? $i->custom_item_name ?? 'Material';
+                    })->take(2)->implode(', ');
+                    if($request->items->count() > 2) {
+                        $materialNames .= ' +' . ($request->items->count() - 2) . ' lainnya';
+                    }
                 @endphp
-                <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
-                    {{-- Status Accent Bar --}}
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5 {{ $statusColor }}"></div>
 
-                    <div class="p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                        <div class="flex items-start sm:items-center gap-5">
-                            {{-- Icon Badge --}}
-                            <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-700/60 flex items-center justify-center text-slate-500 dark:text-slate-300 group-hover:bg-[#22AF85]/10 group-hover:text-[#22AF85] transition-all flex-shrink-0">
-                                @if(in_array($request->status, ['CANCELLED', 'REJECTED']))
-                                    <svg class="w-7 h-7 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                @elseif($request->status == 'PENDING')
-                                    <svg class="w-7 h-7 text-amber-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                @else
-                                    <svg class="w-7 h-7 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                @endif
+                {{-- 3-TIER MODERN CARD --}}
+                <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/90 dark:border-slate-700/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 overflow-hidden group">
+                    
+                    {{-- TIER 1: CARD HEADER --}}
+                    <div class="bg-slate-50/70 dark:bg-slate-800/80 px-6 py-4 border-b border-slate-100 dark:border-slate-700/80 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-2.5 min-w-0">
+                            <div class="w-2.5 h-2.5 rounded-full {{ $statusColor }} shrink-0"></div>
+                            
+                            <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight font-mono group-hover:text-[#22AF85] transition-colors">
+                                {{ $request->request_number }}
+                            </h2>
+
+                            {{-- Status Pill --}}
+                            <span class="px-3 py-1 rounded-full {{ $statusColor }} text-[10px] font-black uppercase tracking-wider shadow-2xs">
+                                {{ $statusLabel }}
+                            </span>
+
+                            {{-- Type Chip --}}
+                            <span class="px-2.5 py-1 rounded-xl {{ $typeBadgeColor }} text-[10px] font-bold uppercase tracking-wider border">
+                                {{ $typeLabel }}
+                            </span>
+
+                            {{-- Ref Finlog --}}
+                            @if($request->finlog_request_id)
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-[10px] font-black uppercase tracking-wider border border-purple-200 dark:border-purple-800 shadow-2xs">
+                                    <svg class="w-3 h-3 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                    <span>Ref Finlog: {{ $request->finlog_request_id }}</span>
+                                </span>
+                            @endif
+                        </div>
+
+                        <div class="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 text-xs font-bold">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span>{{ $request->created_at->format('d M Y • H:i') }}</span>
+                        </div>
+                    </div>
+
+                    {{-- TIER 2: CARD BODY (4-COLUMN INFO GRID) --}}
+                    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        
+                        {{-- Col 1: Diajukan Oleh --}}
+                        <div class="bg-slate-50/90 dark:bg-slate-750/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/60 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-black text-xs shrink-0">
+                                {{ strtoupper(substr($request->requestedBy->name ?? 'A', 0, 2)) }}
                             </div>
-
-                            <div class="space-y-3 min-w-0 flex-1">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight font-mono group-hover:text-[#22AF85] transition-colors">
-                                        {{ $request->request_number }}
-                                    </h2>
-                                    <span class="px-3 py-1 rounded-full {{ $statusColor }} text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
-                                        {{ $statusLabel }}
-                                    </span>
-                                    <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider border border-slate-200 dark:border-slate-600">
-                                        {{ $typeLabel }}
-                                    </span>
-                                    @if($request->finlog_request_id)
-                                        <span class="px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 text-[10px] font-black uppercase tracking-wider border border-indigo-200 dark:border-indigo-800">
-                                            Ref Finlog: {{ $request->finlog_request_id }}
-                                        </span>
-                                    @endif
-                                </div>
-
-                                {{-- Meta Grid --}}
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-2 text-xs">
-                                    <div>
-                                        <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Diajukan Oleh</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $request->requestedBy->name ?? 'Sistem' }}</span>
-                                    </div>
-                                    <div>
-                                        <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Tanggal</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $request->created_at->format('d M Y, H:i') }}</span>
-                                    </div>
-                                    <div>
-                                        <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Cakupan SPK</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">
-                                            @if($request->work_order_id)
-                                                SPK #{{ $request->workOrder->spk_number }}
-                                            @else
-                                                <span class="text-[#22AF85] font-black">{{ $request->items->pluck('work_order_id')->unique()->filter()->count() }} SPK (Batch)</span>
-                                            @endif
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Jumlah Material</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $request->items->count() }} Jenis Item</span>
-                                    </div>
-                                </div>
+                            <div class="min-w-0">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Diajukan Oleh</span>
+                                <span class="text-xs font-black text-slate-800 dark:text-slate-200 truncate block mt-0.5">{{ $request->requestedBy->name ?? 'Admin Gudang' }}</span>
+                                <span class="text-[9px] font-bold text-slate-400 block">Pemohon Workshop</span>
                             </div>
                         </div>
 
-                        {{-- Total & Action Buttons --}}
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between lg:justify-end gap-4 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-700">
-                            <div class="flex flex-col text-left lg:text-right">
-                                <span class="text-[9px] font-black text-[#22AF85] uppercase tracking-wider">Estimasi Total Belanja</span>
-                                <span class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Rp {{ number_format($request->total_estimated_cost, 0, ',', '.') }}</span>
+                        {{-- Col 2: Cakupan SPK --}}
+                        <div class="bg-slate-50/90 dark:bg-slate-750/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/60 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#22AF85] flex items-center justify-center text-lg shrink-0">
+                                🎯
                             </div>
-
-                            <div class="flex items-center gap-2 w-full sm:w-auto">
-                                @if(!in_array($request->status, ['RECEIVED', 'CANCELLED', 'REJECTED']))
-                                    <button type="button" 
-                                            wire:click="quickFulfill({{ $request->id }})" 
-                                            wire:confirm="Verifikasi & konfirmasi penerimaan fisik bahan baku untuk {{ $request->request_number }}? Stok akan otomatis bertambah dan SPK akan lanjut ke PRODUKSI."
-                                            class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#22AF85] hover:bg-emerald-600 text-white font-black text-xs shadow-md shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                        <span>Terima Barang</span>
-                                    </button>
-                                @elseif($request->status === 'RECEIVED')
-                                    <span class="px-3 py-2 rounded-xl bg-emerald-50 text-[#22AF85] font-black text-xs border border-emerald-200 flex items-center gap-1.5 whitespace-nowrap">
-                                        <svg class="w-4 h-4 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                        <span>Material Tiba</span>
-                                    </span>
+                            <div class="min-w-0">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Cakupan SPK</span>
+                                @if($request->work_order_id)
+                                    <span class="text-xs font-black text-slate-800 dark:text-slate-200 truncate block mt-0.5">#{{ $request->workOrder->spk_number }}</span>
+                                    <span class="text-[9px] font-bold text-slate-400 block">Single Order</span>
+                                @else
+                                    <span class="text-xs font-black text-[#22AF85] block mt-0.5">{{ $request->items->pluck('work_order_id')->unique()->filter()->count() }} SPK Batch</span>
+                                    <span class="text-[9px] font-bold text-slate-400 block">Multi Target</span>
                                 @endif
-
-                                <a href="{{ route('material-requests.show', $request) }}" wire:navigate 
-                                   class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-[#FFC232] hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                    <span>Detail Request</span>
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                                </a>
-
-                                <button type="button" 
-                                        wire:click="deleteRequest({{ $request->id }})" 
-                                        wire:confirm="Apakah Anda yakin ingin menghapus pengajuan ini?"
-                                        class="p-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 dark:bg-slate-700 dark:hover:bg-rose-950/50 transition-all border border-slate-200 dark:border-slate-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
                             </div>
+                        </div>
+
+                        {{-- Col 3: Item Material --}}
+                        <div class="bg-slate-50/90 dark:bg-slate-750/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/60 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg shrink-0">
+                                📦
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Jumlah Material</span>
+                                <span class="text-xs font-black text-slate-800 dark:text-slate-200 block mt-0.5">{{ $request->items->count() }} Jenis Item</span>
+                                <span class="text-[9px] font-bold text-slate-400 truncate block" title="{{ $materialNames }}">{{ $materialNames ?: 'Bahan Baku' }}</span>
+                            </div>
+                        </div>
+
+                        {{-- Col 4: Estimasi Total Belanja --}}
+                        <div class="bg-gradient-to-br from-emerald-50/80 to-teal-50/80 dark:from-emerald-950/30 dark:to-teal-950/30 rounded-2xl p-4 border border-emerald-100 dark:border-emerald-900/40 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-[#22AF85] text-white flex items-center justify-center text-lg shadow-sm shadow-emerald-500/20 shrink-0">
+                                💰
+                            </div>
+                            <div class="min-w-0">
+                                <span class="text-[9px] font-black text-[#22AF85] uppercase tracking-wider block">Estimasi Belanja</span>
+                                <span class="text-base sm:text-lg font-black text-slate-900 dark:text-white block mt-0.5">Rp {{ number_format($request->total_estimated_cost, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- TIER 3: CARD FOOTER / ACTION BAR --}}
+                    <div class="px-6 py-4 bg-slate-50/40 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        
+                        {{-- Left Footer: Status Note --}}
+                        <div class="flex items-center gap-2 text-xs font-bold text-slate-400">
+                            @if($request->status === 'RECEIVED')
+                                <span class="inline-flex items-center gap-1.5 text-[#22AF85]">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    Bahan baku telah diverifikasi &amp; stok gudang telah diperbarui.
+                                </span>
+                            @elseif($request->status === 'PENDING')
+                                <span class="inline-flex items-center gap-1.5 text-amber-500">
+                                    <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Menunggu persetujuan dan nota pembelian dari Finlog.
+                                </span>
+                            @else
+                                <span>Status pengajuan: {{ $statusLabel }}</span>
+                            @endif
+                        </div>
+
+                        {{-- Right Footer: Action Buttons --}}
+                        <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                            
+                            {{-- Terima Barang / Material Tiba Button --}}
+                            @if(!in_array($request->status, ['RECEIVED', 'CANCELLED', 'REJECTED']))
+                                <button type="button" 
+                                        wire:click="quickFulfill({{ $request->id }})" 
+                                        wire:confirm="Verifikasi & konfirmasi penerimaan fisik bahan baku untuk {{ $request->request_number }}? Stok akan otomatis bertambah dan SPK akan lanjut ke PRODUKSI."
+                                        class="px-4 py-2.5 rounded-xl bg-[#22AF85] hover:bg-emerald-600 text-white font-black text-xs shadow-md shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    <span>Terima Barang</span>
+                                </button>
+                            @elseif($request->status === 'RECEIVED')
+                                <span class="px-3.5 py-2 rounded-xl bg-emerald-50 text-[#22AF85] font-black text-xs border border-emerald-200 flex items-center gap-1.5 whitespace-nowrap shadow-2xs">
+                                    <svg class="w-4 h-4 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    <span>Material Tiba</span>
+                                </span>
+                            @endif
+
+                            {{-- Detail Request Button --}}
+                            <a href="{{ route('material-requests.show', $request) }}" wire:navigate 
+                               class="px-5 py-2.5 rounded-xl bg-[#FFC232] hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                <span>Detail Request</span>
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+
+                            {{-- High Contrast Rose Red Delete Button --}}
+                            <button type="button" 
+                                    wire:click="deleteRequest({{ $request->id }})" 
+                                    wire:confirm="Apakah Anda yakin ingin menghapus pengajuan {{ $request->request_number }} ini?"
+                                    title="Hapus Pengajuan"
+                                    class="px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200/90 hover:border-rose-600 shadow-2xs hover:shadow-md hover:shadow-rose-500/20 transition-all duration-200 active:scale-95 flex items-center justify-center gap-1.5 shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <span class="hidden sm:inline text-xs font-bold">Hapus</span>
+                            </button>
                         </div>
                     </div>
                 </div>

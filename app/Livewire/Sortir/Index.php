@@ -218,7 +218,7 @@ class Index extends Component
 
         $orders = WorkOrder::whereIn('id', $this->selectedWaitingItems)
             ->with(['materials' => function($q) {
-                $q->where('work_order_materials.status', 'REQUESTED');
+                $q->where('work_order_materials.status', '!=', 'RECEIVED');
             }])->get();
 
         $allMaterials = [];
@@ -239,7 +239,7 @@ class Index extends Component
         }
 
         if (empty($allMaterials)) {
-            $this->dispatch('notify', ['type' => 'warning', 'message' => 'Tidak ada material berstatus REQUESTED pada SPK yang dipilih.']);
+            $this->dispatch('notify', ['type' => 'warning', 'message' => 'Tidak ada material belanja pada SPK yang dipilih.']);
             return;
         }
 
@@ -254,7 +254,7 @@ class Index extends Component
     public function openPengajuanModal($id)
     {
         $order = WorkOrder::with(['materials' => function($q) {
-            $q->wherePivot('status', 'REQUESTED');
+            $q->where('work_order_materials.status', '!=', 'RECEIVED');
         }])->find($id);
 
         if (!$order) return;

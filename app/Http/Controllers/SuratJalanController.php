@@ -167,7 +167,14 @@ class SuratJalanController extends Controller
      */
     public function show($id)
     {
-        $suratJalan = SuratJalan::with(['pengirim', 'penerima', 'items.workOrder'])->findOrFail($id);
+        $suratJalan = SuratJalan::with([
+            'pengirim', 
+            'penerima', 
+            'items.workOrder.materials',
+            'items.workOrder.services',
+            'items.workOrder.lead',
+            'items.workOrder.customer'
+        ])->findOrFail($id);
 
         return view('surat-jalan.show', compact('suratJalan'));
     }
@@ -177,7 +184,14 @@ class SuratJalanController extends Controller
      */
     public function print($id)
     {
-        $suratJalan = SuratJalan::with(['pengirim', 'penerima', 'items.workOrder.services', 'items.workOrder.lead'])->findOrFail($id);
+        $suratJalan = SuratJalan::with([
+            'pengirim', 
+            'penerima', 
+            'items.workOrder.materials',
+            'items.workOrder.services', 
+            'items.workOrder.lead',
+            'items.workOrder.customer'
+        ])->findOrFail($id);
 
         return view('surat-jalan.print', compact('suratJalan'));
     }
@@ -187,7 +201,7 @@ class SuratJalanController extends Controller
      */
     public function markAsReceived(Request $request, $id)
     {
-        $suratJalan = SuratJalan::with('items.workOrder')->findOrFail($id);
+        $suratJalan = SuratJalan::with(['items.workOrder.materials'])->findOrFail($id);
         
         DB::transaction(function () use ($suratJalan) {
             $suratJalan->update([
@@ -197,6 +211,7 @@ class SuratJalanController extends Controller
             ]);
 
             $workflowService = app(\App\Services\WorkflowService::class);
+            $materialService = app(\App\Services\MaterialManagementService::class);
 
             foreach ($suratJalan->items as $item) {
                 if (!$item->workOrder) continue;
@@ -206,6 +221,35 @@ class SuratJalanController extends Controller
                     if ($wo->status === \App\Enums\WorkOrderStatus::SORTIR) {
                         $workflowService->updateStatus($wo, \App\Enums\WorkOrderStatus::PRODUCTION);
                     }
+
+                    // Material handover deduction (KELUAR) for Produksi usage
+                    if ($wo->materials && $wo->materials->isNotEmpty()) {
+                        foreach ($wo->materials as $mat) {
+                            $qty = $mat->pivot->quantity ?? 1;
+
+                            // Check if this material has already been deducted (OUT) for this SPK
+                            $alreadyDeducted = \App\Models\MaterialTransaction::where('reference_type', 'WorkOrder')
+                                ->where('reference_id', $wo->id)
+                                ->where('material_id', $mat->id)
+                                ->where('type', 'OUT')
+                                ->exists();
+
+                            if (!$alreadyDeducted) {
+                                $freshMat = \App\Models\Material::where('id', $mat->id)->lockForUpdate()->first();
+                                if ($freshMat) {
+                                    $freshMat->decrement('stock', $qty);
+                                    $materialService->logTransaction(
+                                        $freshMat,
+                                        'OUT',
+                                        $qty,
+                                        'WorkOrder',
+                                        $wo->id,
+                                        "Pemakaian fisik material oleh Produksi via Surat Jalan #{$suratJalan->nomor_surat}"
+                                    );
+                                }
+                            }
+                        }
+                    }
                 } elseif ($suratJalan->jenis_serah_terima === 'produksi_to_post_qc') {
                     if ($wo->status === \App\Enums\WorkOrderStatus::PRODUCTION) {
                         $workflowService->updateStatus($wo, \App\Enums\WorkOrderStatus::QC);
@@ -214,6 +258,6 @@ class SuratJalanController extends Controller
             }
         });
 
-        return redirect()->back()->with('success', "Surat Jalan {$suratJalan->nomor_surat} telah dikonfirmasi diterima. Seluruh SPK otomatis berpindah status!");
+        return redirect()->back()->with('success', "Surat Jalan {$suratJalan->nomor_surat} telah dikonfirmasi diterima. Seluruh SPK otomatis berpindah ke Produksi & pemakaian material tercatat!");
     }
 }
