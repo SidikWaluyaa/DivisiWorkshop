@@ -244,6 +244,12 @@
                                         </div>
                                     @endif
                                 </div>
+                                @if(isset($warranty->loss_amount) && $warranty->loss_amount > 0)
+                                    <div class="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                                        <span>💰 Kerugian:</span>
+                                        <span>Rp {{ number_format($warranty->loss_amount, 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
                             </div>
                             
                             <div class="pt-4 border-t border-gray-50">
@@ -307,6 +313,46 @@
                                         @endforeach
                                     </div>
                                 @endif
+
+                                {{-- Estimasi Kerugian Workshop Full Card --}}
+                                <div class="mt-5 p-5 bg-gradient-to-br from-rose-50 to-amber-50 rounded-2xl border border-rose-200/80 shadow-sm relative overflow-hidden">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm">💰</span>
+                                            <span class="text-[10px] font-black text-rose-700 uppercase tracking-widest">Estimasi Kerugian Workshop</span>
+                                        </div>
+                                        <button wire:click="editWarranty({{ $warranty->id }})" class="px-3 py-1 bg-white/90 hover:bg-rose-100 text-rose-600 rounded-lg text-[9px] font-black uppercase tracking-wider border border-rose-200 shadow-2xs transition-all flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                            <span>Edit Kerugian</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                                        <div>
+                                            <span class="text-[9px] font-extrabold text-gray-400 uppercase tracking-wider block">Nominal Rugi:</span>
+                                            <span class="text-base font-black text-rose-600">
+                                                {{ ($warranty->loss_amount && $warranty->loss_amount > 0) ? 'Rp ' . number_format($warranty->loss_amount, 0, ',', '.') : 'Rp 0 (Belum diisi)' }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span class="text-[9px] font-extrabold text-gray-400 uppercase tracking-wider block">Kategori:</span>
+                                            <span class="font-bold text-gray-800 uppercase text-[11px]">{{ $warranty->loss_category ?: 'REWORK_LABOR' }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-[9px] font-extrabold text-gray-400 uppercase tracking-wider block">Penanggung Jawab:</span>
+                                            <span class="font-bold text-rose-700 text-[11px]">{{ $warranty->responsible_party ?: '-' }}</span>
+                                        </div>
+                                    </div>
+
+                                    @if($warranty->loss_description)
+                                        <div class="mt-2.5 pt-2 border-t border-rose-200/60 text-xs">
+                                            <span class="text-[9px] font-extrabold text-gray-400 uppercase tracking-wider block mb-0.5">Rincian Material / Catatan Kerugian:</span>
+                                            <p class="text-gray-700 font-medium italic text-[11px] bg-white/70 p-2.5 rounded-xl border border-rose-100">
+                                                "{{ $warranty->loss_description }}"
+                                            </p>
+                                        </div>
+                                    @endif
+                                </div>
                                 
                                 {{-- Meta Info (Creator/Finisher) --}}
                                 <div class="mt-4 pt-4 border-t border-gray-200/50 flex items-center justify-between">
@@ -446,7 +492,7 @@
                 <div class="px-10 pt-10 pb-8">
                     <div class="flex justify-between items-start mb-10">
                         <div class="space-y-1">
-                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-widest text-[#22AF85]">Langkah {{ $step }} dari 2</span>
+                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-widest">Langkah {{ $step }} dari 2</span>
                             <h3 class="text-3xl font-black text-[#1a3b34] tracking-tighter">
                                 @if($step === 1) Cari <span class="text-[#22AF85]">Data Asli</span> @else Deskripsi <span class="text-[#22AF85]">Masalah</span> @endif
                             </h3>
@@ -526,6 +572,40 @@
                                                 </span>
                                             @endforeach
                                         </div>
+                                    </div>
+                                </div>
+
+                                {{-- Estimasi Kerugian Workshop --}}
+                                <div class="space-y-3 p-5 bg-amber-50/80 rounded-[2rem] border border-amber-200/80">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-base">💰</span>
+                                        <label class="block text-[10px] font-black uppercase tracking-widest text-amber-900">Estimasi Kerugian Workshop (Opsional)</label>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1 ml-1">Nominal Kerugian (Rp):</label>
+                                            <input type="number" wire:model="loss_amount" min="0" placeholder="0" class="w-full px-4 py-2.5 bg-white border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#22AF85]">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1 ml-1">Kategori Kerugian:</label>
+                                            <select wire:model="loss_category" class="w-full px-4 py-2.5 bg-white border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#22AF85]">
+                                                <option value="REWORK_LABOR">Ongkos Pengerjaan Ulang</option>
+                                                <option value="MATERIAL_WASTE">Bahan Terbuang / Rusak</option>
+                                                <option value="REPLACEMENT">Penggantian Komponen/Unit</option>
+                                                <option value="OTHERS">Lain-lain</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1 ml-1">Penanggung Jawab / Penyebab:</label>
+                                        <input type="text" wire:model="responsible_party" placeholder="Misal: Teknisi Soling / Supplier Material / QC" class="w-full px-4 py-2.5 bg-white border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#22AF85]">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1 ml-1">Rincian Material Terbuang / Catatan:</label>
+                                        <input type="text" wire:model="loss_description" placeholder="Misal: 1 Pcs Sol Rubber, 2 Botol Lem..." class="w-full px-4 py-2.5 bg-white border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#22AF85]">
                                     </div>
                                 </div>
 
@@ -623,7 +703,7 @@
                 <div class="px-10 pt-10 pb-8">
                     <div class="flex justify-between items-start mb-10">
                         <div class="space-y-1">
-                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-widest text-[#22AF85]">Update Data Garansi</span>
+                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-widest">Update Data Garansi</span>
                             <h3 class="text-3xl font-black text-[#1a3b34] tracking-tighter">
                                 Edit <span class="text-[#22AF85]">Klaim</span>
                             </h3>
@@ -634,6 +714,40 @@
                     </div>
 
                     <div class="space-y-8">
+                        {{-- Estimasi Kerugian Workshop --}}
+                        <div class="space-y-3 p-5 bg-amber-50/80 rounded-[2rem] border border-amber-200/80">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-base">💰</span>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-amber-900">Estimasi Kerugian Workshop (Opsional)</label>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1 ml-1">Nominal Kerugian (Rp):</label>
+                                    <input type="number" wire:model="loss_amount" min="0" placeholder="0" class="w-full px-4 py-2.5 bg-white border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#22AF85]">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1 ml-1">Kategori Kerugian:</label>
+                                    <select wire:model="loss_category" class="w-full px-4 py-2.5 bg-white border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#22AF85]">
+                                        <option value="REWORK_LABOR">Ongkos Pengerjaan Ulang</option>
+                                        <option value="MATERIAL_WASTE">Bahan Terbuang / Rusak</option>
+                                        <option value="REPLACEMENT">Penggantian Komponen/Unit</option>
+                                        <option value="OTHERS">Lain-lain</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1 ml-1">Penanggung Jawab / Penyebab:</label>
+                                <input type="text" wire:model="responsible_party" placeholder="Misal: Teknisi Soling / Supplier Material / QC" class="w-full px-4 py-2.5 bg-white border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#22AF85]">
+                            </div>
+
+                            <div>
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1 ml-1">Rincian Material Terbuang / Catatan:</label>
+                                <input type="text" wire:model="loss_description" placeholder="Misal: 1 Pcs Sol Rubber, 2 Botol Lem..." class="w-full px-4 py-2.5 bg-white border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:ring-2 focus:ring-[#22AF85]">
+                            </div>
+                        </div>
+
                         {{-- Input Deskripsi --}}
                          <div class="space-y-3">
                              <label class="block text-[10px] font-black uppercase tracking-widest text-[#22AF85] mb-3 ml-2">Detail Kerusakan</label>
@@ -735,4 +849,3 @@
         background: #cbd5e1;
     }
 </style>
-

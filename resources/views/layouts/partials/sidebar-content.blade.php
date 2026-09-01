@@ -267,7 +267,7 @@
     {{-- 2. DIVISI GUDANG --}}
     @can('access-gudang')
     <div x-data="{ 
-            open: localStorage.getItem('sb_gudang') === 'true' || {{ request()->routeIs('admin.supply-chain.*') || request()->routeIs('material-requests.*') || request()->routeIs('admin.materials.*') || request()->routeIs('admin.purchases.*') || request()->routeIs('storage.*') || request()->routeIs('assessment.*') ? 'true' : 'false' }},
+            open: localStorage.getItem('sb_gudang') === 'true' || {{ request()->routeIs('admin.supply-chain.*') || request()->routeIs('material-requests.*') || request()->routeIs('admin.materials.*') || request()->routeIs('admin.purchases.*') || request()->routeIs('storage.*') || request()->routeIs('assessment.*') || request()->routeIs('finish.*') || request()->routeIs('shipping.*') || request()->routeIs('admin.custom-label.*') || request()->routeIs('gudang.outbound-receipt') ? 'true' : 'false' }},
             toggle() {
                 this.open = !this.open;
                 localStorage.setItem('sb_gudang', this.open);
@@ -298,22 +298,27 @@
 
         <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
 
-
-
-        @if(Auth::user()->hasAccess('admin.materials'))
-
-
-        {{-- Stok Material --}}
-        <a href="{{ route('admin.materials.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.materials.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+        {{-- Penerimaan Outbound (QC to Gudang) --}}
+        <a href="{{ route('gudang.outbound-receipt') }}" 
+           class="nav-item {{ request()->routeIs('gudang.outbound-receipt') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-amber-500/10 bg-amber-500/5 hover:bg-amber-500/20"
            :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
+            <svg class="nav-icon flex-shrink-0 text-amber-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"></path>
             </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Stok Material</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Material</span>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-amber-400">Penerimaan Outbound</span>
+            
+            @php $pendingOutboundCount = \App\Models\WorkshopManifest::where('manifest_number', 'like', 'MNF-OUT-%')->where('status', 'SENT')->count(); @endphp
+            @if($pendingOutboundCount > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-amber-500 text-slate-950 shadow-sm animate-pulse">
+                    {{ $pendingOutboundCount }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 border border-white rounded-full animate-pulse"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-amber-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Penerimaan QC</span>
         </a>
-        @endif
+
+
 
         @if(Auth::user()->hasAccess('admin.purchases'))
 
@@ -450,7 +455,7 @@
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-emerald-400 font-bold">Logistik Manifest</span>
             
-            @php $manifestCount = \App\Models\WorkshopManifest::whereIn('status', ['DRAFT', 'SENT'])->count(); @endphp
+            @php $manifestCount = \App\Models\WorkshopManifest::where('manifest_number', 'not like', 'MNF-OUT-%')->whereIn('status', ['DRAFT', 'SENT'])->count(); @endphp
             @if($manifestCount > 0)
                 <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm">
                     {{ $manifestCount }}
@@ -460,8 +465,6 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Logistik</span>
         </a>
-
-
 
         @if(Auth::user()->hasAccess('admin'))
         {{-- Gudang Manual --}}
@@ -486,178 +489,11 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">R. Manual</span>
         </a>
         @endif
-        </div>
-    </div>
-    @endcan
 
-    {{-- 3. DIVISI WORKSHOP --}}
-    @can('access-workshop')
-    <div x-data="{ 
-            open: localStorage.getItem('sb_workshop') === 'true' || {{ request()->routeIs('workshop.*') || request()->routeIs('preparation.*') || request()->routeIs('sortir.*') || request()->routeIs('production.*') || request()->routeIs('qc.*') || request()->routeIs('finish.*') || request()->routeIs('revision.*') || request()->routeIs('garansi.*') ? 'true' : 'false' }},
-            toggle() {
-                this.open = !this.open;
-                localStorage.setItem('sb_workshop', this.open);
-            }
-         }" 
-         class="mt-4 text-white">
-        
-        <button @click="toggle()" 
-                type="button" 
-                class="w-full flex items-center justify-between px-3 py-2.5 transition-all duration-300 group rounded-xl mb-1 active:scale-95 touch-manipulation"
-                :class="open ? 'bg-white/15 text-white shadow-lg ring-1 ring-white/30 backdrop-blur-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'"
-                :title="sidebarCollapsed ? 'Divisi Workshop' : ''">
-            <div class="flex items-center gap-3">
-                <!-- Workshop Icon -->
-                <svg class="w-5 h-5 flex-shrink-0 transition-transform duration-300" 
-                     :class="{ 'text-blue-400 scale-110 rotate-3': open, 'text-gray-400 group-hover:scale-110': !open }" 
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-                <h3 x-show="!sidebarCollapsed" 
-                    class="section-title mb-0 text-xs font-bold uppercase tracking-wider transition-colors"
-                    :class="open ? 'text-blue-100' : 'text-gray-400 group-hover:text-blue-400'">Divisi Workshop</h3>
-            </div>
-            <svg x-show="!sidebarCollapsed" :class="{ 'rotate-180': open }" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-        </button>
-
-        <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
-
-        {{-- Workshop Dashboard --}}
-        <a href="{{ route('workshop.dashboard-v2') }}" 
-           class="nav-item {{ request()->routeIs('workshop.dashboard-v2') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Workshop Dashboard</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Workshop</span>
-        </a>
-        
-        {{-- Fast Track SPK --}}
-        <a href="{{ route('workshop.fast-track.index') }}" 
-           class="nav-item {{ request()->routeIs('workshop.fast-track.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Fast Track SPK</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Fast Track</span>
-        </a>
-
-
-        @if(Auth::user()->hasAccess('preparation'))
-        <a href="{{ route('preparation.index') }}" 
-           class="nav-item {{ request()->routeIs('preparation.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1">Persiapan</span>
-            
-            {{-- Badge --}}
-            @if(isset($sidebarCounts['preparation']) && $sidebarCounts['preparation'] > 0)
-                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-orange-500 text-white shadow-sm">
-                    {{ $sidebarCounts['preparation'] }}
-                </span>
-                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-orange-500 border border-white rounded-full"></span>
-            @endif
-
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Persiapan</span>
-        </a>
-        @endif
-
-        @if(Auth::user()->hasAccess('sortir'))
-        <a href="{{ route('sortir.index') }}" 
-           class="nav-item {{ request()->routeIs('sortir.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1">Sortir</span>
-            
-            {{-- Badge --}}
-            @if(isset($sidebarCounts['sortir']) && $sidebarCounts['sortir'] > 0)
-                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-teal-500 text-white shadow-sm">
-                    {{ $sidebarCounts['sortir'] }}
-                </span>
-                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-teal-500 border border-white rounded-full"></span>
-            @endif
-
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Sortir</span>
-        </a>
-        @endif
-
-        {{-- 4. Produksi --}}
-        @if(Auth::user()->hasAccess('production'))
-        <a href="{{ route('production.index') }}" 
-           class="nav-item {{ request()->routeIs('production.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-blue-400 font-bold">Produksi</span>
-            
-            @if(isset($sidebarCounts['production']) && $sidebarCounts['production'] > 0)
-                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm">
-                    {{ $sidebarCounts['production'] }}
-                </span>
-                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-blue-500 border border-white rounded-full"></span>
-            @endif
-
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Produksi</span>
-        </a>
-
-        {{-- Info Keterlambatan --}}
-        <a href="{{ route('production.late-info') }}" 
-           class="nav-item {{ request()->routeIs('production.late-info') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-orange-400 font-bold">Info Keterlambatan</span>
-            
-            @php 
-                $lateCount = \App\Models\WorkOrder::productionLate()->whereRaw('DATEDIFF(estimation_date, NOW()) <= 0')->count(); 
-            @endphp
-            @if($lateCount > 0)
-                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-red-500 text-white shadow-sm">
-                    {{ $lateCount }}
-                </span>
-                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border border-white rounded-full"></span>
-            @endif
-
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Terlambat</span>
-        </a>
-        @endif
-
-        {{-- 5. Quality Control --}}
-        @if(Auth::user()->hasAccess('qc'))
-        <a href="{{ route('qc.index') }}" 
-           class="nav-item {{ request()->routeIs('qc.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-10 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-purple-400 font-bold">Quality Control</span>
-            
-            @if(isset($sidebarCounts['qc']) && $sidebarCounts['qc'] > 0)
-                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-purple-500 text-white shadow-sm">
-                    {{ $sidebarCounts['qc'] }}
-                </span>
-                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-purple-500 border border-white rounded-full"></span>
-            @endif
-
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">QC</span>
-        </a>
-        @endif
-
-        {{-- 6. Gudang Finish --}}
-        @if(Auth::user()->hasAccess('finish'))
+        {{-- Gudang Finish --}}
+        @if(Auth::user()->hasAccess('finish') || Auth::user()->hasAccess('gudang'))
         <a href="{{ route('finish.index') }}" 
-           class="nav-item {{ request()->routeIs('finish.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           class="nav-item {{ request()->routeIs('finish.index') || request()->routeIs('finish.show') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
             <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
@@ -673,53 +509,9 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">G. Finish</span>
         </a>
-
-        {{-- 6.1 Revisi Teknik --}}
-        @if(Auth::user()->hasAccess('finish'))
-        <a href="{{ route('revision.index') }}" 
-           class="nav-item {{ request()->routeIs('revision.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0 text-red-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-red-400 font-bold">Revisi</span>
-            
-            @php $revCount = \App\Models\WorkOrderRevision::where('status', 'OPEN')->count(); @endphp
-            @if($revCount > 0)
-                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-red-500 text-white shadow-sm">
-                    {{ $revCount }}
-                </span>
-                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border border-white rounded-full"></span>
-            @endif
-
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Revisi</span>
-        </a>
         @endif
 
-        {{-- 6.2 Sistem Garansi --}}
-        @if(Auth::user()->hasAccess('finish'))
-        <a href="{{ route('garansi.index') }}" 
-           class="nav-item {{ request()->routeIs('garansi.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0 text-yellow-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 21.48V11.5" />
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-yellow-400 font-bold">Garansi</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Garansi</span>
-        </a>
-        <!-- List Garansi link -->
-        <a href="{{ route('finish.list-garansi') }}" 
-            class="nav-item {{ request()->routeIs('finish.list-garansi') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-            :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0 text-yellow-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-yellow-400 font-bold">List Garansi</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">List Garansi</span>
-        </a>
-        @endif
-
-        {{-- 7. Pengiriman --}}
+        {{-- Pengiriman --}}
         <a href="{{ route('shipping.index') }}" 
            class="nav-item {{ request()->routeIs('shipping.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -740,8 +532,33 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-teal-400">Label Custom</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Label Custom</span>
         </a>
-        @endif
         </div>
+    </div>
+    @endcan
+
+    {{-- 3. DIVISI WORKSHOP (PWA WORKSHOP SHORTCUT) --}}
+    @can('access-workshop')
+    <div class="mt-4 px-2">
+        <a href="{{ route('workshop.dashboard-v2') }}" 
+           class="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-teal-900/30 transition-all hover:scale-[1.02] active:scale-95 group border border-teal-400/30 relative"
+           :title="sidebarCollapsed ? 'Buka PWA Divisi Workshop' : ''">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-sm flex flex-shrink-0 items-center justify-center text-white font-black text-sm shadow-inner group-hover:rotate-12 transition-transform">
+                    W
+                </div>
+                <div x-show="!sidebarCollapsed" class="whitespace-nowrap">
+                    <div class="font-black text-xs text-white tracking-tight flex items-center gap-1.5">
+                        <span>DIVISI WORKSHOP</span>
+                        <span class="px-1.5 py-0.2 bg-amber-400 text-slate-950 font-black text-[9px] rounded uppercase shadow-sm">PWA</span>
+                    </div>
+                    <p class="text-[9px] font-bold text-teal-100/90 -mt-0.5">Sistem Operasional Terpisah →</p>
+                </div>
+            </div>
+            <svg x-show="!sidebarCollapsed" class="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2.5 py-1 bg-slate-900 text-white text-xs font-bold rounded-lg shadow-lg whitespace-nowrap pointer-events-none z-50">Divisi Workshop PWA</span>
+        </a>
     </div>
     @endcan
 
@@ -1113,19 +930,6 @@
         </a>
         @endif
 
-        {{-- Service Master Data --}}
-        @if(Auth::user()->hasAccess('admin.services'))
-        <a href="{{ route('admin.services.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.services.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Manajemen Layanan</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Layanan</span>
-        </a>
-        @endif
-
         {{-- Promo Management --}}
         @if(Auth::user()->hasAccess('admin.promotions'))
         <a href="{{ route('admin.promotions.index') }}" 
@@ -1190,17 +994,7 @@
         </a>
         @endif
 
-        @if(Auth::user()->hasAccess('admin.performance'))
-        <a href="{{ route('admin.performance.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.performance.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Performa</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Performa</span>
-        </a>
-        @endif
+
 
         @if(Auth::user()->hasAccess('admin.performance'))
         <a href="{{ route('admin.kpi.index') }}" 
@@ -1265,16 +1059,6 @@
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 font-bold">Kesehatan Data</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Data</span>
-        </a>
-
-        <a href="{{ route('admin.system.index') }}" 
-           class="nav-item {{ request()->routeIs('admin.system.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative bg-red-900/30 text-red-100 hover:bg-red-800 mt-2"
-           :class="sidebarCollapsed ? 'justify-center' : ''">
-            <svg class="nav-icon flex-shrink-0 text-red-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 font-bold">Pembersihan Sistem</span>
-            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Reset</span>
         </a>
         @endif
         </div>

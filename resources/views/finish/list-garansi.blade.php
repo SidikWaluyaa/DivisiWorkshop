@@ -146,7 +146,7 @@
     </style>
 @endpush
 
-<x-app-layout>
+<x-workshop-pwa-layout>
     <style>
         /* ── Premium Dot Grid & Variables ── */
         .premium-bg {
@@ -649,4 +649,4 @@
 
         </div>
     </div>
-</x-app-layout>
+</x-workshop-pwa-layout>

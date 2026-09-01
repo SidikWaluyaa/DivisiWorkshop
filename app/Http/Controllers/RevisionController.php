@@ -234,4 +234,31 @@ class RevisionController extends Controller
             return redirect()->back()->with('error', 'Gagal menghapus revisi: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Update estimated workshop loss details for a revision.
+     */
+    public function updateLoss(Request $request, WorkOrderRevision $revision)
+    {
+        $request->validate([
+            'loss_amount' => 'nullable|numeric|min:0',
+            'loss_category' => 'nullable|string',
+            'loss_description' => 'nullable|string',
+            'responsible_party' => 'nullable|string',
+        ]);
+
+        try {
+            $lossAmount = $request->input('loss_amount', 0);
+            $revision->update([
+                'loss_amount' => is_numeric($lossAmount) ? floatval($lossAmount) : 0,
+                'loss_category' => $request->input('loss_category', 'REWORK_LABOR'),
+                'loss_description' => $request->input('loss_description'),
+                'responsible_party' => $request->input('responsible_party'),
+            ]);
+
+            return redirect()->back()->with('success', 'Data kerugian workshop berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui data kerugian: ' . $e->getMessage());
+        }
+    }
 }

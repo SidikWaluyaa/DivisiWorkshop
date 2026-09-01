@@ -122,6 +122,8 @@ Route::middleware('auth')->group(function () {
             Route::get('services/template', [App\Http\Controllers\Admin\ServiceController::class, 'downloadTemplate'])->name('services.template');
             Route::post('services/import', [App\Http\Controllers\Admin\ServiceController::class, 'import'])->name('services.import');
             Route::get('services/batch-edit', \App\Livewire\Admin\ServiceBatchEdit::class)->name('services.batch-edit');
+            Route::get('technician-skills', \App\Livewire\Admin\TechnicianSkillMatrix::class)->name('technician-skills');
+            Route::get('technicians', \App\Livewire\Admin\TechnicianManagement::class)->name('technicians.index');
             Route::resource('services', App\Http\Controllers\Admin\ServiceController::class);
         });
 
@@ -190,12 +192,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/performance', [App\Http\Controllers\Admin\PerformanceController::class, 'index'])->name('performance.index');
         });
 
-        // System Tools
+        // System Tools (Master Data Kendala & Solusi CX)
         Route::middleware('access:admin.system')->group(function () {
-            Route::get('/system', [App\Http\Controllers\Admin\SystemController::class, 'index'])->name('system.index');
-            Route::post('/system/reset', [App\Http\Controllers\Admin\SystemController::class, 'reset'])->name('system.reset');
-            Route::post('/system/cleanup-orphaned-storage', [App\Http\Controllers\Admin\SystemController::class, 'cleanupOrphanedStorage'])->name('system.cleanup-orphaned-storage');
-
             // Master Data Kendala & Solusi (CX)
             Route::post('master-issues/{id}/toggle', [App\Http\Controllers\Admin\MasterIssueController::class, 'toggleActive'])->name('master-issues.toggle');
             Route::resource('master-issues', App\Http\Controllers\Admin\MasterIssueController::class)->except(['show']);
@@ -288,8 +286,24 @@ Route::middleware('auth')->group(function () {
         });
         
         Route::middleware('access:preparation')->group(function () {
+            Route::get('/{id}/receive', [WorkshopManifestController::class, 'receiveForm'])->name('receive.form');
             Route::post('/{id}/receive', [WorkshopManifestController::class, 'receive'])->name('receive');
         });
+    });
+
+    // Gudang Outbound Receipt (Penerimaan QC ke Gudang Utama)
+    Route::get('/gudang/outbound-receipt', \App\Livewire\Gudang\OutboundReceiptIndex::class)->name('gudang.outbound-receipt');
+
+
+
+    // Surat Jalan Handover (FR-10.1)
+    Route::prefix('surat-jalan')->name('surat-jalan.')->group(function () {
+        Route::get('/', [App\Http\Controllers\SuratJalanController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\SuratJalanController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\SuratJalanController::class, 'store'])->name('store');
+        Route::get('/{id}', [App\Http\Controllers\SuratJalanController::class, 'show'])->name('show');
+        Route::get('/{id}/print', [App\Http\Controllers\SuratJalanController::class, 'print'])->name('print');
+        Route::post('/{id}/receive', [App\Http\Controllers\SuratJalanController::class, 'markAsReceived'])->name('receive');
     });
 
 
@@ -351,11 +365,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/skip-to-production', [SortirController::class, 'skipToProduction'])->name('skip-production');
         Route::post('/bulk-skip-to-production', [SortirController::class, 'bulkSkipToProduction'])->name('bulk-skip-production');
         Route::post('/bulk-update', [SortirController::class, 'bulkUpdate'])->name('bulk-update');
+
+        // Surat Jalan (Print-friendly Delivery Note)
+        Route::get('/{id}/surat-jalan', [App\Http\Controllers\Workshop\SuratJalanController::class, 'show'])->name('surat-jalan');
     });
 
     // Production
     Route::prefix('production')->name('production.')->middleware('access:production')->group(function () {
         Route::get('/', \App\Livewire\Production\StationIndex::class)->lazy()->name('index');
+        Route::get('/technician-assistant', \App\Livewire\Production\TechnicianAssistant::class)->name('technician-assistant');
         Route::post('/{id}/update-station', [ProductionController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/finish', [ProductionController::class, 'finish'])->name('finish');
         Route::post('/{id}/approve', [ProductionController::class, 'approve'])->name('approve');
@@ -367,6 +385,10 @@ Route::middleware('auth')->group(function () {
     // QC
     Route::prefix('qc')->name('qc.')->middleware('access:qc')->group(function () {
         Route::get('/', \App\Livewire\Qc\QcIndex::class)->lazy()->name('index');
+        Route::get('/outbond', \App\Livewire\Qc\OutboundIndex::class)->lazy()->name('outbound');
+        Route::get('/outbond/create', \App\Livewire\Qc\OutboundCreate::class)->name('outbound.create');
+        Route::get('/outbond/{id}', [App\Http\Controllers\OutboundController::class, 'show'])->name('outbound.show');
+        Route::get('/outbond/{id}/print', [App\Http\Controllers\OutboundController::class, 'print'])->name('outbound.print');
         Route::get('/{id}', [QCController::class, 'show'])->name('show');
         Route::post('/{id}/update-station', [QCController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/update', [QCController::class, 'update'])->name('update');
@@ -410,6 +432,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{revision}', [App\Http\Controllers\RevisionController::class, 'show'])->name('show');
         Route::post('/{workOrder}/request', [App\Http\Controllers\RevisionController::class, 'request'])->name('request');
         Route::post('/{revision}/complete', [App\Http\Controllers\RevisionController::class, 'complete'])->name('complete');
+        Route::post('/{revision}/loss', [App\Http\Controllers\RevisionController::class, 'updateLoss'])->name('update-loss');
         Route::delete('/{revision}', [App\Http\Controllers\RevisionController::class, 'destroy'])->name('destroy');
     });
 
@@ -750,7 +773,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/', \App\Livewire\Procurement\Index::class)->name('index');
         Route::get('/create', \App\Livewire\Procurement\Create::class)->name('create');
         Route::get('/{id}', \App\Livewire\Procurement\Show::class)->name('show');
-        
+        Route::get('/{id}/json', [App\Http\Controllers\MaterialRequestController::class, 'json'])->name('json');
+        Route::get('/{materialRequest}/print', [App\Http\Controllers\MaterialRequestController::class, 'print'])->name('print');
+
         // Legacy actions (Still handled by Controller if needed, or moved to Livewire)
         Route::post('/{materialRequest}/approve', [App\Http\Controllers\MaterialRequestController::class, 'approve'])->name('approve');
         Route::post('/{materialRequest}/reject', [App\Http\Controllers\MaterialRequestController::class, 'reject'])->name('reject');

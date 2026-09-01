@@ -29,7 +29,7 @@ class InternalTracking extends Component
                           $sub->where('invoice_number', 'like', '%' . $keyword . '%');
                       });
                 })
-                ->with(['customer', 'invoice', 'photos', 'logs', 'storageAssignments.rack'])
+                ->with(['customer', 'invoice', 'photos', 'logs', 'storageAssignments.rack', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'workOrderServices'])
                 // Prioritaskan hasil pencarian jika namanya SAMA PERSIS, atau SPK-nya SAMA PERSIS
                 ->orderByRaw("
                     CASE 

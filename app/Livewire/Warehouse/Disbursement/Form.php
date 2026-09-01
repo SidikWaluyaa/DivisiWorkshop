@@ -282,6 +282,6 @@ class Form extends Component
     {
         return view('livewire.warehouse.disbursement.form', [
             'modalMaterials' => $this->filteredMaterials
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }

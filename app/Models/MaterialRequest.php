@@ -12,6 +12,7 @@ class MaterialRequest extends Model
     use SoftDeletes;
     protected $fillable = [
         'request_number',
+        'finlog_request_id',
         'work_order_id',
         'oto_id',
         'requested_by',
@@ -92,6 +93,16 @@ class MaterialRequest extends Model
     public function markAsPurchased(): void
     {
         $this->update(['status' => 'PURCHASED']);
+    }
+
+    public function isReceived(): bool
+    {
+        return $this->status === 'RECEIVED';
+    }
+
+    public function markAsReceived(): void
+    {
+        $this->update(['status' => 'RECEIVED']);
     }
 
     public function cancel(): void

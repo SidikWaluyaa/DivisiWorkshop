@@ -1,85 +1,37 @@
 <div class="py-6 bg-gray-50 min-h-screen" x-data="{ selectedItems: @entangle('selectedItems') }">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         
-        {{-- Premium Stats Overview with Glassmorphism --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            {{-- Jahit Stat --}}
-            <button wire:click="setTab('jahit')"
-                 class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl text-left"
-                 :class="{ 'ring-4 ring-blue-400 ring-opacity-50': '{{ $activeTab }}' === 'jahit' }">
-                <div class="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
-                <div class="relative z-10 text-white">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-                        </div>
-                        @if($activeTab === 'jahit')
-                            <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-xs font-bold animate-pulse">Active</span>
-                        @endif
-                    </div>
-                    <h3 class="font-black text-lg mb-1">QC Jahit</h3>
-                    <p class="text-white/80 text-xs mb-3">Inspeksi jahitan & sol</p>
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-4xl font-black">{{ $this->counts['jahit'] }}</span>
-                        <span class="text-white/70 text-sm font-medium">antrian</span>
-                    </div>
-                </div>
-            </button>
-
-            {{-- Cleanup Stat --}}
-            <button wire:click="setTab('cleanup')"
-                 class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl text-left"
-                 :class="{ 'ring-4 ring-teal-400 ring-opacity-50': '{{ $activeTab }}' === 'cleanup' }">
-                <div class="absolute inset-0 bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
-                <div class="relative z-10 text-white">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        @if($activeTab === 'cleanup')
-                            <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-xs font-bold animate-pulse">Active</span>
-                        @endif
-                    </div>
-                    <h3 class="font-black text-lg mb-1">QC Cleanup</h3>
-                    <p class="text-white/80 text-xs mb-3">Pemeriksaan kebersihan</p>
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-4xl font-black">{{ $this->counts['cleanup'] }}</span>
-                        <span class="text-white/70 text-sm font-medium">antrian</span>
-                    </div>
-                </div>
-            </button>
-
-            {{-- Final Stat --}}
-            <button wire:click="setTab('final')"
-                 class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl text-left"
-                 :class="{ 'ring-4 ring-emerald-400 ring-opacity-50': '{{ $activeTab }}' === 'final' }">
-                <div class="absolute inset-0 bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+        {{-- 2 Main Cards Overview --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {{-- Card 1: Antrean QC --}}
+            <button wire:click="setTab('qc')"
+                 class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl text-left"
+                 :class="{ 'ring-4 ring-blue-400 ring-opacity-50': '{{ $activeTab }}' === 'qc' }">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500 via-teal-600 to-emerald-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                 <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
                 <div class="relative z-10 text-white">
                     <div class="flex justify-between items-start mb-3">
                         <div class="p-3 bg-white/20 rounded-xl backdrop-blur-md">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
-                        @if($activeTab === 'final')
+                        @if($activeTab === 'qc')
                             <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-xs font-bold animate-pulse">Active</span>
                         @endif
                     </div>
-                    <h3 class="font-black text-lg mb-1">QC Final</h3>
-                    <p class="text-white/80 text-xs mb-3">Verifikasi akhir produk</p>
+                    <h3 class="font-black text-xl mb-1">Antrean QC</h3>
+                    <p class="text-white/80 text-xs mb-3">Pengerjaan Stasiun Jahit, Cleanup &amp; Final</p>
                     <div class="flex items-baseline gap-2">
-                        <span class="text-4xl font-black">{{ $this->counts['final'] }}</span>
-                        <span class="text-white/70 text-sm font-medium">antrian</span>
+                        <span class="text-4xl font-black">{{ $this->counts['qc'] }}</span>
+                        <span class="text-white/70 text-sm font-medium">antrean</span>
                     </div>
                 </div>
             </button>
 
-            {{-- Siap Approval --}}
+            {{-- Card 2: Siap Selesai (Review Admin Akhir) --}}
             <button wire:click="setTab('review')"
-                 class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl text-left"
+                 class="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl text-left"
                  :class="{ 'ring-4 ring-indigo-400 ring-opacity-50': '{{ $activeTab }}' === 'review' }">
-                <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-800 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                 <div class="absolute inset-0 backdrop-blur-sm bg-white/10"></div>
                 <div class="relative z-10 text-white">
                     <div class="flex justify-between items-start mb-3">
@@ -90,8 +42,8 @@
                             <span class="px-3 py-1 bg-white/30 backdrop-blur-md rounded-full text-xs font-bold animate-pulse">Active</span>
                         @endif
                     </div>
-                    <h3 class="font-black text-lg mb-1">Siap Selesai</h3>
-                    <p class="text-white/80 text-xs mb-3">Pemeriksaan Admin Akhir</p>
+                    <h3 class="font-black text-xl mb-1">Siap Selesai</h3>
+                    <p class="text-white/80 text-xs mb-3">Pemeriksaan Admin Akhir &amp; Lolos QC</p>
                     <div class="flex items-baseline gap-2">
                         <span class="text-4xl font-black">{{ $this->counts['review'] }}</span>
                         <span class="text-white/70 text-sm font-medium">order</span>
@@ -132,6 +84,8 @@
                         <option value="regular">⚪ REGULER</option>
                     </select>
                 </div>
+
+
 
                 {{-- Technician Filter --}}
                 @if($activeTab !== 'review')
@@ -175,10 +129,8 @@
 
             @php
                 $tabInfo = match($activeTab) {
-                    'jahit' => ['color' => 'blue', 'label' => 'QC Jahit'],
-                    'cleanup' => ['color' => 'teal', 'label' => 'QC Cleanup'],
-                    'final' => ['color' => 'emerald', 'label' => 'QC Final'],
-                    'review' => ['color' => 'indigo', 'label' => 'Menunggu Approval Admin'],
+                    'qc' => ['color' => 'teal', 'label' => 'Pengerjaan Stasiun QC Terpadu'],
+                    'review' => ['color' => 'indigo', 'label' => 'Siap Selesai (Pemeriksaan Admin Akhir)'],
                 };
             @endphp
 
@@ -188,6 +140,15 @@
                     Daftar Antrian: {{ $tabInfo['label'] }}
                 </h3>
                 <div class="flex items-center gap-4">
+                    @if($activeTab === 'qc' && $orders->count() > 0)
+                    <button wire:click="autoAssignUnassignedTechnicians"
+                            wire:loading.attr="disabled"
+                            wire:confirm="Sistem akan otomatis mengisi teknisi untuk stasiun QC yang belum terisi (kosong). Teknisi yang sudah ada TIDAK akan diubah. Lanjutkan?"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-md shadow-blue-100 transition-all active:scale-95 cursor-pointer">
+                        Auto Assign Teknisi (Kosong)
+                    </button>
+                    @endif
+
                     @if($activeTab === 'review' && $orders->count() > 0)
                     <button wire:click="approveAll" 
                             wire:confirm="Apakah Anda yakin ingin menyetujui seluruh {{ $orders->total() }} antrean di stasiun ini?" 
@@ -195,13 +156,6 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Approve Semua ({{ $orders->total() }})
                     </button>
-                    @endif
-                    
-                    @if($activeTab !== 'review')
-                     <div class="flex items-center gap-2">
-                          <input type="checkbox" id="select-all-top" wire:model.live="selectAll" class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 transition-all cursor-pointer">
-                          <label for="select-all-top" class="text-[10px] font-black text-{{ $tabInfo['color'] }}-700 cursor-pointer uppercase">Pilih Semua</label>
-                      </div>
                     @endif
                  </div>
             </div>
@@ -220,14 +174,14 @@
                                 <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">No</th>
                             @endif
                             <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">SPK</th>
-                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan & Sepatu</th>
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pelanggan &amp; Sepatu</th>
                             <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Prioritas</th>
                             @if($activeTab === 'review')
                                 <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status Pengerjaan</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Aksi</th>
                             @else
-                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teknisi</th>
-                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Durasi / SLA</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Progres &amp; Petugas QC</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Estimasi SLA</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Detail</th>
                             @endif
                         </tr>
@@ -236,8 +190,8 @@
                         <x-station-card 
                             wire:key="card-{{ $activeTab }}-{{ $order->id }}"
                             :order="$order" 
-                            :type="'qc_' . $activeTab" 
-                            :technicians="$this->techs[$activeTab] ?? collect()"
+                            :type="$activeTab === 'qc' ? 'qc_qc' : 'qc_review'" 
+                            :technicians="$this->techs"
                             :color="$tabInfo['color']"
                             :loopIteration="$loop->iteration"
                             :showCheckbox="true"
@@ -293,7 +247,7 @@
                     <div class="relative group">
                         <select id="bulk-tech-select-qc" class="appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-[10px] rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block w-44 pl-3 pr-8 py-2.5 font-black uppercase tracking-wider cursor-pointer transition-all">
                             <option value="">-- PILIH PETUGAS --</option>
-                            @foreach($this->techs[$activeTab] as $tech)
+                            @foreach($this->techs[$activeTab] ?? [] as $tech)
                                 <option value="{{ $tech->id }}">{{ $tech->name }}</option>
                             @endforeach
                         </select>
@@ -309,6 +263,13 @@
                         Assign
                     </button>
                 </div>
+
+                {{-- Express Pass (1-Click Batch Pass) --}}
+                <button type="button" 
+                        onclick="window.bulkActionQc('express_pass')" 
+                        class="bg-[#FFC232] hover:bg-amber-400 text-slate-950 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 active:scale-95 border border-amber-300">
+                    ⚡ Express Pass (<span x-text="selectedItems.length"></span>)
+                </button>
 
                 {{-- Bulk Finish --}}
                 <button type="button" 
@@ -390,4 +351,7 @@
             @this.updateStation(id, type, action, techId, finishedAt);
         };
     </script>
+
+    {{-- Revision Modal --}}
+    <x-revision-modal currentStage="QC" />
 </div>

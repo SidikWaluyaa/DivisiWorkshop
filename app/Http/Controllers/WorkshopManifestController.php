@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\WorkOrder;
 use App\Models\WorkshopManifest;
+use App\Models\User;
 use App\Enums\WorkOrderStatus;
 use App\Services\WorkflowService;
+use App\Services\TechnicianAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,14 +22,33 @@ class WorkshopManifestController extends Controller
         $this->workflow = $workflow;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $manifests = WorkshopManifest::with(['dispatcher', 'receiver'])
-            ->withCount('workOrders')
-            ->orderBy('created_at', 'desc')
+        $baseQuery = WorkshopManifest::where('manifest_number', 'not like', 'MNF-OUT-%');
+
+        $countSent = (clone $baseQuery)->where('status', 'SENT')->count();
+        $countReceived = (clone $baseQuery)->where('status', 'RECEIVED')->count();
+        $countAll = (clone $baseQuery)->count();
+
+        $query = (clone $baseQuery)->with(['dispatcher', 'receiver'])
+            ->withCount('workOrders');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $manifests = $query->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('manifest.index', compact('manifests'));
+        $isWorkshopUser = request('mode') === 'pwa' || 
+            request()->is('workshop/*') || 
+            (Auth::check() && (
+                Auth::user()->role === 'admin_workshop' || 
+                Auth::user()->role === 'technician'
+            ));
+        $layout = $isWorkshopUser ? 'workshop-pwa-layout' : 'app-layout';
+
+        return view('manifest.index', compact('manifests', 'layout', 'countSent', 'countReceived', 'countAll'));
     }
 
     public function create(Request $request)
@@ -106,19 +127,96 @@ class WorkshopManifestController extends Controller
 
     public function show($id)
     {
-        $manifest = WorkshopManifest::with(['workOrders', 'dispatcher', 'receiver'])->findOrFail($id);
-        return view('manifest.show', compact('manifest'));
+        $manifest = WorkshopManifest::with(['workOrders.customer', 'workOrders.workOrderServices.service', 'dispatcher', 'receiver'])->findOrFail($id);
+        $isWorkshopUser = request('mode') === 'pwa' || 
+            request()->is('workshop/*') || 
+            (Auth::check() && (
+                Auth::user()->role === 'admin_workshop' || 
+                Auth::user()->role === 'technician'
+            ));
+        $layout = $isWorkshopUser ? 'workshop-pwa-layout' : 'app-layout';
+
+        if (str_starts_with($manifest->manifest_number, 'MNF-OUT-')) {
+            return view('qc.outbound.show', compact('manifest', 'layout'));
+        }
+        return view('manifest.show', compact('manifest', 'layout'));
+    }
+
+    public function receiveForm($id)
+    {
+        $manifest = WorkshopManifest::with(['workOrders', 'dispatcher'])->findOrFail($id);
+
+        if (str_starts_with($manifest->manifest_number, 'MNF-OUT-')) {
+            return redirect()->route('gudang.outbound-receipt')->with('info', 'Manifest Outbound dikelola melalui modul Penerimaan Outbound Gudang.');
+        }
+
+        if ($manifest->status !== 'SENT') {
+            return redirect()->route('manifest.show', $id)->with('error', 'Manifest ini tidak dalam status siap diterima.');
+        }
+
+        $assignmentService = app(TechnicianAssignmentService::class);
+        
+        $candidates_washing = TechnicianAssignmentService::getPrepWashingCandidates();
+        $candidates_sol = $assignmentService->getQualifiedTechnicians('sol');
+        $candidates_upper = $assignmentService->getQualifiedTechnicians('upper');
+
+        foreach ($manifest->workOrders as $order) {
+            // 1. Washing recommendation
+            $recWashing = $assignmentService->getRecommendedPrepWashingTechnician($order, $candidates_washing);
+            $order->recommended_prep_washing_by = $recWashing ? $recWashing->id : null;
+
+            // 2. Sol Prep recommendation
+            if ($order->needs_prep_sol) {
+                $order->recommended_prep_sol_by = $candidates_sol->isEmpty() ? null : $candidates_sol->sortBy(function ($tech) {
+                    return WorkOrder::where('prep_sol_by', $tech->id)
+                        ->whereNull('prep_sol_completed_at')
+                        ->count();
+                })->first()->id;
+            } else {
+                $order->recommended_prep_sol_by = null;
+            }
+
+            // 3. Upper Prep recommendation
+            if ($order->needs_prep_upper) {
+                $order->recommended_prep_upper_by = $candidates_upper->isEmpty() ? null : $candidates_upper->sortBy(function ($tech) {
+                    return WorkOrder::where('prep_upper_by', $tech->id)
+                        ->whereNull('prep_upper_completed_at')
+                        ->count();
+                })->first()->id;
+            } else {
+                $order->recommended_prep_upper_by = null;
+            }
+        }
+
+        $layout = 'workshop-pwa-layout';
+
+        return view('manifest.receive', compact(
+            'manifest', 
+            'candidates_washing', 
+            'candidates_sol', 
+            'candidates_upper',
+            'layout'
+        ));
     }
 
     public function receive(Request $request, $id)
     {
-        $manifest = WorkshopManifest::findOrFail($id);
+        $manifest = WorkshopManifest::with('workOrders')->findOrFail($id);
 
         if ($manifest->status !== 'SENT') {
-            return back()->with('error', 'Manifest ini tidak dapat diterima karena statusnya ' . $manifest->status);
+            return redirect()->route('manifest.show', $id)->with('error', 'Manifest ini tidak dapat diterima karena statusnya ' . $manifest->status);
         }
 
-        return DB::transaction(function () use ($manifest) {
+        $request->validate([
+            'prep_washing_by' => 'required|array',
+            'prep_washing_by.*' => 'required|exists:users,id',
+            'prep_sol_by' => 'nullable|array',
+            'prep_sol_by.*' => 'nullable|exists:users,id',
+            'prep_upper_by' => 'nullable|array',
+            'prep_upper_by.*' => 'nullable|exists:users,id',
+        ]);
+
+        return DB::transaction(function () use ($manifest, $request) {
             $manifest->update([
                 'status' => 'RECEIVED',
                 'receiver_id' => Auth::id(),
@@ -126,17 +224,30 @@ class WorkshopManifestController extends Controller
             ]);
 
             foreach ($manifest->workOrders as $order) {
-                // Defensive: Only transition if still OTW
                 if ($order->status === WorkOrderStatus::OTW_WORKSHOP) {
+                    $updateData = [
+                        'prep_washing_by' => $request->prep_washing_by[$order->id] ?? null
+                    ];
+
+                    if ($order->needs_prep_sol && isset($request->prep_sol_by[$order->id])) {
+                        $updateData['prep_sol_by'] = $request->prep_sol_by[$order->id];
+                    }
+
+                    if ($order->needs_prep_upper && isset($request->prep_upper_by[$order->id])) {
+                        $updateData['prep_upper_by'] = $request->prep_upper_by[$order->id];
+                    }
+
+                    $order->update($updateData);
+
                     $this->workflow->updateStatus(
                         $order, 
                         WorkOrderStatus::PREPARATION, 
-                        "Received at Workshop Hijau from Manifest #{$manifest->manifest_number}"
+                        "Received at Workshop Hijau from Manifest #{$manifest->manifest_number} (Technicians assigned)"
                     );
                 }
             }
 
-            return redirect()->route('manifest.index')->with('success', "Manifest #{$manifest->manifest_number} berhasil diterima. Barang siap di-Preparation.");
+            return redirect()->route('manifest.index', array_filter(['status' => 'SENT', 'mode' => $request->query('mode') ?? 'pwa']))->with('success', "Manifest #{$manifest->manifest_number} berhasil diterima dan teknisi prep telah ditugaskan.");
         });
     }
 }

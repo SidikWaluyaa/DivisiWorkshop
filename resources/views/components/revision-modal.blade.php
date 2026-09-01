@@ -199,12 +199,46 @@
                             </div>
                         @endif
 
+                        <!-- Estimasi Kerugian Workshop -->
+                        <div class="mb-4 p-4 rounded-xl bg-amber-50/80 border border-amber-200/80 space-y-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base">💰</span>
+                                <label class="block text-xs font-black text-amber-900 uppercase tracking-wider">Estimasi Kerugian Workshop (Opsional)</label>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-600 mb-1">Nominal Kerugian (Rp):</label>
+                                    <input type="number" name="loss_amount" min="0" placeholder="0" class="w-full text-xs rounded-lg border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85]">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-600 mb-1">Kategori Kerugian:</label>
+                                    <select name="loss_category" class="w-full text-xs rounded-lg border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85]">
+                                        <option value="REWORK_LABOR">Ongkos Pengerjaan Ulang</option>
+                                        <option value="MATERIAL_WASTE">Bahan Terbuang / Rusak</option>
+                                        <option value="REPLACEMENT">Penggantian Komponen/Unit</option>
+                                        <option value="OTHERS">Lain-lain</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-600 mb-1">Penanggung Jawab / Penyebab:</label>
+                                <input type="text" name="responsible_party" placeholder="Misal: Teknisi Soling / Supplier Material / QC" class="w-full text-xs rounded-lg border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85]">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-600 mb-1">Rincian Bahan Terbuang / Catatan:</label>
+                                <input type="text" name="loss_description" placeholder="Misal: 1 Pcs Sol Rubber, 2 Botol Lem..." class="w-full text-xs rounded-lg border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85]">
+                            </div>
+                        </div>
+
                         <!-- Reason -->
                         <div class="mb-4">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Alasan Revisi:</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Alasan Revisi / Catatan:</label>
                             <textarea name="reason" x-model="reason" required 
                                       placeholder="Jelaskan kondisi barang kenapa ditolak..."
-                                      class="w-full rounded-xl border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85] h-32"></textarea>
+                                      class="w-full rounded-xl border-gray-300 focus:border-[#22AF85] focus:ring-[#22AF85] h-28"></textarea>
                         </div>
 
                         <!-- Evidence Photos (Multiple with Previews) -->

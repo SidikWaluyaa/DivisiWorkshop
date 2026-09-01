@@ -13,10 +13,15 @@ Route::middleware(['api.key'])->prefix('v1/kpi')->group(function () {
     Route::get('/workshop', [KpiController::class, 'getWorkshopKpi']);
     Route::get('/gudang', [KpiController::class, 'gudangKpi']);
     Route::get('/finance', [KpiController::class, 'financeKpi']);
+    Route::get('/cs', [KpiController::class, 'csKpi']);
 });
 
 
 Route::prefix('v1')->group(function () {
+    // Finlog Webhook Endpoint (FR-4.4, SRS §6.2)
+    Route::post('/webhooks/finlog/purchase-status', [\App\Http\Controllers\Api\V1\FinlogWebhookController::class, 'handle'])
+        ->name('api.webhooks.finlog');
+
     // Public Tracking Endpoint (CORS-restricted, rate-limited, no API key required)
     Route::get('/public/track', [\App\Http\Controllers\Api\V1\PublicTrackingApiController::class, 'track'])
         ->middleware('throttle:60,1');

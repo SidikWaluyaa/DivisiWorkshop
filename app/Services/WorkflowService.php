@@ -43,6 +43,14 @@ class WorkflowService
                 app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder);
             }
             
+            // Trigger Technician Auto-Assignment (FR-1.1, FR-5.1)
+            $techService = app(\App\Services\TechnicianAssignmentService::class);
+            if ($newStatus === WorkOrderStatus::PREPARATION) {
+                $techService->autoAssignPrepWashing($workOrder);
+            } elseif ($newStatus === WorkOrderStatus::PRODUCTION) {
+                $techService->autoAssignProductionTechnicians($workOrder);
+            }
+
             $workOrder->save();
             
             // Auto-resolve any open revision issues when the order progresses to a new status
@@ -55,6 +63,17 @@ class WorkflowService
                     'resolved_at' => now(),
                     'resolution_notes' => 'Diselesaikan otomatis karena status SPK telah berlanjut ke ' . $newStatus->value
                 ]);
+
+            // Auto-complete open WorkOrderRevision records if order reaches SELESAI or STAGING_OUTBOUND
+            if (in_array($newStatus, [WorkOrderStatus::SELESAI, WorkOrderStatus::STAGING_OUTBOUND, WorkOrderStatus::HISTORY, WorkOrderStatus::DIANTAR])) {
+                \App\Models\WorkOrderRevision::where('work_order_id', $workOrder->id)
+                    ->where('status', 'OPEN')
+                    ->update([
+                        'status'      => 'FINISHED',
+                        'resolved_by' => $userId ?: Auth::id(),
+                        'finished_at' => now(),
+                    ]);
+            }
             
             // 3. Dispatch Event
             $this->dispatchUpdateEvent($workOrder, $oldStatusObj, $newStatus, $note, $userId);
@@ -96,12 +115,21 @@ class WorkflowService
     /**
      * Move the order back to a previous stage for revision.
      */
-    public function revise(WorkOrder $workOrder, WorkOrderStatus $targetStatus, string $reason, array $stationsToReset = [], $photoPaths = null): void
-    {
-        DB::transaction(function () use ($workOrder, $targetStatus, $reason, $stationsToReset, $photoPaths) {
-            $oldStatus = $workOrder->status;
-            
-            // Normalize photoPaths to array
+    public function revise(
+        WorkOrder $workOrder, 
+        WorkOrderStatus $targetStatus, 
+        string $reason = '', 
+        array $stationsToReset = [], 
+        array $photoPaths = [],
+        float $lossAmount = 0.0,
+        ?string $lossCategory = null,
+        ?string $lossDescription = null,
+        ?string $responsibleParty = null
+    ) {
+        $oldStatus = $workOrder->status;
+
+        DB::transaction(function () use ($workOrder, $targetStatus, $reason, $stationsToReset, $photoPaths, $oldStatus, $lossAmount, $lossCategory, $lossDescription, $responsibleParty) {
+            // Ensure $photoPaths is an array
             if (is_string($photoPaths)) {
                 $photoPaths = [$photoPaths];
             } elseif (is_null($photoPaths)) {
@@ -115,34 +143,60 @@ class WorkflowService
             $workOrder->current_location = $this->getDefaultLocationForStatus($targetStatus);
 
             // 2. Reset specific stations if requested
-            // stationsToReset format: ['prep_washing', 'prod_sol', etc]
             foreach ($stationsToReset as $station) {
                 $workOrder->{"{$station}_completed_at"} = null;
             }
 
             $workOrder->save();
 
-            // 3. Create WorkOrderRevision
+            // 3. Determine QC Stage & Count Reworks (GAP FR-6.4, FR-6.5, FR-7.2)
             $oldStatusValue = $oldStatus instanceof WorkOrderStatus ? $oldStatus->value : $oldStatus;
+            $qcStage = in_array($oldStatusValue, ['POST', 'FINISH', 'POST_QC']) ? 'AKHIR' : 'PRODUKSI';
+
             \App\Models\WorkOrderRevision::create([
-                'work_order_id' => $workOrder->id,
-                'description' => $reason,
-                'photo_path' => $photoPaths[0] ?? null,
-                'photo_paths' => $photoPaths,
-                'status' => 'OPEN',
-                'origin_status' => $oldStatusValue,
-                'created_by' => Auth::id() ?? 1,
+                'work_order_id'     => $workOrder->id,
+                'description'       => $reason,
+                'photo_path'        => $photoPaths[0] ?? null,
+                'photo_paths'       => $photoPaths,
+                'status'            => 'OPEN',
+                'origin_status'     => $oldStatusValue,
+                'qc_stage'          => $qcStage,
+                'loss_amount'       => $lossAmount,
+                'loss_category'     => $lossCategory,
+                'loss_description'  => $lossDescription,
+                'responsible_party' => $responsibleParty,
+                'created_by'        => Auth::id() ?? 1,
             ]);
 
-            // 4. Log the Revision Detail
-            WorkOrderLog::create([
-                'work_order_id' => $workOrder->id,
-                'user_id' => Auth::id(),
-                'action' => 'REVISION_REQUESTED',
-                'description' => "REVISI dari " . $oldStatusValue . 
-                                 " ke " . $targetStatus->value . ". Alasan: " . $reason,
-                'step' => $targetStatus->value
-            ]);
+            // Count revisions for this specific stage
+            $stageReworkCount = \App\Models\WorkOrderRevision::where('work_order_id', $workOrder->id)
+                ->where('qc_stage', $qcStage)
+                ->count();
+
+            // FR-6.5 & FR-7.3: If failed 3 times on the same QC stage, auto-lock to Rak FU for Lead Workshop review
+            if ($stageReworkCount >= 3) {
+                $workOrder->status = WorkOrderStatus::CX_FOLLOWUP;
+                $workOrder->current_location = 'Rak FU (Terkuci - Rework 3x ' . $qcStage . ')';
+                $workOrder->save();
+
+                WorkOrderLog::create([
+                    'work_order_id' => $workOrder->id,
+                    'user_id' => Auth::id() ?? 1,
+                    'action' => 'RAK_FU_LOCKED_3X_FAIL',
+                    'description' => "GAGAL QC 3x pada stage QC {$qcStage}. SPK otomatis terkunci di Rak FU untuk eskalasi ke Lead Workshop.",
+                    'step' => 'RAK_FU'
+                ]);
+            } else {
+                // 4. Log the Revision Detail
+                WorkOrderLog::create([
+                    'work_order_id' => $workOrder->id,
+                    'user_id' => Auth::id(),
+                    'action' => 'REVISION_REQUESTED',
+                    'description' => "REVISI (#{$stageReworkCount} stage {$qcStage}) dari " . $oldStatusValue . 
+                                     " ke " . $targetStatus->value . ". Alasan: " . $reason,
+                    'step' => $targetStatus->value
+                ]);
+            }
 
             // 5. Create CX Issue Record for Workshop Revisions (DISABLED - Revisions shouldn't trigger active CX followup)
             /*
@@ -275,14 +329,22 @@ class WorkflowService
                 WorkOrderStatus::BATAL
             ],
             WorkOrderStatus::QC->value => [
+                WorkOrderStatus::STAGING_OUTBOUND,
                 WorkOrderStatus::SELESAI,
                 WorkOrderStatus::PRODUCTION, // Revisi (Return to Prod)
                 WorkOrderStatus::PREPARATION, // Revisi (Return to Prep)
                 WorkOrderStatus::REVISI,
                 WorkOrderStatus::BATAL
             ],
+            WorkOrderStatus::STAGING_OUTBOUND->value => [
+                WorkOrderStatus::SELESAI,
+                WorkOrderStatus::QC,
+                WorkOrderStatus::PRODUCTION,
+                WorkOrderStatus::BATAL
+            ],
             WorkOrderStatus::SELESAI->value => [
                 WorkOrderStatus::DIANTAR, // Delivery
+                WorkOrderStatus::STAGING_OUTBOUND,
                 WorkOrderStatus::QC, // Re-open if customer complains
                 WorkOrderStatus::PREPARATION, // Upsell (Tambah Layanan) -> Back to Prep
                 WorkOrderStatus::REVISI, // Technical Revision

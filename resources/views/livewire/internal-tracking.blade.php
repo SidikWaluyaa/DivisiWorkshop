@@ -479,26 +479,68 @@
                                     </div>
                                 @endif
 
-                                {{-- Status Info & Transition Timestamp --}}
-                                <div class="px-3.5 py-3 bg-[#fafbfc] border border-slate-100 rounded-xl flex items-center justify-between mb-4 mt-2 select-none w-full">
-                                    <div class="flex flex-col">
-                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Status Sekarang</span>
-                                        <span class="inline-flex items-center gap-1.5 text-xs font-black {{ $statusTheme['text'] ?? 'text-slate-700' }} uppercase tracking-wide mt-0.5">
-                                            <span class="w-1.5 h-1.5 rounded-full {{ $statusTheme['dot'] ?? 'bg-slate-500' }} animate-pulse"></span>
-                                            {{ $statusLabel }}
-                                        </span>
-                                    </div>
-                                    <div class="text-right flex flex-col">
-                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Waktu Status</span>
-                                        @php
-                                            $statusLog = $spk->logs ? $spk->logs->where('step', $statusVal)->sortByDesc('created_at')->first() : null;
-                                            $statusTime = $statusLog ? $statusLog->created_at : $spk->updated_at;
-                                        @endphp
-                                        <span class="text-xs font-black text-slate-900 mt-0.5">
-                                            {{ $statusTime ? $statusTime->format('d/m/Y') : '-' }}
-                                        </span>
-                                    </div>
-                                </div>
+                                 {{-- Status Info & Transition Timestamp --}}
+                                 <div class="px-3.5 py-3 bg-[#fafbfc] border border-slate-100 rounded-xl flex flex-col gap-2.5 mb-4 mt-2 select-none w-full shadow-2xs">
+                                     <div class="flex items-center justify-between">
+                                         <div class="flex flex-col">
+                                             <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Status Sekarang</span>
+                                             <span class="inline-flex items-center gap-1.5 text-xs font-black {{ $statusTheme['text'] ?? 'text-slate-700' }} uppercase tracking-wide mt-0.5">
+                                                 <span class="w-1.5 h-1.5 rounded-full {{ $statusTheme['dot'] ?? 'bg-slate-500' }} animate-pulse"></span>
+                                                 {{ $statusLabel }}
+                                             </span>
+                                         </div>
+                                         <div class="text-right flex flex-col">
+                                             <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Waktu Status</span>
+                                             @php
+                                                 $statusLog = $spk->logs ? $spk->logs->where('step', $statusVal)->sortByDesc('created_at')->first() : null;
+                                                 $statusTime = $statusLog ? $statusLog->created_at : $spk->updated_at;
+                                             @endphp
+                                             <span class="text-xs font-black text-slate-900 mt-0.5">
+                                                 {{ $statusTime ? $statusTime->format('d/m/Y') : '-' }}
+                                             </span>
+                                         </div>
+                                     </div>
+
+                                     {{-- Integrated Production Sub-Status & Active Station (Clean Key-Value 2-Column, No Emojis) --}}
+                                     @if($statusVal === 'PRODUCTION')
+                                         @php
+                                             $prodInProgress = false;
+                                             $activeInfo = [];
+
+                                             if ($spk->prod_sol_started_at && !$spk->prod_sol_completed_at) {
+                                                 $prodInProgress = true;
+                                                 $techName = $spk->prodSolBy->name ?? 'Sol';
+                                                 $activeInfo[] = "Soling - $techName";
+                                             }
+                                             if ($spk->prod_upper_started_at && !$spk->prod_upper_completed_at) {
+                                                 $prodInProgress = true;
+                                                 $techName = $spk->prodUpperBy->name ?? 'Upper';
+                                                 $activeInfo[] = "Upper - $techName";
+                                             }
+                                             if ($spk->prod_cleaning_started_at && !$spk->prod_cleaning_completed_at) {
+                                                 $prodInProgress = true;
+                                                 $techName = $spk->prodCleaningBy->name ?? 'Treatment';
+                                                 $activeInfo[] = "Treatment - $techName";
+                                             }
+                                         @endphp
+                                         <div class="pt-2.5 border-t border-slate-200/70 flex items-start justify-between gap-2 text-xs">
+                                             <div class="flex flex-col">
+                                                 <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Sub-Status</span>
+                                                 <span class="text-[11px] font-black {{ $prodInProgress ? 'text-blue-600' : 'text-amber-600' }} uppercase tracking-wide mt-0.5">
+                                                     {{ $prodInProgress ? 'Sedang Dikerjakan' : 'Dalam Antrean' }}
+                                                 </span>
+                                             </div>
+                                             @if($prodInProgress && !empty($activeInfo))
+                                                 <div class="text-right flex flex-col">
+                                                     <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Stasiun Aktif</span>
+                                                     <span class="text-[11px] font-black text-slate-800 uppercase tracking-wide mt-0.5">
+                                                         {{ implode(', ', $activeInfo) }}
+                                                     </span>
+                                                 </div>
+                                             @endif
+                                         </div>
+                                     @endif
+                                 </div>
 
                                 {{-- Card Footer Actions (STASIUN and HISTORY buttons side-by-side) --}}
                                 <div class="grid grid-cols-2 gap-3 mt-auto select-none w-full">

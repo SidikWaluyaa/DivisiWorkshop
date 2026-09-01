@@ -14,6 +14,11 @@ class WorkOrderRevision extends Model
         'photo_paths',
         'status',
         'origin_status',
+        'qc_stage',
+        'loss_amount',
+        'loss_category',
+        'loss_description',
+        'responsible_party',
         'created_by',
         'resolved_by',
         'finished_at',
@@ -22,6 +27,7 @@ class WorkOrderRevision extends Model
     protected $casts = [
         'finished_at' => 'datetime',
         'photo_paths' => 'array',
+        'loss_amount' => 'decimal:2',
     ];
 
     public function workOrder(): BelongsTo

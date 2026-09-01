@@ -41,22 +41,22 @@ class Index extends Component
     {
         Gate::authorize('manageInventory', \App\Models\WorkOrder::class);
         
-        $materialRequest = MaterialRequest::with('items.material')->find($id);
+        $materialRequest = MaterialRequest::with(['items.material', 'items.workOrder', 'workOrder'])->find($id);
         
-        if (!$materialRequest || (!$materialRequest->isApproved() && !$materialRequest->isPending())) {
-            $this->dispatch('notify', type: 'error', message: 'Request tidak valid atau sudah diproses.');
+        if (!$materialRequest || $materialRequest->status === 'RECEIVED' || $materialRequest->status === 'CANCELLED' || $materialRequest->status === 'REJECTED') {
+            $this->dispatch('notify', type: 'error', message: 'Request tidak valid atau sudah selesai diterima.');
             return;
         }
 
         $service = app(\App\Services\MaterialManagementService::class);
+        $workflow = app(\App\Services\WorkflowService::class);
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($materialRequest, $service) {
-            // REFRESH & LOCK for concurrency safety
+        \Illuminate\Support\Facades\DB::transaction(function () use ($materialRequest, $service, $workflow) {
             $materialRequest->refresh();
-            if ($materialRequest->status === 'PURCHASED') return;
+            if ($materialRequest->status === 'RECEIVED') return;
 
-            // 1. Mark status as PURCHASED
-            $materialRequest->markAsPurchased();
+            // 1. Mark status as RECEIVED (Bahan Baku Tiba di Workshop)
+            $materialRequest->markAsReceived();
 
             // 2. Increment Stock & Log Transaction
             foreach ($materialRequest->items as $item) {
@@ -64,18 +64,68 @@ class Index extends Component
                     $service->restock(
                         $item->material,
                         $item->quantity,
-                        "Penerimaan barang dari Pengajuan #{$materialRequest->request_number} (Quick Fulfill)",
+                        "Penerimaan & verifikasi fisik barang dari Pengajuan #{$materialRequest->request_number}",
                         'MaterialRequest',
                         $materialRequest->id
                     );
                 }
             }
 
-            // 3. Global Auto-Allocation
+            // 3. Update linked WorkOrders to isolate materials (set pivot status to RECEIVED)
+            $workOrders = collect();
+            if ($materialRequest->work_order_id && $materialRequest->workOrder) {
+                $workOrders->push($materialRequest->workOrder);
+            }
+            foreach ($materialRequest->items as $item) {
+                if ($item->workOrder) {
+                    $workOrders->push($item->workOrder);
+                }
+                if ($item->work_order_id && $item->material_id) {
+                    \Illuminate\Support\Facades\DB::table('work_order_materials')
+                        ->where('work_order_id', $item->work_order_id)
+                        ->where('material_id', $item->material_id)
+                        ->update(['status' => 'RECEIVED']);
+                }
+            }
+
+            if ($materialRequest->work_order_id) {
+                foreach ($materialRequest->items as $item) {
+                    if ($item->material_id) {
+                        \Illuminate\Support\Facades\DB::table('work_order_materials')
+                            ->where('work_order_id', $materialRequest->work_order_id)
+                            ->where('material_id', $item->material_id)
+                            ->update(['status' => 'RECEIVED']);
+                    }
+                }
+            }
+
+            // 4. Update linked WorkOrders status, location, arrival date, and perlu_belanja flag
+            foreach ($workOrders->unique('id') as $order) {
+                $hasUnfulfilled = $order->materials()
+                    ->wherePivot('status', 'REQUESTED')
+                    ->exists();
+
+                $order->material_arrival_date = now();
+                if (!$hasUnfulfilled) {
+                    $order->perlu_belanja = false;
+                    $order->current_location = 'Sortir (Siap Handover)';
+                }
+                $order->save();
+
+                // Log material receipt & allocation to WorkOrder
+                $order->logs()->create([
+                    'user_id' => \Illuminate\Support\Facades\Auth::id() ?? 1,
+                    'step' => 'SORTIR',
+                    'action' => 'CLASSIFICATION_COMPLETED',
+                    'description' => "Material pengajuan (#{$materialRequest->request_number}) diverifikasi & diterima fisik. Bahan baku terisolir ke SPK #{$order->spk_number}. SPK Siap Surat Jalan (Sortir ➔ Produksi).",
+                ]);
+            }
+
+            // 5. Global Auto-Allocation for other non-shopping orders
             $service->autoAllocateStock();
         });
 
-        $this->dispatch('notify', type: 'success', message: 'Barang berhasil diterima & SPK otomatis pindah ke Siap Produksi.');
+        $this->dispatch('notify', type: 'success', message: "Material pengajuan #{$materialRequest->request_number} berhasil diterima fisik & SPK siap diserah-terimakan via Surat Jalan!");
     }
 
     public function deleteRequest($id)
@@ -120,8 +170,19 @@ class Index extends Component
         
         $requests = $query->paginate(10);
 
+        // Compute Summary Metrics
+        $metrics = [
+            'total_requests'   => MaterialRequest::count(),
+            'total_cost'       => (float) MaterialRequest::where('status', '!=', 'CANCELLED')->where('status', '!=', 'REJECTED')->sum('total_estimated_cost'),
+            'pending_count'    => MaterialRequest::where('status', 'PENDING')->count(),
+            'shipping_count'   => MaterialRequest::whereIn('status', ['APPROVED', 'PURCHASED'])->count(),
+            'received_count'   => MaterialRequest::where('status', 'RECEIVED')->count(),
+            'rejected_count'   => MaterialRequest::whereIn('status', ['REJECTED', 'CANCELLED'])->count(),
+        ];
+
         return view('livewire.procurement.index', [
-            'requests' => $requests
-        ])->layout('layouts.app');
+            'requests' => $requests,
+            'metrics'  => $metrics,
+        ])->layout('layouts.workshop-pwa');
     }
 }

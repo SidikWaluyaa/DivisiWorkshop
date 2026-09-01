@@ -53,6 +53,6 @@ class History extends Component
         return view('livewire.warehouse.history', [
             'transactions' => $transactions,
             'materials' => Material::orderBy('name')->get()
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }

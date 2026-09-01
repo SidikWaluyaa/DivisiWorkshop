@@ -137,4 +137,36 @@ class KpiController extends Controller
             'last_updated' => now()->toIso8601String(),
         ]);
     }
+
+    public function csKpi(Request $request)
+    {
+        $dateRange = $request->input('date_range');
+        
+        $startDate = null;
+        $endDate = null;
+        if (!empty($dateRange)) {
+            $parts = explode(' to ', $dateRange);
+            $startDate = Carbon::parse($parts[0])->startOfDay();
+            if (isset($parts[1])) {
+                $endDate = Carbon::parse($parts[1])->endOfDay();
+            } else {
+                $endDate = Carbon::parse($parts[0])->endOfDay();
+            }
+        } else {
+            $startDate = Carbon::now()->startOfMonth()->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
+        }
+
+        $data = $this->kpiService->getCsKpi($startDate, $endDate);
+
+        return response()->json([
+            'status' => 'success',
+            'period' => [
+                'start' => $startDate->format('Y-m-d'),
+                'end' => $endDate->format('Y-m-d'),
+            ],
+            'data' => $data,
+            'last_updated' => now()->toIso8601String(),
+        ]);
+    }
 }

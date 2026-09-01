@@ -146,6 +146,6 @@ class LateInfo extends Component
 
         return view('livewire.production.late-info', [
             'orders' => $orders
-        ])->layout('layouts.app');
+        ])->layout('layouts.workshop-pwa');
     }
 }

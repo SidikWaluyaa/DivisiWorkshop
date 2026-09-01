@@ -180,6 +180,6 @@ class FastTrackPage extends Component
             'pendingFastTrack' => $stats['pendingCount'],
             'downgradedFastTrack' => $stats['downgradedCount'],
             'totalFilteredRevenue' => $totalFilteredRevenue,
-        ]);
+        ])->layout('layouts.workshop-pwa');
     }
 }

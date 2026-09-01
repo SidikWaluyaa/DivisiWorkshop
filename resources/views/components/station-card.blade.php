@@ -41,14 +41,57 @@
 
     // Resolved CX Issue
     $resolvedIssue = $order->cxIssues ? $order->cxIssues->where('status', 'RESOLVED')->sortByDesc('resolved_at')->first() : null;
+
+    // Revision badge & history
+    $revisions = $order->revisions ? $order->revisions->whereIn('qc_stage', ['PRODUKSI', 'AKHIR']) : collect();
+    $revisionCount = $revisions->count();
+    $revisionBadgeClass = match(true) {
+        $revisionCount >= 3 => 'bg-red-600',
+        $revisionCount == 2 => 'bg-orange-500',
+        $revisionCount >= 1 => 'bg-yellow-500',
+        default => '',
+    };
+
+    // Initialize technician variables for card drawer
+    $techId = $isPrepReview || !isset($order->{$byColumn}) ? null : $order->{$byColumn};
+    $techName = $isPrepReview || !$techByRelation || !isset($order->{$techByRelation}) ? null : ($order->{$techByRelation}->name ?? null);
+    $startedAt = $isPrepReview || !isset($order->{$startedAtColumn}) ? null : $order->{$startedAtColumn};
 @endphp
 
 <tbody {{ $attributes }} x-data="{ 
           expanded: false,
           showPhotos: false, 
           showFinishModal: false, 
+          finishType: '',
           finishDate: '{{ now()->format('Y-m-d\TH:i') }}',
           isHighlighted: false,
+          showOverrideModal: false,
+          overrideReason: '',
+          pendingTechId: null,
+          pendingType: null,
+          pendingOrderId: null,
+          pendingCurrentTechName: '',
+          pendingNewTechName: '',
+          pendingStationLabel: '',
+          openOverrideModal(orderId, stationType, techId, currentTechName, newTechName, stationLabel) {
+              this.pendingOrderId = orderId;
+              this.pendingType = stationType;
+              this.pendingTechId = techId;
+              this.pendingCurrentTechName = currentTechName;
+              this.pendingNewTechName = newTechName;
+              this.pendingStationLabel = stationLabel;
+              this.overrideReason = '';
+              this.showOverrideModal = true;
+          },
+          submitOverride() {
+              if (!this.overrideReason || this.overrideReason.trim().length < 5) {
+                  alert('Alasan override wajib diisi minimal 5 karakter.');
+                  return;
+              }
+              $wire.updateTechnicianWithReason(this.pendingOrderId, this.pendingType, this.pendingTechId, this.overrideReason);
+              this.showOverrideModal = false;
+              this.overrideReason = '';
+          },
           init() {
               const urlParams = new URLSearchParams(window.location.search);
               if (urlParams.get('highlight') === '{{ $order->spk_number }}') {
@@ -122,6 +165,12 @@
                          CX RESOLVED
                      </span>
                  @endif
+                 @if($revisionCount > 0)
+                     <span class="px-2 py-0.5 rounded text-[8px] font-black {{ $revisionBadgeClass }} text-white tracking-widest shadow-sm"
+                           title="SPK ini pernah direvisi sebanyak {{ $revisionCount }}x">
+                         REVISI {{ $revisionCount }}x
+                     </span>
+                 @endif
              </div>
          </td>
 
@@ -190,72 +239,480 @@
               {{-- Column 6: Action Buttons for Review & Toggle --}}
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
                   <div class="flex items-center justify-end gap-2">
-                      <button wire:click="performApprove({{ $order->id }})" 
-                              wire:confirm="{{ str_starts_with($type, 'prep') ? 'Preparation sudah OK semua? Lanjut ke Sortir?' : (str_starts_with($type, 'prod') ? 'Sudah dicek dan OK? Lanjut ke QC?' : 'QC sudah OK semua? Order akan Finish.') }}"
-                              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow transition-all active:scale-95">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                          Approve
-                      </button>
+                       <button wire:click="performApprove({{ $order->id }})" 
+                               wire:confirm="{{ str_starts_with($type, 'prep') ? 'Preparation sudah OK semua? Lanjut ke Sortir?' : (str_starts_with($type, 'prod') ? 'Sudah dicek dan OK? Lanjut ke QC?' : 'QC Akhir sudah OK semua? Order akan masuk Staging Outbound.') }}"
+                               class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow transition-all active:scale-95">
+                           {{ str_starts_with($type, 'qc') ? 'Lolos QC' : 'Approve' }}
+                       </button>
 
-                      <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" 
-                              class="bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-955/20 dark:text-red-400 px-3 py-2 rounded-lg font-bold text-xs transition-all active:scale-95">
-                          Revisi
-                      </button>
+                       <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" 
+                               class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer">
+                           Revisi
+                       </button>
 
                       <button @click="expanded = !expanded" class="p-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-gray-750 text-teal-600 dark:text-teal-400 transition-colors">
                           <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transform transition-transform duration-250" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                           </svg>
                       </button>
-                  </div>
-              </td>
-          @else
-              {{-- Column 5: Technician --}}
-              <td class="px-6 py-4 whitespace-nowrap">
-                  @php
-                      $techId = $isPrepReview ? null : $order->{$byColumn};
-                      $techName = $isPrepReview ? null : ($order->{$techByRelation}->name ?? null);
-                      $startedAt = $isPrepReview ? null : $order->{$startedAtColumn};
-                  @endphp
-                  @if($techName)
-                      <div class="flex items-center gap-1.5">
-                          <div class="w-5 h-5 rounded-full bg-{{ $stationColor }}-100 dark:bg-{{ $stationColor }}-955/40 flex items-center justify-center text-[10px] text-{{ $stationColor }}-700 dark:text-{{ $stationColor }}-400 font-bold">
-                              {{ substr($techName, 0, 1) }}
+                  </div>          @else
+              @if(str_starts_with($type, 'prep_') && !$isReviewTab)
+                  {{-- Column 5: Progress Tugas Prep --}}
+                  <td class="px-6 py-4" @click.stop>
+                      <div class="flex flex-col gap-1.5 min-w-[200px]">
+                          {{-- Washing --}}
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-gray-500 uppercase">Cuci:</span>
+                              @if($order->prep_washing_completed_at)
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prep_washing_completed_at->format('d M H:i') }}">✓ {{ $order->prepWashingBy->name ?? 'Selesai' }}</span>
+                              @else
+                                  <div class="flex items-center gap-1">
+                                      @php
+                                          $washingStarted = (bool)$order->prep_washing_started_at;
+                                          $washingCurrentTech = $order->prepWashingBy->name ?? 'Kosong';
+                                      @endphp
+                                      <select
+                                          @if($washingStarted)
+                                              @change="
+                                                  const newTechId = $event.target.value;
+                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
+                                                  $event.target.value = '{{ $order->prep_washing_by }}';
+                                                  openOverrideModal({{ $order->id }}, 'prep_washing', newTechId, '{{ addslashes($washingCurrentTech) }}', newTechName, 'Cuci');
+                                              "
+                                          @else
+                                              wire:change="updateTechnician({{ $order->id }}, 'prep_washing', $event.target.value)"
+                                          @endif
+                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-teal-500 cursor-pointer max-w-[110px]">
+                                          <option value="">-- Pilih --</option>
+                                          @php
+                                              $washingTechList = collect($this->techs['washing'] ?? []);
+                                              if ($order->prep_washing_by && $order->prepWashingBy && !$washingTechList->contains('id', $order->prep_washing_by) && !str_contains($order->prepWashingBy->name, 'Dr. Shoe')) {
+                                                  $washingTechList->push($order->prepWashingBy);
+                                              }
+                                          @endphp
+                                          @foreach($washingTechList as $t)
+                                              <option value="{{ $t->id }}" {{ $order->prep_washing_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+                                  </div>
+                              @endif
                           </div>
-                          <span class="text-xs font-semibold text-gray-800 dark:text-gray-200">{{ $techName }}</span>
+                          {{-- Sol Prep --}}
+                          @if($order->needs_prep_sol)
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-orange-500 uppercase">Sol:</span>
+                              @if($order->prep_sol_completed_at)
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prep_sol_completed_at->format('d M H:i') }}">✓ {{ $order->prepSolBy->name ?? '-' }}</span>
+                              @else
+                                  <div class="flex items-center gap-1">
+                                      @php
+                                          $solStarted = (bool)$order->prep_sol_started_at;
+                                          $solCurrentTech = $order->prepSolBy->name ?? 'Kosong';
+                                      @endphp
+                                      <select
+                                          @if($solStarted)
+                                              @change="
+                                                  const newTechId = $event.target.value;
+                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
+                                                  $event.target.value = '{{ $order->prep_sol_by }}';
+                                                  openOverrideModal({{ $order->id }}, 'prep_sol', newTechId, '{{ addslashes($solCurrentTech) }}', newTechName, 'Sol');
+                                              "
+                                          @else
+                                              wire:change="updateTechnician({{ $order->id }}, 'prep_sol', $event.target.value)"
+                                          @endif
+                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-orange-500 cursor-pointer max-w-[110px]">
+                                          <option value="">-- Pilih --</option>
+                                          @php
+                                              $solTechList = collect($this->techs['sol'] ?? []);
+                                              if ($order->prep_sol_by && $order->prepSolBy && !$solTechList->contains('id', $order->prep_sol_by) && !str_contains($order->prepSolBy->name, 'Dr. Shoe')) {
+                                                  $solTechList->push($order->prepSolBy);
+                                              }
+                                          @endphp
+                                          @foreach($solTechList as $t)
+                                              <option value="{{ $t->id }}" {{ $order->prep_sol_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+                                  </div>
+                              @endif
+                          </div>
+                          @endif
+                          {{-- Upper Prep --}}
+                          @if($order->needs_prep_upper)
+                          <div class="flex items-center justify-between text-[11px]">
+                              <span class="font-bold text-purple-500 uppercase">Upper:</span>
+                              @if($order->prep_upper_completed_at)
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prep_upper_completed_at->format('d M H:i') }}">✓ {{ $order->prepUpperBy->name ?? '-' }}</span>
+                              @else
+                                  <div class="flex items-center gap-1">
+                                      @php
+                                          $upperStarted = (bool)$order->prep_upper_started_at;
+                                          $upperCurrentTech = $order->prepUpperBy->name ?? 'Kosong';
+                                      @endphp
+                                      <select
+                                          @if($upperStarted)
+                                              @change="
+                                                  const newTechId = $event.target.value;
+                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
+                                                  $event.target.value = '{{ $order->prep_upper_by }}';
+                                                  openOverrideModal({{ $order->id }}, 'prep_upper', newTechId, '{{ addslashes($upperCurrentTech) }}', newTechName, 'Upper');
+                                              "
+                                          @else
+                                              wire:change="updateTechnician({{ $order->id }}, 'prep_upper', $event.target.value)"
+                                          @endif
+                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-purple-500 cursor-pointer max-w-[110px]">
+                                          <option value="">-- Pilih --</option>
+                                          @php
+                                              $upperTechList = collect($this->techs['upper'] ?? []);
+                                              if ($order->prep_upper_by && $order->prepUpperBy && !$upperTechList->contains('id', $order->prep_upper_by) && !str_contains($order->prepUpperBy->name, 'Dr. Shoe')) {
+                                                  $upperTechList->push($order->prepUpperBy);
+                                              }
+                                          @endphp
+                                          @foreach($upperTechList as $t)
+                                              <option value="{{ $t->id }}" {{ $order->prep_upper_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+                                  </div>
+                              @endif
+                          </div>
+                          @endif
                       </div>
-                  @else
-                      <span class="text-xs text-gray-400 dark:text-gray-505 italic">Belum ditugaskan</span>
-                  @endif
-              </td>
+                  </td>
 
-              {{-- Column 6: Duration / SLA --}}
-              <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
-                  @if($startedAt)
-                      <div class="flex flex-col">
-                          <span class="font-bold text-[9px] text-gray-400 dark:text-gray-505 uppercase tracking-wider">Durasi</span>
-                          <span class="font-mono font-black text-{{ $stationColor }}-600 dark:text-{{ $stationColor }}-400" data-started-at="{{ $startedAt->toIso8601String() }}">
-                              Calculating...
-                          </span>
-                      </div>
-                  @else
-                      <div class="text-[10px]">
+                  {{-- Column 6: Duration / SLA --}}
+                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                      <div class="text-[11px] font-semibold text-gray-750 dark:text-gray-300">
                           @if($order->estimation_date)
-                              <span class="text-orange-600 font-semibold" title="Estimasi Selesai">{{ $order->estimation_date->format('d M') }}</span>
+                              <span class="text-orange-600 font-bold" title="Estimasi Selesai">{{ $order->estimation_date->format('d M Y') }}</span>
                           @else
                               <span class="text-gray-400">-</span>
                           @endif
                       </div>
-                  @endif
-              </td>
+                  </td>
+              @elseif($type === 'prod_reparasi')
+                  {{-- Column 5: Progress Tugas Produksi Terpadu --}}
+                  @php
+                      $hasSol = $order->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'sol') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'sol'));
+                      $hasUpper = $order->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'upper') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'upper'));
+                      $hasTreatment = $order->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'clean') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'wash') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'treatment') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'repaint') || \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'whitening') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'clean') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'treatment'));
+                      
+                      if (!$hasSol && !$hasUpper) {
+                          $hasTreatment = true;
+                      }
 
-              {{-- Column 7: Toggle Expand --}}
+                      $isUpperLocked = $hasSol && !$order->prod_sol_completed_at;
+                      $isTreatmentLocked = ($hasSol && !$order->prod_sol_completed_at) || ($hasUpper && !$order->prod_upper_completed_at);
+                  @endphp
+                  <td class="px-6 py-4" @click.stop>
+                      <div class="flex flex-col gap-1.5 min-w-[220px]">
+                          {{-- Soling --}}
+                           @if($hasSol)
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-orange-500 uppercase">Soling:</span>
+                              @if($order->prod_sol_completed_at)
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_sol_completed_at->format('d M H:i') }}">Selesai: {{ $order->prodSolBy->name ?? '-' }}</span>
+                              @else
+                                  <div class="flex items-center gap-1">
+                                      @php
+                                          $solStarted = (bool)$order->prod_sol_started_at;
+                                          $solCurrentTech = $order->prodSolBy->name ?? 'Kosong';
+                                      @endphp
+                                      <select
+                                          @if($solStarted)
+                                              @change="
+                                                  const newTechId = $event.target.value;
+                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
+                                                  $event.target.value = '{{ $order->prod_sol_by }}';
+                                                  openOverrideModal({{ $order->id }}, 'prod_sol', newTechId, '{{ addslashes($solCurrentTech) }}', newTechName, 'Soling');
+                                              "
+                                          @else
+                                              wire:change="updateTechnician({{ $order->id }}, 'prod_sol', $event.target.value)"
+                                          @endif
+                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-orange-500 cursor-pointer max-w-[110px]">
+                                          <option value="">-- Pilih --</option>
+                                          @foreach($this->techs['sol'] ?? [] as $t)
+                                              <option value="{{ $t->id }}" {{ $order->prod_sol_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+
+                                      @if($order->prod_sol_started_at)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_sol', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan Soling">Selesaikan</button>
+                                      @elseif($order->prod_sol_by)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_sol', 'start', {{ $order->prod_sol_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Soling">Mulai</button>
+                                      @endif
+                                  </div>
+                              @endif
+                          </div>
+                          @else
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1 opacity-50">
+                              <span class="font-bold text-gray-400 uppercase">Soling:</span>
+                              <span class="text-gray-400 text-[10px] italic">Tidak Diperlukan</span>
+                          </div>
+                          @endif
+
+                          {{-- Upper --}}
+                          @if($hasUpper)
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-purple-550 uppercase">Upper:</span>
+                              @if($order->prod_upper_completed_at)
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_upper_completed_at->format('d M H:i') }}">Selesai: {{ $order->prodUpperBy->name ?? '-' }}</span>
+                              @elseif($isUpperLocked)
+                                  <span class="text-yellow-600 italic text-[10px]" title="Menunggu Soling selesai">Menunggu Soling</span>
+                              @else
+                                  <div class="flex items-center gap-1">
+                                      @php
+                                          $upperStarted = (bool)$order->prod_upper_started_at;
+                                          $upperCurrentTech = $order->prodUpperBy->name ?? 'Kosong';
+                                      @endphp
+                                      <select
+                                          @if($upperStarted)
+                                              @change="
+                                                  const newTechId = $event.target.value;
+                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
+                                                  $event.target.value = '{{ $order->prod_upper_by }}';
+                                                  openOverrideModal({{ $order->id }}, 'prod_upper', newTechId, '{{ addslashes($upperCurrentTech) }}', newTechName, 'Upper');
+                                              "
+                                          @else
+                                              wire:change="updateTechnician({{ $order->id }}, 'prod_upper', $event.target.value)"
+                                          @endif
+                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-purple-500 cursor-pointer max-w-[110px]">
+                                          <option value="">-- Pilih --</option>
+                                          @foreach($this->techs['upper'] ?? [] as $t)
+                                              <option value="{{ $t->id }}" {{ $order->prod_upper_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+
+                                      @if($order->prod_upper_started_at)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_upper', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan Upper">Selesaikan</button>
+                                      @elseif($order->prod_upper_by)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_upper', 'start', {{ $order->prod_upper_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Upper">Mulai</button>
+                                      @endif
+                                  </div>
+                              @endif
+                          </div>
+                          @else
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1 opacity-50">
+                              <span class="font-bold text-gray-400 uppercase">Upper:</span>
+                              <span class="text-gray-400 text-[10px] italic">Tidak Diperlukan</span>
+                          </div>
+                          @endif
+
+                          {{-- Treatment --}}
+                          @if($hasTreatment)
+                          <div class="flex items-center justify-between text-[11px]">
+                              <span class="font-bold text-teal-600 uppercase">Treatment:</span>
+                              @if($order->prod_cleaning_completed_at)
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_cleaning_completed_at->format('d M H:i') }}">Selesai: {{ $order->prodCleaningBy->name ?? '-' }}</span>
+                              @elseif($isTreatmentLocked)
+                                  <span class="text-yellow-600 italic text-[10px]" title="Menunggu stasiun sebelumnya selesai">Menunggu Urutan</span>
+                              @else
+                                  <div class="flex items-center gap-1">
+                                      @php
+                                          $treatmentStarted = (bool)$order->prod_cleaning_started_at;
+                                          $treatmentCurrentTech = $order->prodCleaningBy->name ?? 'Kosong';
+                                      @endphp
+                                      <select
+                                          @if($treatmentStarted)
+                                              @change="
+                                                  const newTechId = $event.target.value;
+                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
+                                                  $event.target.value = '{{ $order->prod_cleaning_by }}';
+                                                  openOverrideModal({{ $order->id }}, 'prod_cleaning', newTechId, '{{ addslashes($treatmentCurrentTech) }}', newTechName, 'Treatment');
+                                              "
+                                          @else
+                                              wire:change="updateTechnician({{ $order->id }}, 'prod_cleaning', $event.target.value)"
+                                          @endif
+                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-teal-500 cursor-pointer max-w-[110px]">
+                                          <option value="">-- Pilih --</option>
+                                          @foreach($this->techs['treatment'] ?? [] as $t)
+                                              <option value="{{ $t->id }}" {{ $order->prod_cleaning_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+
+                                      @if($order->prod_cleaning_started_at)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_cleaning', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan Treatment">Selesaikan</button>
+                                      @elseif($order->prod_cleaning_by)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_cleaning', 'start', {{ $order->prod_cleaning_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Treatment">Mulai</button>
+                                      @endif
+                                  </div>
+                              @endif
+                          </div>
+                          @else
+                          <div class="flex items-center justify-between text-[11px] opacity-50">
+                              <span class="font-bold text-gray-400 uppercase">Treatment:</span>
+                              <span class="text-gray-400 text-[10px] italic">Tidak Diperlukan</span>
+                          </div>
+                          @endif
+                      </div>
+                  </td>
+
+                  {{-- Column 6: Duration / SLA --}}
+                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                      <div class="text-[11px] font-semibold text-gray-750 dark:text-gray-300">
+                          @if($order->estimation_date)
+                              <span class="text-orange-600 font-bold" title="Estimasi Selesai">{{ $order->estimation_date->format('d M Y') }}</span>
+                          @else
+                              <span class="text-gray-400">-</span>
+                          @endif
+                      </div>
+                  </td>
+              @elseif($type === 'qc_terpadu' || $type === 'qc_qc')
+                  {{-- Column 5: Progress Stasiun QC Terpadu (Jahit, Cleanup, Final) --}}
+                  @php
+                      $hasJahitQc = $order->workOrderServices->contains(fn($s) => 
+                          \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'sol') || 
+                          \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'sol') ||
+                          \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'upper') || 
+                          \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'upper') ||
+                          \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'jahit') || 
+                          \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'jahit')
+                      );
+                  @endphp
+                  <td class="px-6 py-4" @click.stop>
+                      <div class="flex flex-col gap-1.5 min-w-[240px]">
+                          {{-- QC Jahit --}}
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-blue-600 uppercase">Jahit:</span>
+                              @if(!$hasJahitQc)
+                                  <span class="text-gray-400 text-[10px] italic">Tidak Diperlukan</span>
+                              @elseif($order->qc_jahit_completed_at)
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_jahit_completed_at->format('d M H:i') }}">✓ {{ $order->qcJahitBy->name ?? '-' }}</span>
+                              @else
+                                  <div class="flex items-center gap-1">
+                                      <select wire:change="updateTechnician({{ $order->id }}, 'qc_jahit', $event.target.value)" 
+                                              class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500/20 cursor-pointer max-w-[125px]">
+                                          <option value="">-- Pilih --</option>
+                                          @foreach($this->techs['jahit'] ?? [] as $t)
+                                              <option value="{{ $t->id }}" {{ $order->qc_jahit_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+
+                                      @if($order->qc_jahit_started_at)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
+                                      @elseif($order->qc_jahit_by)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'start', {{ $order->qc_jahit_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                      @endif
+                                  </div>
+                              @endif
+                          </div>
+
+                          {{-- QC Cleanup --}}
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-teal-600 uppercase">Cleanup:</span>
+                              @if($order->qc_cleanup_completed_at)
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_cleanup_completed_at->format('d M H:i') }}">✓ {{ $order->qcCleanupBy->name ?? '-' }}</span>
+                              @else
+                                  <div class="flex items-center gap-1">
+                                      <select wire:change="updateTechnician({{ $order->id }}, 'qc_cleanup', $event.target.value)" 
+                                              class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:ring-2 focus:ring-teal-500/20 cursor-pointer max-w-[125px]">
+                                          <option value="">-- Pilih --</option>
+                                          @foreach($this->techs['cleanup'] ?? [] as $t)
+                                              <option value="{{ $t->id }}" {{ $order->qc_cleanup_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+
+                                      @if($order->qc_cleanup_started_at)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
+                                      @elseif($order->qc_cleanup_by)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'start', {{ $order->qc_cleanup_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                      @endif
+                                  </div>
+                              @endif
+                          </div>
+
+                          {{-- QC Final --}}
+                          <div class="flex items-center justify-between text-[11px]">
+                              <span class="font-bold text-emerald-600 uppercase">QC Final:</span>
+                              @if($order->qc_final_completed_at)
+                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_final_completed_at->format('d M H:i') }}">✓ {{ $order->qcFinalBy->name ?? '-' }}</span>
+                              @else
+                                  <div class="flex items-center gap-1">
+                                      <select wire:change="updateTechnician({{ $order->id }}, 'qc_final', $event.target.value)" 
+                                              class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer max-w-[125px]">
+                                          <option value="">-- Pilih --</option>
+                                          @foreach($this->techs['final'] ?? [] as $t)
+                                              <option value="{{ $t->id }}" {{ $order->qc_final_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                          @endforeach
+                                      </select>
+
+                                      @if($order->qc_final_started_at)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
+                                      @elseif($order->qc_final_by)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'start', {{ $order->qc_final_by }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                      @endif
+                                  </div>
+                              @endif
+                          </div>
+                      </div>
+                  </td>
+
+                  {{-- Column 6: Duration / SLA --}}
+                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                      <div class="text-[11px] font-semibold text-gray-750 dark:text-gray-300">
+                          @if($order->estimation_date)
+                              <span class="text-orange-600 font-bold" title="Estimasi Selesai">{{ $order->estimation_date->format('d M Y') }}</span>
+                          @else
+                              <span class="text-gray-400">-</span>
+                          @endif
+                      </div>
+                  </td>
+              @else
+                  {{-- Column 5: Technician --}}
+                  <td class="px-6 py-4 whitespace-nowrap">
+                      @php
+                          $techId = $isPrepReview ? null : $order->{$byColumn};
+                          $techName = $isPrepReview ? null : ($order->{$techByRelation}->name ?? null);
+                          $startedAt = $isPrepReview ? null : $order->{$startedAtColumn};
+                      @endphp
+                      @if($techName)
+                          <div class="flex items-center gap-1.5">
+                              <div class="w-5 h-5 rounded-full bg-{{ $stationColor }}-100 dark:bg-{{ $stationColor }}-955/40 flex items-center justify-center text-[10px] text-{{ $stationColor }}-700 dark:text-{{ $stationColor }}-400 font-bold">
+                                  {{ substr($techName, 0, 1) }}
+                              </div>
+                              <span class="text-xs font-semibold text-gray-800 dark:text-gray-200">{{ $techName }}</span>
+                          </div>
+                      @else
+                          <span class="text-xs text-gray-400 dark:text-gray-505 italic">Belum ditugaskan</span>
+                      @endif
+                  </td>
+
+                  {{-- Column 6: Duration / SLA --}}
+                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                      @if($startedAt)
+                          <div class="flex flex-col">
+                              <span class="font-bold text-[9px] text-gray-400 dark:text-gray-505 uppercase tracking-wider">Durasi</span>
+                              <span class="font-mono font-black text-{{ $stationColor }}-600 dark:text-{{ $stationColor }}-400" data-started-at="{{ $startedAt->toIso8601String() }}">
+                                  Calculating...
+                              </span>
+                          </div>
+                      @else
+                          <div class="text-[10px]">
+                              @if($order->estimation_date)
+                                  <span class="text-orange-600 font-semibold" title="Estimasi Selesai">{{ $order->estimation_date->format('d M') }}</span>
+                              @else
+                                  <span class="text-gray-400">-</span>
+                              @endif
+                          </div>
+                      @endif
+                  </td>
+              @endif
+
+              {{-- Column 7: Actions & Master Express Pass --}}
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button @click.stop="expanded = !expanded" class="p-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-gray-750 text-teal-600 dark:text-teal-400 transition-colors">
-                      <svg :class="{'rotate-180': expanded}" class="w-5 h-5 transform transition-transform duration-250" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                      </svg>
-                  </button>
+                  <div class="flex items-center justify-end gap-2">
+                      @if($type === 'qc_terpadu' || $type === 'qc_qc')
+                          <button type="button" 
+                                  @click.stop="$wire.expressPass({{ $order->id }})" 
+                                  class="px-3 py-1.5 bg-[#FFC232] hover:bg-amber-400 text-slate-950 font-black text-[11px] rounded-xl shadow-md shadow-amber-500/20 border border-amber-300 transition-all active:scale-95 flex items-center gap-1 cursor-pointer" 
+                                  title="1-Klik Lolos QC 3 Tahap Sekaligus & Pindah ke Siap Selesai">
+                              ⚡ Loloskan QC
+                          </button>
+                      @endif
+                      <button @click.stop="expanded = !expanded" class="p-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-gray-750 text-teal-600 dark:text-teal-400 transition-colors">
+                          <svg :class="{'rotate-180': expanded}" class="w-5 h-5 transform transition-transform duration-250" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                          </svg>
+                      </button>
+                  </div>
               </td>
           @endif
      </tr>
@@ -267,6 +724,73 @@
                    
                    {{-- Info & Notes Col --}}
                    <div class="md:col-span-2 space-y-4">
+                        {{-- Revision History Panel --}}
+                        @if($revisionCount > 0)
+                            <div class="p-3.5 rounded-xl border-2 shadow-sm
+                                {{ $revisionCount >= 3 ? 'bg-red-50/90 dark:bg-red-950/40 border-red-300 dark:border-red-800' : ($revisionCount == 2 ? 'bg-orange-50/90 dark:bg-orange-950/40 border-orange-300 dark:border-orange-800' : 'bg-yellow-50/90 dark:bg-yellow-950/40 border-yellow-300 dark:border-yellow-800') }}">
+                                <div class="flex items-center justify-between gap-2 mb-2.5">
+                                    <span class="text-[9px] font-black uppercase tracking-widest
+                                        {{ $revisionCount >= 3 ? 'text-red-700 dark:text-red-400' : ($revisionCount == 2 ? 'text-orange-700 dark:text-orange-400' : 'text-yellow-700 dark:text-yellow-400') }}">
+                                        Riwayat Revisi ({{ $revisionCount }}x)
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[8px] font-black text-white
+                                        {{ $revisionCount >= 3 ? 'bg-red-600' : ($revisionCount == 2 ? 'bg-orange-500' : 'bg-yellow-500') }}">
+                                        REVISI {{ $revisionCount }}x
+                                    </span>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-[10px] border-collapse">
+                                        <thead>
+                                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                                <th class="text-left py-1 pr-3 font-black text-gray-400 uppercase tracking-wider">#</th>
+                                                <th class="text-left py-1 pr-3 font-black text-gray-400 uppercase tracking-wider">Asal Revisi</th>
+                                                <th class="text-left py-1 pr-3 font-black text-gray-400 uppercase tracking-wider">Stage QC</th>
+                                                <th class="text-left py-1 pr-3 font-black text-gray-400 uppercase tracking-wider">Tanggal</th>
+                                                <th class="text-right py-1 font-black text-rose-500 uppercase tracking-wider">Est. Kerugian</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($revisions->sortBy('created_at') as $idx => $rev)
+                                                <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                                                    <td class="py-1 pr-3 font-bold text-gray-500">{{ $idx + 1 }}</td>
+                                                    <td class="py-1 pr-3 font-bold text-gray-700 dark:text-gray-300">
+                                                        @php
+                                                            $asalLabel = match($rev->origin_status) {
+                                                                'PRODUCTION' => 'QC Produksi',
+                                                                'POST', 'POST_QC', 'FINISH' => 'QC Akhir',
+                                                                default => ucfirst($rev->origin_status ?? '-')
+                                                            };
+                                                        @endphp
+                                                        {{ $asalLabel }}
+                                                    </td>
+                                                    <td class="py-1 pr-3">
+                                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase
+                                                            {{ $rev->qc_stage === 'PRODUKSI' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300' }}">
+                                                            {{ $rev->qc_stage }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="py-1 pr-3 font-semibold text-gray-500 dark:text-gray-400">
+                                                        {{ $rev->created_at ? $rev->created_at->translatedFormat('d M Y') : '-' }}
+                                                    </td>
+                                                    <td class="py-1 text-right font-black text-rose-600 dark:text-rose-400">
+                                                        {{ isset($rev->loss_amount) && $rev->loss_amount > 0 ? 'Rp ' . number_format($rev->loss_amount, 0, ',', '.') : '-' }}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @if($revisionCount >= 3)
+                                    <div class="mt-2.5 pt-2 border-t border-red-200 dark:border-red-800 text-[10px] font-bold text-red-700 dark:text-red-400">
+                                        SPK ini sudah direvisi 3x atau lebih dan telah/akan masuk Rak Follow Up CX.
+                                    </div>
+                                @elseif($revisionCount == 2)
+                                    <div class="mt-2.5 pt-2 border-t border-orange-200 dark:border-orange-800 text-[10px] font-bold text-orange-700 dark:text-orange-400">
+                                        Perhatian: SPK ini sudah direvisi 2x. Jika direvisi 1x lagi, akan otomatis masuk Rak Follow Up CX.
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                        {{-- Banner Rangkuman Resolusi CX --}}
                        @if($resolvedIssue)
                            <div class="p-4 bg-emerald-50/90 dark:bg-emerald-950/40 rounded-xl border-2 border-emerald-300 dark:border-emerald-800 shadow-sm">
@@ -489,106 +1013,551 @@
                    </div>
 
                    {{-- Controls / Cover SPK Col --}}
-                   <div class="md:col-span-1">
-                       @if(!($isReviewTab ?? false))
-                           <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between shadow-sm h-fit">
-                               <h4 class="text-xs font-bold text-gray-400 dark:text-gray-505 uppercase tracking-wider mb-3">Kontrol Pengerjaan</h4>
-                               
-                               @if($isPrepReview)
-                                   <button type="button" @click="confirmApprovePrep({{ $order->id }}); expanded = false;" 
-                                           class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-green-500/10 hover:shadow-green-500/20 transition-all flex items-center justify-center gap-2">
-                                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                       Approve
-                                   </button>
-                               @else
-                                   @if(!$techId)
-                                       <div class="space-y-3">
-                                           <div>
-                                               <label class="block text-[10px] font-bold text-gray-455 dark:text-gray-505 uppercase mb-1">Pilih Teknisi</label>
-                                               <select id="tech-{{ $type }}-{{ $order->id }}" class="w-full text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-teal-500 focus:border-teal-500 font-medium dark:bg-gray-700 dark:text-white">
-                                                   <option value="">-- TEKNISI --</option>
-                                                   @foreach($technicians as $t)
-                                                       <option value="{{ $t->id }}">{{ $t->name }}</option>
-                                                   @endforeach
-                                               </select>
-                                           </div>
-                                           <button type="button" @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'start'); expanded = false;" 
-                                                   class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-xs font-bold uppercase transition-all shadow-md shadow-blue-500/10">
-                                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                               Mulai
-                                           </button>
-                                       </div>
-                                   @else
-                                       <div class="space-y-3">
-                                           <div class="bg-{{ $stationColor }}-50/50 dark:bg-{{ $stationColor }}-955/20 border border-{{ $stationColor }}-200/50 dark:border-{{ $stationColor }}-900/30 rounded-lg p-2.5">
-                                               <div class="text-[9px] text-{{ $stationColor }}-600 dark:text-{{ $stationColor }}-400 font-bold uppercase tracking-wider mb-1">Pekerja Aktif</div>
-                                               <div class="font-bold text-xs text-gray-800 dark:text-white">{{ $techName }}</div>
-                                               @if($startedAt)
-                                                   <div class="text-[9px] text-gray-400 dark:text-gray-550 mt-0.5">Mulai: {{ $startedAt->format('H:i') }} WIB</div>
-                                               @endif
-                                           </div>
+                    <div class="md:col-span-1">
+                        @if(!($isReviewTab ?? false))
+                            @if(str_starts_with($type, 'prep_') && !$isReviewTab)
+                                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between shadow-sm h-fit space-y-4">
+                                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2 mb-2">
+                                        <h4 class="text-xs font-bold text-gray-400 dark:text-gray-555 uppercase tracking-wider">Kontrol Pengerjaan</h4>
+                                        <button type="button" 
+                                                @click="if(confirm('Selesaikan seluruh proses persiapan (Cuci, Sol, Upper) untuk SPK ini secara instan?')) { Swal.fire({ title: 'Memproses...', text: 'Mohon tunggu sebentar.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } }); $wire.completeAllPrep({{ $order->id }}); expanded = false; }"
+                                                class="px-2 py-1 text-[9px] font-black uppercase tracking-wider bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-all shadow active:scale-95 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                            Selesaikan Semua
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="space-y-4">
+                                        {{-- 1. WASHING CONTROLS (Always required) --}}
+                                        <div class="p-3 bg-teal-50/40 dark:bg-teal-955/20 border border-teal-100 dark:border-teal-900/40 rounded-xl space-y-2">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[10px] font-black text-teal-700 dark:text-teal-400 uppercase tracking-widest">🧼 WASHING (CUCI)</span>
+                                                @if($order->prep_washing_completed_at)
+                                                    <span class="px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black rounded uppercase">SELESAI</span>
+                                                @elseif($order->prep_washing_started_at)
+                                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-black rounded uppercase animate-pulse">PROSES</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 bg-gray-100 text-gray-800 text-[8px] font-black rounded uppercase">PENDING</span>
+                                                @endif
+                                            </div>
 
-                                           <button type="button" @click="showFinishModal = true" 
-                                                   class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg text-xs font-bold uppercase transition-all shadow-md shadow-green-500/10">
-                                               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                               </svg>
-                                               Selesaikan
-                                           </button>
+                                            @if($order->prep_washing_completed_at)
+                                                <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                                    Dikerjakan: <span class="text-teal-700">{{ $order->prepWashingBy->name ?? '-' }}</span>
+                                                </div>
+                                            @else
+                                                @if(!$order->prep_washing_by)
+                                                    <div class="space-y-2">
+                                                        <select id="tech-prep_washing-{{ $order->id }}" class="w-full text-xs border border-gray-300 dark:border-gray-600 rounded-lg py-1 px-2 focus:ring-teal-500 focus:border-teal-500 font-semibold dark:bg-gray-700 dark:text-white">
+                                                            <option value="">-- TEKNISI --</option>
+                                                            @if($technicians instanceof \Illuminate\Support\Collection || is_array($technicians))
+                                                                @foreach($technicians as $t)
+                                                                    @if(is_object($t) && isset($t->id))
+                                                                        @php
+                                                                            $poolTag = in_array($t->station ?? '', ['SOLING', 'UPPER', 'TREATMENT']) ? '⚪ Abu' : '🟢 Hijau';
+                                                                            $specTag = $t->specialization ? " - {$t->specialization}" : '';
+                                                                        @endphp
+                                                                        <option value="{{ $t->id }}">{{ $t->name }}{{ $specTag }} ({{ $poolTag }})</option>
+                                                                    @endif
+                                                                @endforeach
+                                                            @endif
+                                                        </select>
+                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prep_washing', 'start');" 
+                                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                            Mulai
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <div class="space-y-2">
+                                                        <div class="text-[10px] text-slate-650 dark:text-slate-400 font-bold">
+                                                            Pekerja: <span class="text-teal-600 dark:text-teal-400">{{ $order->prepWashingBy->name ?? '-' }}</span>
+                                                            @if($order->prep_washing_started_at)
+                                                                <div class="text-[8px] text-gray-400 mt-0.5 font-normal">Mulai: {{ $order->prep_washing_started_at->format('H:i') }} WIB</div>
+                                                            @endif
+                                                        </div>
+                                                        <button type="button" @click="finishType = 'prep_washing'; showFinishModal = true" 
+                                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                            Selesaikan
+                                                        </button>
+                                                    </div>
+                                                @endif
+                                            @endif
+                                        </div>
 
-                                           {{-- Finish Modal --}}
-                                           <div x-show="showFinishModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" style="display: none;" x-transition>
-                                               <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-5 w-80 border border-gray-200 dark:border-gray-700" @click.away="showFinishModal = false">
-                                                   <h3 class="font-bold text-gray-800 dark:text-white text-sm mb-2 uppercase tracking-widest">Konfirmasi Selesai</h3>
-                                                   <p class="text-xs text-gray-555 mb-3 font-bold">Masukkan waktu selesai aktual:</p>
-                                                   <input type="datetime-local" x-model="finishDate" class="w-full text-xs border-gray-300 dark:border-gray-650 rounded-lg mb-4 focus:ring-green-500 focus:border-green-500 dark:bg-gray-750 dark:text-white">
-                                                   <div class="flex justify-end gap-2">
-                                                       <button @click="showFinishModal = false" class="px-3 py-1.5 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold">Batal</button>
-                                                       <button @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'finish', null, finishDate); showFinishModal = false; expanded = false;" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold">Simpan</button>
-                                                   </div>
-                                               </div>
-                                           </div>
-                                       </div>
-                                   @endif
-                               @endif
-                               
-                               {{-- Cover SPK --}}
-                               @php
-                                   $coverPhoto = $order->photos->firstWhere('is_spk_cover', true);
-                               @endphp
-                               @if($coverPhoto)
-                                   <div class="mt-4 pt-4 border-t border-gray-150 dark:border-gray-750">
-                                       <span class="block text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">📸 Cover SPK</span>
-                                       <div class="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 group">
-                                           <template x-if="expanded">
-                                               <img src="{{ $coverPhoto->photo_url }}" 
-                                                    class="w-full h-32 object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                                                    @click="window.open('{{ $coverPhoto->photo_url }}', '_blank')">
-                                           </template>
-                                       </div>
-                                   </div>
-                               @endif
-                           </div>
-                       @else
-                           {{-- Cover SPK only for Review Tab --}}
-                           @php
-                               $coverPhoto = $order->photos->firstWhere('is_spk_cover', true);
-                           @endphp
-                           @if($coverPhoto)
-                               <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm h-fit">
-                                   <span class="block text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">📸 Cover SPK</span>
-                                   <div class="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 group">
-                                       <template x-if="expanded">
-                                           <img src="{{ $coverPhoto->photo_url }}" 
-                                                class="w-full h-32 object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                                                @click="window.open('{{ $coverPhoto->photo_url }}', '_blank')">
-                                       </template>
-                                   </div>
-                               </div>
-                           @endif
-                       @endif
-                   </div>
-               </div>
-           </td>
+                                        {{-- 2. SOL PREP CONTROLS (Only if needs_prep_sol) --}}
+                                        @if($order->needs_prep_sol)
+                                        <div class="p-3 bg-orange-50/40 dark:bg-orange-955/20 border border-orange-100 dark:border-orange-900/40 rounded-xl space-y-2">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest">Sol Prep</span>
+                                                @if($order->prep_sol_completed_at)
+                                                    <span class="px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black rounded uppercase">SELESAI</span>
+                                                @elseif($order->prep_sol_started_at)
+                                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-black rounded uppercase animate-pulse">PROSES</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 bg-gray-100 text-gray-800 text-[8px] font-black rounded uppercase">PENDING</span>
+                                                @endif
+                                            </div>
+
+                                            @if($order->prep_sol_completed_at)
+                                                <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                                    Dikerjakan: <span class="text-orange-600">{{ $order->prepSolBy->name ?? '-' }}</span>
+                                                </div>
+                                            @else
+                                                @if(!$order->prep_sol_by)
+                                                    <div class="space-y-2">
+                                                        <select id="tech-prep_sol-{{ $order->id }}" class="w-full text-xs border border-gray-300 dark:border-gray-600 rounded-lg py-1 px-2 focus:ring-orange-500 focus:border-orange-500 font-semibold dark:bg-gray-700 dark:text-white">
+                                                            <option value="">-- TEKNISI SOL --</option>
+                                                            @foreach($technicians['sol'] ?? [] as $t)
+                                                                <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prep_sol', 'start');" 
+                                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                            Mulai
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <div class="space-y-2">
+                                                        <div class="text-[10px] text-slate-650 dark:text-slate-400 font-bold">
+                                                            Pekerja: <span class="text-orange-600 dark:text-orange-400">{{ $order->prepSolBy->name ?? '-' }}</span>
+                                                            @if($order->prep_sol_started_at)
+                                                                <div class="text-[8px] text-gray-400 mt-0.5 font-normal">Mulai: {{ $order->prep_sol_started_at->format('H:i') }} WIB</div>
+                                                            @endif
+                                                        </div>
+                                                        <button type="button" @click="finishType = 'prep_sol'; showFinishModal = true" 
+                                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                            Selesaikan
+                                                        </button>
+                                                    </div>
+                                                @endif
+                                            @endif
+                                        </div>
+                                        @endif
+
+                                        {{-- 3. UPPER PREP CONTROLS (Only if needs_prep_upper) --}}
+                                        @if($order->needs_prep_upper)
+                                        <div class="p-3 bg-purple-50/40 dark:bg-purple-955/20 border border-purple-100 dark:border-purple-900/40 rounded-xl space-y-2">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest">Upper Prep</span>
+                                                @if($order->prep_upper_completed_at)
+                                                    <span class="px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black rounded uppercase">SELESAI</span>
+                                                @elseif($order->prep_upper_started_at)
+                                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-black rounded uppercase animate-pulse">PROSES</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 bg-gray-100 text-gray-800 text-[8px] font-black rounded uppercase">PENDING</span>
+                                                @endif
+                                            </div>
+
+                                            @if($order->prep_upper_completed_at)
+                                                <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                                    Dikerjakan: <span class="text-purple-600">{{ $order->prepUpperBy->name ?? '-' }}</span>
+                                                </div>
+                                            @else
+                                                @if(!$order->prep_upper_by)
+                                                    <div class="space-y-2">
+                                                        <select id="tech-prep_upper-{{ $order->id }}" class="w-full text-xs border border-gray-300 dark:border-gray-600 rounded-lg py-1 px-2 focus:ring-purple-500 focus:border-purple-500 font-semibold dark:bg-gray-700 dark:text-white">
+                                                            <option value="">-- TEKNISI UPPER --</option>
+                                                            @foreach($technicians['upper'] ?? [] as $t)
+                                                                <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prep_upper', 'start');" 
+                                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                            Mulai
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <div class="space-y-2">
+                                                        <div class="text-[10px] text-slate-650 dark:text-slate-400 font-bold">
+                                                            Pekerja: <span class="text-purple-600 dark:text-purple-400">{{ $order->prepUpperBy->name ?? '-' }}</span>
+                                                            @if($order->prep_upper_started_at)
+                                                                <div class="text-[8px] text-gray-400 mt-0.5 font-normal">Mulai: {{ $order->prep_upper_started_at->format('H:i') }} WIB</div>
+                                                            @endif
+                                                        </div>
+                                                        <button type="button" @click="finishType = 'prep_upper'; showFinishModal = true" 
+                                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                            Selesaikan
+                                                        </button>
+                                                    </div>
+                                                @endif
+                                            @endif
+                                        </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Finish Modal --}}
+                                    <div x-show="showFinishModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" style="display: none;" x-transition>
+                                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-5 w-80 border border-gray-200 dark:border-gray-700" @click.away="showFinishModal = false">
+                                            <h3 class="font-bold text-gray-800 dark:text-white text-sm mb-2 uppercase tracking-widest">Konfirmasi Selesai</h3>
+                                            <p class="text-xs text-gray-555 mb-3 font-bold">Masukkan waktu selesai aktual:</p>
+                                            <input type="datetime-local" x-model="finishDate" class="w-full text-xs border-gray-300 dark:border-gray-650 rounded-lg mb-4 focus:ring-green-500 focus:border-green-500 dark:bg-gray-750 dark:text-white">
+                                            <div class="flex justify-end gap-2">
+                                                <button @click="showFinishModal = false" class="px-3 py-1.5 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold">Batal</button>
+                                                <button @click="window.updateStation({{ $order->id }}, finishType, 'finish', null, finishDate); showFinishModal = false; expanded = false;" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold">Simpan</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @elseif($type === 'prod_reparasi')
+                                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between shadow-sm h-fit space-y-4">
+                                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2 mb-2">
+                                        <h4 class="text-xs font-bold text-gray-400 dark:text-gray-555 uppercase tracking-wider">Kontrol Pengerjaan</h4>
+                                    </div>
+                                    
+                                    <div class="space-y-4">
+                                        {{-- 1. SOLING CONTROLS --}}
+                                        @if($hasSol)
+                                        <div class="p-3 bg-orange-50/40 dark:bg-orange-955/20 border border-orange-100 dark:border-orange-900/40 rounded-xl space-y-2">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[10px] font-black text-orange-700 dark:text-orange-400 uppercase tracking-widest">🥾 SOLING (SOL)</span>
+                                                @if($order->prod_sol_completed_at)
+                                                    <span class="px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black rounded uppercase">SELESAI</span>
+                                                @elseif($order->prod_sol_started_at)
+                                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-black rounded uppercase animate-pulse">PROSES</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 bg-gray-100 text-gray-800 text-[8px] font-black rounded uppercase">PENDING</span>
+                                                @endif
+                                            </div>
+
+                                            @if($order->prod_sol_completed_at)
+                                                <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                                    Dikerjakan: <span class="text-orange-700">{{ $order->prodSolBy->name ?? '-' }}</span>
+                                                </div>
+                                            @else
+                                                @if(!$order->prod_sol_by)
+                                                    <div class="space-y-2">
+                                                        <select id="tech-prod_sol-{{ $order->id }}" class="w-full text-xs border border-gray-300 dark:border-gray-600 rounded-lg py-1 px-2 focus:ring-orange-500 focus:border-orange-500 font-semibold dark:bg-gray-700 dark:text-white">
+                                                            <option value="">-- TEKNISI SOL --</option>
+                                                            @foreach($technicians['sol'] ?? [] as $t)
+                                                                <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_sol', 'start');" 
+                                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                            Mulai Pengerjaan
+                                                        </button>
+                                                    </div>
+                                                @elseif(!$order->prod_sol_started_at)
+                                                    <div class="space-y-2">
+                                                        <div class="text-[10px] text-slate-600 dark:text-slate-400 font-bold flex justify-between items-center">
+                                                            <span>Pekerja: <span class="text-orange-600 dark:text-orange-400">{{ $order->prodSolBy->name ?? '-' }}</span></span>
+                                                            <span class="text-[9px] text-amber-600 font-normal italic">Belum Dimulai</span>
+                                                        </div>
+                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_sol', 'start', {{ $order->prod_sol_by }});" 
+                                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                            Mulai Pengerjaan
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <div class="space-y-2">
+                                                        <div class="text-[10px] text-slate-600 dark:text-slate-400 font-bold">
+                                                            Pekerja: <span class="text-orange-600 dark:text-orange-400">{{ $order->prodSolBy->name ?? '-' }}</span>
+                                                            <div class="text-[8px] text-gray-400 mt-0.5 font-normal">Mulai: {{ $order->prod_sol_started_at->format('H:i') }} WIB</div>
+                                                        </div>
+                                                        <button type="button" @click="finishType = 'prod_sol'; showFinishModal = true" 
+                                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                            Selesaikan
+                                                        </button>
+                                                    </div>
+                                                @endif
+                                            @endif
+                                        </div>
+                                        @endif
+
+                                        {{-- 2. UPPER CONTROLS --}}
+                                        @if($hasUpper)
+                                        @php
+                                            $isUpperLocked = $hasSol && !$order->prod_sol_completed_at;
+                                        @endphp
+                                        <div class="p-3 bg-purple-50/40 dark:bg-purple-955/20 border border-purple-100 dark:border-purple-900/40 rounded-xl space-y-2 relative">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[10px] font-black text-purple-700 dark:text-purple-400 uppercase tracking-widest">REPARASI UPPER</span>
+                                                @if($order->prod_upper_completed_at)
+                                                    <span class="px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black rounded uppercase">SELESAI</span>
+                                                @elseif($order->prod_upper_started_at)
+                                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-black rounded uppercase animate-pulse">PROSES</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 bg-gray-100 text-gray-800 text-[8px] font-black rounded uppercase">PENDING</span>
+                                                @endif
+                                            </div>
+
+                                            @if($isUpperLocked)
+                                                <div class="p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg text-[10px] text-yellow-800 dark:text-yellow-400 border border-yellow-250 font-bold">
+                                                    Menunggu stasiun Soling selesai (Sequencing)
+                                                </div>
+                                            @else
+                                                @if($order->prod_upper_completed_at)
+                                                    <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                                        Dikerjakan: <span class="text-purple-750">{{ $order->prodUpperBy->name ?? '-' }}</span>
+                                                    </div>
+                                                @else
+                                                    @if(!$order->prod_upper_by)
+                                                        <div class="space-y-2">
+                                                            <select id="tech-prod_upper-{{ $order->id }}" class="w-full text-xs border border-gray-300 dark:border-gray-600 rounded-lg py-1 px-2 focus:ring-purple-500 focus:border-purple-500 font-semibold dark:bg-gray-700 dark:text-white">
+                                                                <option value="">-- TEKNISI UPPER --</option>
+                                                                @foreach($technicians['upper'] ?? [] as $t)
+                                                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_upper', 'start');" 
+                                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                                Mulai Pengerjaan
+                                                            </button>
+                                                        </div>
+                                                    @elseif(!$order->prod_upper_started_at)
+                                                        <div class="space-y-2">
+                                                            <div class="text-[10px] text-slate-650 dark:text-slate-400 font-bold flex justify-between items-center">
+                                                                <span>Pekerja: <span class="text-purple-600 dark:text-purple-400">{{ $order->prodUpperBy->name ?? '-' }}</span></span>
+                                                                <span class="text-[9px] text-amber-600 font-normal italic">Belum Dimulai</span>
+                                                            </div>
+                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_upper', 'start', {{ $order->prod_upper_by }});" 
+                                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                                Mulai Pengerjaan
+                                                            </button>
+                                                        </div>
+                                                    @else
+                                                        <div class="space-y-2">
+                                                            <div class="text-[10px] text-slate-650 dark:text-slate-400 font-bold">
+                                                                Pekerja: <span class="text-purple-600 dark:text-purple-400">{{ $order->prodUpperBy->name ?? '-' }}</span>
+                                                                <div class="text-[8px] text-gray-400 mt-0.5 font-normal">Mulai: {{ $order->prod_upper_started_at->format('H:i') }} WIB</div>
+                                                            </div>
+                                                            <button type="button" @click="finishType = 'prod_upper'; showFinishModal = true" 
+                                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                                Selesaikan
+                                                            </button>
+                                                        </div>
+                                                    @endif
+                                                @endif
+                                            @endif
+                                        </div>
+                                        @endif
+
+                                        {{-- 3. TREATMENT CONTROLS --}}
+                                        @if($hasTreatment)
+                                        @php
+                                            $isTreatmentLocked = ($hasSol && !$order->prod_sol_completed_at) || ($hasUpper && !$order->prod_upper_completed_at);
+                                        @endphp
+                                        <div class="p-3 bg-teal-50/40 dark:bg-teal-955/20 border border-teal-100 dark:border-teal-900/40 rounded-xl space-y-2 relative">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[10px] font-black text-teal-700 dark:text-teal-400 uppercase tracking-widest">TREATMENT / CLEANING</span>
+                                                @if($order->prod_cleaning_completed_at)
+                                                    <span class="px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black rounded uppercase">SELESAI</span>
+                                                @elseif($order->prod_cleaning_started_at)
+                                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-black rounded uppercase animate-pulse">PROSES</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 bg-gray-100 text-gray-800 text-[8px] font-black rounded uppercase">PENDING</span>
+                                                @endif
+                                            </div>
+
+                                            @if($isTreatmentLocked)
+                                                <div class="p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg text-[10px] text-yellow-800 dark:text-yellow-400 border border-yellow-250 font-bold">
+                                                    Menunggu stasiun Soling &amp; Upper selesai (Sequencing)
+                                                </div>
+                                            @else
+                                                @if($order->prod_cleaning_completed_at)
+                                                    <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                                        Dikerjakan: <span class="text-teal-700">{{ $order->prodCleaningBy->name ?? '-' }}</span>
+                                                    </div>
+                                                @else
+                                                    @if(!$order->prod_cleaning_by)
+                                                        <div class="space-y-2">
+                                                            <select id="tech-prod_cleaning-{{ $order->id }}" class="w-full text-xs border border-gray-300 dark:border-gray-600 rounded-lg py-1 px-2 focus:ring-teal-500 focus:border-teal-500 font-semibold dark:bg-gray-700 dark:text-white">
+                                                                <option value="">-- TEKNISI TREATMENT --</option>
+                                                                @foreach($technicians['treatment'] ?? [] as $t)
+                                                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_cleaning', 'start');" 
+                                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                                Mulai Pengerjaan
+                                                            </button>
+                                                        </div>
+                                                    @elseif(!$order->prod_cleaning_started_at)
+                                                        <div class="space-y-2">
+                                                            <div class="text-[10px] text-slate-600 dark:text-slate-400 font-bold flex justify-between items-center">
+                                                                <span>Pekerja: <span class="text-teal-600 dark:text-teal-400">{{ $order->prodCleaningBy->name ?? '-' }}</span></span>
+                                                                <span class="text-[9px] text-amber-600 font-normal italic">Belum Dimulai</span>
+                                                            </div>
+                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_cleaning', 'start', {{ $order->prod_cleaning_by }});" 
+                                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                                Mulai Pengerjaan
+                                                            </button>
+                                                        </div>
+                                                    @else
+                                                        <div class="space-y-2">
+                                                            <div class="text-[10px] text-slate-600 dark:text-slate-400 font-bold">
+                                                                Pekerja: <span class="text-teal-600 dark:text-teal-400">{{ $order->prodCleaningBy->name ?? '-' }}</span>
+                                                                <div class="text-[8px] text-gray-400 mt-0.5 font-normal">Mulai: {{ $order->prod_cleaning_started_at->format('H:i') }} WIB</div>
+                                                            </div>
+                                                            <button type="button" @click="finishType = 'prod_cleaning'; showFinishModal = true" 
+                                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
+                                                                Selesaikan
+                                                            </button>
+                                                        </div>
+                                                    @endif
+                                                @endif
+                                            @endif
+                                        </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Finish Modal --}}
+                                    <div x-show="showFinishModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" style="display: none;" x-transition>
+                                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-5 w-80 border border-gray-200 dark:border-gray-700" @click.away="showFinishModal = false">
+                                            <h3 class="font-bold text-gray-800 dark:text-white text-sm mb-2 uppercase tracking-widest">Konfirmasi Selesai</h3>
+                                            <p class="text-xs text-gray-555 mb-3 font-bold">Masukkan waktu selesai aktual:</p>
+                                            <input type="datetime-local" x-model="finishDate" class="w-full text-xs border-gray-300 dark:border-gray-650 rounded-lg mb-4 focus:ring-green-500 focus:border-green-500 dark:bg-gray-750 dark:text-white">
+                                            <div class="flex justify-end gap-2">
+                                                <button @click="showFinishModal = false" class="px-3 py-1.5 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold">Batal</button>
+                                                <button @click="window.updateStation({{ $order->id }}, finishType, 'finish', null, finishDate); showFinishModal = false; expanded = false;" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold">Simpan</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between shadow-sm h-fit">
+                                    <h4 class="text-xs font-bold text-gray-400 dark:text-gray-555 uppercase tracking-wider mb-3">Kontrol Pengerjaan</h4>
+                                    
+                                    @if($isPrepReview)
+                                        <button type="button" @click="confirmApprovePrep({{ $order->id }}); expanded = false;" 
+                                                class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-green-500/10 hover:shadow-green-500/20 transition-all flex items-center justify-center gap-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            Approve
+                                        </button>
+                                    @else
+                                        @if(!$techId)
+                                            <div class="space-y-3">
+                                                <div>
+                                                    <label class="block text-[10px] font-bold text-gray-455 dark:text-gray-505 uppercase mb-1">Pilih Teknisi</label>
+                                                    <select id="tech-{{ $type }}-{{ $order->id }}" class="w-full text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-teal-500 focus:border-teal-500 font-medium dark:bg-gray-700 dark:text-white">
+                                                        <option value="">-- TEKNISI --</option>
+                                                        @if($technicians instanceof \Illuminate\Support\Collection || is_array($technicians))
+                                                            @foreach($technicians as $t)
+                                                                @if(is_object($t) && isset($t->id))
+                                                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                                                @endif
+                                                            @endforeach
+                                                        @endif
+                                                    </select>
+                                                </div>
+                                                <button type="button" @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'start'); expanded = false;" 
+                                                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-xs font-bold uppercase transition-all shadow-md shadow-blue-500/10">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    Mulai
+                                                </button>
+                                            </div>
+                                        @else
+                                            <div class="space-y-3">
+                                                <div class="bg-{{ $stationColor }}-50/50 dark:bg-{{ $stationColor }}-955/20 border border-{{ $stationColor }}-200/50 dark:border-{{ $stationColor }}-900/30 rounded-lg p-2.5">
+                                                    <div class="text-[9px] text-{{ $stationColor }}-600 dark:text-{{ $stationColor }}-400 font-bold uppercase tracking-wider mb-1">Pekerja Aktif</div>
+                                                    <div class="font-bold text-xs text-gray-800 dark:text-white">{{ $techName }}</div>
+                                                    @if($startedAt)
+                                                        <div class="text-[9px] text-gray-400 dark:text-gray-550 mt-0.5">Mulai: {{ $startedAt->format('H:i') }} WIB</div>
+                                                    @endif
+                                                </div>
+
+                                                <button type="button" @click="showFinishModal = true" 
+                                                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg text-xs font-bold uppercase transition-all shadow-md shadow-green-500/10">
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    Selesaikan
+                                                </button>
+
+                                                {{-- Finish Modal --}}
+                                                <div x-show="showFinishModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" style="display: none;" x-transition>
+                                                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-5 w-80 border border-gray-200 dark:border-gray-700" @click.away="showFinishModal = false">
+                                                        <h3 class="font-bold text-gray-800 dark:text-white text-sm mb-2 uppercase tracking-widest">Konfirmasi Selesai</h3>
+                                                        <p class="text-xs text-gray-555 mb-3 font-bold">Masukkan waktu selesai aktual:</p>
+                                                        <input type="datetime-local" x-model="finishDate" class="w-full text-xs border-gray-300 dark:border-gray-650 rounded-lg mb-4 focus:ring-green-500 focus:border-green-500 dark:bg-gray-750 dark:text-white">
+                                                        <div class="flex justify-end gap-2">
+                                                            <button @click="showFinishModal = false" class="px-3 py-1.5 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold">Batal</button>
+                                                            <button @click="window.updateStation({{ $order->id }}, '{{ $type }}', 'finish', null, finishDate); showFinishModal = false; expanded = false;" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold">Simpan</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
+                            @endif
+                        @else
+                            {{-- Cover SPK only for Review Tab --}}
+                            @php
+                                $coverPhoto = $order->photos->firstWhere('is_spk_cover', true);
+                            @endphp
+                            @if($coverPhoto)
+                                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm h-fit">
+                                    <span class="block text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">📸 Cover SPK</span>
+                                    <div class="relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 group">
+                                        <template x-if="expanded">
+                                            <img src="{{ $coverPhoto->photo_url }}" 
+                                                 class="w-full h-32 object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                                                 @click="window.open('{{ $coverPhoto->photo_url }}', '_blank')">
+                                        </template>
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+            </td>
+       </tr>
+
+      {{-- Override Modal Row (inside same Alpine scope) --}}
+      <tr x-show="showOverrideModal" x-cloak style="display:none;">
+          <td colspan="{{ ($isReviewTab ?? false) ? 6 : 7 }}" class="p-0">
+              <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                   @click.self="showOverrideModal = false; overrideReason = '';">
+                  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+                      <div class="flex items-center justify-between">
+                          <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wide">Konfirmasi Override Teknisi</h3>
+                          <button @click="showOverrideModal = false; overrideReason = '';"
+                                  class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 transition-colors">
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                          </button>
+                      </div>
+                      <div class="text-xs text-gray-600 dark:text-gray-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-3 space-y-1">
+                          <p class="font-bold text-amber-800 dark:text-amber-300">Stasiun sudah berjalan. Perubahan teknisi memerlukan alasan.</p>
+                          <div class="grid grid-cols-2 gap-2 mt-2">
+                              <div>
+                                  <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Teknisi Sekarang</span>
+                                  <span class="font-bold text-gray-700 dark:text-gray-200" x-text="pendingCurrentTechName"></span>
+                              </div>
+                              <div>
+                                  <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Diganti ke</span>
+                                  <span class="font-bold text-blue-600 dark:text-blue-400" x-text="pendingNewTechName"></span>
+                              </div>
+                          </div>
+                          <div class="mt-1">
+                              <span class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Stasiun</span>
+                              <span class="font-bold text-gray-700 dark:text-gray-200" x-text="pendingStationLabel"></span>
+                          </div>
+                      </div>
+                      <div class="space-y-1.5">
+                          <label class="block text-[10px] font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                              Alasan Override <span class="text-red-500">*</span>
+                          </label>
+                          <textarea x-model="overrideReason"
+                                    placeholder="Tuliskan alasan pergantian teknisi di tengah pengerjaan..."
+                                    rows="3"
+                                    class="w-full text-xs border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none placeholder:text-gray-400 dark:placeholder:text-gray-500"></textarea>
+                          <p class="text-[10px] text-gray-400" x-text="overrideReason.trim().length + ' / minimal 5 karakter'"></p>
+                      </div>
+                      <div class="flex gap-3 pt-1">
+                          <button @click="showOverrideModal = false; overrideReason = '';"
+                                  class="flex-1 px-4 py-2.5 rounded-xl text-xs font-black bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-650 text-gray-700 dark:text-gray-300 transition-all">
+                              Batal
+                          </button>
+                          <button @click="submitOverride()"
+                                  :disabled="overrideReason.trim().length < 5"
+                                  :class="overrideReason.trim().length >= 5 ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'"
+                                  class="flex-1 px-4 py-2.5 rounded-xl text-xs font-black transition-all">
+                              Simpan Override
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </td>
       </tr>
 </tbody>

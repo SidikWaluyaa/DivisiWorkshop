@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use Livewire\Attributes\Computed;
 use App\Models\WorkOrder;
 
-#[Layout('layouts.app')]
+#[Layout('layouts.workshop-pwa')]
 #[Title('Workshop Dashboard V2')]
 class DashboardV2 extends Component
 {

@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-workshop-pwa-layout>
     <x-slot name="header">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 class="font-bold text-xl text-white leading-tight flex items-center gap-2">
@@ -133,4 +133,4 @@
             </div>
         </form>
     </x-modal>
-</x-app-layout>
+</x-workshop-pwa-layout>

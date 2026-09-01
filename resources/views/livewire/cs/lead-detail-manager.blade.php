@@ -1158,6 +1158,72 @@
                                         @endforeach
                                     </div>
                                 </div>
+
+                                {{-- MATERIAL REQUEST SECTION (KEBUTUHAN MATERIAL UNTUK WORKSHOP) --}}
+                                <div x-data="{ showMatSearch: false, matSearchText: '' }" class="mt-8 pt-8 border-t border-slate-100">
+                                    <div class="flex justify-between items-center mb-4 px-2">
+                                        <div class="flex flex-col">
+                                            <label class="text-[10px] font-black uppercase text-indigo-600 tracking-[0.2em]">🛠️ Kebutuhan Material / Bahan Baku (Opsional)</label>
+                                            <span class="text-[8px] font-bold text-slate-400 uppercase">Catatan bahan baku untuk Stage Sortir Workshop (Rp 0 - Tidak menambah harga penawaran)</span>
+                                        </div>
+                                        <button type="button" @click="showMatSearch = !showMatSearch" class="text-[9px] font-black bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-indigo-200">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
+                                            Tambah Material
+                                        </button>
+                                    </div>
+
+                                    {{-- Selected Materials List --}}
+                                    @if(!empty($draftItems[$idx]['requested_materials']))
+                                        <div class="space-y-2 mb-4">
+                                            @foreach($draftItems[$idx]['requested_materials'] as $mIdx => $mat)
+                                                <div wire:key="draft-mat-{{ $idx }}-{{ $mIdx }}" class="flex items-center justify-between p-3.5 bg-indigo-50/60 rounded-2xl border border-indigo-100 shadow-sm">
+                                                    <div class="flex items-center gap-3">
+                                                        <span class="w-7 h-7 rounded-xl bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center">📦</span>
+                                                        <div>
+                                                            <p class="text-xs font-black text-slate-800 uppercase">{{ $mat['name'] }}</p>
+                                                            <p class="text-[9px] text-slate-400 font-bold uppercase">{{ $mat['sub_category'] ?? '-' }}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="flex items-center gap-1 bg-white px-3 py-1 rounded-xl border border-indigo-100">
+                                                            <button type="button" wire:click="updateDraftItemMaterialQty({{ $idx }}, {{ $mIdx }}, {{ ($mat['quantity'] ?? 1) - 1 }})" class="text-slate-400 hover:text-indigo-600 font-bold text-xs px-1">-</button>
+                                                            <span class="text-xs font-black text-indigo-700 w-6 text-center">{{ $mat['quantity'] ?? 1 }}</span>
+                                                            <button type="button" wire:click="updateDraftItemMaterialQty({{ $idx }}, {{ $mIdx }}, {{ ($mat['quantity'] ?? 1) + 1 }})" class="text-slate-400 hover:text-indigo-600 font-bold text-xs px-1">+</button>
+                                                            <span class="text-[10px] font-bold text-slate-400 uppercase ml-1">{{ $mat['unit'] ?? 'pcs' }}</span>
+                                                        </div>
+
+                                                        <button type="button" wire:click="removeMaterialFromDraftItem({{ $idx }}, {{ $mIdx }})" class="text-rose-400 hover:text-rose-600 transition-colors p-1">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    {{-- Material Search Dropdown --}}
+                                    <div x-show="showMatSearch" x-transition class="p-4 bg-white rounded-2xl border border-indigo-200 shadow-sm space-y-3">
+                                        <div class="relative">
+                                            <input type="text" x-model="matSearchText" placeholder="Cari material (sol, leather, lem, dsb)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-400">
+                                        </div>
+
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scroll">
+                                            @foreach($this->materials as $m)
+                                                <div x-show="!matSearchText || '{{ strtolower($m->name) }}'.includes(matSearchText.toLowerCase())" 
+                                                     wire:click="addMaterialToDraftItem({{ $idx }}, {{ $m->id }})" 
+                                                     @click="showMatSearch = false; matSearchText = ''"
+                                                     class="p-2.5 bg-slate-50 hover:bg-indigo-50 rounded-xl border border-slate-100 hover:border-indigo-200 cursor-pointer flex items-center justify-between transition-all">
+                                                    <div>
+                                                        <span class="text-xs font-bold text-slate-800 block">{{ $m->name }}</span>
+                                                        <span class="text-[9px] text-slate-400 font-bold uppercase">{{ $m->sub_category ?? 'Material' }} | Stok: {{ $m->stock }}</span>
+                                                    </div>
+                                                    <span class="text-xs font-black text-indigo-600">+ Tambah</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                                     <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start mt-8">

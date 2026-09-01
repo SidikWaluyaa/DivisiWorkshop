@@ -25,8 +25,9 @@
         <link rel="apple-touch-icon" sizes="152x152" href="{{ asset('pwa-icons/icon-152x152.png') }}">
         <link rel="apple-touch-icon" sizes="144x144" href="{{ asset('pwa-icons/icon-144x144.png') }}">
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
 
         <!-- Page-specific head content (must load before Alpine) -->
         @stack('head')
@@ -42,6 +43,10 @@
         
         <style>
             [x-cloak] { display: none !important; }
+
+            body, .font-sans {
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            }
 
             /* Sidebar collapse handling */
             @media (min-width: 1024px) {

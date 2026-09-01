@@ -25,6 +25,6 @@ class Detail extends Component
 
     public function render()
     {
-        return view('livewire.warehouse.disbursement.detail')->layout('layouts.app');
+        return view('livewire.warehouse.disbursement.detail')->layout('layouts.workshop-pwa');
     }
 }

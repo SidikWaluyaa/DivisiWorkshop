@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model
@@ -19,4 +18,9 @@ class Service extends Model
         'hk_days',
         'allow_fast_track'
     ];
+
+    public function technicians()
+    {
+        return $this->belongsToMany(User::class, 'technician_services')->withTimestamps();
+    }
 }
