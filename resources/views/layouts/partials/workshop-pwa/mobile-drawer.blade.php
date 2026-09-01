@@ -43,7 +43,7 @@
                         </div>
                         <p class="text-[10px] font-bold text-slate-500 mt-0.5">Daftar Surat Jalan dari Toko/Gudang ke Workshop</p>
                     </div>
-                    @php $pendingInboundCount = \App\Models\WorkshopManifest::where('status', 'SENT')->count(); @endphp
+                    @php $pendingInboundCount = \App\Models\WorkshopManifest::where('status', 'SENT')->where('manifest_number', 'not like', 'MNF-OUT-%')->count(); @endphp
                     @if($pendingInboundCount > 0)
                         <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-[#FFC232] text-slate-950 shadow-sm animate-pulse">
                             {{ $pendingInboundCount }}

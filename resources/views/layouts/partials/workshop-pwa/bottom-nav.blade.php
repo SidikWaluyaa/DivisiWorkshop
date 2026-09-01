@@ -14,7 +14,7 @@
 
         {{-- 2. Inbound --}}
         @php
-            $inboundCount = \App\Models\WorkshopManifest::where('status', 'SENT')->count();
+            $inboundCount = \App\Models\WorkshopManifest::where('status', 'SENT')->where('manifest_number', 'not like', 'MNF-OUT-%')->count();
             $isInboundActive = request()->routeIs('manifest.*');
         @endphp
         <a href="{{ route('manifest.index', ['status' => 'SENT', 'mode' => 'pwa']) }}" 

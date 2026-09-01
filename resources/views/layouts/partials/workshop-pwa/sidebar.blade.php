@@ -26,7 +26,7 @@
             'fastTrack' => WorkOrder::where('fast_track_status', 'yes')
                 ->whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL])
                 ->count(),
-            'inbound' => WorkshopManifest::where('status', 'SENT')->count(),
+            'inbound' => WorkshopManifest::where('status', 'SENT')->where('manifest_number', 'not like', 'MNF-OUT-%')->count(),
             'prep' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->count(),
             // 2. Sortir Active WIP (SPK still being sorted, not yet classification completed)
             'sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)

@@ -24,7 +24,13 @@ class WorkshopManifestController extends Controller
 
     public function index(Request $request)
     {
-        $query = WorkshopManifest::with(['dispatcher', 'receiver'])
+        $baseQuery = WorkshopManifest::where('manifest_number', 'not like', 'MNF-OUT-%');
+
+        $countSent = (clone $baseQuery)->where('status', 'SENT')->count();
+        $countReceived = (clone $baseQuery)->where('status', 'RECEIVED')->count();
+        $countAll = (clone $baseQuery)->count();
+
+        $query = (clone $baseQuery)->with(['dispatcher', 'receiver'])
             ->withCount('workOrders');
 
         if ($request->filled('status')) {
@@ -42,7 +48,7 @@ class WorkshopManifestController extends Controller
             ));
         $layout = $isWorkshopUser ? 'workshop-pwa-layout' : 'app-layout';
 
-        return view('manifest.index', compact('manifests', 'layout'));
+        return view('manifest.index', compact('manifests', 'layout', 'countSent', 'countReceived', 'countAll'));
     }
 
     public function create(Request $request)
@@ -139,6 +145,10 @@ class WorkshopManifestController extends Controller
     public function receiveForm($id)
     {
         $manifest = WorkshopManifest::with(['workOrders', 'dispatcher'])->findOrFail($id);
+
+        if (str_starts_with($manifest->manifest_number, 'MNF-OUT-')) {
+            return redirect()->route('gudang.outbound-receipt')->with('info', 'Manifest Outbound dikelola melalui modul Penerimaan Outbound Gudang.');
+        }
 
         if ($manifest->status !== 'SENT') {
             return redirect()->route('manifest.show', $id)->with('error', 'Manifest ini tidak dalam status siap diterima.');

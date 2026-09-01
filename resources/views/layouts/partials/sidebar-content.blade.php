@@ -455,7 +455,7 @@
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-emerald-400 font-bold">Logistik Manifest</span>
             
-            @php $manifestCount = \App\Models\WorkshopManifest::whereIn('status', ['DRAFT', 'SENT'])->count(); @endphp
+            @php $manifestCount = \App\Models\WorkshopManifest::where('manifest_number', 'not like', 'MNF-OUT-%')->whereIn('status', ['DRAFT', 'SENT'])->count(); @endphp
             @if($manifestCount > 0)
                 <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm">
                     {{ $manifestCount }}

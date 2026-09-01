@@ -55,7 +55,7 @@
                 <div>
                     <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Dalam Pengiriman</div>
                     <div class="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                        {{ $manifests->where('status', 'SENT')->count() }} Batch
+                        {{ $countSent ?? $manifests->where('status', 'SENT')->count() }} Batch
                     </div>
                 </div>
             </div>
@@ -72,7 +72,7 @@
                 <div>
                     <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Sudah Diterima</div>
                     <div class="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                        {{ $manifests->where('status', 'RECEIVED')->count() }} Batch
+                        {{ $countReceived ?? $manifests->where('status', 'RECEIVED')->count() }} Batch
                     </div>
                 </div>
             </div>
@@ -89,7 +89,7 @@
                 <div>
                     <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Semua Manifest</div>
                     <div class="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                        {{ $manifests->total() }} Record
+                        {{ $countAll ?? $manifests->total() }} Record
                     </div>
                 </div>
             </div>
