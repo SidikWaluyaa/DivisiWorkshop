@@ -176,6 +176,38 @@ class SuratJalanController extends Controller
             'items.workOrder.customer'
         ])->findOrFail($id);
 
+        // Self-healing: Sync any SPK materials whose MaterialRequest is RECEIVED or arrived
+        foreach ($suratJalan->items as $item) {
+            if ($item->workOrder) {
+                $wo = $item->workOrder;
+                $hasArrivedMR = \App\Models\MaterialRequestItem::where('work_order_id', $wo->id)
+                    ->whereHas('materialRequest', function($q) {
+                        $q->where('status', 'RECEIVED');
+                    })->exists() || !empty($wo->material_arrival_date);
+
+                if ($hasArrivedMR) {
+                    \Illuminate\Support\Facades\DB::table('work_order_materials')
+                        ->where('work_order_id', $wo->id)
+                        ->where('status', 'REQUESTED')
+                        ->update(['status' => 'RECEIVED']);
+
+                    $hasUnfulfilled = $wo->materials()
+                        ->wherePivot('status', 'REQUESTED')
+                        ->exists();
+
+                    if (!$hasUnfulfilled && $wo->perlu_belanja) {
+                        $wo->update(['perlu_belanja' => false]);
+                    }
+                }
+            }
+        }
+
+        // Reload fresh relations
+        $suratJalan->load([
+            'items.workOrder.materials',
+            'items.workOrder.services'
+        ]);
+
         return view('surat-jalan.show', compact('suratJalan'));
     }
 

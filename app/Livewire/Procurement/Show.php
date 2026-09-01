@@ -155,21 +155,43 @@ class Show extends Component
                 if ($item->workOrder) {
                     $workOrders->push($item->workOrder);
                 }
+                if ($item->work_order_id && $item->material_id) {
+                    \Illuminate\Support\Facades\DB::table('work_order_materials')
+                        ->where('work_order_id', $item->work_order_id)
+                        ->where('material_id', $item->material_id)
+                        ->update(['status' => 'RECEIVED']);
+                }
             }
 
-            // 3. Process each WorkOrder to set arrival date & advance status to Production
-            $workflow = app(\App\Services\WorkflowService::class);
+            if ($this->materialRequest->work_order_id) {
+                foreach ($this->materialRequest->items as $item) {
+                    if ($item->material_id) {
+                        \Illuminate\Support\Facades\DB::table('work_order_materials')
+                            ->where('work_order_id', $this->materialRequest->work_order_id)
+                            ->where('material_id', $item->material_id)
+                            ->update(['status' => 'RECEIVED']);
+                    }
+                }
+            }
 
+            // 3. Process each WorkOrder to set arrival date & update perlu_belanja flag
             foreach ($workOrders->unique('id') as $order) {
+                $hasUnfulfilled = $order->materials()
+                    ->wherePivot('status', 'REQUESTED')
+                    ->exists();
+
                 $order->material_arrival_date = now();
-                $order->current_location = 'Sortir (Siap Handover)';
+                if (!$hasUnfulfilled) {
+                    $order->perlu_belanja = false;
+                    $order->current_location = 'Sortir (Siap Handover)';
+                }
                 $order->save();
 
                 $order->logs()->create([
                     'user_id' => Auth::id() ?? 1,
                     'step' => 'SORTIR',
                     'action' => 'CLASSIFICATION_COMPLETED',
-                    'description' => "Material pengajuan (#{$this->materialRequest->request_number}) diverifikasi & diterima fisik oleh " . Auth::user()->name . ". SPK Siap Surat Jalan (Sortir ➔ Produksi).",
+                    'description' => "Material pengajuan (#{$this->materialRequest->request_number}) diverifikasi & diterima fisik oleh " . Auth::user()->name . ". Bahan siap & SPK Siap Surat Jalan (Sortir ➔ Produksi).",
                 ]);
             }
         });

@@ -223,7 +223,15 @@
                                                 @foreach($materials as $mat)
                                                     @php
                                                         $matStatus = $mat->pivot->status ?? 'ALLOCATED';
-                                                        $isAllocated = in_array($matStatus, ['ALLOCATED', 'RECEIVED', 'READY']);
+                                                        
+                                                        // Accurate Arrival & Readiness Check
+                                                        $hasArrived = in_array($matStatus, ['ALLOCATED', 'RECEIVED', 'READY', 'CONSUMED']) 
+                                                            || !empty($wo?->material_arrival_date) 
+                                                            || ($wo && $wo->materialRequests()->where('status', 'RECEIVED')->exists())
+                                                            || \App\Models\MaterialRequestItem::where('work_order_id', $wo?->id)->where('material_id', $mat->id)->whereHas('materialRequest', fn($mr) => $mr->where('status', 'RECEIVED'))->exists()
+                                                            || (($mat->stock ?? 0) >= ($mat->pivot->quantity ?? 1));
+
+                                                        $isAllocated = $hasArrived;
                                                     @endphp
                                                     <li class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-2xs flex items-center justify-between gap-2">
                                                         <div>
@@ -285,7 +293,7 @@
                                                 </span>
                                             @endif
 
-                                            @if($wo?->perlu_belanja)
+                                            @if($wo?->perlu_belanja && empty($wo?->material_arrival_date))
                                                 <span class="px-2 py-0.5 text-[10px] font-bold rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200">
                                                     🛒 Belanja
                                                 </span>
