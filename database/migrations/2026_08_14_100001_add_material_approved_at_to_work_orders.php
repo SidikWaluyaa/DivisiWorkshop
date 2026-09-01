@@ -12,9 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('work_orders', function (Blueprint $table) {
-            if (!Schema::hasColumn('work_orders', 'material_approved_at')) {
-                $table->timestamp('material_approved_at')->nullable()->after('status');
-            }
+            $table->timestamp('material_approved_at')->nullable()->after('status');
         });
     }
 
@@ -24,9 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('work_orders', function (Blueprint $table) {
-            if (Schema::hasColumn('work_orders', 'material_approved_at')) {
-                $table->dropColumn('material_approved_at');
-            }
+            $table->dropColumn('material_approved_at');
         });
     }
 };
