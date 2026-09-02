@@ -243,7 +243,7 @@ class PendingSpkMonitoring extends Component
     public function render()
     {
         $query = WorkOrder::query()
-            ->with(['services.service', 'creator'])
+            ->with(['services', 'creator'])
             ->where('status', WorkOrderStatus::SPK_PENDING);
 
         // 1. Tab Filter
