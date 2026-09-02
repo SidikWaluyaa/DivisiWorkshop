@@ -1,4 +1,46 @@
 <div class="py-8 bg-slate-50 min-h-screen">
+    {{-- Flatpickr Styles & Script --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <style>
+        .flatpickr-calendar {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(226, 232, 240, 0.9) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15) !important;
+            padding: 10px 8px !important;
+            font-family: inherit !important;
+            width: 320px !important;
+            z-index: 99999 !important;
+        }
+        .flatpickr-day.selected, 
+        .flatpickr-day.startRange, 
+        .flatpickr-day.endRange {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3) !important;
+            border-radius: 12px !important;
+        }
+        .flatpickr-day.inRange {
+            background: rgba(16, 185, 129, 0.12) !important;
+            border-color: transparent !important;
+            color: #047857 !important;
+            font-weight: 700 !important;
+        }
+        .flatpickr-months .flatpickr-month {
+            color: #0f172a !important;
+            fill: #0f172a !important;
+            font-weight: 900 !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            font-weight: 800 !important;
+        }
+    </style>
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
         {{-- Page Header --}}
@@ -14,7 +56,7 @@
                     <span>Monitoring Kiriman SPK Pending</span>
                 </h1>
                 <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                    Pantau status pengiriman sepatu pelanggan khusus SPK Pending. Sepatu otomatis keluar dari daftar ini setelah diterima oleh tim Gudang.
+                    Pantau status kiriman sepatu customer secara real-time. SPK otomatis keluar dari daftar begitu diproses masuk di Gudang.
                 </p>
             </div>
 
@@ -88,23 +130,173 @@
             </button>
         </div>
 
-        {{-- Main Table Card --}}
-        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        {{-- Dynamic Filter Section --}}
+        <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
             
-            {{-- Search & Controls --}}
-            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
-                <div class="relative w-full sm:w-96">
+            {{-- Top Filter Row: Search & Date Range Picker --}}
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
+                
+                {{-- 1. Search Bar (5 cols) --}}
+                <div class="lg:col-span-5 relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
                     <input type="text" 
                            wire:model.live.debounce.300ms="search" 
-                           placeholder="Cari No SPK, Pelanggan, Resi..." 
-                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-2xs transition-all">
+                           placeholder="Cari No SPK, Nama, Telepon, Brand, Resi..." 
+                           class="w-full pl-10 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white shadow-2xs transition-all">
+                    @if(!empty($search))
+                        <button type="button" wire:click="$set('search', '')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                            ✕
+                        </button>
+                    @endif
                 </div>
 
-                <div class="text-xs font-bold text-slate-500 w-full sm:w-auto text-right">
-                    Menampilkan {{ $orders->count() }} dari {{ $orders->total() }} data
+                {{-- 2. Date Basis Selector (2 cols) --}}
+                <div class="lg:col-span-2">
+                    <select wire:model.live="dateField" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:bg-white cursor-pointer shadow-2xs">
+                        <option value="created_at">📅 Tanggal Buat SPK</option>
+                        <option value="customer_shipped_at">🚚 Tanggal Input Resi</option>
+                    </select>
+                </div>
+
+                {{-- 3. Flatpickr Date Range Input (5 cols) --}}
+                <div class="lg:col-span-5" 
+                     x-data="{
+                         dateRange: @entangle('dateRange').live,
+                         initPicker() {
+                             const fp = flatpickr(this.$refs.datePicker, {
+                                 mode: 'range',
+                                 dateFormat: 'Y-m-d',
+                                 defaultDate: this.dateRange ? this.dateRange.split(' to ') : null,
+                                 onChange: (selectedDates, dateStr) => {
+                                     if (selectedDates.length === 2 || selectedDates.length === 0) {
+                                         this.dateRange = dateStr;
+                                     }
+                                 }
+                             });
+
+                             this.$watch('dateRange', (val) => {
+                                 if (!val) {
+                                     fp.clear();
+                                 } else {
+                                     fp.setDate(val.split(' to '), false);
+                                 }
+                             });
+                         }
+                     }" 
+                     x-init="initPicker()">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <input type="text" 
+                               x-ref="datePicker" 
+                               readonly 
+                               placeholder="Pilih Rentang Tanggal (Mulai - Sampai)..." 
+                               class="w-full pl-10 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white shadow-2xs cursor-pointer transition-all">
+                        @if(!empty($dateRange))
+                            <button type="button" wire:click="setPresetDate('clear')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                                ✕
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- Quick Date Presets & Filter Dropdowns Row --}}
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                
+                {{-- Date Presets --}}
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider mr-1">Preset:</span>
+                    <button type="button" wire:click="setPresetDate('today')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
+                        Hari Ini
+                    </button>
+                    <button type="button" wire:click="setPresetDate('7days')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
+                        7 Hari Terakhir
+                    </button>
+                    <button type="button" wire:click="setPresetDate('this_month')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[11px] font-bold transition-all cursor-pointer">
+                        Bulan Ini
+                    </button>
+                    @if(!empty($dateRange))
+                        <button type="button" wire:click="setPresetDate('clear')" class="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-xl text-[11px] font-bold transition-all cursor-pointer hover:bg-rose-100">
+                            ✕ Hapus Tanggal
+                        </button>
+                    @endif
+                </div>
+
+                {{-- Dropdowns Group --}}
+                <div class="flex items-center gap-2 flex-wrap">
+                    
+                    {{-- Filter Brand --}}
+                    <select wire:model.live="brandFilter" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                        <option value="">👟 Semua Brand</option>
+                        @foreach($brands as $b)
+                            <option value="{{ $b }}">{{ $b }}</option>
+                        @endforeach
+                    </select>
+
+                    {{-- Filter Channel --}}
+                    <select wire:model.live="channelFilter" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                        <option value="">📱 Semua Channel</option>
+                        @foreach($channels as $ch)
+                            <option value="{{ $ch }}">{{ $ch }}</option>
+                        @endforeach
+                    </select>
+
+                    {{-- Filter Creator --}}
+                    <select wire:model.live="creatorFilter" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                        <option value="">👤 Pembuat SPK</option>
+                        @foreach($creators as $cr)
+                            <option value="{{ $cr->id }}">{{ $cr->name }}</option>
+                        @endforeach
+                    </select>
+
+                    {{-- Sort By --}}
+                    <select wire:model.live="sortBy" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                        <option value="latest">⚡ Terbaru</option>
+                        <option value="oldest">⏳ Terlama</option>
+                        <option value="customer_asc">🔤 Nama (A - Z)</option>
+                        <option value="customer_desc">🔤 Nama (Z - A)</option>
+                        <option value="resi_latest">🚚 Resi Terbaru</option>
+                    </select>
+
+                    {{-- Per Page --}}
+                    <select wire:model.live="perPage" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                        <option value="15">15 Baris</option>
+                        <option value="25">25 Baris</option>
+                        <option value="50">50 Baris</option>
+                        <option value="100">100 Baris</option>
+                    </select>
+
+                    {{-- Reset Button --}}
+                    @if($this->isFiltered)
+                        <button type="button" 
+                                wire:click="resetAllFilters" 
+                                class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span>Reset Filter</span>
+                        </button>
+                    @endif
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {{-- Main Table Card --}}
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <span>📋</span>
+                    <span>DAFTAR ANTRIAN SPK PENDING</span>
+                </div>
+                <div class="text-xs font-bold text-slate-500">
+                    Menampilkan {{ $orders->count() }} dari {{ $orders->total() }} data SPK
                 </div>
             </div>
 
@@ -137,6 +329,11 @@
                                     <div class="text-[11px] text-slate-400 font-medium mt-1">
                                         {{ $order->created_at ? $order->created_at->format('d M Y • H:i') : '-' }}
                                     </div>
+                                    @if($order->creator)
+                                        <div class="text-[10px] text-slate-400 font-semibold mt-0.5">
+                                            CS: {{ $order->creator->name }}
+                                        </div>
+                                    @endif
                                 </td>
 
                                 {{-- Pelanggan & Kontak --}}
@@ -147,6 +344,11 @@
                                     <div class="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
                                         <span>📞 {{ $order->customer_phone ?: '-' }}</span>
                                     </div>
+                                    @if($order->channel)
+                                        <span class="inline-block mt-1 px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-600 border border-slate-200">
+                                            {{ $order->channel }}
+                                        </span>
+                                    @endif
                                 </td>
 
                                 {{-- Sepatu & Layanan --}}
@@ -186,7 +388,7 @@
                                             </button>
                                         </div>
                                         <div class="text-[10px] text-slate-400 font-medium mt-0.5">
-                                            Diinput: {{ $order->customer_shipped_at ? $order->customer_shipped_at->format('d M, H:i') : '-' }}
+                                            Diinput: {{ $order->customer_shipped_at ? $order->customer_shipped_at->format('d M Y, H:i') : '-' }}
                                         </div>
                                     @else
                                         <span class="text-slate-400 text-xs italic font-medium">Belum ada resi</span>
@@ -230,7 +432,7 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="p-12 text-center text-slate-400 text-sm font-bold italic">
-                                    Tidak ada data SPK Pending yang ditemukan.
+                                    Tidak ada data SPK Pending yang sesuai dengan kriteria filter.
                                 </td>
                             </tr>
                         @endforelse
@@ -268,6 +470,9 @@
                                 <div class="font-mono font-black text-slate-900 text-sm flex items-center justify-between">
                                     <span>{{ $order->customer_tracking_number }}</span>
                                     <button type="button" onclick="navigator.clipboard.writeText('{{ $order->customer_tracking_number }}'); alert('Resi disalin!');" class="text-slate-500">📋</button>
+                                </div>
+                                <div class="text-[10px] text-slate-400">
+                                    Diinput: {{ $order->customer_shipped_at ? $order->customer_shipped_at->format('d M Y, H:i') : '-' }}
                                 </div>
                             </div>
                         @endif

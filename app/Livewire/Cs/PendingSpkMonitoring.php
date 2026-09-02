@@ -3,6 +3,7 @@
 namespace App\Livewire\Cs;
 
 use App\Models\WorkOrder;
+use App\Models\User;
 use App\Enums\WorkOrderStatus;
 use App\Helpers\ActivityLogger;
 use Livewire\Component;
@@ -11,6 +12,7 @@ use Livewire\Attributes\Url;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PendingSpkMonitoring extends Component
 {
@@ -21,6 +23,24 @@ class PendingSpkMonitoring extends Component
 
     #[Url(except: '')]
     public $search = '';
+
+    #[Url(except: '')]
+    public $dateRange = '';
+
+    #[Url(except: 'created_at')]
+    public $dateField = 'created_at'; // created_at | customer_shipped_at
+
+    #[Url(except: '')]
+    public $brandFilter = '';
+
+    #[Url(except: '')]
+    public $channelFilter = '';
+
+    #[Url(except: '')]
+    public $creatorFilter = '';
+
+    #[Url(except: 'latest')]
+    public $sortBy = 'latest'; // latest | oldest | customer_asc | customer_desc | resi_latest
 
     public $perPage = 15;
 
@@ -39,20 +59,63 @@ class PendingSpkMonitoring extends Component
         'trackingNumber.min' => 'Nomor resi minimal 3 karakter.',
     ];
 
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingActiveTab()
-    {
-        $this->resetPage();
-    }
+    public function updatingSearch() { $this->resetPage(); }
+    public function updatingActiveTab() { $this->resetPage(); }
+    public function updatingDateRange() { $this->resetPage(); }
+    public function updatingDateField() { $this->resetPage(); }
+    public function updatingBrandFilter() { $this->resetPage(); }
+    public function updatingChannelFilter() { $this->resetPage(); }
+    public function updatingCreatorFilter() { $this->resetPage(); }
+    public function updatingSortBy() { $this->resetPage(); }
+    public function updatingPerPage() { $this->resetPage(); }
 
     public function setTab($tab)
     {
         $this->activeTab = $tab;
         $this->resetPage();
+    }
+
+    public function setPresetDate($preset)
+    {
+        $today = now()->format('Y-m-d');
+        if ($preset === 'today') {
+            $this->dateRange = "{$today} to {$today}";
+        } elseif ($preset === '7days') {
+            $startDate = now()->subDays(6)->format('Y-m-d');
+            $this->dateRange = "{$startDate} to {$today}";
+        } elseif ($preset === 'this_month') {
+            $startDate = now()->startOfMonth()->format('Y-m-d');
+            $endDate = now()->endOfMonth()->format('Y-m-d');
+            $this->dateRange = "{$startDate} to {$endDate}";
+        } elseif ($preset === 'clear') {
+            $this->dateRange = '';
+        }
+        $this->resetPage();
+    }
+
+    public function resetAllFilters()
+    {
+        $this->search = '';
+        $this->dateRange = '';
+        $this->dateField = 'created_at';
+        $this->brandFilter = '';
+        $this->channelFilter = '';
+        $this->creatorFilter = '';
+        $this->sortBy = 'latest';
+        $this->activeTab = 'all';
+        $this->resetPage();
+    }
+
+    #[Computed]
+    public function isFiltered()
+    {
+        return !empty($this->search) || 
+               !empty($this->dateRange) || 
+               !empty($this->brandFilter) || 
+               !empty($this->channelFilter) || 
+               !empty($this->creatorFilter) || 
+               $this->activeTab !== 'all' || 
+               $this->sortBy !== 'latest';
     }
 
     #[Computed]
@@ -63,6 +126,39 @@ class PendingSpkMonitoring extends Component
             'in_transit' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->whereNotNull('customer_tracking_number')->count(),
             'waiting' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->whereNull('customer_tracking_number')->count(),
         ];
+    }
+
+    #[Computed]
+    public function availableBrands()
+    {
+        return WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
+            ->whereNotNull('shoe_brand')
+            ->where('shoe_brand', '!=', '')
+            ->distinct()
+            ->orderBy('shoe_brand')
+            ->pluck('shoe_brand');
+    }
+
+    #[Computed]
+    public function availableChannels()
+    {
+        return WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
+            ->whereNotNull('channel')
+            ->where('channel', '!=', '')
+            ->distinct()
+            ->orderBy('channel')
+            ->pluck('channel');
+    }
+
+    #[Computed]
+    public function availableCreators()
+    {
+        $creatorIds = WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
+            ->whereNotNull('created_by')
+            ->distinct()
+            ->pluck('created_by');
+
+        return User::whereIn('id', $creatorIds)->orderBy('name')->get(['id', 'name']);
     }
 
     public function openResiModal($woId)
@@ -150,14 +246,14 @@ class PendingSpkMonitoring extends Component
             ->with(['services.service', 'creator'])
             ->where('status', WorkOrderStatus::SPK_PENDING);
 
-        // Tab Filter
+        // 1. Tab Filter
         if ($this->activeTab === 'in_transit') {
             $query->whereNotNull('customer_tracking_number');
         } elseif ($this->activeTab === 'waiting') {
             $query->whereNull('customer_tracking_number');
         }
 
-        // Search Filter
+        // 2. Search Filter
         if (!empty($this->search)) {
             $term = trim($this->search);
             $query->where(function ($q) use ($term) {
@@ -165,15 +261,70 @@ class PendingSpkMonitoring extends Component
                   ->orWhere('customer_name', 'like', "%{$term}%")
                   ->orWhere('customer_phone', 'like', "%{$term}%")
                   ->orWhere('shoe_brand', 'like', "%{$term}%")
+                  ->orWhere('shoe_type', 'like', "%{$term}%")
                   ->orWhere('customer_tracking_number', 'like', "%{$term}%");
             });
         }
 
-        $orders = $query->latest('id')->paginate($this->perPage);
+        // 3. Date Range Filter
+        if (!empty($this->dateRange)) {
+            $dates = explode(' to ', $this->dateRange);
+            $field = in_array($this->dateField, ['created_at', 'customer_shipped_at']) ? $this->dateField : 'created_at';
+
+            if (count($dates) === 2) {
+                $start = Carbon::parse($dates[0])->startOfDay();
+                $end = Carbon::parse($dates[1])->endOfDay();
+                $query->whereBetween($field, [$start, $end]);
+            } elseif (count($dates) === 1 && !empty($dates[0])) {
+                $start = Carbon::parse($dates[0])->startOfDay();
+                $end = Carbon::parse($dates[0])->endOfDay();
+                $query->whereBetween($field, [$start, $end]);
+            }
+        }
+
+        // 4. Dropdown Filters
+        if (!empty($this->brandFilter)) {
+            $query->where('shoe_brand', $this->brandFilter);
+        }
+
+        if (!empty($this->channelFilter)) {
+            $query->where('channel', $this->channelFilter);
+        }
+
+        if (!empty($this->creatorFilter)) {
+            $query->where('created_by', $this->creatorFilter);
+        }
+
+        // 5. Sorting
+        switch ($this->sortBy) {
+            case 'oldest':
+                $query->oldest('id');
+                break;
+            case 'customer_asc':
+                $query->orderBy('customer_name', 'asc');
+                break;
+            case 'customer_desc':
+                $query->orderBy('customer_name', 'desc');
+                break;
+            case 'resi_latest':
+                $query->orderByRaw('CASE WHEN customer_shipped_at IS NOT NULL THEN 0 ELSE 1 END')
+                      ->latest('customer_shipped_at')
+                      ->latest('id');
+                break;
+            case 'latest':
+            default:
+                $query->latest('id');
+                break;
+        }
+
+        $orders = $query->paginate($this->perPage);
 
         return view('livewire.cs.pending-spk-monitoring', [
             'orders' => $orders,
             'counts' => $this->counts,
+            'brands' => $this->availableBrands,
+            'channels' => $this->availableChannels,
+            'creators' => $this->availableCreators,
         ])->layout('layouts.app');
     }
 }
