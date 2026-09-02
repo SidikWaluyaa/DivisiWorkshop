@@ -1018,5 +1018,35 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Update customer tracking number (Resi Inbound) and timestamp
+     */
+    public function updateCustomerTracking(Request $request, $id)
+    {
+        $request->validate([
+            'customer_tracking_number' => 'nullable|string|max:100',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        $cleanResi = $request->customer_tracking_number ? strtoupper(trim($request->customer_tracking_number)) : null;
+
+        $order->customer_tracking_number = $cleanResi;
+        $order->customer_shipped_at = $cleanResi ? now() : null;
+        $order->save();
+
+        \App\Helpers\ActivityLogger::log('Update Resi Inbound', "User (" . auth()->user()->name . ") mengupdate resi customer untuk SPK {$order->spk_number}: " . ($cleanResi ?: 'Dikosongkan'));
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Nomor resi customer berhasil diperbarui.',
+                'tracking_number' => $order->customer_tracking_number,
+                'shipped_at' => $order->customer_shipped_at ? $order->customer_shipped_at->format('d M Y, H:i') : null,
+            ]);
+        }
+
+        return back()->with('success', 'Nomor resi customer berhasil diperbarui.');
+    }
 }
 

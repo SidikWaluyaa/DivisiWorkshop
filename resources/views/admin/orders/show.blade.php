@@ -42,11 +42,32 @@
                         <h1 class="text-5xl font-black text-gray-900 tracking-tight leading-tight">
                             {{ $order->spk_number }}
                         </h1>
-                        <div class="mt-4 flex items-center gap-4">
+                        <div class="mt-4 flex flex-wrap items-center gap-4">
                             <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200">
                                 <span class="w-2 h-2 rounded-full bg-[#FFC232] animate-pulse"></span>
                                 <span class="text-gray-700 text-sm font-bold">{{ str_replace('_', ' ', $order->status->value) }}</span>
                             </div>
+
+                            {{-- Inbound Tracking Badge --}}
+                            @if($order->customer_tracking_number)
+                                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span class="text-emerald-950 font-black">🚚 Resi Inbound:</span>
+                                    <span class="font-mono bg-white px-2 py-0.5 rounded-md border border-emerald-200 font-black">{{ $order->customer_tracking_number }}</span>
+                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $order->customer_tracking_number }}'); alert('Nomor resi customer disalin!');" class="text-emerald-600 hover:text-emerald-900 cursor-pointer" title="Salin Resi">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                                    </button>
+                                    @if($order->customer_shipped_at)
+                                        <span class="text-[11px] text-emerald-600 font-semibold">• Dikirim: {{ $order->customer_shipped_at->format('d M, H:i') }}</span>
+                                    @endif
+                                </div>
+                            @elseif($order->status === \App\Enums\WorkOrderStatus::SPK_PENDING)
+                                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold shadow-2xs">
+                                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                                    <span>⏳ Menunggu Resi Customer</span>
+                                </div>
+                            @endif
+
                             <div class="h-4 w-px bg-gray-300"></div>
                             <div class="text-gray-500 text-sm flex items-center gap-2" 
                                  x-data="{ 
@@ -830,6 +851,159 @@
                                                 <button @click="showModal = false" class="px-8 py-4 bg-white border border-gray-200 text-gray-500 font-black rounded-2xl transition-all">
                                                     Batal
                                                 </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- Inbound Customer Shipment & Tracking Card --}}
+                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 mt-8"
+                         x-data="{
+                            showModal: false,
+                            trackingNumber: '{{ $order->customer_tracking_number ?? '' }}',
+                            displayTracking: '{{ $order->customer_tracking_number ?? '' }}',
+                            shippedAt: '{{ $order->customer_shipped_at ? $order->customer_shipped_at->format('d F Y, H:i') . ' WIB' : '' }}',
+                            isLoading: false,
+                            async saveTracking() {
+                                this.isLoading = true;
+                                try {
+                                    const res = await fetch('{{ route('admin.orders.update-customer-tracking', $order->id) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                            'Accept': 'application/json'
+                                        },
+                                        body: JSON.stringify({ customer_tracking_number: this.trackingNumber })
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        this.displayTracking = data.tracking_number;
+                                        this.shippedAt = data.shipped_at ? data.shipped_at + ' WIB' : '';
+                                        this.showModal = false;
+                                        window.location.reload();
+                                    } else {
+                                        alert(data.message || 'Gagal menyimpan resi');
+                                    }
+                                } catch (e) {
+                                    alert('Terjadi kesalahan koneksi saat menyimpan resi.');
+                                } finally {
+                                    this.isLoading = false;
+                                }
+                            }
+                         }" x-cloak>
+                        <div class="bg-gray-50/50 p-6 border-b border-gray-100 flex items-center justify-between">
+                            <h3 class="font-black text-gray-800 text-base uppercase tracking-widest flex items-center gap-2">
+                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+                                Resi &amp; Kiriman Customer
+                            </h3>
+                            @can('manageOrder', \App\Models\WorkOrder::class)
+                            <button @click="showModal = true" class="p-1.5 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-emerald-600 hover:border-emerald-600 transition-all" title="Edit Resi Customer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                            @endcan
+                        </div>
+
+                        <div class="p-6 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -z-0"></div>
+
+                            {{-- Status Pill --}}
+                            <div class="mb-4">
+                                <template x-if="displayTracking">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        🚚 Sedang Dikirim Customer
+                                    </span>
+                                </template>
+                                <template x-if="!displayTracking">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase bg-amber-50 text-amber-700 border border-amber-200">
+                                        <span>⏳ Belum Ada Resi (Menunggu Kiriman)</span>
+                                    </span>
+                                </template>
+                            </div>
+
+                            {{-- Tracking Info Box --}}
+                            <div class="space-y-3 relative z-10">
+                                <div class="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
+                                    <div class="text-[10px] font-black text-emerald-700 uppercase tracking-wider mb-1">Nomor Resi Customer</div>
+                                    <template x-if="displayTracking">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-mono font-black text-gray-900 text-base" x-text="displayTracking"></span>
+                                            <button type="button" @click="navigator.clipboard.writeText(displayTracking); alert('Resi disalin!');" class="px-2.5 py-1 bg-white border border-emerald-200 rounded-lg text-emerald-700 hover:bg-emerald-50 text-xs font-bold transition-all shadow-2xs cursor-pointer">
+                                                📋 Salin
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <template x-if="!displayTracking">
+                                        <span class="text-xs text-gray-400 italic font-medium">Belum ada nomor resi yang diinput.</span>
+                                    </template>
+                                </div>
+
+                                <div class="p-3 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-between">
+                                    <span class="text-xs font-bold text-gray-400 uppercase">Waktu Input / Dikirim</span>
+                                    <span class="text-xs font-bold text-gray-700 font-mono" x-text="shippedAt || '-'"></span>
+                                </div>
+                            </div>
+
+                            {{-- WhatsApp Follow Up if No Resi --}}
+                            @if(!$order->customer_tracking_number && $order->customer_phone)
+                                @php
+                                    $waText = urlencode("Halo kak {$order->customer_name}, kami dari Shoe Workshop ingin mengonfirmasi apakah sepatu ({$order->shoe_brand}) untuk SPK #{$order->spk_number} sudah dikirimkan? Jika sudah, boleh minta nomor resinya ya kak. Terima kasih! 😊");
+                                    $waNumber = preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $order->customer_phone));
+                                @endphp
+                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                    <a href="https://wa.me/{{ $waNumber }}?text={{ $waText }}" target="_blank" class="w-full py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2">
+                                        <span>💬 Follow-up Resi via WhatsApp</span>
+                                    </a>
+                                </div>
+                            @endif
+
+                            {{-- Tracking Editor Modal --}}
+                            <template x-teleport="body">
+                                <div x-show="showModal" class="fixed inset-0 z-[999999] overflow-y-auto" style="display: none;">
+                                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                        <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 transition-opacity" aria-hidden="true" @click="showModal = false">
+                                            <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-md"></div>
+                                        </div>
+
+                                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                                        <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                             class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-white/20 relative z-[1000]">
+                                            
+                                            <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-6 text-white">
+                                                <div class="flex justify-between items-center">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-xl">🚚</div>
+                                                        <div>
+                                                            <h3 class="text-lg font-black leading-tight">Edit Resi Masuk Customer</h3>
+                                                            <p class="text-emerald-100 text-[10px] font-bold mt-0.5 uppercase tracking-widest">SPK #{{ $order->spk_number }}</p>
+                                                        </div>
+                                                    </div>
+                                                    <button @click="showModal = false" class="text-white hover:rotate-90 transition-transform duration-300">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="p-6 space-y-4">
+                                                <div>
+                                                    <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Nomor Resi Pengiriman Customer</label>
+                                                    <input type="text" x-model="trackingNumber" placeholder="Contoh: JP1234567890 / JNE..." class="w-full rounded-xl border-gray-200 focus:border-emerald-600 focus:ring-emerald-600 font-mono font-bold text-sm uppercase">
+                                                    <p class="text-[10px] text-gray-400 mt-1">Kosongkan jika ingin menghapus resi dari SPK ini.</p>
+                                                </div>
+
+                                                <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                                                    <button type="button" @click="showModal = false" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl text-xs transition-all">
+                                                        Batal
+                                                    </button>
+                                                    <button type="button" @click="saveTracking()" :disabled="isLoading" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50 flex items-center gap-2">
+                                                        <span x-text="isLoading ? 'Menyimpan...' : 'Simpan Resi'"></span>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
