@@ -171,10 +171,16 @@
                                     </a>
 
                                     @if($manifest->status === 'SENT')
-                                        <a href="{{ route('manifest.receive', array_filter([$manifest->id, 'mode' => request('mode')])) }}" 
-                                           class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-900/20 active:scale-95 transition-all">
-                                            📥 Terima Inbound
-                                        </a>
+                                        @if($manifest->work_orders_count > 0)
+                                            <a href="{{ route('manifest.receive', array_filter([$manifest->id, 'mode' => request('mode')])) }}" 
+                                               class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-900/20 active:scale-95 transition-all cursor-pointer">
+                                                📥 Terima Inbound
+                                            </a>
+                                        @else
+                                            <span class="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[11px] font-bold">
+                                                ⚠️ 0 SPK
+                                            </span>
+                                        @endif
                                     @endif
                                 </div>
                             </td>
@@ -226,9 +232,15 @@
                                 Detail
                             </a>
                             @if($manifest->status === 'SENT')
-                                <a href="{{ route('manifest.receive', array_filter([$manifest->id, 'mode' => request('mode')])) }}" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs shadow-md">
-                                    📥 Terima
-                                </a>
+                                @if($manifest->work_orders_count > 0)
+                                    <a href="{{ route('manifest.receive', array_filter([$manifest->id, 'mode' => request('mode')])) }}" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs shadow-md">
+                                        📥 Terima
+                                    </a>
+                                @else
+                                    <span class="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold">
+                                        ⚠️ 0 SPK
+                                    </span>
+                                @endif
                             @endif
                         </div>
                     </div>
