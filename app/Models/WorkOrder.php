@@ -424,7 +424,15 @@ class WorkOrder extends Model
     public function hasServiceCategory($categoryNames)
     {
         $categories = (array) $categoryNames;
-        return $this->workOrderServices()->whereIn('category_name', $categories)->exists();
+        return $this->workOrderServices()
+            ->where(function ($q) use ($categories) {
+                $q->whereIn('category_name', $categories);
+                foreach ($categories as $cat) {
+                    $q->orWhere('category_name', 'LIKE', "%{$cat}%")
+                      ->orWhere('custom_service_name', 'LIKE', "%{$cat}%");
+                }
+            })
+            ->exists();
     }
 
     public function getStationUrl()

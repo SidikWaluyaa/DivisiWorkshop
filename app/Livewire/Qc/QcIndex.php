@@ -203,8 +203,9 @@ class QcIndex extends Component
             $now = now();
             $authId = Auth::id();
 
-            // 1. Pass QC Jahit (if required & incomplete)
-            $needsJahit = $order->hasServiceCategory(['Sol', 'Upper', 'Repaint', 'Jahit']);
+            // 1. Pass QC Jahit (if required or uncompleted)
+            $needsJahit = $order->hasServiceCategory([WorkOrder::CAT_SOL, WorkOrder::CAT_UPPER, 'Sol', 'Upper', 'Repaint', 'Jahit']) ||
+                          $order->needs_sol || $order->needs_upper || !empty($order->qc_jahit_by);
             if ($needsJahit && !$order->qc_jahit_completed_at) {
                 if (!$order->qc_jahit_by) $order->qc_jahit_by = $authId;
                 if (!$order->qc_jahit_started_at) $order->qc_jahit_started_at = $now;
