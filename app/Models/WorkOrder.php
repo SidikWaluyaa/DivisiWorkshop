@@ -57,6 +57,8 @@ class WorkOrder extends Model
         'customer_email',
         'channel',
         'customer_address',
+        'customer_tracking_number',
+        'customer_shipped_at',
         'shoe_brand',
         'shoe_type',
         'shoe_color',
@@ -210,6 +212,7 @@ class WorkOrder extends Model
 
     protected $casts = [
         'status' => WorkOrderStatus::class, // Enum Casting
+        'customer_shipped_at' => 'datetime',
         'entry_date' => 'datetime',
         'estimation_date' => 'datetime',
         'new_estimation_date' => 'datetime',

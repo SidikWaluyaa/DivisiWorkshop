@@ -551,6 +551,7 @@ Route::middleware('auth')->group(function () {
         
         // SPK & Conversion
         Route::middleware('access:cs.spk')->group(function () {
+            Route::get('/pending-monitoring', \App\Livewire\Cs\PendingSpkMonitoring::class)->name('pending-monitoring');
             Route::get('/spk-data', [App\Http\Controllers\CsSpkController::class, 'index'])->name('spk.index');
             Route::get('/spk-data/report-pdf', [App\Http\Controllers\CsSpkController::class, 'reportPdf'])->name('spk.report-pdf');
             Route::get('/spk-data/report-excel', [App\Http\Controllers\CsSpkController::class, 'reportExcel'])->name('spk.report-excel');
