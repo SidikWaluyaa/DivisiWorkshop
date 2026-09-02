@@ -707,6 +707,16 @@ class WorkOrder extends Model
         return $this->belongsTo(User::class, 'qc_final_by')->withTrashed();
     }
 
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by')->withTrashed();
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by')->withTrashed();
+    }
+
     // ========================================
     // Supply Chain Scopes
     // ========================================
