@@ -44,11 +44,11 @@ class WorkOrderService extends Pivot
 
     public function technician()
     {
-        return $this->belongsTo(User::class, 'technician_id');
+        return $this->belongsTo(User::class, 'technician_id')->withTrashed();
     }
 
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by')->withTrashed();
     }
 }

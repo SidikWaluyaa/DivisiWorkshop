@@ -672,28 +672,28 @@ class WorkOrder extends Model
 
     public function prodSolBy()
     {
-        return $this->belongsTo(User::class, 'prod_sol_by');
+        return $this->belongsTo(User::class, 'prod_sol_by')->withTrashed();
     }
     public function prodUpperBy()
     {
-        return $this->belongsTo(User::class, 'prod_upper_by');
+        return $this->belongsTo(User::class, 'prod_upper_by')->withTrashed();
     }
     public function prodCleaningBy()
     {
-        return $this->belongsTo(User::class, 'prod_cleaning_by');
+        return $this->belongsTo(User::class, 'prod_cleaning_by')->withTrashed();
     }
 
     public function qcJahitBy()
     {
-        return $this->belongsTo(User::class, 'qc_jahit_by');
+        return $this->belongsTo(User::class, 'qc_jahit_by')->withTrashed();
     }
     public function qcCleanupBy()
     {
-        return $this->belongsTo(User::class, 'qc_cleanup_by');
+        return $this->belongsTo(User::class, 'qc_cleanup_by')->withTrashed();
     }
     public function qcFinalBy()
     {
-        return $this->belongsTo(User::class, 'qc_final_by');
+        return $this->belongsTo(User::class, 'qc_final_by')->withTrashed();
     }
 
     // ========================================
@@ -1054,41 +1054,41 @@ class WorkOrder extends Model
     // Relationships for Technicians/PICs
     public function picSortirSol()
     {
-        return $this->belongsTo(User::class, 'pic_sortir_sol_id');
+        return $this->belongsTo(User::class, 'pic_sortir_sol_id')->withTrashed();
     }
     public function picSortirUpper()
     {
-        return $this->belongsTo(User::class, 'pic_sortir_upper_id');
+        return $this->belongsTo(User::class, 'pic_sortir_upper_id')->withTrashed();
     }
     public function technicianProduction()
     {
-        return $this->belongsTo(User::class, 'technician_production_id');
+        return $this->belongsTo(User::class, 'technician_production_id')->withTrashed();
     }
     public function qcJahitTechnician()
     {
-        return $this->belongsTo(User::class, 'qc_jahit_technician_id');
+        return $this->belongsTo(User::class, 'qc_jahit_technician_id')->withTrashed();
     }
     public function qcCleanupTechnician()
     {
-        return $this->belongsTo(User::class, 'qc_cleanup_technician_id');
+        return $this->belongsTo(User::class, 'qc_cleanup_technician_id')->withTrashed();
     }
     public function qcFinalPic()
     {
-        return $this->belongsTo(User::class, 'qc_final_pic_id');
+        return $this->belongsTo(User::class, 'qc_final_pic_id')->withTrashed();
     }
 
     // Preparation Technicians
     public function prepWashingBy()
     {
-        return $this->belongsTo(User::class, 'prep_washing_by');
+        return $this->belongsTo(User::class, 'prep_washing_by')->withTrashed();
     }
     public function prepSolBy()
     {
-        return $this->belongsTo(User::class, 'prep_sol_by');
+        return $this->belongsTo(User::class, 'prep_sol_by')->withTrashed();
     }
     public function prepUpperBy()
     {
-        return $this->belongsTo(User::class, 'prep_upper_by');
+        return $this->belongsTo(User::class, 'prep_upper_by')->withTrashed();
     }
 
     // Enhanced Service Relationship
