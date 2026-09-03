@@ -491,10 +491,13 @@
                     <div class="relative">
                         <label for="proof_file_input" class="flex flex-col items-center justify-center w-full min-h-[150px] border-2 border-dashed border-slate-300 hover:border-[#22AF85] rounded-2xl bg-[#F8FAFC] cursor-pointer p-4 transition-all">
                             {{-- STATE 1: Compress & Upload Loading --}}
-                            <div x-show="isCompressing" class="flex flex-col items-center justify-center space-y-2 py-4" style="display: none;">
-                                <svg class="animate-spin h-8 w-8 text-[#22AF85]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                <p class="text-xs font-black text-slate-800">Mengompres &amp; Menyiapkan Foto...</p>
-                                <p class="text-[10px] text-slate-400">Menyesuaikan resolusi agar ringan dan super cepat</p>
+                            <div x-show="isCompressing" class="flex flex-col items-center justify-center space-y-2.5 py-6 text-center w-full" style="display: none;">
+                                <div class="relative w-12 h-12 flex items-center justify-center">
+                                    <div class="absolute inset-0 rounded-full border-2 border-emerald-200 border-t-[#22AF85] animate-spin"></div>
+                                    <span class="text-sm">⚡</span>
+                                </div>
+                                <p class="text-xs font-black text-slate-800 tracking-tight">Mengompres &amp; Menyiapkan Foto...</p>
+                                <p class="text-[10px] text-slate-400 max-w-xs">Otomatis menyesuaikan resolusi agar ringan &amp; super cepat</p>
                             </div>
 
                             {{-- STATE 2: Foto Berhasil Dipilih & Ditampilkan Review --}}
@@ -544,13 +547,28 @@
                 {{-- Submit Button (Kuning Aksen #FFC232) --}}
                 <div class="pt-2">
                     <button type="submit" 
+                            :disabled="isCompressing"
                             wire:loading.attr="disabled"
-                            class="w-full py-4 px-6 bg-[#FFC232] hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider rounded-2xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
-                        <span wire:loading.remove>Kirim Bukti Pembayaran ➔</span>
-                        <span wire:loading class="inline-flex items-center gap-2">
-                            <svg class="animate-spin h-5 w-5 text-slate-950" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Mengirim Bukti...
-                        </span>
+                            wire:target="submitPayment"
+                            class="w-full h-14 bg-[#FFC232] hover:bg-amber-400 disabled:opacity-70 disabled:cursor-not-allowed text-slate-950 font-black text-sm uppercase tracking-wider rounded-2xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-[0.98] flex items-center justify-center cursor-pointer relative overflow-hidden">
+                        
+                        {{-- Default State --}}
+                        <div wire:loading.remove wire:target="submitPayment" x-show="!isCompressing" class="flex items-center justify-center gap-2">
+                            <span>Kirim Bukti Pembayaran</span>
+                            <span class="text-base leading-none">➔</span>
+                        </div>
+
+                        {{-- Client-Side Uploading / Compressing State --}}
+                        <div x-show="isCompressing" class="flex items-center justify-center gap-2.5" style="display: none;">
+                            <div class="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></div>
+                            <span>Memproses Foto Bukti...</span>
+                        </div>
+
+                        {{-- Server-Side Submitting State --}}
+                        <div wire:loading.flex wire:target="submitPayment" class="items-center justify-center gap-2.5">
+                            <div class="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></div>
+                            <span>Mengirim Bukti Pembayaran...</span>
+                        </div>
                     </button>
                 </div>
             </form>
