@@ -44,7 +44,7 @@
         </div>
 
         {{-- Top Brand Bar --}}
-        <header class="relative z-10 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 shadow-xs">
+        <header class="sticky top-0 z-10 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
             <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-[#22AF85] text-white font-black flex items-center justify-center text-xs shadow-md shadow-[#22AF85]/20 transform -rotate-3">
