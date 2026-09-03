@@ -75,8 +75,9 @@ class StationIndex extends Component
             ->get();
 
         return [
-            'sol' => $allTechs->filter(fn($u) => $u->station === 'SOLING' || empty($u->station)),
-            'upper' => $allTechs->filter(fn($u) => $u->station === 'UPPER' || empty($u->station)),
+            'upper' => $allTechs->filter(fn($u) => $u->station === 'UPPER' || empty($u->station) || str_contains(strtolower($u->specialization ?? ''), 'upper')),
+            'sol' => $allTechs->filter(fn($u) => $u->station === 'SOLING' || empty($u->station) || str_contains(strtolower($u->specialization ?? ''), 'sol')),
+            'jahit' => $allTechs->filter(fn($u) => $u->station === 'QC' || empty($u->station) || str_contains(strtolower($u->specialization ?? ''), 'jahit')),
             'treatment' => $allTechs->filter(fn($u) => $u->station === 'TREATMENT' || empty($u->station)),
             'prep' => $allTechs->filter(fn($u) => $u->station === 'PREPARATION'),
             'qc' => $allTechs->filter(fn($u) => $u->station === 'QC'),
@@ -110,29 +111,29 @@ class StationIndex extends Component
             $q->whereHas('workOrderServices')
               ->where(function ($sq) {
                   $sq->where(function ($ssq) {
-                      $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%'))
-                          ->whereNull('prod_sol_completed_at');
-                  })
-                  ->orWhere(function ($ssq) {
                       $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Upper%'))
                           ->whereNull('prod_upper_completed_at');
                   })
                   ->orWhere(function ($ssq) {
-                      $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'not like', '%Sol%')->where('category_name', 'not like', '%Upper%'))
-                          ->whereNull('prod_cleaning_completed_at');
+                      $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%'))
+                          ->whereNull('prod_sol_completed_at');
+                  })
+                  ->orWhere(function ($ssq) {
+                      $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%')->orWhere('category_name', 'like', '%Upper%')->orWhere('category_name', 'like', '%Jahit%'))
+                          ->whereNull('qc_jahit_completed_at');
                   });
               });
         });
 
         $inProgressCount = (clone $reparasiQuery)->where(function($q) {
             $q->where(function($sq) {
-                $sq->whereNotNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
-            })
-            ->orWhere(function($sq) {
                 $sq->whereNotNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
             })
             ->orWhere(function($sq) {
-                $sq->whereNotNull('prod_cleaning_started_at')->whereNull('prod_cleaning_completed_at');
+                $sq->whereNotNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
+            })
+            ->orWhere(function($sq) {
+                $sq->whereNotNull('qc_jahit_started_at')->whereNull('qc_jahit_completed_at');
             });
         })->count();
 
@@ -464,19 +465,20 @@ class StationIndex extends Component
                         $order->is_revising = false;
                         $order->save();
                     }
-                    $order->update([
-                        'current_location' => 'Produksi (Siap Handover)',
-                    ]);
-                    $order->logs()->create([
-                        'user_id' => Auth::id(),
-                        'step' => 'PRODUCTION',
-                        'action' => 'PRODUCTION_APPROVED',
-                        'description' => 'Produksi selesai & disetujui Admin. Siap serah terima ke QC via Surat Jalan.',
-                    ]);
+                    $workflow->advanceStatus(
+                        $order,
+                        WorkOrderStatus::QC,
+                        Auth::id(),
+                        'Mass Approved from Production to QC',
+                        [
+                            'step' => 'PRODUCTION',
+                            'action' => 'PRODUCTION_APPROVED'
+                        ]
+                    );
                 }
                 $successCount++;
             } catch (\Exception $e) {
-                Log::error("Approve All Production Error (#{$order->id}): " . $e->getMessage());
+                Log::error("Mass Approve Error (#{$order->id}): " . $e->getMessage());
             }
         }
         
@@ -494,9 +496,9 @@ class StationIndex extends Component
                        ->where('action', 'PRODUCTION_APPROVED');
                 })
                 ->where(function($q) {
-                    $q->whereNull('prod_sol_by')
-                      ->orWhereNull('prod_upper_by')
-                      ->orWhereNull('prod_cleaning_by');
+                    $q->whereNull('prod_upper_by')
+                      ->orWhereNull('prod_sol_by')
+                      ->orWhereNull('qc_jahit_by');
                 })
                 ->get();
 
@@ -514,7 +516,7 @@ class StationIndex extends Component
         $this->autoAssignUnassignedOrders();
 
         $query = WorkOrder::query()
-            ->with(['customer', 'workOrderServices', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions']);
+            ->with(['customer', 'workOrderServices', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions']);
 
         // Search Filter
         if ($this->search) {
@@ -541,16 +543,16 @@ class StationIndex extends Component
                 $q->whereHas('workOrderServices')
                   ->where(function ($sq) {
                       $sq->where(function ($ssq) {
-                          $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'like', '%Sol%'); })
-                              ->whereNull('prod_sol_completed_at');
-                      })
-                      ->orWhere(function ($ssq) {
                           $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'like', '%Upper%'); })
                               ->whereNull('prod_upper_completed_at');
                       })
                       ->orWhere(function ($ssq) {
-                          $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'not like', '%Sol%')->where('category_name', 'not like', '%Upper%'); })
-                              ->whereNull('prod_cleaning_completed_at');
+                          $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'like', '%Sol%'); })
+                              ->whereNull('prod_sol_completed_at');
+                      })
+                      ->orWhere(function ($ssq) {
+                          $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'like', '%Sol%')->orWhere('category_name', 'like', '%Upper%')->orWhere('category_name', 'like', '%Jahit%'); })
+                              ->whereNull('qc_jahit_completed_at');
                       });
                   });
             });
@@ -561,28 +563,28 @@ class StationIndex extends Component
             if ($this->substate === 'in_progress') {
                 $query->where(function($q) {
                     $q->where(function($sq) {
-                        $sq->whereNotNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
-                    })
-                    ->orWhere(function($sq) {
                         $sq->whereNotNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
                     })
                     ->orWhere(function($sq) {
-                        $sq->whereNotNull('prod_cleaning_started_at')->whereNull('prod_cleaning_completed_at');
+                        $sq->whereNotNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
+                    })
+                    ->orWhere(function($sq) {
+                        $sq->whereNotNull('qc_jahit_started_at')->whereNull('qc_jahit_completed_at');
                     });
                 });
             } elseif ($this->substate === 'queued') {
                 $query->where(function($q) {
                     $q->where(function($sq) {
-                        $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%'))
-                           ->whereNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
-                    })
-                    ->orWhere(function($sq) {
                         $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Upper%'))
                            ->whereNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
                     })
                     ->orWhere(function($sq) {
-                        $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'not like', '%Sol%')->where('category_name', 'not like', '%Upper%'))
-                           ->whereNull('prod_cleaning_started_at')->whereNull('prod_cleaning_completed_at');
+                        $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%'))
+                           ->whereNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
+                    })
+                    ->orWhere(function($sq) {
+                        $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%')->orWhere('category_name', 'like', '%Upper%')->orWhere('category_name', 'like', '%Jahit%'))
+                           ->whereNull('qc_jahit_started_at')->whereNull('qc_jahit_completed_at');
                     });
                 });
             }
@@ -592,19 +594,19 @@ class StationIndex extends Component
         if ($this->onlyInProgress && $this->activeTab !== 'review') {
             $query->where(function($q) {
                 $q->where(function($sq) {
-                    $sq->whereNotNull('prod_sol_by')
-                       ->whereNotNull('prod_sol_started_at')
-                       ->whereNull('prod_sol_completed_at');
-                })
-                ->orWhere(function($sq) {
                     $sq->whereNotNull('prod_upper_by')
                        ->whereNotNull('prod_upper_started_at')
                        ->whereNull('prod_upper_completed_at');
                 })
                 ->orWhere(function($sq) {
-                    $sq->whereNotNull('prod_cleaning_by')
-                       ->whereNotNull('prod_cleaning_started_at')
-                       ->whereNull('prod_cleaning_completed_at');
+                    $sq->whereNotNull('prod_sol_by')
+                       ->whereNotNull('prod_sol_started_at')
+                       ->whereNull('prod_sol_completed_at');
+                })
+                ->orWhere(function($sq) {
+                    $sq->whereNotNull('qc_jahit_by')
+                       ->whereNotNull('qc_jahit_started_at')
+                       ->whereNull('qc_jahit_completed_at');
                 });
             });
         }
@@ -621,9 +623,9 @@ class StationIndex extends Component
         // Technician Filter
         if ($this->technicianFilter !== 'all') {
             $query->where(function($q) {
-                $q->where('prod_sol_by', $this->technicianFilter)
-                  ->orWhere('prod_upper_by', $this->technicianFilter)
-                  ->orWhere('prod_cleaning_by', $this->technicianFilter);
+                $q->where('prod_upper_by', $this->technicianFilter)
+                  ->orWhere('prod_sol_by', $this->technicianFilter)
+                  ->orWhere('qc_jahit_by', $this->technicianFilter);
             });
         }
 
@@ -632,7 +634,7 @@ class StationIndex extends Component
         $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END");
         
         if ($this->activeTab !== 'review') {
-            $query->orderByRaw("CASE WHEN prod_sol_started_at IS NOT NULL OR prod_upper_started_at IS NOT NULL OR prod_cleaning_started_at IS NOT NULL THEN 0 ELSE 1 END");
+            $query->orderByRaw("CASE WHEN prod_upper_started_at IS NOT NULL OR prod_sol_started_at IS NOT NULL OR qc_jahit_started_at IS NOT NULL THEN 0 ELSE 1 END");
         }
 
         // 2. Then by Priority
