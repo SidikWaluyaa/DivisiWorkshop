@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-12" x-data="{ fullImage: null, quickInfoModal: null }">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-12" x-data="{ fullImage: null }">
     {{-- Top Header Section --}}
     <div class="bg-white dark:bg-gray-800 p-5 sm:p-7 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="space-y-1">
@@ -16,7 +16,7 @@
                 Verifikasi Bukti Bayar Customer
             </h1>
             <p class="text-xs text-slate-500 dark:text-gray-400 max-w-xl">
-                Validasi dan sinkronisasi pembayaran mandiri yang diunggah customer melalui scan QR Code Invoice.
+                Validasi dan sinkronisasi pembayaran mandiri customer, pilih tipe pembayaran (DP, Pelunasan, dll) untuk update status Invoice otomatis.
             </p>
         </div>
 
@@ -48,7 +48,7 @@
             </div>
             <div class="mt-2 text-[10px] text-slate-400 flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full {{ $pendingCount > 0 ? 'bg-[#FFC232] animate-ping' : 'bg-slate-300' }}"></span>
-                <span>{{ $pendingCount > 0 ? 'Perlu tindakan approval' : 'Semua antrean beres' }}</span>
+                <span>{{ $pendingCount > 0 ? 'Pilih tipe bayar & setujui' : 'Semua antrean beres' }}</span>
             </div>
         </div>
 
@@ -68,7 +68,7 @@
                 <span class="text-[10px] font-bold text-[#22AF85] uppercase">Tercatat</span>
             </div>
             <div class="mt-2 text-[10px] text-slate-400 flex items-center gap-1">
-                <span>Saldo Invoice otomatis diperbarui</span>
+                <span>Saldo Invoice otomatis terpotong</span>
             </div>
         </div>
 
@@ -134,7 +134,7 @@
         <div class="relative w-full sm:w-80">
             <input type="text" 
                    wire:model.live.debounce.300ms="search"
-                   placeholder="Cari Invoice, SPK, Customer..."
+                   placeholder="Cari Invoice, SPK, Customer, No HP..."
                    class="w-full text-xs bg-[#F8FAFC] dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl pl-9 pr-4 py-2.5 text-slate-900 dark:text-gray-200 font-medium focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] outline-none transition-all placeholder:text-slate-400">
             <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </div>
@@ -175,9 +175,17 @@
                             @else
                                 <span class="font-black text-slate-900 dark:text-white text-sm uppercase">{{ $pay->spk_number_snapshot }}</span>
                             @endif
-                            <span class="text-[10px] text-slate-500 dark:text-gray-400 block font-mono">
-                                {{ $pay->customer_name_snapshot ?? ($pay->invoice->customer->name ?? 'N/A') }}
-                            </span>
+                            <div class="flex items-center gap-1.5 mt-0.5">
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    {{ $pay->customer_name_snapshot ?? ($pay->invoice->customer->name ?? 'N/A') }}
+                                </span>
+                                @if($phone = ($pay->customer_phone_snapshot ?? ($pay->invoice->customer->phone ?? null)))
+                                    <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $phone)) }}" target="_blank"
+                                       class="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-mono font-bold hover:underline">
+                                        WA ↗
+                                    </a>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
@@ -199,15 +207,30 @@
                     </div>
                 </div>
 
+                {{-- Shoe Items Breakdown --}}
+                @if($pay->invoice && $pay->invoice->workOrders->isNotEmpty())
+                    <div class="bg-slate-50 dark:bg-gray-750 p-2.5 rounded-2xl border border-slate-200/60 dark:border-gray-700 text-xs space-y-1">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Sepatu &amp; SPK:</span>
+                        <div class="space-y-1 max-h-24 overflow-y-auto">
+                            @foreach($pay->invoice->workOrders as $wo)
+                                <div class="flex items-center justify-between text-[11px]">
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ $wo->shoe_brand }} {{ $wo->shoe_type }}</span>
+                                    <span class="font-mono text-[10px] text-slate-500 bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded border">{{ $wo->spk_number }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Financial & Transfer Details --}}
                 <div class="grid grid-cols-2 gap-2 bg-[#F8FAFC] dark:bg-gray-900/60 p-3.5 rounded-2xl border border-slate-200/60 dark:border-gray-700 text-xs">
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nominal Transfer</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nominal Ditransfer</span>
                         <span class="font-black text-[#22AF85] font-mono text-sm block">
                             Rp {{ number_format($pay->amount_total, 0, ',', '.') }}
                         </span>
-                        <span class="text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase mt-0.5 inline-block">
-                            Via {{ $pay->payment_method }}
+                        <span class="text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase mt-0.5 inline-block bg-slate-100 px-1.5 py-0.5 rounded">
+                            Bank {{ $pay->payment_method }}
                         </span>
                     </div>
 
@@ -226,7 +249,39 @@
                     </div>
                 </div>
 
-                {{-- Notes or Customer Input --}}
+                {{-- Tipe Pembayaran Selector / Badge --}}
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        Tipe Pembayaran
+                    </label>
+                    @if(!$pay->is_verified && !str_contains($pay->notes, '[DITOLAK FINANCE'))
+                        <select wire:model="selectedTypes.{{ $pay->id }}" 
+                                class="w-full px-3 py-2 bg-white dark:bg-gray-900 border-2 border-emerald-500/40 rounded-xl text-xs font-black text-slate-800 dark:text-white focus:ring-2 focus:ring-[#22AF85] focus:border-[#22AF85] outline-none">
+                            <option value="BEFORE">DP / Pencicilan</option>
+                            <option value="AFTER">Pelunasan Pesanan</option>
+                            <option value="TAMBAH_JASA">Tambah Jasa</option>
+                            <option value="LUNAS_AWAL">Lunas Awal</option>
+                            <option value="ONGKIR">Pembayaran Ongkir</option>
+                            <option value="OTO">Pembayaran OTO</option>
+                        </select>
+                    @else
+                        @php
+                            $typeNames = [
+                                'BEFORE'      => 'DP / Pencicilan',
+                                'AFTER'       => 'Pelunasan Pesanan',
+                                'TAMBAH_JASA' => 'Tambah Jasa',
+                                'LUNAS_AWAL'  => 'Lunas Awal',
+                                'ONGKIR'      => 'Pembayaran Ongkir',
+                                'OTO'         => 'Pembayaran OTO',
+                            ];
+                        @endphp
+                        <span class="px-2.5 py-1 bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-300 rounded-lg text-xs font-black uppercase inline-block">
+                            {{ $typeNames[$pay->type] ?? ($pay->type ?: 'Pembayaran') }}
+                        </span>
+                    @endif
+                </div>
+
+                {{-- Notes / Catatan Customer --}}
                 @if($pay->notes)
                     <div class="text-[11px] text-slate-600 dark:text-gray-300 bg-slate-50 dark:bg-gray-750 p-2.5 rounded-xl border border-slate-200/60 dark:border-gray-700 italic">
                         "{{ $pay->notes }}"
@@ -247,7 +302,7 @@
                                 ✕ Tolak
                             </button>
                             <button type="button" 
-                                    wire:click="approvePayment({{ $pay->id }})"
+                                    wire:click="openApproveModal({{ $pay->id }})"
                                     class="px-4 py-2 bg-[#22AF85] hover:bg-emerald-600 text-white text-xs font-black uppercase rounded-xl shadow-md shadow-emerald-500/20 transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 <span>Terima</span>
@@ -273,13 +328,13 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-[#F8FAFC] dark:bg-gray-900/60 border-b border-slate-100 dark:border-gray-700 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-gray-400">
-                        <th class="py-4 px-4 text-center w-12">No</th>
-                        <th class="py-4 px-4">Bukti Transfer</th>
-                        <th class="py-4 px-4">Invoice & SPK</th>
+                        <th class="py-4 px-3 text-center w-10">No</th>
+                        <th class="py-4 px-3">Bukti Transfer</th>
+                        <th class="py-4 px-4">Invoice &amp; Item SPK</th>
                         <th class="py-4 px-4">Pelanggan</th>
-                        <th class="py-4 px-4">Nominal Transfer</th>
-                        <th class="py-4 px-4">Rekening Tujuan</th>
-                        <th class="py-4 px-4">Status & Waktu</th>
+                        <th class="py-4 px-4">Nominal &amp; Tagihan</th>
+                        <th class="py-4 px-4">Tipe Pembayaran</th>
+                        <th class="py-4 px-3">Rekening &amp; Waktu</th>
                         <th class="py-4 px-4 text-right">Aksi Verifikasi</th>
                     </tr>
                 </thead>
@@ -287,12 +342,12 @@
                     @forelse($payments as $index => $pay)
                         <tr class="hover:bg-[#F8FAFC]/80 dark:hover:bg-gray-750/50 transition-colors">
                             {{-- No --}}
-                            <td class="py-4 px-4 text-center font-bold text-slate-400">
+                            <td class="py-4 px-3 text-center font-bold text-slate-400">
                                 {{ $payments->firstItem() + $index }}
                             </td>
 
                             {{-- Bukti Struk Thumbnail --}}
-                            <td class="py-4 px-4">
+                            <td class="py-4 px-3">
                                 @if($pay->proof_image)
                                     <div class="relative group cursor-pointer w-16 h-16 rounded-2xl overflow-hidden border border-slate-200 dark:border-gray-700 shadow-xs"
                                          @click="fullImage = '{{ Storage::url($pay->proof_image) }}'">
@@ -306,67 +361,94 @@
                                 @endif
                             </td>
 
-                            {{-- Invoice & SPK --}}
-                            <td class="py-4 px-4 space-y-1">
+                            {{-- Invoice & Item SPK --}}
+                            <td class="py-4 px-4 space-y-1 max-w-[200px]">
                                 @if($pay->invoice)
                                     <a href="{{ route('finance.invoices.show', $pay->invoice->id) }}" target="_blank"
                                        class="font-black text-[#22AF85] hover:underline uppercase block text-xs tracking-tight">
                                         {{ $pay->invoice->invoice_number }} ↗
                                     </a>
-                                    <span class="text-[10px] text-slate-500 dark:text-gray-400 block font-mono truncate max-w-[160px]">
-                                        {{ $pay->spk_number_snapshot }}
-                                    </span>
+                                    @if($pay->invoice->workOrders->isNotEmpty())
+                                        <div class="space-y-0.5">
+                                            @foreach($pay->invoice->workOrders->take(2) as $wo)
+                                                <div class="text-[10px] text-slate-600 dark:text-slate-300 truncate">
+                                                    • <span class="font-bold">{{ $wo->shoe_brand }}</span> ({{ $wo->spk_number }})
+                                                </div>
+                                            @endforeach
+                                            @if($pay->invoice->workOrders->count() > 2)
+                                                <span class="text-[9px] text-slate-400 italic">+{{ $pay->invoice->workOrders->count() - 2 }} item lainnya</span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 @else
                                     <span class="font-bold text-slate-800 dark:text-gray-200">{{ $pay->spk_number_snapshot }}</span>
                                 @endif
                             </td>
 
-                            {{-- Pelanggan --}}
-                            <td class="py-4 px-4">
+                            {{-- Pelanggan & WA --}}
+                            <td class="py-4 px-4 space-y-1">
                                 <span class="font-black text-slate-900 dark:text-gray-200 block">
                                     {{ $pay->customer_name_snapshot ?? ($pay->invoice->customer->name ?? '-') }}
                                 </span>
-                                <span class="text-[10px] text-slate-400 font-mono block">
-                                    {{ $pay->customer_phone_snapshot ?? ($pay->invoice->customer->phone ?? '-') }}
-                                </span>
+                                @if($phone = ($pay->customer_phone_snapshot ?? ($pay->invoice->customer->phone ?? null)))
+                                    <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $phone)) }}" target="_blank"
+                                       class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold hover:underline flex items-center gap-1">
+                                        <span>💬 {{ $phone }}</span>
+                                    </a>
+                                @endif
                             </td>
 
-                            {{-- Nominal --}}
-                            <td class="py-4 px-4">
+                            {{-- Nominal & Sisa Tagihan --}}
+                            <td class="py-4 px-4 space-y-0.5">
                                 <span class="font-black text-[#22AF85] text-sm font-mono block">
                                     Rp {{ number_format($pay->amount_total, 0, ',', '.') }}
                                 </span>
                                 @if($pay->invoice)
-                                    <span class="text-[10px] text-slate-400 block">
+                                    <span class="text-[10px] text-slate-400 block font-mono">
                                         Total: Rp {{ number_format($pay->invoice->total_amount, 0, ',', '.') }}
+                                    </span>
+                                    <span class="text-[9px] font-bold text-amber-700 dark:text-amber-400 block font-mono">
+                                        Sisa: Rp {{ number_format(max(0, $pay->invoice->total_amount - $pay->invoice->paid_amount), 0, ',', '.') }}
                                     </span>
                                 @endif
                             </td>
 
-                            {{-- Rekening Tujuan --}}
+                            {{-- Tipe Pembayaran Dropdown / Badge --}}
                             <td class="py-4 px-4">
-                                <span class="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase 
+                                @if(!$pay->is_verified && !str_contains($pay->notes, '[DITOLAK FINANCE'))
+                                    <select wire:model="selectedTypes.{{ $pay->id }}" 
+                                            class="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-600 rounded-xl text-xs font-black text-slate-800 dark:text-white focus:ring-2 focus:ring-[#22AF85] focus:border-[#22AF85] outline-none">
+                                        <option value="BEFORE">DP / Pencicilan</option>
+                                        <option value="AFTER">Pelunasan Pesanan</option>
+                                        <option value="TAMBAH_JASA">Tambah Jasa</option>
+                                        <option value="LUNAS_AWAL">Lunas Awal</option>
+                                        <option value="ONGKIR">Pembayaran Ongkir</option>
+                                        <option value="OTO">Pembayaran OTO</option>
+                                    </select>
+                                @else
+                                    @php
+                                        $typeNames = [
+                                            'BEFORE'      => 'DP / Pencicilan',
+                                            'AFTER'       => 'Pelunasan Pesanan',
+                                            'TAMBAH_JASA' => 'Tambah Jasa',
+                                            'LUNAS_AWAL'  => 'Lunas Awal',
+                                            'ONGKIR'      => 'Pembayaran Ongkir',
+                                            'OTO'         => 'Pembayaran OTO',
+                                        ];
+                                    @endphp
+                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-300 rounded-lg text-xs font-black uppercase inline-block">
+                                        {{ $typeNames[$pay->type] ?? ($pay->type ?: 'Pembayaran') }}
+                                    </span>
+                                @endif
+                            </td>
+
+                            {{-- Rekening & Waktu --}}
+                            <td class="py-4 px-3 space-y-1">
+                                <span class="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase block w-fit
                                       {{ $pay->payment_method === 'BCA' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' }}">
                                     {{ $pay->payment_method }}
                                 </span>
-                            </td>
-
-                            {{-- Status & Waktu --}}
-                            <td class="py-4 px-4 space-y-1">
-                                @if(str_contains($pay->notes, '[DITOLAK FINANCE'))
-                                    <span class="px-2.5 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 rounded-full text-[10px] font-black uppercase block w-fit">
-                                        Ditolak
-                                    </span>
-                                @elseif($pay->is_verified)
-                                    <span class="px-2.5 py-0.5 bg-emerald-100 text-[#22AF85] dark:bg-emerald-950 dark:text-emerald-300 rounded-full text-[10px] font-black uppercase block w-fit">
-                                        ✓ Lolos
-                                    </span>
-                                @else
-                                    <span class="px-2.5 py-0.5 bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 rounded-full text-[10px] font-black uppercase animate-pulse block w-fit">
-                                        Pending
-                                    </span>
-                                @endif
-                                <span class="text-[10px] text-slate-400 block">
+                                <span class="text-[10px] text-slate-400 block font-mono">
                                     {{ $pay->paid_at ? $pay->paid_at->format('d/m/Y H:i') : '-' }} WIB
                                 </span>
                             </td>
@@ -376,7 +458,7 @@
                                 @if(!$pay->is_verified && !str_contains($pay->notes, '[DITOLAK FINANCE'))
                                     <div class="flex items-center justify-end gap-1.5">
                                         <button type="button" 
-                                                wire:click="approvePayment({{ $pay->id }})"
+                                                wire:click="openApproveModal({{ $pay->id }})"
                                                 class="px-3.5 py-2 bg-[#22AF85] hover:bg-emerald-600 text-white font-black text-xs uppercase rounded-xl shadow-md shadow-emerald-500/20 transition-all active:scale-95 flex items-center gap-1 cursor-pointer">
                                             ✓ Terima
                                         </button>
@@ -388,7 +470,7 @@
                                     </div>
                                 @else
                                     <span class="text-slate-400 text-[10px] italic">
-                                        {{ $pay->pic->name ?? '-' }}
+                                        {{ $pay->pic->name ?? 'Sistem' }}
                                     </span>
                                 @endif
                             </td>
@@ -435,6 +517,75 @@
             <img :src="fullImage" class="max-w-full max-h-[85vh] object-contain mx-auto">
         </div>
     </div>
+
+    {{-- Approve Modal (Review & Confirm Type) --}}
+    @if($approveModalOpen && $approvingPayment)
+        <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 dark:border-gray-700 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-gray-700 pb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-xl bg-emerald-100 text-[#22AF85] flex items-center justify-center font-bold text-xs">✓</div>
+                        <h3 class="font-black text-sm uppercase tracking-wider text-slate-900 dark:text-white">Konfirmasi Terima Pembayaran</h3>
+                    </div>
+                    <button type="button" wire:click="closeApproveModal" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+                </div>
+
+                {{-- Summary Box --}}
+                <div class="bg-[#F8FAFC] dark:bg-gray-900/60 p-4 rounded-2xl border border-slate-200/60 space-y-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Nomor Invoice:</span>
+                        <span class="font-black text-slate-900 dark:text-white font-mono">{{ $approvingPayment->invoice->invoice_number ?? $approvingPayment->spk_number_snapshot }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Nama Pelanggan:</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $approvingPayment->customer_name_snapshot ?? ($approvingPayment->invoice->customer->name ?? '-') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Nominal Transfer:</span>
+                        <span class="font-black text-[#22AF85] text-sm font-mono">Rp {{ number_format($approvingPayment->amount_total, 0, ',', '.') }}</span>
+                    </div>
+                    @if($approvingPayment->invoice)
+                        <div class="flex justify-between border-t pt-1.5 border-slate-200/60">
+                            <span class="text-slate-500">Total Tagihan:</span>
+                            <span class="font-bold font-mono">Rp {{ number_format($approvingPayment->invoice->total_amount, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Sisa Tagihan Setelah Ini:</span>
+                            <span class="font-black text-[#B45309] font-mono">
+                                Rp {{ number_format(max(0, $approvingPayment->invoice->total_amount - ($approvingPayment->invoice->paid_amount + $approvingPayment->amount_total)), 0, ',', '.') }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Tipe Pembayaran Selector --}}
+                <div class="space-y-2">
+                    <label class="block text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                        Pilih Tipe Pembayaran <span class="text-red-500">*</span>
+                    </label>
+                    <select wire:model="approvePaymentType" 
+                            class="w-full px-4 py-3 bg-white dark:bg-gray-900 border-2 border-emerald-500/50 rounded-2xl text-xs font-black text-slate-800 dark:text-white focus:ring-2 focus:ring-[#22AF85] outline-none">
+                        <option value="BEFORE">DP / Pencicilan</option>
+                        <option value="AFTER">Pelunasan Pesanan</option>
+                        <option value="TAMBAH_JASA">Tambah Jasa</option>
+                        <option value="LUNAS_AWAL">Lunas Awal</option>
+                        <option value="ONGKIR">Pembayaran Ongkir</option>
+                        <option value="OTO">Pembayaran OTO</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" wire:click="closeApproveModal" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition-all">
+                        Batal
+                    </button>
+                    <button type="button" wire:click="confirmApproveFromModal" class="px-5 py-2.5 bg-[#22AF85] hover:bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-md shadow-emerald-500/20 transition-all active:scale-95 cursor-pointer flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Konfirmasi Terima</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     {{-- Reject Reason Modal --}}
     @if($rejectModalOpen)

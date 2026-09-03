@@ -3,6 +3,7 @@
 namespace App\Livewire\Finance;
 
 use App\Models\Invoice;
+use App\Models\InvoicePayment;
 use App\Models\OrderPayment;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
@@ -15,9 +16,19 @@ class PaymentVerificationIndex extends Component
 {
     use WithPagination;
 
-    public $activeTab = 'pending'; // 'pending', 'verified', 'all'
+    public $activeTab = 'pending'; // 'pending', 'verified', 'rejected'
     public $search = '';
     public $selectedProofImage = null;
+    
+    // Payment Types selection per payment ID: [payment_id => 'BEFORE'|'AFTER'|...]
+    public $selectedTypes = [];
+
+    // Approval Modal State (for reviewing details before confirming)
+    public $approveModalOpen = false;
+    public $approvingPayment = null;
+    public $approvePaymentType = 'BEFORE';
+
+    // Reject Modal State
     public $rejectModalOpen = false;
     public $rejectPaymentId = null;
     public $rejectReason = '';
@@ -48,6 +59,35 @@ class PaymentVerificationIndex extends Component
         $this->selectedProofImage = null;
     }
 
+    public function openApproveModal($paymentId)
+    {
+        $payment = OrderPayment::with(['invoice.customer', 'invoice.workOrders.workOrderServices.service'])->findOrFail($paymentId);
+        $this->approvingPayment = $payment;
+
+        // Auto determine recommended type
+        if ($payment->invoice) {
+            if ($payment->invoice->paid_amount == 0) {
+                if ($payment->amount_total >= $payment->invoice->total_amount) {
+                    $this->approvePaymentType = 'LUNAS_AWAL';
+                } else {
+                    $this->approvePaymentType = 'BEFORE'; // DP / Pencicilan
+                }
+            } else {
+                $this->approvePaymentType = 'AFTER'; // Pelunasan
+            }
+        } else {
+            $this->approvePaymentType = $payment->type ?? 'BEFORE';
+        }
+
+        $this->approveModalOpen = true;
+    }
+
+    public function closeApproveModal()
+    {
+        $this->approveModalOpen = false;
+        $this->approvingPayment = null;
+    }
+
     public function openRejectModal($paymentId)
     {
         $this->rejectPaymentId = $paymentId;
@@ -62,19 +102,43 @@ class PaymentVerificationIndex extends Component
         $this->rejectModalOpen = false;
     }
 
-    public function approvePayment($paymentId)
+    public function approvePaymentDirect($paymentId, $paymentType = null)
+    {
+        $type = $paymentType ?: ($this->selectedTypes[$paymentId] ?? 'BEFORE');
+        $this->processApproval($paymentId, $type);
+    }
+
+    public function confirmApproveFromModal()
+    {
+        if (!$this->approvingPayment) return;
+        $this->processApproval($this->approvingPayment->id, $this->approvePaymentType);
+        $this->closeApproveModal();
+    }
+
+    private function processApproval($paymentId, $paymentType)
     {
         try {
-            $payment = OrderPayment::with(['invoice', 'workOrder'])->findOrFail($paymentId);
+            $payment = OrderPayment::with(['invoice.customer', 'invoice.workOrders'])->findOrFail($paymentId);
 
             if ($payment->is_verified) {
                 $this->dispatch('swal:toast', icon: 'info', title: 'Pembayaran ini sudah diverifikasi sebelumnya.');
                 return;
             }
 
+            $typeLabel = match($paymentType) {
+                'BEFORE'      => 'DP / Pencicilan',
+                'AFTER'       => 'Pelunasan Pesanan',
+                'TAMBAH_JASA' => 'Tambah Jasa',
+                'LUNAS_AWAL'  => 'Lunas Awal',
+                'ONGKIR'      => 'Pembayaran Ongkir',
+                'OTO'         => 'Pembayaran OTO',
+                default       => $paymentType
+            };
+
             $payment->is_verified = true;
+            $payment->type = $paymentType;
             $payment->pic_id = Auth::id();
-            $payment->notes = ($payment->notes ? $payment->notes . ' ' : '') . '[Diverifikasi oleh ' . (Auth::user()->name ?? 'Finance') . ' pada ' . now()->format('d/m/Y H:i') . ']';
+            $payment->notes = ($payment->notes ? $payment->notes . ' ' : '') . "[Diverifikasi sbg {$typeLabel} oleh " . (Auth::user()->name ?? 'Finance') . ' pada ' . now()->format('d/m/Y H:i') . ']';
             $payment->save();
 
             // Update Invoice Balance & Status
@@ -82,25 +146,45 @@ class PaymentVerificationIndex extends Component
                 $invoice = $payment->invoice;
                 $invoice->paid_amount = (float)$invoice->paid_amount + (float)$payment->amount_total;
 
-                if ($invoice->paid_amount >= $invoice->total_amount) {
-                    $invoice->status = 'Lunas';
+                if ($invoice->paid_amount >= $invoice->total_amount || in_array($paymentType, ['LUNAS_AWAL', 'AFTER'])) {
+                    if ($invoice->paid_amount >= $invoice->total_amount) {
+                        $invoice->status = 'Lunas';
+                    } else {
+                        $invoice->status = 'DP/Cicil';
+                    }
                 } elseif ($invoice->paid_amount > 0) {
                     $invoice->status = 'DP/Cicil';
                 }
                 $invoice->save();
 
-                // Audit Log on work orders
+                // Record in InvoicePayment (if model exists)
+                try {
+                    InvoicePayment::create([
+                        'invoice_id'     => $invoice->id,
+                        'payment_type'   => $paymentType,
+                        'amount_total'   => $payment->amount_total,
+                        'payment_method' => $payment->payment_method,
+                        'paid_at'        => $payment->paid_at ?? now(),
+                        'pic_id'         => Auth::id(),
+                        'notes'          => $payment->notes,
+                        'proof_image'    => $payment->proof_image,
+                    ]);
+                } catch (\Throwable $invPayErr) {
+                    // Ignore if already logged or table differ
+                }
+
+                // Audit Log on associated work orders
                 foreach ($invoice->workOrders as $wo) {
                     $wo->logs()->create([
                         'user_id'     => Auth::id(),
                         'step'        => 'PAYMENT',
                         'action'      => 'PAYMENT_VERIFIED',
-                        'description' => "Pembayaran Rp " . number_format($payment->amount_total, 0, ',', '.') . " via {$payment->payment_method} telah diverifikasi oleh " . (Auth::user()->name ?? 'Finance') . ". Status Invoice: {$invoice->status}.",
+                        'description' => "Pembayaran Rp " . number_format($payment->amount_total, 0, ',', '.') . " via {$payment->payment_method} ({$typeLabel}) diverifikasi oleh " . (Auth::user()->name ?? 'Finance') . ". Status Invoice: {$invoice->status}.",
                     ]);
                 }
             }
 
-            $this->dispatch('swal:toast', icon: 'success', title: "Pembayaran Rp " . number_format($payment->amount_total, 0, ',', '.') . " Berhasil Diverifikasi!");
+            $this->dispatch('swal:toast', icon: 'success', title: "Pembayaran Rp " . number_format($payment->amount_total, 0, ',', '.') . " ({$typeLabel}) Berhasil Diverifikasi!");
 
         } catch (\Throwable $e) {
             Log::error("Approve Payment Error (#{$paymentId}): " . $e->getMessage());
@@ -146,7 +230,7 @@ class PaymentVerificationIndex extends Component
 
     public function render()
     {
-        $query = OrderPayment::with(['invoice.customer', 'invoice.workOrders', 'pic'])
+        $query = OrderPayment::with(['invoice.customer', 'invoice.workOrders.workOrderServices.service', 'pic'])
             ->latest('paid_at');
 
         if ($this->activeTab === 'pending') {
@@ -165,6 +249,7 @@ class PaymentVerificationIndex extends Component
             $query->where(function($q) use ($search) {
                 $q->where('spk_number_snapshot', 'LIKE', "%{$search}%")
                   ->orWhere('customer_name_snapshot', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_phone_snapshot', 'LIKE', "%{$search}%")
                   ->orWhere('notes', 'LIKE', "%{$search}%")
                   ->orWhereHas('invoice', function($iq) use ($search) {
                       $iq->where('invoice_number', 'LIKE', "%{$search}%");
@@ -179,8 +264,21 @@ class PaymentVerificationIndex extends Component
         $verifiedCount = OrderPayment::where('is_verified', true)->count();
         $rejectedCount = OrderPayment::where('notes', 'LIKE', '%[DITOLAK FINANCE%')->count();
 
+        $payments = $query->paginate(15);
+
+        // Prepopulate selectedTypes for rows if empty
+        foreach ($payments as $pay) {
+            if (!isset($this->selectedTypes[$pay->id])) {
+                if ($pay->invoice && $pay->invoice->paid_amount == 0) {
+                    $this->selectedTypes[$pay->id] = ($pay->amount_total >= $pay->invoice->total_amount) ? 'LUNAS_AWAL' : 'BEFORE';
+                } else {
+                    $this->selectedTypes[$pay->id] = $pay->type ?: 'AFTER';
+                }
+            }
+        }
+
         return view('livewire.finance.payment-verification-index', [
-            'payments'      => $query->paginate(15),
+            'payments'      => $payments,
             'pendingCount'  => $pendingCount,
             'verifiedCount' => $verifiedCount,
             'rejectedCount' => $rejectedCount,
