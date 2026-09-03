@@ -203,14 +203,14 @@
                     Terima Kasih!
                 </h2>
                 <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                    Bukti pembayaran untuk Invoice <strong class="text-[#22AF85] font-mono">{{ $invoice->invoice_number }}</strong> telah berhasil diunggah dan sedang dalam antrean verifikasi tim Finance.
+                    Bukti pembayaran untuk Invoice <strong class="text-[#22AF85] font-mono">{{ $invoice?->invoice_number ?? '-' }}</strong> telah berhasil diunggah dan sedang dalam antrean verifikasi tim Finance.
                 </p>
             </div>
 
             <div class="bg-[#F8FAFC] rounded-2xl p-4 border border-slate-200/80 text-left space-y-2.5 text-xs">
                 <div class="flex justify-between items-center text-slate-500">
                     <span>Nominal Ditransfer:</span>
-                    <strong class="text-[#22AF85] text-sm font-black font-mono">Rp {{ number_format(preg_replace('/[^0-9]/', '', $amount), 0, ',', '.') }}</strong>
+                    <strong class="text-[#22AF85] text-sm font-black font-mono">Rp {{ number_format(preg_replace('/[^0-9]/', '', (string)$amount), 0, ',', '.') }}</strong>
                 </div>
                 <div class="flex justify-between items-center text-slate-500">
                     <span>Bank Tujuan:</span>
@@ -223,11 +223,13 @@
             </div>
 
             <div class="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
-                <a href="{{ url('/api/invoice_share_grouped.php?token=' . urlencode($invoice->invoice_number)) }}" target="_blank"
-                   class="w-full sm:w-auto px-6 py-3.5 bg-[#FFC232] hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                    Lihat Lembar Invoice
-                </a>
+                @if($invoice)
+                    <a href="{{ url('/api/invoice_share_grouped.php?token=' . urlencode($invoice->invoice_number)) }}" target="_blank"
+                       class="w-full sm:w-auto px-6 py-3.5 bg-[#FFC232] hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        Lihat Lembar Invoice
+                    </a>
+                @endif
                 <button type="button" wire:click="resetInvoice"
                         class="w-full sm:w-auto px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all active:scale-95">
                     Kirim Bukti Lain

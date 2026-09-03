@@ -86,6 +86,8 @@ class PaymentConfirmation extends Component
         $this->amount = '';
         $this->proof_image = null;
         $this->notes = '';
+        $this->isSubmitted = false;
+        $this->submittedPaymentId = null;
     }
 
     public function submitPayment()
