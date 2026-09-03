@@ -401,13 +401,16 @@ class PaymentVerificationIndex extends Component
 
         // Sorting
         if ($this->sortBy === 'oldest') {
-            $query->oldest('paid_at');
+            $query->orderByRaw('DATE(paid_at) ASC')->orderBy('created_at', 'asc')->orderBy('id', 'asc');
+        } elseif ($this->sortBy === 'upload_latest') {
+            $query->orderByDesc('created_at')->orderByDesc('id');
         } elseif ($this->sortBy === 'highest') {
-            $query->orderByDesc('amount_total');
+            $query->orderByDesc('amount_total')->orderByDesc('id');
         } elseif ($this->sortBy === 'lowest') {
-            $query->orderBy('amount_total');
+            $query->orderBy('amount_total', 'asc')->orderByDesc('id');
         } else {
-            $query->latest('paid_at');
+            // Default latest: Order by Tanggal Bayar DESC, lalu Waktu Konfirmasi Masuk DESC, lalu ID DESC
+            $query->orderByRaw('DATE(paid_at) DESC')->orderByDesc('created_at')->orderByDesc('id');
         }
 
         // Tab Counts (Independent of dynamic filters so tab badges remain accurate)

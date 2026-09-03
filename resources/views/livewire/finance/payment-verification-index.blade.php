@@ -255,6 +255,7 @@
                 <select wire:model.live="sortBy"
                         class="w-full text-xs bg-[#F8FAFC] dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-3 py-2.5 text-slate-800 dark:text-gray-200 font-bold focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] outline-none transition-all">
                     <option value="latest">Terbaru (Tgl Bayar)</option>
+                    <option value="upload_latest">Terbaru (Waktu Upload)</option>
                     <option value="oldest">Terlama (Tgl Bayar)</option>
                     <option value="highest">Nominal Terbesar</option>
                     <option value="lowest">Nominal Terkecil</option>
