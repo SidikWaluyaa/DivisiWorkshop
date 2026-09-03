@@ -720,7 +720,7 @@
 
                             {{-- Catatan Customer jika ada --}}
                             @if($notes)
-                                <div class="pt-2 border-t border-slate-200/60 text-[11px] text-slate-600 italic bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
+                                <div class="mt-2 text-[11px] text-slate-600 italic bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
                                     <span class="text-[9px] font-bold text-slate-400 not-italic block uppercase">Catatan Tambahan:</span>
                                     "{{ $notes }}"
                                 </div>
