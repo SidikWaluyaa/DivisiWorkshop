@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('work_orders', function (Blueprint $table) {
-            $table->timestamp('material_approved_at')->nullable()->after('status');
+            $table->string('customer_tracking_number')->nullable()->after('status');
+            $table->timestamp('customer_shipped_at')->nullable()->after('customer_tracking_number');
         });
     }
 
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('work_orders', function (Blueprint $table) {
-            $table->dropColumn('material_approved_at');
+            $table->dropColumn(['customer_tracking_number', 'customer_shipped_at']);
         });
     }
 };

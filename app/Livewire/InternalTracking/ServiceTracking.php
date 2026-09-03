@@ -68,6 +68,21 @@ class ServiceTracking extends Component
         $this->resetPage();
     }
 
+    public function exportExcel()
+    {
+        $filters = [
+            'search' => $this->search,
+            'category' => $this->category,
+            'date_start' => $this->date_start,
+            'date_end' => $this->date_end,
+        ];
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ServiceTrackingExport($filters),
+            'laporan-tracking-jasa-' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
     public function render()
     {
         // 1. Build Base Query for Filtering

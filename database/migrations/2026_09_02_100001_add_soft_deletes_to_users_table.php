@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('work_orders', function (Blueprint $table) {
-            $table->timestamp('material_approved_at')->nullable()->after('status');
+        Schema::table('users', function (Blueprint $table) {
+            $table->softDeletes()->after('updated_at');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('work_orders', function (Blueprint $table) {
-            $table->dropColumn('material_approved_at');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropSoftDeletes();
         });
     }
 };

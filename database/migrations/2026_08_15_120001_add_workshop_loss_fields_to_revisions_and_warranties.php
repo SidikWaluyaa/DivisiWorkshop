@@ -13,35 +13,19 @@ return new class extends Migration
     {
         if (Schema::hasTable('work_order_revisions')) {
             Schema::table('work_order_revisions', function (Blueprint $table) {
-                if (!Schema::hasColumn('work_order_revisions', 'loss_amount')) {
-                    $table->decimal('loss_amount', 12, 2)->nullable()->default(0.00)->after('status');
-                }
-                if (!Schema::hasColumn('work_order_revisions', 'loss_category')) {
-                    $table->string('loss_category', 50)->nullable()->after('loss_amount');
-                }
-                if (!Schema::hasColumn('work_order_revisions', 'loss_description')) {
-                    $table->text('loss_description')->nullable()->after('loss_category');
-                }
-                if (!Schema::hasColumn('work_order_revisions', 'responsible_party')) {
-                    $table->string('responsible_party', 100)->nullable()->after('loss_description');
-                }
+                $table->decimal('loss_amount', 12, 2)->nullable()->default(0.00)->after('status');
+                $table->string('loss_category', 50)->nullable()->after('loss_amount');
+                $table->text('loss_description')->nullable()->after('loss_category');
+                $table->string('responsible_party', 100)->nullable()->after('loss_description');
             });
         }
 
         if (Schema::hasTable('work_order_warranties')) {
             Schema::table('work_order_warranties', function (Blueprint $table) {
-                if (!Schema::hasColumn('work_order_warranties', 'loss_amount')) {
-                    $table->decimal('loss_amount', 12, 2)->nullable()->default(0.00)->after('status');
-                }
-                if (!Schema::hasColumn('work_order_warranties', 'loss_category')) {
-                    $table->string('loss_category', 50)->nullable()->after('loss_amount');
-                }
-                if (!Schema::hasColumn('work_order_warranties', 'loss_description')) {
-                    $table->text('loss_description')->nullable()->after('loss_category');
-                }
-                if (!Schema::hasColumn('work_order_warranties', 'responsible_party')) {
-                    $table->string('responsible_party', 100)->nullable()->after('loss_description');
-                }
+                $table->decimal('loss_amount', 12, 2)->nullable()->default(0.00)->after('status');
+                $table->string('loss_category', 50)->nullable()->after('loss_amount');
+                $table->text('loss_description')->nullable()->after('loss_category');
+                $table->string('responsible_party', 100)->nullable()->after('loss_description');
             });
         }
     }
@@ -53,27 +37,13 @@ return new class extends Migration
     {
         if (Schema::hasTable('work_order_revisions')) {
             Schema::table('work_order_revisions', function (Blueprint $table) {
-                $columns = [];
-                if (Schema::hasColumn('work_order_revisions', 'loss_amount')) $columns[] = 'loss_amount';
-                if (Schema::hasColumn('work_order_revisions', 'loss_category')) $columns[] = 'loss_category';
-                if (Schema::hasColumn('work_order_revisions', 'loss_description')) $columns[] = 'loss_description';
-                if (Schema::hasColumn('work_order_revisions', 'responsible_party')) $columns[] = 'responsible_party';
-                if (!empty($columns)) {
-                    $table->dropColumn($columns);
-                }
+                $table->dropColumn(['loss_amount', 'loss_category', 'loss_description', 'responsible_party']);
             });
         }
 
         if (Schema::hasTable('work_order_warranties')) {
             Schema::table('work_order_warranties', function (Blueprint $table) {
-                $columns = [];
-                if (Schema::hasColumn('work_order_warranties', 'loss_amount')) $columns[] = 'loss_amount';
-                if (Schema::hasColumn('work_order_warranties', 'loss_category')) $columns[] = 'loss_category';
-                if (Schema::hasColumn('work_order_warranties', 'loss_description')) $columns[] = 'loss_description';
-                if (Schema::hasColumn('work_order_warranties', 'responsible_party')) $columns[] = 'responsible_party';
-                if (!empty($columns)) {
-                    $table->dropColumn($columns);
-                }
+                $table->dropColumn(['loss_amount', 'loss_category', 'loss_description', 'responsible_party']);
             });
         }
     }

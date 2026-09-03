@@ -97,6 +97,7 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/update-shipping-address', [App\Http\Controllers\Admin\OrderController::class, 'updateShippingAddress'])->name('orders.update-shipping-address');
         Route::post('orders/{id}/update-customer-info', [App\Http\Controllers\Admin\OrderController::class, 'updateCustomerInfo'])->name('orders.update-customer-info');
         Route::post('orders/{id}/update-channel', [App\Http\Controllers\Admin\OrderController::class, 'updateChannel'])->name('orders.update-channel');
+        Route::post('orders/{id}/update-customer-tracking', [App\Http\Controllers\Admin\OrderController::class, 'updateCustomerTracking'])->name('orders.update-customer-tracking');
         Route::post('orders/{id}/update-estimation-date', [App\Http\Controllers\Admin\OrderController::class, 'updateEstimationDate'])->name('orders.update-estimation-date');
         Route::post('orders/{id}/update-warranty-info', [App\Http\Controllers\Admin\OrderController::class, 'updateWarrantyInfo'])->name('orders.update-warranty-info');
         Route::post('orders/{id}/update-spk-description', [App\Http\Controllers\Admin\OrderController::class, 'updateSpkDescription'])->name('orders.update-spk-description');
@@ -551,6 +552,7 @@ Route::middleware('auth')->group(function () {
         
         // SPK & Conversion
         Route::middleware('access:cs.spk')->group(function () {
+            Route::get('/pending-monitoring', \App\Livewire\Cs\PendingSpkMonitoring::class)->name('pending-monitoring');
             Route::get('/spk-data', [App\Http\Controllers\CsSpkController::class, 'index'])->name('spk.index');
             Route::get('/spk-data/report-pdf', [App\Http\Controllers\CsSpkController::class, 'reportPdf'])->name('spk.report-pdf');
             Route::get('/spk-data/report-excel', [App\Http\Controllers\CsSpkController::class, 'reportExcel'])->name('spk.report-excel');

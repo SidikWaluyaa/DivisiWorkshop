@@ -12,15 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('work_order_services', function (Blueprint $table) {
-            if (!Schema::hasColumn('work_order_services', 'started_at')) {
-                $table->dateTime('started_at')->nullable()->after('status');
-            }
-            if (!Schema::hasColumn('work_order_services', 'completed_at')) {
-                $table->dateTime('completed_at')->nullable()->after('started_at');
-            }
-            if (!Schema::hasColumn('work_order_services', 'actual_duration_minutes')) {
-                $table->integer('actual_duration_minutes')->nullable()->after('completed_at');
-            }
+            $table->dateTime('started_at')->nullable()->after('status');
+            $table->dateTime('completed_at')->nullable()->after('started_at');
+            $table->integer('actual_duration_minutes')->nullable()->after('completed_at');
         });
     }
 

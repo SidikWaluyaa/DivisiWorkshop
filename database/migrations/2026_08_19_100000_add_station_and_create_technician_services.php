@@ -13,11 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Add station column to users table
-        if (!Schema::hasColumn('users', 'station')) {
-            Schema::table('users', function (Blueprint $table) {
-                $table->string('station')->nullable()->after('specialization')->comment('PREPARATION, SOLING, UPPER, TREATMENT, QC');
-            });
-        }
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('station')->nullable()->after('specialization')->comment('PREPARATION, SOLING, UPPER, TREATMENT, QC');
+        });
 
         // 2. Create technician_services pivot table
         if (!Schema::hasTable('technician_services')) {
@@ -60,10 +58,8 @@ return new class extends Migration
     {
         Schema::dropIfExists('technician_services');
 
-        if (Schema::hasColumn('users', 'station')) {
-            Schema::table('users', function (Blueprint $table) {
-                $table->dropColumn('station');
-            });
-        }
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('station');
+        });
     }
 };

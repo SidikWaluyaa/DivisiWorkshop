@@ -367,7 +367,12 @@ class KpiService
                   });
             });
 
-        $totalIncomingItems = (clone $validWoQuery)->count();
+        $totalIncomingItems = WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$startDate, $endDate])
+            ->where('status', '!=', WorkOrderStatus::SPK_PENDING->value)
+            ->where('status', '!=', WorkOrderStatus::BATAL->value)
+            ->count();
+
         if ($totalIncomingItems == 0 && count($allSpkIdsGlobal) > 0) {
             $totalIncomingItems = \App\Models\CsSpkItem::whereIn('spk_id', $allSpkIdsGlobal)->count();
         }
