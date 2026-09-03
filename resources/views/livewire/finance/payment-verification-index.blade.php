@@ -779,6 +779,8 @@
                                 Rp {{ number_format(max(0, $approvingPayment->invoice->total_amount - ($approvingPayment->invoice->paid_amount + $approvingPayment->amount_total)), 0, ',', '.') }}
                             </span>
                         </div>
+                    @endif
+
                     @if($approvingPayment->notes)
                         <div class="border-t pt-2 border-slate-200/60 dark:border-gray-700">
                             <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Catatan Customer:</span>
