@@ -201,6 +201,30 @@
         </a>
         @endif
 
+        {{-- Monitoring Kiriman SPK Pending --}}
+        @if(Auth::user()->hasAccess('cs.spk') || Auth::user()->hasAccess('cs'))
+        <a href="{{ route('cs.pending-monitoring') }}" 
+           class="nav-item {{ request()->routeIs('cs.pending-monitoring') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-amber-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold">Kiriman SPK Pending</span>
+
+            @php
+                $pendingSpkCount = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SPK_PENDING)->count();
+            @endphp
+            @if($pendingSpkCount > 0)
+                <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-[11px] font-black bg-amber-500 text-white shadow-xs">
+                    {{ $pendingSpkCount }}
+                </span>
+                <span x-show="sidebarCollapsed" class="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 border border-white rounded-full"></span>
+            @endif
+
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Kiriman SPK Pending</span>
+        </a>
+        @endif
+
         {{-- Data SPK --}}
         @if(Auth::user()->hasAccess('cs.spk'))
         <a href="{{ route('cs.spk.index') }}" 
