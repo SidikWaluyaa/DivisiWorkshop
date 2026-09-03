@@ -82,6 +82,7 @@
                  });
          },
 
+         proofPreview: null,
          isCompressing: false,
          originalSizeKb: null,
          compressedSizeKb: null,
@@ -90,6 +91,8 @@
              const file = e.target.files[0];
              if (!file) return;
 
+             // Instant local preview for immediate visual feedback
+             this.proofPreview = URL.createObjectURL(file);
              this.isCompressing = true;
              this.originalSizeKb = (file.size / 1024).toFixed(0);
 
@@ -125,6 +128,8 @@
                              return;
                          }
                          this.compressedSizeKb = (blob.size / 1024).toFixed(0);
+                         this.proofPreview = URL.createObjectURL(blob);
+
                          const compressedFile = new File([blob], 'proof_' + Date.now() + '.jpg', {
                              type: 'image/jpeg',
                              lastModified: Date.now()
@@ -144,6 +149,15 @@
                  img.src = event.target.result;
              };
              reader.readAsDataURL(file);
+         },
+
+         removeProof() {
+             this.proofPreview = null;
+             this.compressedSizeKb = null;
+             this.originalSizeKb = null;
+             const input = document.getElementById('proof_file_input');
+             if (input) input.value = '';
+             @this.set('proof_image', null);
          },
 
          copyText(text) {
@@ -475,45 +489,42 @@
                     </div>
 
                     <div class="relative">
-                        <label class="flex flex-col items-center justify-center w-full min-h-[140px] border-2 border-dashed border-slate-300 hover:border-[#22AF85] rounded-2xl bg-[#F8FAFC] cursor-pointer p-4 transition-all">
-                            <template x-if="isCompressing">
-                                <div class="flex flex-col items-center justify-center space-y-2 py-4">
-                                    <svg class="animate-spin h-8 w-8 text-[#22AF85]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    <p class="text-xs font-black text-slate-800">Mengompres & Menyiapkan Foto...</p>
-                                    <p class="text-[10px] text-slate-400">Menyesuaikan resolusi agar ringan dan super cepat</p>
-                                </div>
-                            </template>
+                        <label for="proof_file_input" class="flex flex-col items-center justify-center w-full min-h-[150px] border-2 border-dashed border-slate-300 hover:border-[#22AF85] rounded-2xl bg-[#F8FAFC] cursor-pointer p-4 transition-all">
+                            {{-- STATE 1: Compress & Upload Loading --}}
+                            <div x-show="isCompressing" class="flex flex-col items-center justify-center space-y-2 py-4" style="display: none;">
+                                <svg class="animate-spin h-8 w-8 text-[#22AF85]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <p class="text-xs font-black text-slate-800">Mengompres &amp; Menyiapkan Foto...</p>
+                                <p class="text-[10px] text-slate-400">Menyesuaikan resolusi agar ringan dan super cepat</p>
+                            </div>
 
-                            <template x-if="!isCompressing">
-                                <div class="w-full">
-                                    @if ($proof_image)
-                                        <div class="flex items-center gap-4 w-full">
-                                            <img src="{{ $proof_image->temporaryUrl() }}" class="w-20 h-20 object-cover rounded-xl border border-slate-200 shadow-md">
-                                            <div class="flex-1 text-left space-y-1">
-                                                <p class="text-xs font-black text-[#22AF85] flex items-center gap-1">
-                                                    ✓ Foto Bukti Siap Dikirim
-                                                </p>
-                                                <template x-if="compressedSizeKb">
-                                                    <span class="inline-block text-[10px] font-bold text-slate-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                                                        Ukuran: <span x-text="compressedSizeKb"></span> KB (Telah Dioptimasi)
-                                                    </span>
-                                                </template>
-                                                <p class="text-[10px] text-slate-400">Klik di sini untuk mengganti foto</p>
-                                            </div>
-                                        </div>
-                                    @else
-                                        <div class="text-center space-y-2">
-                                            <div class="w-10 h-10 rounded-2xl bg-white text-[#22AF85] flex items-center justify-center mx-auto border border-slate-200 shadow-sm">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                            </div>
-                                            <p class="text-xs font-black text-slate-800">Pilih Foto atau Screenshot Struk</p>
-                                            <p class="text-[10px] text-slate-400">Otomatis dikompres agar hemat kuota &amp; upload instan</p>
-                                        </div>
-                                    @endif
+                            {{-- STATE 2: Foto Berhasil Dipilih & Ditampilkan Review --}}
+                            <div x-show="proofPreview && !isCompressing" class="w-full flex items-center gap-4" style="display: none;">
+                                <img :src="proofPreview" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-2xl border-2 border-[#22AF85] shadow-md flex-shrink-0">
+                                <div class="flex-1 text-left space-y-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-[#22AF85] animate-ping"></span>
+                                        <p class="text-xs font-black text-[#22AF85]">Foto Bukti Siap Dikirim ✓</p>
+                                    </div>
+                                    <div x-show="compressedSizeKb" class="inline-block text-[10px] font-bold text-slate-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-mono">
+                                        Ukuran: <span x-text="compressedSizeKb"></span> KB <span class="text-slate-400 font-normal">(Dioptimasi)</span>
+                                    </div>
+                                    <div class="pt-1 flex items-center gap-3">
+                                        <span class="text-[10px] font-bold text-slate-600 hover:text-slate-900 underline">Ganti Foto</span>
+                                        <button type="button" @click.stop.prevent="removeProof()" class="text-[10px] font-bold text-rose-500 hover:text-rose-700">✕ Hapus</button>
+                                    </div>
                                 </div>
-                            </template>
+                            </div>
 
-                            <input type="file" @change="compressAndUploadProof($event)" accept="image/*" class="hidden">
+                            {{-- STATE 3: Belum Ada Foto --}}
+                            <div x-show="!proofPreview && !isCompressing" class="text-center space-y-2">
+                                <div class="w-12 h-12 rounded-2xl bg-white text-[#22AF85] flex items-center justify-center mx-auto border border-slate-200 shadow-sm">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                </div>
+                                <p class="text-xs font-black text-slate-800">Pilih Foto atau Screenshot Struk</p>
+                                <p class="text-[10px] text-slate-400">Otomatis dikompres agar hemat kuota &amp; upload instan</p>
+                            </div>
+
+                            <input type="file" id="proof_file_input" @change="compressAndUploadProof($event)" accept="image/*" class="hidden">
                         </label>
                     </div>
                     @error('proof_image') <span class="text-red-500 text-xs font-bold">{{ $message }}</span> @enderror
