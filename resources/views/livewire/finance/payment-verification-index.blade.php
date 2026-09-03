@@ -636,6 +636,8 @@
                 </div>
             </div>
         </div>
+    @endif
+
     {{-- Delete Confirmation Modal --}}
     @if($deleteModalOpen && $deletingPayment)
         <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
