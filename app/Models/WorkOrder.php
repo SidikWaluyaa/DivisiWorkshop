@@ -596,17 +596,16 @@ class WorkOrder extends Model
                 $q->whereDoesntHave('workOrderServices')
                   ->orWhere(function ($sq) {
                       $sq->where(function ($ssq) {
-                            $ssq->withoutServiceCategory(self::CAT_SOL)
-                                ->orWhereNotNull('prod_sol_completed_at');
-                        })
-                        ->where(function ($ssq) {
                             $ssq->withoutServiceCategory(self::CAT_UPPER)
                                 ->orWhereNotNull('prod_upper_completed_at');
                         })
                         ->where(function ($ssq) {
-                            $ssq->whereDoesntHave('workOrderServices', function($tsq) {
-                                $tsq->whereIn('category_name', [self::CAT_REPAINT, 'Cleaning', 'Treatment', 'Whitening']);
-                            })->orWhereNotNull('prod_cleaning_completed_at');
+                            $ssq->withoutServiceCategory(self::CAT_SOL)
+                                ->orWhereNotNull('prod_sol_completed_at');
+                        })
+                        ->where(function ($ssq) {
+                            $ssq->withoutServiceCategory([self::CAT_SOL, self::CAT_UPPER, 'Jahit'])
+                                ->orWhereNotNull('qc_jahit_completed_at');
                         });
                   });
             });
@@ -662,8 +661,9 @@ class WorkOrder extends Model
                       $sq->whereNotNull('qc_cleanup_completed_at')
                          ->whereNotNull('qc_final_completed_at')
                          ->where(function ($ssq) {
-                             $ssq->withoutServiceCategory(self::CAT_SOL)
-                                 ->orWhereNotNull('qc_jahit_completed_at');
+                             $ssq->whereDoesntHave('workOrderServices', function($tsq) {
+                                 $tsq->whereIn('category_name', [self::CAT_REPAINT, 'Cleaning', 'Treatment', 'Whitening']);
+                             })->orWhereNotNull('prod_cleaning_completed_at');
                          });
                   });
             });
@@ -834,12 +834,17 @@ class WorkOrder extends Model
         return $this->hasServiceCategory([self::CAT_REPAINT, 'Cleaning', 'Treatment', 'Whitening']);
     }
 
+    public function getNeedsProdJahitAttribute(): bool
+    {
+        return $this->hasServiceCategory([self::CAT_SOL, 'Sol', 'Reparasi Sol', self::CAT_UPPER, 'Upper', 'Reparasi Upper', 'Jahit']);
+    }
+
     public function getMissingProductionTasksAttribute(): string
     {
         $missing = [];
-        if ($this->getNeedsProdSolAttribute() && is_null($this->prod_sol_completed_at)) $missing[] = 'Sol';
         if ($this->getNeedsProdUpperAttribute() && is_null($this->prod_upper_completed_at)) $missing[] = 'Upper';
-        if ($this->getNeedsProdTreatmentAttribute() && is_null($this->prod_cleaning_completed_at)) $missing[] = 'Cleaning/Treatment';
+        if ($this->getNeedsProdSolAttribute() && is_null($this->prod_sol_completed_at)) $missing[] = 'Sol';
+        if ($this->getNeedsProdJahitAttribute() && is_null($this->qc_jahit_completed_at)) $missing[] = 'QC Jahit';
 
         return implode(', ', $missing);
     }
@@ -857,9 +862,8 @@ class WorkOrder extends Model
     {
         $missing = [];
         
-        // 1. QC Jahit (Only if needed)
-        $needsJahit = $this->hasServiceCategory(self::CAT_SOL);
-        if ($needsJahit && is_null($this->qc_jahit_completed_at)) $missing[] = 'QC Jahit';
+        // 1. Treatment (Only if needed)
+        if ($this->getNeedsProdTreatmentAttribute() && is_null($this->prod_cleaning_completed_at)) $missing[] = 'Treatment';
 
         // 2. QC Cleanup (Mandatory)
         if (is_null($this->qc_cleanup_completed_at)) $missing[] = 'QC Cleanup';
