@@ -350,40 +350,80 @@
                 {{-- Decorative Top Accent Bar --}}
                 <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#22AF85] to-[#FFC232]"></div>
 
-                <div class="flex items-start justify-between gap-3 pt-1">
-                    <div>
-                        <span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#22AF85] text-[10px] font-black uppercase tracking-wider border border-emerald-200">
+                {{-- Invoice & Customer Header --}}
+                <div class="space-y-3 pt-1">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[#22AF85] text-[10px] font-black uppercase tracking-wider border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#22AF85]"></span>
                             {{ $invoice->status ?? 'Belum Bayar' }}
                         </span>
-                        <h2 class="text-base sm:text-lg font-black font-poppins text-slate-900 uppercase tracking-tight mt-1">
-                            {{ $invoice->invoice_number }}
-                        </h2>
-                        <p class="text-[11px] text-slate-400 font-mono">{{ $invoice->created_at?->format('d M Y, H:i') }} WIB</p>
+                        <button type="button" wire:click="resetInvoice" class="text-[11px] font-bold text-slate-500 hover:text-[#22AF85] flex items-center gap-1 transition-colors">
+                            <span>🔄</span>
+                            <span class="underline">Ganti QR</span>
+                        </button>
                     </div>
 
-                    <div class="text-right">
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Pelanggan</span>
-                        <span class="text-xs sm:text-sm font-black text-slate-900 block truncate max-w-[140px] sm:max-w-none">
-                            {{ $invoice->customer->name ?? 'N/A' }}
-                        </span>
-                        <span class="text-[10px] text-slate-400 font-mono">{{ $invoice->customer->phone ?? '' }}</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#F8FAFC] p-3.5 rounded-2xl border border-slate-200/60">
+                        <div>
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Nomor Invoice</span>
+                            <h2 class="text-base sm:text-lg font-black font-poppins text-slate-900 uppercase tracking-tight font-mono">
+                                {{ $invoice->invoice_number }}
+                            </h2>
+                            <p class="text-[10px] text-slate-400 font-mono">{{ $invoice->created_at?->format('d M Y, H:i') }} WIB</p>
+                        </div>
+                        <div class="sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200/60">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Pelanggan</span>
+                            <span class="text-xs sm:text-sm font-black text-slate-900 block truncate">
+                                {{ $invoice->customer->name ?? 'Pelanggan' }}
+                            </span>
+                            @if($invoice->customer && $invoice->customer->phone)
+                                <span class="text-[10px] text-slate-500 font-mono block">{{ $invoice->customer->phone }}</span>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
-                {{-- Shoe Items Breakdown --}}
-                <div class="space-y-1.5">
-                    <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-wider block">Daftar Item & Layanan:</span>
-                    <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                        @foreach($invoice->workOrders as $wo)
-                            <div class="bg-[#F8FAFC] rounded-2xl p-2.5 border border-slate-200/80 flex items-center justify-between text-xs">
-                                <div>
-                                    <span class="font-black text-slate-900 block">{{ $wo->shoe_brand }} {{ $wo->shoe_type }}</span>
-                                    <span class="text-[10px] text-slate-500 font-mono">{{ $wo->spk_number }}</span>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-[10px] font-bold text-[#22AF85] bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 block">
-                                        {{ $wo->workOrderServices->pluck('service.name')->filter()->join(', ') ?: 'Reparasi/Treatment' }}
+                {{-- Shoe Items Breakdown (Mobile-First Tag Layout) --}}
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-wider block">
+                            Daftar Sepatu &amp; Layanan ({{ $invoice->workOrders->count() }} Item):
+                        </span>
+                    </div>
+
+                    <div class="space-y-2.5 max-h-60 overflow-y-auto pr-0.5">
+                        @foreach($invoice->workOrders as $index => $wo)
+                            <div class="bg-[#F8FAFC] rounded-2xl p-3 border border-slate-200/80 space-y-2 hover:border-[#22AF85]/50 transition-all">
+                                {{-- Row 1: Shoe Brand, Type & SPK Badge --}}
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="font-black text-slate-900 text-xs sm:text-sm">
+                                                {{ $wo->shoe_brand }} {{ $wo->shoe_type }}
+                                            </span>
+                                            <span class="inline-block text-[9px] font-bold text-slate-600 font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                                                {{ $wo->spk_number }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <span class="flex-shrink-0 text-[10px] font-black text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-200">
+                                        #{{ $index + 1 }}
                                     </span>
+                                </div>
+
+                                {{-- Row 2: Services List as neat badges / tags --}}
+                                <div class="pt-1.5 border-t border-slate-200/60">
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Pengerjaan:</span>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @forelse($wo->workOrderServices as $wos)
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-[#147a5c] bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-lg leading-tight">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-[#22AF85] flex-shrink-0"></span>
+                                                <span>{{ $wos->service->name ?? 'Layanan' }}</span>
+                                            </span>
+                                        @empty
+                                            <span class="text-[10px] text-slate-400 italic">Reparasi / Treatment</span>
+                                        @endforelse
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -391,28 +431,25 @@
                 </div>
 
                 {{-- Financial Summary Grid --}}
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3 border-t border-slate-100 text-xs">
-                    <div class="bg-[#F8FAFC] p-2.5 rounded-2xl border border-slate-200/60">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Total Tagihan</span>
-                        <span class="font-black text-slate-900 text-xs sm:text-sm font-mono block">Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}</span>
+                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs">
+                    <div class="bg-[#F8FAFC] p-2.5 rounded-2xl border border-slate-200/60 text-center">
+                        <span class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase block tracking-tight">Total Tagihan</span>
+                        <span class="font-black text-slate-900 text-xs sm:text-sm font-mono block mt-0.5">
+                            Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}
+                        </span>
                     </div>
-                    <div class="bg-[#F8FAFC] p-2.5 rounded-2xl border border-slate-200/60">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Terbayar (DP)</span>
-                        <span class="font-black text-[#22AF85] text-xs sm:text-sm font-mono block">Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</span>
+                    <div class="bg-[#F8FAFC] p-2.5 rounded-2xl border border-slate-200/60 text-center">
+                        <span class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase block tracking-tight">Terbayar (DP)</span>
+                        <span class="font-black text-[#22AF85] text-xs sm:text-sm font-mono block mt-0.5">
+                            Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}
+                        </span>
                     </div>
-                    <div class="col-span-2 sm:col-span-1 bg-amber-50 p-2.5 rounded-2xl border border-amber-200 text-left sm:text-right">
-                        <span class="text-[9px] font-black text-amber-800 uppercase block">Sisa Tagihan</span>
-                        <span class="font-black text-[#B45309] text-xs sm:text-sm font-mono block">
+                    <div class="bg-amber-50 p-2.5 rounded-2xl border border-amber-200/80 text-center">
+                        <span class="text-[8px] sm:text-[9px] font-black text-amber-800 uppercase block tracking-tight">Sisa Tagihan</span>
+                        <span class="font-black text-[#B45309] text-xs sm:text-sm font-mono block mt-0.5">
                             Rp {{ number_format(max(0, $invoice->total_amount - $invoice->paid_amount), 0, ',', '.') }}
                         </span>
                     </div>
-                </div>
-
-                {{-- Switch / Re-scan button --}}
-                <div class="text-right pt-1">
-                    <button type="button" wire:click="resetInvoice" class="text-[11px] font-bold text-[#22AF85] hover:underline transition-colors">
-                        🔄 Ganti / Scan QR Lain
-                    </button>
                 </div>
             </div>
 
