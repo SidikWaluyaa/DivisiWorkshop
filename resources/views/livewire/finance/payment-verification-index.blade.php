@@ -1,4 +1,4 @@
-<div class="space-y-6 pb-12" x-data="{ fullImage: null, quickInfoModal: null }">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-12" x-data="{ fullImage: null, quickInfoModal: null }">
     {{-- Top Header Section --}}
     <div class="bg-white dark:bg-gray-800 p-5 sm:p-7 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="space-y-1">
