@@ -24,10 +24,11 @@
          },
 
          onAmountInput(e) {
-             let clean = e.target.value.replace(/[^0-9]/g, '');
-             this.rawAmount = clean;
-             this.formattedAmount = clean ? this.formatRupiah(clean) : '';
-         },
+            let clean = e.target.value.replace(/[^0-9]/g, '');
+            this.rawAmount = clean;
+            this.formattedAmount = clean ? this.formatRupiah(clean) : '';
+            @this.set('amount', clean);
+        },
 
          startCamera() {
              this.scanMode = 'camera';
@@ -454,7 +455,7 @@
             </div>
 
             {{-- Form Upload Bukti Pembayaran --}}
-            <form wire:submit.prevent="submitPayment" class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl shadow-slate-200/60 border border-slate-100 space-y-5">
+            <form wire:submit.prevent="openConfirmModal" class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl shadow-slate-200/60 border border-slate-100 space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
                     <div class="flex items-center gap-2">
                         <span class="flex h-6 w-6 rounded-full bg-[#22AF85] text-white items-center justify-center text-xs font-black">2</span>
@@ -491,7 +492,7 @@
                         </div>
                         <div class="relative">
                             <input type="date" 
-                                   wire:model.defer="transfer_date"
+                                   wire:model="transfer_date"
                                    max="{{ date('Y-m-d') }}"
                                    class="w-full bg-[#F8FAFC] border border-slate-300 rounded-2xl py-3 px-4 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#22AF85] focus:ring-2 focus:ring-[#22AF85]/20 outline-none transition-all">
                         </div>
@@ -602,7 +603,7 @@
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Catatan Tambahan (Opsional)
                     </label>
-                    <textarea wire:model.defer="notes" 
+                    <textarea wire:model="notes" 
                               rows="2" 
                               placeholder="Misal: Pembayaran DP dari rekening a.n Budi Santoso"
                               class="w-full bg-[#F8FAFC] border border-slate-300 rounded-2xl p-3 text-xs text-slate-800 focus:border-[#22AF85] focus:ring-1 focus:ring-[#22AF85] outline-none placeholder:text-slate-400"></textarea>
