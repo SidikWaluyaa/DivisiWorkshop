@@ -117,8 +117,21 @@ class PaymentConfirmation extends Component
         }
 
         try {
-            // Store proof image
-            $path = $this->proof_image->store('payment_proofs', 'public');
+            // Compress & optimize image server-side (max 1200px, 75% quality)
+            $filename = 'proof_' . $this->invoice->invoice_number . '_' . time() . '_' . \Illuminate\Support\Str::random(6) . '.jpg';
+            $fullRelativePath = 'payment_proofs/' . $filename;
+
+            try {
+                $manager = \Intervention\Image\ImageManager::gd();
+                $img = $manager->read($this->proof_image->getRealPath());
+                $img->scaleDown(1200, 1200);
+                $encoded = $img->toJpeg(75);
+                Storage::disk('public')->put($fullRelativePath, (string) $encoded);
+                $path = $fullRelativePath;
+            } catch (\Throwable $imgErr) {
+                Log::warning("Intervention Image fallback for payment proof: " . $imgErr->getMessage());
+                $path = $this->proof_image->store('payment_proofs', 'public');
+            }
 
             $firstWorkOrder = $this->invoice->workOrders->first();
             $spkNumbers = $this->invoice->workOrders->pluck('spk_number')->filter()->join(', ');
