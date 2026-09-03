@@ -157,21 +157,23 @@ class PaymentVerificationIndex extends Component
                 }
                 $invoice->save();
 
-                // Record in InvoicePayment (if model exists)
+                // Record in InvoicePayment for Invoice Detail View synchronization
                 try {
                     InvoicePayment::create([
-                        'invoice_id'     => $invoice->id,
-                        'payment_type'   => $paymentType,
-                        'amount_total'   => $payment->amount_total,
-                        'payment_method' => $payment->payment_method,
-                        'paid_at'        => $payment->paid_at ?? now(),
-                        'pic_id'         => Auth::id(),
-                        'notes'          => $payment->notes,
-                        'proof_image'    => $payment->proof_image,
+                        'invoice_id'   => $invoice->id,
+                        'amount'       => $payment->amount_total,
+                        'payment_date' => $payment->paid_at ? \Carbon\Carbon::parse($payment->paid_at)->toDateString() : now()->toDateString(),
+                        'notes'        => $payment->notes,
+                        'verified'     => true,
+                        'type'         => $paymentType,
+                        'created_by'   => Auth::id() ?: 1,
                     ]);
                 } catch (\Throwable $invPayErr) {
-                    // Ignore if already logged or table differ
+                    Log::error("InvoicePayment creation error on verify: " . $invPayErr->getMessage());
                 }
+
+                // Synchronize invoice financials
+                $invoice->syncFinancials();
 
                 // Audit Log on associated work orders
                 foreach ($invoice->workOrders as $wo) {
