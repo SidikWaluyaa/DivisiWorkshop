@@ -285,6 +285,15 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Direct Confirmation Link --}}
+                        <div class="mt-4 pt-3 border-t border-gray-100">
+                            <a href="{{ url('/konfirmasi-pembayaran?token=' . urlencode($invoice->invoice_number)) }}" target="_blank" 
+                               class="w-full py-2.5 px-3 bg-[#22AF85] hover:bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-95 text-center">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                Upload Bukti Pembayaran
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -372,52 +381,125 @@
         </div>
     </div>
 
-    <!-- PAGE 2: APPENDIX (PHOTOS) -->
-    <!-- We check if there are any photos across all SPKs first to avoid an empty blank page -->
+    <!-- PAGE 2: APPENDIX & PAYMENT QR -->
     @php
         $hasAnyPhotos = $invoice->workOrders->contains(function($wo) {
             return $wo->warehouseBeforePhotos->isNotEmpty();
         });
+        $payPortalUrl = url('/konfirmasi-pembayaran?token=' . urlencode($invoice->invoice_number));
     @endphp
 
-    @if($hasAnyPhotos)
     <div class="invoice-paper" style="page-break-before: always; border-top: none;">
         <!-- Simple Header for Appendix -->
         <div class="bg-gray-900 min-h-[100px] w-full px-6 sm:px-10 py-8 flex flex-col justify-center">
-            <h2 class="text-white text-xl sm:text-2xl font-black italic tracking-wide">Lampiran Dokumentasi Awal</h2>
+            <h2 class="text-white text-xl sm:text-2xl font-black italic tracking-wide">Lampiran &amp; QR Pembayaran</h2>
             <p class="text-gray-400 text-xs sm:text-sm mt-1 uppercase tracking-widest">INV: {{ $invoice->invoice_number }}</p>
         </div>
 
-        <div class="content-body flex-1 px-4 sm:px-10 py-8 bg-[#F8FAFC]">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                @foreach($invoice->workOrders as $item)
-                    @php
-                        // Get the Cover Photo or the first one if no cover exists
-                        $coverPhoto = $item->warehouseBeforePhotos->where('is_spk_cover', true)->first() 
-                                   ?? $item->warehouseBeforePhotos->first();
-                    @endphp
-                    
-                    @if($coverPhoto)
-                    <!-- Photo Card -->
-                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col" style="page-break-inside: avoid;">
-                        <div class="aspect-square bg-gray-100 relative">
-                            <img src="{{ $coverPhoto->photo_url }}" alt="Before {{ $item->spk_number }}" class="w-full h-full object-cover">
-                            <!-- Overlay Badge -->
-                            <div class="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[9px] font-black tracking-wider uppercase">
-                                BEFORE
-                            </div>
-                        </div>
-                        <div class="p-4 flex flex-col items-center text-center bg-white">
-                            <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-[0.1em] mb-1 italic">{{ $item->spk_number }}</span>
-                            <span class="text-xs font-black text-gray-900 leading-tight">{{ $item->shoe_brand }}</span>
-                            <span class="text-[10px] font-bold text-gray-500 mt-0.5 truncate w-full">{{ $item->shoe_type }}</span>
-                        </div>
+        <div class="content-body flex-1 px-4 sm:px-10 py-8 bg-[#F8FAFC] space-y-8">
+            {{-- QR CODE PAYMENT CARD --}}
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-gray-100 flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
+                <div class="p-3 bg-white border-2 border-emerald-500/30 rounded-2xl shadow-md flex-shrink-0 flex flex-col items-center gap-2">
+                    <div id="invoice-qr-container" class="w-36 h-36 flex items-center justify-center bg-white">
+                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(140)->margin(1)->generate($payPortalUrl) !!}
                     </div>
-                    @endif
-                @endforeach
+                    <span class="text-[9px] font-black text-gray-500 font-mono tracking-tight">{{ $invoice->invoice_number }}</span>
+                </div>
+
+                <div class="flex-1 space-y-3 text-center sm:text-left">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-[10px] font-black uppercase tracking-wider border border-emerald-200">
+                        ⚡ Scan atau Download QR
+                    </div>
+                    <h3 class="text-base sm:text-lg font-black text-gray-900 uppercase tracking-tight">
+                        Konfirmasi Pembayaran Cepat
+                    </h3>
+                    <p class="text-xs text-gray-600 leading-relaxed max-w-xl">
+                        Scan QR Code di samping menggunakan kamera HP Anda atau download gambar QR ini untuk di-upload pada portal konfirmasi pembayaran kami. Nomor invoice dan rincian tagihan akan otomatis terdeteksi.
+                    </p>
+
+                    <div class="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                        <button type="button" 
+                                onclick="downloadInvoiceQr('{{ $invoice->invoice_number }}')"
+                                class="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95 flex items-center gap-2 cursor-pointer">
+                            <svg class="w-4 h-4 text-[#FFC232]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Download Gambar QR
+                        </button>
+
+                        <a href="{{ $payPortalUrl }}" target="_blank"
+                           class="px-5 py-2.5 bg-[#22AF85] hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            Buka Link Konfirmasi
+                        </a>
+                    </div>
+                </div>
             </div>
+
+            {{-- PHOTOS GRID (IF AVAILABLE) --}}
+            @if($hasAnyPhotos)
+                <div class="space-y-4">
+                    <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest italic">Dokumentasi Awal (Before)</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        @foreach($invoice->workOrders as $item)
+                            @php
+                                $coverPhoto = $item->warehouseBeforePhotos->where('is_spk_cover', true)->first() 
+                                           ?? $item->warehouseBeforePhotos->first();
+                            @endphp
+                            
+                            @if($coverPhoto)
+                            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col" style="page-break-inside: avoid;">
+                                <div class="aspect-square bg-gray-100 relative">
+                                    <img src="{{ $coverPhoto->photo_url }}" alt="Before {{ $item->spk_number }}" class="w-full h-full object-cover">
+                                    <div class="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[9px] font-black tracking-wider uppercase">
+                                        BEFORE
+                                    </div>
+                                </div>
+                                <div class="p-4 flex flex-col items-center text-center bg-white">
+                                    <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-[0.1em] mb-1 italic">{{ $item->spk_number }}</span>
+                                    <span class="text-xs font-black text-gray-900 leading-tight">{{ $item->shoe_brand }}</span>
+                                    <span class="text-[10px] font-bold text-gray-500 mt-0.5 truncate w-full">{{ $item->shoe_type }}</span>
+                                </div>
+                            </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
-    @endif
+
+    {{-- Script for downloading SVG/PNG QR Code --}}
+    <script>
+        function downloadInvoiceQr(invoiceNumber) {
+            const svgEl = document.querySelector('#invoice-qr-container svg');
+            if (!svgEl) {
+                alert('QR Code tidak ditemukan.');
+                return;
+            }
+
+            const svgData = new XMLSerializer().serializeToString(svgEl);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+
+            canvas.width = 400;
+            canvas.height = 400;
+
+            img.onload = function() {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 20, 20, 360, 360);
+                
+                const pngUrl = canvas.toDataURL('image/png');
+                const downloadLink = document.createElement('a');
+                downloadLink.href = pngUrl;
+                downloadLink.download = 'QR-Invoice-' + invoiceNumber + '.png';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            };
+
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        }
+    </script>
 </body>
 </html>

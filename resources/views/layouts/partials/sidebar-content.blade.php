@@ -693,6 +693,19 @@
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Audit CS</span>
         </a>
 
+        {{-- Verifikasi Bukti Transfer Customer --}}
+        <a href="{{ route('finance.payment-verifications.index') }}" 
+           class="nav-item {{ request()->routeIs('finance.payment-verifications.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-emerald-400" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-emerald-400 font-black italic">Verifikasi Bayar Customer</span>
+            @php $pendingCustCount = \App\Models\OrderPayment::where('is_verified', false)->where('notes', 'LIKE', '%[Upload Mandiri dari Customer]%')->count(); @endphp
+            <span x-show="!sidebarCollapsed && {{ $pendingCustCount }} > 0" class="ml-auto bg-emerald-500 text-white py-0.5 px-2 rounded-full text-[10px] font-black animate-pulse">{{ $pendingCustCount }}</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Verifikasi Customer</span>
+        </a>
+
         {{-- Input Pembayaran --}}
         <a href="{{ route('finance.payments.index') }}" 
            class="nav-item {{ request()->routeIs('finance.payments.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"

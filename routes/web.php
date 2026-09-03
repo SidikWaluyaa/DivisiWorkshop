@@ -41,6 +41,9 @@ Route::get('cx-issue/{spk_number}/report', [App\Http\Controllers\CxIssueControll
 // Public Warranty Claim Portal
 Route::get('/klaim-garansi', \App\Livewire\Warranty\PublicClaimPortal::class)->name('warranty.public-claim');
 
+// Public Payment Confirmation Portal (QR Upload / Scan)
+Route::get('/konfirmasi-pembayaran', \App\Livewire\Public\PaymentConfirmation::class)->name('payment.confirmation');
+
 // SleekFlow Webhook (CSRF Excluded in bootstrap/app.php)
 Route::post('/webhooks/sleekflow', [App\Http\Controllers\SleekFlowWebhookController::class, 'handle'])->name('webhooks.sleekflow');
 
@@ -621,6 +624,7 @@ Route::middleware('auth')->group(function () {
         Route::get('finance/export-excel', [App\Http\Controllers\FinanceController::class, 'exportExcel'])->name('finance.export-excel');
         Route::get('finance/cs-verification', [App\Http\Controllers\FinanceController::class, 'csVerification'])->name('finance.cs-verification');
         Route::get('finance/cs-verification/history', [App\Http\Controllers\FinanceController::class, 'csVerificationHistory'])->name('finance.cs-verification.history');
+        Route::get('finance/payment-verifications', \App\Livewire\Finance\PaymentVerificationIndex::class)->name('finance.payment-verifications.index');
         Route::get('finance/temp-fix-payments', [App\Http\Controllers\FinanceController::class, 'tempFixPayments']);
 
         // === Payment Verification System ===
