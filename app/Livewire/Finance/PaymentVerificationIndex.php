@@ -20,6 +20,14 @@ class PaymentVerificationIndex extends Component
     public $search = '';
     public $selectedProofImage = null;
     
+    // Dynamic Filter State
+    public $dateRange = 'all'; // 'all', 'today', '7d', 'this_month', 'custom'
+    public $startDate = null;
+    public $endDate = null;
+    public $filterBank = ''; // '', 'BCA', 'Mandiri', 'QRIS', 'Lainnya'
+    public $filterType = ''; // '', 'BEFORE', 'AFTER', 'TAMBAH_JASA', 'LUNAS_AWAL', 'ONGKIR', 'OTO'
+    public $sortBy = 'latest'; // 'latest', 'oldest', 'highest', 'lowest'
+
     // Payment Types selection per payment ID: [payment_id => 'BEFORE'|'AFTER'|...]
     public $selectedTypes = [];
 
@@ -39,19 +47,75 @@ class PaymentVerificationIndex extends Component
     public $deletingPayment = null;
 
     protected $queryString = [
-        'activeTab' => ['except' => 'pending'],
-        'search'    => ['except' => ''],
+        'activeTab'   => ['except' => 'pending'],
+        'search'      => ['except' => ''],
+        'dateRange'   => ['except' => 'all'],
+        'startDate'   => ['except' => null],
+        'endDate'     => ['except' => null],
+        'filterBank'  => ['except' => ''],
+        'filterType'  => ['except' => ''],
+        'sortBy'      => ['except' => 'latest'],
     ];
 
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
+    public function updatingSearch() { $this->resetPage(); }
+    public function updatingFilterBank() { $this->resetPage(); }
+    public function updatingFilterType() { $this->resetPage(); }
+    public function updatingSortBy() { $this->resetPage(); }
 
     public function setTab($tab)
     {
         $this->activeTab = $tab;
         $this->resetPage();
+    }
+
+    public function setDatePreset($preset)
+    {
+        $this->dateRange = $preset;
+        if ($preset === 'today') {
+            $this->startDate = date('Y-m-d');
+            $this->endDate = date('Y-m-d');
+        } elseif ($preset === '7d') {
+            $this->startDate = now()->subDays(6)->format('Y-m-d');
+            $this->endDate = date('Y-m-d');
+        } elseif ($preset === 'this_month') {
+            $this->startDate = now()->startOfMonth()->format('Y-m-d');
+            $this->endDate = now()->endOfMonth()->format('Y-m-d');
+        } elseif ($preset === 'all') {
+            $this->startDate = null;
+            $this->endDate = null;
+        }
+        $this->resetPage();
+    }
+
+    public function setCustomDates($start, $end)
+    {
+        $this->dateRange = 'custom';
+        $this->startDate = $start;
+        $this->endDate = $end;
+        $this->resetPage();
+    }
+
+    public function resetFilters()
+    {
+        $this->search = '';
+        $this->dateRange = 'all';
+        $this->startDate = null;
+        $this->endDate = null;
+        $this->filterBank = '';
+        $this->filterType = '';
+        $this->sortBy = 'latest';
+        $this->resetPage();
+    }
+
+    public function getActiveFilterCountProperty()
+    {
+        $count = 0;
+        if (!empty($this->search)) $count++;
+        if ($this->dateRange !== 'all') $count++;
+        if (!empty($this->filterBank)) $count++;
+        if (!empty($this->filterType)) $count++;
+        if ($this->sortBy !== 'latest') $count++;
+        return $count;
     }
 
     public function showProofModal($imageUrl)
@@ -284,9 +348,9 @@ class PaymentVerificationIndex extends Component
 
     public function render()
     {
-        $query = OrderPayment::with(['invoice.customer', 'invoice.workOrders.workOrderServices.service', 'pic'])
-            ->latest('paid_at');
+        $query = OrderPayment::with(['invoice.customer', 'invoice.workOrders.workOrderServices.service', 'pic']);
 
+        // Tab Filter
         if ($this->activeTab === 'pending') {
             $query->where(function($q) {
                 $q->where('is_verified', false)
@@ -298,6 +362,7 @@ class PaymentVerificationIndex extends Component
             $query->where('notes', 'LIKE', '%[DITOLAK FINANCE%');
         }
 
+        // Live Search
         if ($this->search) {
             $search = $this->search;
             $query->where(function($q) use ($search) {
@@ -305,18 +370,56 @@ class PaymentVerificationIndex extends Component
                   ->orWhere('customer_name_snapshot', 'LIKE', "%{$search}%")
                   ->orWhere('customer_phone_snapshot', 'LIKE', "%{$search}%")
                   ->orWhere('notes', 'LIKE', "%{$search}%")
+                  ->orWhere('amount_total', 'LIKE', "%" . preg_replace('/[^0-9]/', '', $search) . "%")
                   ->orWhereHas('invoice', function($iq) use ($search) {
                       $iq->where('invoice_number', 'LIKE', "%{$search}%");
                   });
             });
         }
 
+        // Bank / Payment Method Filter
+        if ($this->filterBank) {
+            $query->where('payment_method', $this->filterBank);
+        }
+
+        // Payment Type Filter
+        if ($this->filterType) {
+            $query->where('type', $this->filterType);
+        }
+
+        // Date Range Filter (Based on Tanggal Bayar: paid_at)
+        if ($this->startDate && $this->endDate) {
+            $query->whereBetween('paid_at', [
+                \Carbon\Carbon::parse($this->startDate)->startOfDay(),
+                \Carbon\Carbon::parse($this->endDate)->endOfDay()
+            ]);
+        } elseif ($this->startDate) {
+            $query->where('paid_at', '>=', \Carbon\Carbon::parse($this->startDate)->startOfDay());
+        } elseif ($this->endDate) {
+            $query->where('paid_at', '<=', \Carbon\Carbon::parse($this->endDate)->endOfDay());
+        }
+
+        // Sorting
+        if ($this->sortBy === 'oldest') {
+            $query->oldest('paid_at');
+        } elseif ($this->sortBy === 'highest') {
+            $query->orderByDesc('amount_total');
+        } elseif ($this->sortBy === 'lowest') {
+            $query->orderBy('amount_total');
+        } else {
+            $query->latest('paid_at');
+        }
+
+        // Tab Counts (Independent of dynamic filters so tab badges remain accurate)
         $pendingCount = OrderPayment::where(function($q) {
             $q->where('is_verified', false)->orWhereNull('is_verified');
         })->where('notes', 'NOT LIKE', '%[DITOLAK FINANCE%')->count();
 
         $verifiedCount = OrderPayment::where('is_verified', true)->count();
         $rejectedCount = OrderPayment::where('notes', 'LIKE', '%[DITOLAK FINANCE%')->count();
+
+        // Total Nominal of currently filtered items
+        $filteredTotalAmount = (clone $query)->sum('amount_total');
 
         $payments = $query->paginate(15);
 
@@ -332,10 +435,11 @@ class PaymentVerificationIndex extends Component
         }
 
         return view('livewire.finance.payment-verification-index', [
-            'payments'      => $payments,
-            'pendingCount'  => $pendingCount,
-            'verifiedCount' => $verifiedCount,
-            'rejectedCount' => $rejectedCount,
+            'payments'            => $payments,
+            'pendingCount'        => $pendingCount,
+            'verifiedCount'       => $verifiedCount,
+            'rejectedCount'       => $rejectedCount,
+            'filteredTotalAmount' => $filteredTotalAmount,
         ])->layout('layouts.app', ['title' => 'Verifikasi Pembayaran Customer — Finance']);
     }
 }

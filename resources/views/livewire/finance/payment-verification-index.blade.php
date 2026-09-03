@@ -93,50 +93,239 @@
         </div>
     </div>
 
+@assets
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<style>
+    .flatpickr-calendar {
+        border-radius: 1.25rem !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+        border: 1px solid #e2e8f0 !important;
+        font-family: inherit !important;
+    }
+    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+        background: #22AF85 !important;
+        border-color: #22AF85 !important;
+        color: #ffffff !important;
+        font-weight: bold !important;
+    }
+    .flatpickr-day.inRange {
+        background: #e6f7f2 !important;
+        border-color: #e6f7f2 !important;
+        color: #0f766e !important;
+    }
+</style>
+@endassets
+
     {{-- Filter & Search Toolbar --}}
-    <div class="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {{-- Navigation Tabs --}}
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-            <button type="button" 
-                    wire:click="setTab('pending')"
-                    class="py-2.5 px-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer flex-shrink-0
-                           {{ $activeTab === 'pending' ? 'bg-[#FFC232] text-slate-950 shadow-sm' : 'bg-slate-100 text-slate-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-slate-200' }}">
-                <span>Menunggu (Pending)</span>
-                @if($pendingCount > 0)
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $activeTab === 'pending' ? 'bg-slate-950 text-[#FFC232]' : 'bg-amber-500 text-white' }}">
-                        {{ $pendingCount }}
+    <div class="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-700 space-y-4">
+        {{-- Row 1: Navigation Tabs & Date Range Presets --}}
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 dark:border-gray-700 pb-3.5">
+            {{-- Navigation Tabs --}}
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                <button type="button" 
+                        wire:click="setTab('pending')"
+                        class="py-2 px-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer flex-shrink-0
+                               {{ $activeTab === 'pending' ? 'bg-[#FFC232] text-slate-950 shadow-sm' : 'bg-slate-100 text-slate-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-slate-200' }}">
+                    <span>Menunggu (Pending)</span>
+                    @if($pendingCount > 0)
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $activeTab === 'pending' ? 'bg-slate-950 text-[#FFC232]' : 'bg-amber-500 text-white' }}">
+                            {{ $pendingCount }}
+                        </span>
+                    @endif
+                </button>
+
+                <button type="button" 
+                        wire:click="setTab('verified')"
+                        class="py-2 px-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer flex-shrink-0
+                               {{ $activeTab === 'verified' ? 'bg-[#22AF85] text-white shadow-sm' : 'bg-slate-100 text-slate-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-slate-200' }}">
+                    <span>Terverifikasi</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $activeTab === 'verified' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-gray-600 text-slate-700 dark:text-gray-300' }}">
+                        {{ $verifiedCount }}
                     </span>
-                @endif
-            </button>
+                </button>
 
-            <button type="button" 
-                    wire:click="setTab('verified')"
-                    class="py-2.5 px-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer flex-shrink-0
-                           {{ $activeTab === 'verified' ? 'bg-[#22AF85] text-white shadow-sm' : 'bg-slate-100 text-slate-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-slate-200' }}">
-                <span>Terverifikasi</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $activeTab === 'verified' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-gray-600 text-slate-700 dark:text-gray-300' }}">
-                    {{ $verifiedCount }}
-                </span>
-            </button>
+                <button type="button" 
+                        wire:click="setTab('rejected')"
+                        class="py-2 px-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer flex-shrink-0
+                               {{ $activeTab === 'rejected' ? 'bg-rose-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-slate-200' }}">
+                    <span>Ditolak</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $activeTab === 'rejected' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-gray-600 text-slate-700 dark:text-gray-300' }}">
+                        {{ $rejectedCount }}
+                    </span>
+                </button>
+            </div>
 
-            <button type="button" 
-                    wire:click="setTab('rejected')"
-                    class="py-2.5 px-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer flex-shrink-0
-                           {{ $activeTab === 'rejected' ? 'bg-rose-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-slate-200' }}">
-                <span>Ditolak</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $activeTab === 'rejected' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-gray-600 text-slate-700 dark:text-gray-300' }}">
-                    {{ $rejectedCount }}
-                </span>
-            </button>
+            {{-- Date Range Presets & Flatpickr Picker --}}
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0"
+                 x-data="{
+                    fp: null,
+                    initPicker() {
+                        if (typeof flatpickr !== 'undefined') {
+                            this.fp = flatpickr(this.$refs.dateRangeInput, {
+                                mode: 'range',
+                                dateFormat: 'Y-m-d',
+                                altInput: true,
+                                altFormat: 'd M Y',
+                                defaultDate: @js($startDate && $endDate ? [$startDate, $endDate] : ($startDate ? [$startDate] : [])),
+                                onChange: (selectedDates, dateStr, instance) => {
+                                    if (selectedDates.length === 2) {
+                                        let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                        let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                        $wire.setCustomDates(start, end);
+                                    } else if (selectedDates.length === 0) {
+                                        $wire.setDatePreset('all');
+                                    }
+                                }
+                            });
+                        }
+                    }
+                 }" 
+                 x-init="$nextTick(() => initPicker())">
+                <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-1 hidden sm:inline-block">🗓️ Tgl Bayar:</span>
+                
+                <button type="button" wire:click="setDatePreset('all')"
+                        class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex-shrink-0 {{ $dateRange === 'all' ? 'bg-[#22AF85] text-white shadow-xs' : 'bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-200' }}">
+                    Semua
+                </button>
+                <button type="button" wire:click="setDatePreset('today')"
+                        class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex-shrink-0 {{ $dateRange === 'today' ? 'bg-[#22AF85] text-white shadow-xs' : 'bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-200' }}">
+                    Hari Ini
+                </button>
+                <button type="button" wire:click="setDatePreset('7d')"
+                        class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex-shrink-0 {{ $dateRange === '7d' ? 'bg-[#22AF85] text-white shadow-xs' : 'bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-200' }}">
+                    7 Hari
+                </button>
+                <button type="button" wire:click="setDatePreset('this_month')"
+                        class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex-shrink-0 {{ $dateRange === 'this_month' ? 'bg-[#22AF85] text-white shadow-xs' : 'bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-200' }}">
+                    Bulan Ini
+                </button>
+
+                {{-- Custom Date Range Button & Hidden Flatpickr Input --}}
+                <div class="relative flex-shrink-0">
+                    <input type="text" x-ref="dateRangeInput" class="hidden">
+                    <button type="button" @click="$refs.dateRangeInput._flatpickr ? $refs.dateRangeInput._flatpickr.open() : null"
+                            class="px-3 py-1.5 rounded-xl text-[11px] font-black transition-all flex items-center gap-1.5 border {{ $dateRange === 'custom' ? 'bg-emerald-50 border-[#22AF85] text-[#22AF85] shadow-xs' : 'bg-slate-100 dark:bg-gray-700 border-transparent text-slate-600 dark:text-gray-300 hover:bg-slate-200' }}">
+                        <span>📅</span>
+                        <span>{{ $dateRange === 'custom' && $startDate ? (\Carbon\Carbon::parse($startDate)->format('d/m') . ' - ' . \Carbon\Carbon::parse($endDate)->format('d/m/Y')) : 'Pilih Rentang...' }}</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
-        {{-- Search Input --}}
-        <div class="relative w-full sm:w-80">
-            <input type="text" 
-                   wire:model.live.debounce.300ms="search"
-                   placeholder="Cari Invoice, SPK, Customer, No HP..."
-                   class="w-full text-xs bg-[#F8FAFC] dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl pl-9 pr-4 py-2.5 text-slate-900 dark:text-gray-200 font-medium focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] outline-none transition-all placeholder:text-slate-400">
-            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        {{-- Row 2: Search, Bank Filter, Type Filter, Sort By, and Reset --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5">
+            {{-- Search Input (lg: 4 cols) --}}
+            <div class="relative lg:col-span-4">
+                <input type="text" 
+                       wire:model.live.debounce.300ms="search"
+                       placeholder="Cari Invoice, SPK, Pelanggan, HP, Nominal..."
+                       class="w-full text-xs bg-[#F8FAFC] dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl pl-9 pr-4 py-2.5 text-slate-900 dark:text-gray-200 font-medium focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] outline-none transition-all placeholder:text-slate-400">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            {{-- Bank Selector (lg: 2 cols) --}}
+            <div class="lg:col-span-2">
+                <select wire:model.live="filterBank"
+                        class="w-full text-xs bg-[#F8FAFC] dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-3 py-2.5 text-slate-800 dark:text-gray-200 font-bold focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] outline-none transition-all">
+                    <option value="">Semua Rekening</option>
+                    <option value="BCA">Bank BCA</option>
+                    <option value="Mandiri">Bank Mandiri</option>
+                    <option value="QRIS">QRIS</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+
+            {{-- Type Selector (lg: 3 cols) --}}
+            <div class="lg:col-span-3">
+                <select wire:model.live="filterType"
+                        class="w-full text-xs bg-[#F8FAFC] dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-3 py-2.5 text-slate-800 dark:text-gray-200 font-bold focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] outline-none transition-all">
+                    <option value="">Semua Tipe Pembayaran</option>
+                    <option value="BEFORE">DP / Pencicilan (BEFORE)</option>
+                    <option value="AFTER">Pelunasan Pesanan (AFTER)</option>
+                    <option value="TAMBAH_JASA">Tambah Jasa</option>
+                    <option value="LUNAS_AWAL">Lunas Awal</option>
+                    <option value="ONGKIR">Pembayaran Ongkir</option>
+                    <option value="OTO">Pembayaran OTO</option>
+                </select>
+            </div>
+
+            {{-- Sort Selector (lg: 2 cols) --}}
+            <div class="lg:col-span-2">
+                <select wire:model.live="sortBy"
+                        class="w-full text-xs bg-[#F8FAFC] dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-3 py-2.5 text-slate-800 dark:text-gray-200 font-bold focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] outline-none transition-all">
+                    <option value="latest">Terbaru (Tgl Bayar)</option>
+                    <option value="oldest">Terlama (Tgl Bayar)</option>
+                    <option value="highest">Nominal Terbesar</option>
+                    <option value="lowest">Nominal Terkecil</option>
+                </select>
+            </div>
+
+            {{-- Reset Button (lg: 1 col) --}}
+            <div class="lg:col-span-1 flex items-center">
+                @if($this->activeFilterCount > 0)
+                    <button type="button" 
+                            wire:click="resetFilters"
+                            title="Reset Semua Filter"
+                            class="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer">
+                        <span>↺</span>
+                        <span class="lg:hidden text-[11px]">Reset</span>
+                    </button>
+                @else
+                    <div class="hidden lg:flex w-full items-center justify-center text-slate-300 text-xs py-2.5 font-mono">
+                        ---
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Row 3: Filter Results Summary & Active Chips --}}
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-gray-700 text-xs">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-600 dark:text-gray-300">
+                    Menampilkan <strong class="text-slate-900 dark:text-white font-mono">{{ $payments->total() }}</strong> bukti transfer
+                </span>
+                <span class="text-slate-300 dark:text-gray-600">•</span>
+                <span class="text-slate-500 font-medium">
+                    Total Nominal: <strong class="text-[#22AF85] font-mono font-bold">Rp {{ number_format($filteredTotalAmount, 0, ',', '.') }}</strong>
+                </span>
+            </div>
+
+            @if($this->activeFilterCount > 0)
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">Filter Aktif:</span>
+                    @if($search)
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-[#22AF85] text-[10px] font-bold border border-emerald-200">
+                            Cari: "{{ $search }}"
+                            <button type="button" wire:click="$set('search', '')" class="hover:text-rose-500 font-black">✕</button>
+                        </span>
+                    @endif
+                    @if($dateRange !== 'all')
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-[#22AF85] text-[10px] font-bold border border-emerald-200">
+                            Tgl: {{ $dateRange === 'today' ? 'Hari Ini' : ($dateRange === '7d' ? '7 Hari' : ($dateRange === 'this_month' ? 'Bulan Ini' : $startDate . ' ~ ' . $endDate)) }}
+                            <button type="button" wire:click="setDatePreset('all')" class="hover:text-rose-500 font-black">✕</button>
+                        </span>
+                    @endif
+                    @if($filterBank)
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 text-[10px] font-bold border border-blue-200">
+                            Bank: {{ $filterBank }}
+                            <button type="button" wire:click="$set('filterBank', '')" class="hover:text-rose-500 font-black">✕</button>
+                        </span>
+                    @endif
+                    @if($filterType)
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200">
+                            Tipe: {{ $filterType }}
+                            <button type="button" wire:click="$set('filterType', '')" class="hover:text-rose-500 font-black">✕</button>
+                        </span>
+                    @endif
+                    @if($sortBy !== 'latest')
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-50 text-purple-800 text-[10px] font-bold border border-purple-200">
+                            Urut: {{ $sortBy }}
+                            <button type="button" wire:click="$set('sortBy', 'latest')" class="hover:text-rose-500 font-black">✕</button>
+                        </span>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 
