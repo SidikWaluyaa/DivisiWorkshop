@@ -308,6 +308,13 @@
                                 <span>Terima</span>
                             </button>
                         </div>
+                    @elseif(str_contains($pay->notes, '[DITOLAK FINANCE'))
+                        <button type="button" 
+                                wire:click="openDeleteModal({{ $pay->id }})"
+                                class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 font-black text-xs uppercase rounded-xl transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer border border-rose-200 shadow-xs">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <span>Hapus Data</span>
+                        </button>
                     @else
                         <span class="text-slate-400 text-[10px] italic">
                             PIC: {{ $pay->pic->name ?? 'Sistem' }}
@@ -468,6 +475,15 @@
                                             ✕ Tolak
                                         </button>
                                     </div>
+                                @elseif(str_contains($pay->notes, '[DITOLAK FINANCE'))
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button" 
+                                                wire:click="openDeleteModal({{ $pay->id }})"
+                                                class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-black text-xs rounded-xl transition-all active:scale-95 flex items-center gap-1 cursor-pointer border border-rose-200 shadow-xs">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            <span>Hapus</span>
+                                        </button>
+                                    </div>
                                 @else
                                     <span class="text-slate-400 text-[10px] italic">
                                         {{ $pay->pic->name ?? 'Sistem' }}
@@ -616,6 +632,34 @@
                     </button>
                     <button type="button" wire:click="confirmRejectPayment" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95 cursor-pointer">
                         Konfirmasi Tolak
+                    </button>
+                </div>
+            </div>
+        </div>
+    {{-- Delete Confirmation Modal --}}
+    @if($deleteModalOpen && $deletingPayment)
+        <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-100 dark:border-gray-700 space-y-4">
+                <div class="text-center space-y-3">
+                    <div class="w-14 h-14 mx-auto bg-rose-50 dark:bg-rose-950/60 rounded-2xl flex items-center justify-center border border-rose-100 text-rose-500 text-2xl shadow-inner">
+                        🗑️
+                    </div>
+                    <div>
+                        <h3 class="font-black text-base uppercase tracking-tight text-slate-900 dark:text-white">
+                            Hapus Bukti Pembayaran?
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
+                            Data bukti pembayaran sebesar <strong class="text-rose-600 font-mono">Rp {{ number_format($deletingPayment->amount_total, 0, ',', '.') }}</strong> untuk Invoice <strong class="text-slate-800 dark:text-white font-mono">{{ $deletingPayment->invoice->invoice_number ?? $deletingPayment->spk_number_snapshot }}</strong> akan dihapus permanen dari server.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2.5 pt-2">
+                    <button type="button" wire:click="closeDeleteModal" class="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition-all">
+                        Batal
+                    </button>
+                    <button type="button" wire:click="confirmDeletePayment" class="flex-1 px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg shadow-rose-500/25 transition-all active:scale-95 cursor-pointer">
+                        Ya, Hapus
                     </button>
                 </div>
             </div>

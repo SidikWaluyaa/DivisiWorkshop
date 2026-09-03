@@ -33,6 +33,11 @@ class PaymentVerificationIndex extends Component
     public $rejectPaymentId = null;
     public $rejectReason = '';
 
+    // Delete Modal State
+    public $deleteModalOpen = false;
+    public $deletePaymentId = null;
+    public $deletingPayment = null;
+
     protected $queryString = [
         'activeTab' => ['except' => 'pending'],
         'search'    => ['except' => ''],
@@ -100,6 +105,53 @@ class PaymentVerificationIndex extends Component
         $this->rejectPaymentId = null;
         $this->rejectReason = '';
         $this->rejectModalOpen = false;
+    }
+
+    public function openDeleteModal($paymentId)
+    {
+        $this->deletePaymentId = $paymentId;
+        $this->deletingPayment = OrderPayment::with(['invoice.customer'])->find($paymentId);
+        $this->deleteModalOpen = true;
+    }
+
+    public function closeDeleteModal()
+    {
+        $this->deletePaymentId = null;
+        $this->deletingPayment = null;
+        $this->deleteModalOpen = false;
+    }
+
+    public function confirmDeletePayment()
+    {
+        try {
+            $payment = OrderPayment::with(['invoice.workOrders'])->findOrFail($this->deletePaymentId);
+
+            // Delete proof file if exists
+            if ($payment->proof_image && \Illuminate\Support\Facades\Storage::disk('public')->exists($payment->proof_image)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($payment->proof_image);
+            }
+
+            // Log on work orders
+            if ($payment->invoice) {
+                foreach ($payment->invoice->workOrders as $wo) {
+                    $wo->logs()->create([
+                        'user_id'     => Auth::id(),
+                        'step'        => 'PAYMENT',
+                        'action'      => 'PAYMENT_DELETED',
+                        'description' => "Data bukti pembayaran Rp " . number_format($payment->amount_total, 0, ',', '.') . " (" . ($payment->notes ?? '') . ") telah dihapus permanen oleh " . (Auth::user()->name ?? 'Finance') . ".",
+                    ]);
+                }
+            }
+
+            $payment->delete();
+
+            $this->closeDeleteModal();
+            $this->dispatch('swal:toast', icon: 'success', title: 'Data bukti pembayaran berhasil dihapus permanen.');
+
+        } catch (\Throwable $e) {
+            Log::error("Delete Payment Error (#{$this->deletePaymentId}): " . $e->getMessage());
+            $this->dispatch('swal:toast', icon: 'error', title: 'Gagal menghapus: ' . $e->getMessage());
+        }
     }
 
     public function approvePaymentDirect($paymentId, $paymentType = null)
