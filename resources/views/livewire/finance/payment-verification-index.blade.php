@@ -290,9 +290,14 @@
 
                 {{-- Action Controls (Mobile) --}}
                 <div class="pt-1 flex items-center justify-between gap-2">
-                    <span class="text-[10px] text-slate-400 font-medium">
-                        {{ $pay->paid_at ? $pay->paid_at->format('d M Y, H:i') : '-' }} WIB
-                    </span>
+                    <div class="text-[10px] font-mono leading-tight">
+                        <span class="text-slate-800 dark:text-slate-200 font-bold block">
+                            🗓️ {{ $pay->paid_at ? $pay->paid_at->format('d/m/Y') : '-' }}
+                        </span>
+                        <span class="text-slate-400 text-[9px] block">
+                            Upload: {{ $pay->created_at ? $pay->created_at->format('d/m H:i') : '-' }}
+                        </span>
+                    </div>
 
                     @if(!$pay->is_verified && !str_contains($pay->notes, '[DITOLAK FINANCE'))
                         <div class="flex items-center gap-2">
@@ -455,9 +460,14 @@
                                       {{ $pay->payment_method === 'BCA' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' }}">
                                     {{ $pay->payment_method }}
                                 </span>
-                                <span class="text-[10px] text-slate-400 block font-mono">
-                                    {{ $pay->paid_at ? $pay->paid_at->format('d/m/Y H:i') : '-' }} WIB
-                                </span>
+                                <div class="text-[10px] font-mono space-y-0.5">
+                                    <span class="text-slate-800 dark:text-slate-200 font-bold block" title="Tanggal Transfer di Struk">
+                                        🗓️ {{ $pay->paid_at ? $pay->paid_at->format('d/m/Y') : '-' }}
+                                    </span>
+                                    <span class="text-slate-400 block text-[9px]" title="Waktu Konfirmasi Masuk">
+                                        Upload: {{ $pay->created_at ? $pay->created_at->format('d/m H:i') : '-' }}
+                                    </span>
+                                </div>
                             </td>
 
                             {{-- Aksi --}}

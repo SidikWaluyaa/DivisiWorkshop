@@ -20,6 +20,7 @@ class PaymentConfirmation extends Component
     
     // Form Inputs
     public $amount = '';
+    public $transfer_date = '';
     public $payment_method = 'BCA';
     public $proof_image;
     public $notes = '';
@@ -32,6 +33,7 @@ class PaymentConfirmation extends Component
 
     public function mount()
     {
+        $this->transfer_date = date('Y-m-d');
         if (!empty($this->token)) {
             $this->loadInvoice($this->token);
         }
@@ -84,6 +86,7 @@ class PaymentConfirmation extends Component
         $this->token = '';
         $this->invoiceNotFound = false;
         $this->amount = '';
+        $this->transfer_date = date('Y-m-d');
         $this->proof_image = null;
         $this->notes = '';
         $this->isSubmitted = false;
@@ -102,11 +105,14 @@ class PaymentConfirmation extends Component
 
         $this->validate([
             'amount'         => 'required',
+            'transfer_date'  => 'required|date|before_or_equal:today',
             'payment_method' => 'required|in:BCA,Mandiri,QRIS,Lainnya',
             'proof_image'    => 'required|image|max:10240', // Max 10MB
             'notes'          => 'nullable|string|max:500',
         ], [
             'amount.required'         => 'Nominal pembayaran wajib diisi.',
+            'transfer_date.required'  => 'Tanggal transfer wajib diisi.',
+            'transfer_date.before_or_equal' => 'Tanggal transfer tidak boleh melebihi hari ini.',
             'payment_method.required' => 'Pilih rekening bank tujuan.',
             'proof_image.required'    => 'Upload foto bukti transfer / struk pembayaran.',
             'proof_image.image'       => 'Berkas bukti bayar harus berupa gambar (JPG/PNG).',
@@ -143,6 +149,11 @@ class PaymentConfirmation extends Component
 
             $paymentType = ($this->invoice->paid_amount > 0) ? 'after' : 'before';
 
+            // Use customer's actual transfer date
+            $paidAt = $this->transfer_date 
+                ? \Carbon\Carbon::parse($this->transfer_date)->setTime(now()->hour, now()->minute, now()->second)
+                : now();
+
             $orderPayment = OrderPayment::create([
                 'invoice_id'              => $this->invoice->id,
                 'work_order_id'           => $firstWorkOrder?->id,
@@ -152,7 +163,7 @@ class PaymentConfirmation extends Component
                 'amount_service'          => (float)$cleanAmount,
                 'amount_shipping'         => 0,
                 'payment_method'          => $this->payment_method,
-                'paid_at'                 => now(),
+                'paid_at'                 => $paidAt,
                 'proof_image'             => $path,
                 'is_verified'             => false,
                 'notes'                   => ($this->notes ? $this->notes . ' ' : '') . '[Upload Mandiri dari Customer]',

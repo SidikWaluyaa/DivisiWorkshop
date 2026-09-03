@@ -213,11 +213,15 @@
                     <strong class="text-[#22AF85] text-sm font-black font-mono">Rp {{ number_format(preg_replace('/[^0-9]/', '', (string)$amount), 0, ',', '.') }}</strong>
                 </div>
                 <div class="flex justify-between items-center text-slate-500">
+                    <span>Tanggal Transfer (Struk):</span>
+                    <strong class="text-slate-800 font-bold font-mono">{{ \Carbon\Carbon::parse($transfer_date ?: now())->format('d M Y') }}</strong>
+                </div>
+                <div class="flex justify-between items-center text-slate-500">
                     <span>Bank Tujuan:</span>
                     <span class="text-slate-800 font-black">{{ $payment_method }} (PT. Terang Garam Solusindo)</span>
                 </div>
                 <div class="flex justify-between items-center text-slate-500">
-                    <span>Waktu Unggah:</span>
+                    <span>Waktu Konfirmasi:</span>
                     <span class="text-slate-700 font-medium">{{ now()->format('d M Y, H:i') }} WIB</span>
                 </div>
             </div>
@@ -422,20 +426,41 @@
                     <span class="text-[10px] text-[#22AF85] font-bold">Langkah 2/2</span>
                 </div>
 
-                {{-- 1. Input Nominal Transfer (Manual) --}}
-                <div class="space-y-1.5">
-                    <label class="block text-xs font-black text-slate-800 uppercase tracking-wider">
-                        Nominal Yang Ditransfer <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                        <input type="text" 
-                               x-model="formattedAmount"
-                               @input="onAmountInput($event)"
-                               placeholder="Ketik nominal transfer, cth: Rp 150.000"
-                               class="w-full bg-[#F8FAFC] border border-slate-300 rounded-2xl py-3.5 px-4 text-slate-900 text-base font-black font-mono tracking-wide focus:border-[#22AF85] focus:ring-2 focus:ring-[#22AF85]/20 outline-none transition-all placeholder:font-sans placeholder:font-normal placeholder:text-slate-400">
+                {{-- 1. Input Nominal & Tanggal Transfer --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {{-- Nominal Transfer --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-black text-slate-800 uppercase tracking-wider">
+                            Nominal Ditransfer <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" 
+                                   x-model="formattedAmount"
+                                   @input="onAmountInput($event)"
+                                   placeholder="Cth: Rp 150.000"
+                                   class="w-full bg-[#F8FAFC] border border-slate-300 rounded-2xl py-3 px-4 text-slate-900 text-base font-black font-mono tracking-wide focus:border-[#22AF85] focus:ring-2 focus:ring-[#22AF85]/20 outline-none transition-all placeholder:font-sans placeholder:font-normal placeholder:text-slate-400">
+                        </div>
+                        @error('amount') <span class="text-red-500 text-xs font-bold">{{ $message }}</span> @enderror
+                        <p class="text-[10px] text-slate-400 italic">Sesuai nominal di struk transfer.</p>
                     </div>
-                    @error('amount') <span class="text-red-500 text-xs font-bold">{{ $message }}</span> @enderror
-                    <p class="text-[10px] text-slate-400 italic">Ketik nominal sesuai yang Anda transfer di struk / mutasi.</p>
+
+                    {{-- Tanggal Transfer --}}
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-black text-slate-800 uppercase tracking-wider">
+                                Tanggal Transfer <span class="text-red-500">*</span>
+                            </label>
+                            <span class="text-[9px] font-bold text-slate-500">Sesuai Struk</span>
+                        </div>
+                        <div class="relative">
+                            <input type="date" 
+                                   wire:model.defer="transfer_date"
+                                   max="{{ date('Y-m-d') }}"
+                                   class="w-full bg-[#F8FAFC] border border-slate-300 rounded-2xl py-3 px-4 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#22AF85] focus:ring-2 focus:ring-[#22AF85]/20 outline-none transition-all">
+                        </div>
+                        @error('transfer_date') <span class="text-red-500 text-xs font-bold">{{ $message }}</span> @enderror
+                        <p class="text-[10px] text-slate-400 italic">Pilih tanggal saat Anda transfer.</p>
+                    </div>
                 </div>
 
                 {{-- 2. Rekening Bank Tujuan Transfer --}}
