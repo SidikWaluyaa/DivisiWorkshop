@@ -29,6 +29,9 @@ class PaymentConfirmation extends Component
     public $isSubmitted = false;
     public $submittedPaymentId = null;
 
+    // Confirmation Modal State
+    public $showConfirmModal = false;
+
     protected $queryString = ['token'];
 
     public function mount()
@@ -59,14 +62,11 @@ class PaymentConfirmation extends Component
             'workOrders.workOrderServices.service'
         ])
         ->where('invoice_number', $token)
+        ->orWhere('id', $token)
         ->first();
 
-        if (!$invoice) {
-            // Fallback: Check if token is SPK Number
-            $workOrder = WorkOrder::where('spk_number', $token)->first();
-            if ($workOrder && $workOrder->invoice) {
-                $invoice = $workOrder->invoice()->with(['customer', 'workOrders.workOrderServices.service'])->first();
-            }
+        if (!$invoice && str_starts_with($token, 'INV-')) {
+            $invoice = Invoice::where('invoice_number', 'LIKE', '%' . $token . '%')->first();
         }
 
         if ($invoice) {
@@ -91,6 +91,45 @@ class PaymentConfirmation extends Component
         $this->notes = '';
         $this->isSubmitted = false;
         $this->submittedPaymentId = null;
+        $this->showConfirmModal = false;
+    }
+
+    public function openConfirmModal()
+    {
+        if (!$this->invoice) {
+            $this->dispatch('swal:toast', icon: 'error', title: 'Silakan scan atau upload QR Code Invoice terlebih dahulu.');
+            return;
+        }
+
+        $cleanAmount = preg_replace('/[^0-9]/', '', (string)$this->amount);
+
+        $this->validate([
+            'amount'         => 'required',
+            'transfer_date'  => 'required|date|before_or_equal:today',
+            'payment_method' => 'required|in:BCA,Mandiri,QRIS,Lainnya',
+            'proof_image'    => 'required|image|max:10240', // Max 10MB
+            'notes'          => 'nullable|string|max:500',
+        ], [
+            'amount.required'         => 'Nominal pembayaran wajib diisi.',
+            'transfer_date.required'  => 'Tanggal transfer wajib diisi.',
+            'transfer_date.before_or_equal' => 'Tanggal transfer tidak boleh melebihi hari ini.',
+            'payment_method.required' => 'Pilih rekening bank tujuan.',
+            'proof_image.required'    => 'Upload foto bukti transfer / struk pembayaran.',
+            'proof_image.image'       => 'Berkas bukti bayar harus berupa gambar (JPG/PNG).',
+            'proof_image.max'         => 'Ukuran berkas maksimal 10MB.',
+        ]);
+
+        if (empty($cleanAmount) || (int)$cleanAmount <= 0) {
+            $this->addError('amount', 'Nominal transfer harus lebih dari Rp 0.');
+            return;
+        }
+
+        $this->showConfirmModal = true;
+    }
+
+    public function closeConfirmModal()
+    {
+        $this->showConfirmModal = false;
     }
 
     public function submitPayment()
@@ -187,6 +226,7 @@ class PaymentConfirmation extends Component
 
             $this->isSubmitted = true;
             $this->submittedPaymentId = $orderPayment->id;
+            $this->showConfirmModal = false;
             $this->dispatch('swal:toast', icon: 'success', title: 'Bukti pembayaran berhasil dikirim!');
 
         } catch (\Throwable $e) {

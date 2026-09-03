@@ -613,11 +613,11 @@
                     <button type="submit" 
                             :disabled="isCompressing"
                             wire:loading.attr="disabled"
-                            wire:target="submitPayment"
+                            wire:target="openConfirmModal, submitPayment"
                             class="w-full h-14 bg-[#FFC232] hover:bg-amber-400 disabled:opacity-70 disabled:cursor-not-allowed text-slate-950 font-black text-sm uppercase tracking-wider rounded-2xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-[0.98] flex items-center justify-center cursor-pointer relative overflow-hidden">
                         
                         {{-- Default State --}}
-                        <div wire:loading.remove wire:target="submitPayment" x-show="!isCompressing" class="flex items-center justify-center gap-2">
+                        <div wire:loading.remove wire:target="openConfirmModal, submitPayment" x-show="!isCompressing" class="flex items-center justify-center gap-2">
                             <span>Kirim Bukti Pembayaran</span>
                             <span class="text-base leading-none">➔</span>
                         </div>
@@ -628,14 +628,127 @@
                             <span>Memproses Foto Bukti...</span>
                         </div>
 
-                        {{-- Server-Side Submitting State --}}
-                        <div wire:loading.flex wire:target="submitPayment" class="items-center justify-center gap-2.5">
+                        {{-- Server-Side Validating State --}}
+                        <div wire:loading.flex wire:target="openConfirmModal, submitPayment" class="items-center justify-center gap-2.5">
                             <div class="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></div>
-                            <span>Mengirim Bukti Pembayaran...</span>
+                            <span>Memeriksa Data...</span>
                         </div>
                     </button>
                 </div>
             </form>
         </div>
+
+        {{-- ======================================================== --}}
+        {{-- MODAL / BOTTOMSHEET KONFIRMASI PENGIRIMAN BUKTI BAYAR   --}}
+        {{-- ======================================================== --}}
+        @if($showConfirmModal && $invoice)
+            <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
+                <div class="bg-white rounded-t-3xl sm:rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
+                    
+                    {{-- Modal Header --}}
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-2xl bg-emerald-100 text-[#22AF85] flex items-center justify-center font-black text-base shadow-xs">
+                                🛡️
+                            </div>
+                            <div>
+                                <h3 class="font-black text-sm sm:text-base uppercase tracking-tight text-slate-900">
+                                    Konfirmasi Pembayaran
+                                </h3>
+                                <p class="text-[10px] text-slate-400">Pastikan nominal &amp; data transfer Anda sudah benar</p>
+                            </div>
+                        </div>
+                        <button type="button" wire:click="closeConfirmModal" class="text-slate-400 hover:text-slate-600 p-1 text-lg">✕</button>
+                    </div>
+
+                    {{-- Highlighted Summary Box --}}
+                    <div class="bg-gradient-to-br from-[#F8FAFC] to-emerald-50/40 p-4 sm:p-5 rounded-2xl border-2 border-emerald-500/30 space-y-3.5">
+                        
+                        {{-- Big Prominent Nominal --}}
+                        <div class="text-center pb-3 border-b border-slate-200/60">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-0.5">
+                                Nominal yang Ditransfer
+                            </span>
+                            <span class="text-2xl sm:text-3xl font-black font-poppins text-[#22AF85] font-mono tracking-tight block">
+                                Rp {{ number_format((int) preg_replace('/[^0-9]/', '', (string)$amount), 0, ',', '.') }}
+                            </span>
+                        </div>
+
+                        {{-- Details Grid --}}
+                        <div class="space-y-2.5 text-xs">
+                            {{-- Tanggal Transfer --}}
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500 font-medium">🗓️ Tanggal Transfer:</span>
+                                <span class="font-black text-slate-900 font-mono">
+                                    {{ $transfer_date ? \Carbon\Carbon::parse($transfer_date)->translatedFormat('d F Y') : '-' }}
+                                </span>
+                            </div>
+
+                            {{-- Rekening Tujuan --}}
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500 font-medium">🏦 Rekening Tujuan:</span>
+                                <span class="font-black text-slate-900">
+                                    @if($payment_method === 'BCA')
+                                        <span class="text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 text-[11px]">Bank BCA (8100978521)</span>
+                                    @elseif($payment_method === 'Mandiri')
+                                        <span class="text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-[11px]">Bank Mandiri (1300030119047)</span>
+                                    @else
+                                        {{ $payment_method }}
+                                    @endif
+                                </span>
+                            </div>
+
+                            {{-- Tagihan Invoice --}}
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500 font-medium">📄 Untuk Invoice:</span>
+                                <span class="font-black text-slate-900 font-mono">
+                                    {{ $invoice->invoice_number }}
+                                </span>
+                            </div>
+
+                            {{-- Mini Bukti Struk Thumbnail Preview --}}
+                            @if($proof_image)
+                                <div class="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                                    <span class="text-slate-500 font-medium">📸 Foto Bukti Struk:</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] text-emerald-600 font-bold">Terlampir ✓</span>
+                                        <img src="{{ $proof_image->temporaryUrl() }}" class="w-10 h-10 object-cover rounded-xl border-2 border-[#22AF85] shadow-xs">
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Catatan Customer jika ada --}}
+                            @if($notes)
+                                <div class="pt-2 border-t border-slate-200/60 text-[11px] text-slate-600 italic bg-white/80 p-2.5 rounded-xl border border-slate-200/60">
+                                    <span class="text-[9px] font-bold text-slate-400 not-italic block uppercase">Catatan Tambahan:</span>
+                                    "{{ $notes }}"
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Action Buttons --}}
+                    <div class="flex flex-col-reverse sm:flex-row gap-2.5 pt-1">
+                        <button type="button" 
+                                wire:click="closeConfirmModal" 
+                                class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs uppercase tracking-wider rounded-2xl transition-all active:scale-95 text-center cursor-pointer">
+                            Periksa Kembali
+                        </button>
+                        <button type="button" 
+                                wire:click="submitPayment" 
+                                wire:loading.attr="disabled"
+                                wire:target="submitPayment"
+                                class="flex-1 py-3.5 px-5 bg-[#FFC232] hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-amber-500/25 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
+                            <span wire:loading.remove wire:target="submitPayment">Ya, Kirim Sekarang ➔</span>
+                            <div wire:loading.flex wire:target="submitPayment" class="items-center gap-2">
+                                <div class="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></div>
+                                <span>Mengirim...</span>
+                            </div>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        @endif
     @endif
 </div>
