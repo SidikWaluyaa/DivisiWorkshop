@@ -755,7 +755,7 @@
                 </div>
 
                 {{-- Summary Box --}}
-                <div class="bg-[#F8FAFC] dark:bg-gray-900/60 p-4 rounded-2xl border border-slate-200/60 space-y-2 text-xs">
+                <div class="bg-[#F8FAFC] dark:bg-gray-900/60 p-4 rounded-2xl border border-slate-200/60 space-y-2.5 text-xs">
                     <div class="flex justify-between">
                         <span class="text-slate-500">Nomor Invoice:</span>
                         <span class="font-black text-slate-900 dark:text-white font-mono">{{ $approvingPayment->invoice->invoice_number ?? $approvingPayment->spk_number_snapshot }}</span>
@@ -763,10 +763,6 @@
                     <div class="flex justify-between">
                         <span class="text-slate-500">Nama Pelanggan:</span>
                         <span class="font-bold text-slate-800 dark:text-slate-200">{{ $approvingPayment->customer_name_snapshot ?? ($approvingPayment->invoice->customer->name ?? '-') }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Nominal Transfer:</span>
-                        <span class="font-black text-[#22AF85] text-sm font-mono">Rp {{ number_format($approvingPayment->amount_total, 0, ',', '.') }}</span>
                     </div>
                     @if($approvingPayment->invoice)
                         <div class="flex justify-between border-t pt-1.5 border-slate-200/60">
@@ -776,7 +772,7 @@
                         <div class="flex justify-between">
                             <span class="text-slate-500">Sisa Tagihan Setelah Ini:</span>
                             <span class="font-black text-[#B45309] font-mono">
-                                Rp {{ number_format(max(0, $approvingPayment->invoice->total_amount - ($approvingPayment->invoice->paid_amount + $approvingPayment->amount_total)), 0, ',', '.') }}
+                                Rp {{ number_format(max(0, $approvingPayment->invoice->total_amount - ($approvingPayment->invoice->paid_amount + (float)($approveAmount ?: 0))), 0, ',', '.') }}
                             </span>
                         </div>
                     @endif
@@ -791,13 +787,39 @@
                     @endif
                 </div>
 
+                {{-- Form Edit: Nominal & Tanggal Bayar --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {{-- Edit Nominal --}}
+                    <div class="space-y-1">
+                        <label class="block text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                            Nominal Bayar (Rp) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" 
+                               wire:model.live.debounce.300ms="approveAmount"
+                               min="1"
+                               placeholder="Nominal transfer"
+                               class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border-2 border-emerald-500/50 rounded-2xl text-sm font-black font-mono text-[#22AF85] focus:ring-2 focus:ring-[#22AF85] outline-none">
+                    </div>
+
+                    {{-- Edit Tanggal Bayar --}}
+                    <div class="space-y-1">
+                        <label class="block text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                            Tanggal Bayar (Struk) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" 
+                               wire:model="approvePaidAt"
+                               max="{{ date('Y-m-d') }}"
+                               class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-600 rounded-2xl text-xs font-bold text-slate-800 dark:text-white focus:ring-2 focus:ring-[#22AF85] outline-none">
+                    </div>
+                </div>
+
                 {{-- Tipe Pembayaran Selector --}}
-                <div class="space-y-2">
+                <div class="space-y-1.5 pt-1">
                     <label class="block text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
                         Pilih Tipe Pembayaran <span class="text-red-500">*</span>
                     </label>
                     <select wire:model="approvePaymentType" 
-                            class="w-full px-4 py-3 bg-white dark:bg-gray-900 border-2 border-emerald-500/50 rounded-2xl text-xs font-black text-slate-800 dark:text-white focus:ring-2 focus:ring-[#22AF85] outline-none">
+                            class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border-2 border-emerald-500/50 rounded-2xl text-xs font-black text-slate-800 dark:text-white focus:ring-2 focus:ring-[#22AF85] outline-none">
                         <option value="BEFORE">DP / Pencicilan</option>
                         <option value="AFTER">Pelunasan Pesanan</option>
                         <option value="TAMBAH_JASA">Tambah Jasa</option>

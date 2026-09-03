@@ -31,10 +31,12 @@ class PaymentVerificationIndex extends Component
     // Payment Types selection per payment ID: [payment_id => 'BEFORE'|'AFTER'|...]
     public $selectedTypes = [];
 
-    // Approval Modal State (for reviewing details before confirming)
+    // Approval Modal State (for reviewing & editing details before confirming)
     public $approveModalOpen = false;
     public $approvingPayment = null;
     public $approvePaymentType = 'BEFORE';
+    public $approveAmount = 0;
+    public $approvePaidAt = '';
 
     // Reject Modal State
     public $rejectModalOpen = false;
@@ -132,6 +134,8 @@ class PaymentVerificationIndex extends Component
     {
         $payment = OrderPayment::with(['invoice.customer', 'invoice.workOrders.workOrderServices.service'])->findOrFail($paymentId);
         $this->approvingPayment = $payment;
+        $this->approveAmount = (float)$payment->amount_total;
+        $this->approvePaidAt = $payment->paid_at ? $payment->paid_at->format('Y-m-d') : date('Y-m-d');
 
         // Auto determine recommended type
         if ($payment->invoice) {
@@ -155,6 +159,8 @@ class PaymentVerificationIndex extends Component
     {
         $this->approveModalOpen = false;
         $this->approvingPayment = null;
+        $this->approveAmount = 0;
+        $this->approvePaidAt = '';
     }
 
     public function openRejectModal($paymentId)
@@ -227,11 +233,23 @@ class PaymentVerificationIndex extends Component
     public function confirmApproveFromModal()
     {
         if (!$this->approvingPayment) return;
-        $this->processApproval($this->approvingPayment->id, $this->approvePaymentType);
+
+        $cleanAmount = preg_replace('/[^0-9]/', '', (string)$this->approveAmount);
+        if (empty($cleanAmount) || (float)$cleanAmount <= 0) {
+            $this->dispatch('swal:toast', icon: 'error', title: 'Nominal pembayaran harus lebih dari Rp 0.');
+            return;
+        }
+
+        $this->processApproval(
+            $this->approvingPayment->id, 
+            $this->approvePaymentType, 
+            (float)$cleanAmount, 
+            $this->approvePaidAt
+        );
         $this->closeApproveModal();
     }
 
-    private function processApproval($paymentId, $paymentType)
+    private function processApproval($paymentId, $paymentType, $overrideAmount = null, $overridePaidAt = null)
     {
         try {
             $payment = OrderPayment::with(['invoice.customer', 'invoice.workOrders'])->findOrFail($paymentId);
@@ -239,6 +257,15 @@ class PaymentVerificationIndex extends Component
             if ($payment->is_verified) {
                 $this->dispatch('swal:toast', icon: 'info', title: 'Pembayaran ini sudah diverifikasi sebelumnya.');
                 return;
+            }
+
+            if ($overrideAmount !== null && (float)$overrideAmount > 0) {
+                $payment->amount_total = (float)$overrideAmount;
+                $payment->amount_service = (float)$overrideAmount;
+            }
+
+            if (!empty($overridePaidAt)) {
+                $payment->paid_at = \Carbon\Carbon::parse($overridePaidAt)->setTime(now()->hour, now()->minute, now()->second);
             }
 
             $typeLabel = match($paymentType) {
