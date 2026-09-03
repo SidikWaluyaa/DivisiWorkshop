@@ -516,8 +516,20 @@
                   <div class="bg-white border border-gray-200 rounded-xl p-2.5 shadow-sm relative mt-2 {{ $servicesCount >= 8 ? 'min-h-[45px]' : 'min-h-[65px]' }}">
                        <div class="absolute top-1 left-3 text-[8px] font-black text-teal-900 uppercase tracking-widest opacity-50">Note / Catatan Tambahan</div>
                        <div class="mt-2 text-[10px] text-gray-700 leading-relaxed font-medium">
-                           @if($order->notes)
-                               {{ $order->notes }}
+                           @php
+                               $rawNotesRight = $order->notes ?? '';
+                               $cleanNotesRight = preg_replace('/\d+\s*HK\s*-\s*(Bergaransi|Non-Garansi|Garansi|Non Garansi)\s*(-\s*)?/i', '', $rawNotesRight);
+                               $cleanNotesRight = trim($cleanNotesRight, ' -');
+                               
+                               // Filter out everything starting from [CX Issue Reported]:
+                               $cxPosRight = strpos($cleanNotesRight, '[CX Issue Reported]:');
+                               if ($cxPosRight !== false) {
+                                   $cleanNotesRight = substr($cleanNotesRight, 0, $cxPosRight);
+                               }
+                               $cleanNotesRight = trim($cleanNotesRight, " \t\n\r\0\x0B-");
+                           @endphp
+                           @if($cleanNotesRight)
+                               {{ $cleanNotesRight }}
                            @else
                                {{-- Dotted lines for manual writing --}}
                                <div class="{{ $servicesCount >= 8 ? 'space-y-1.5 pt-0.5' : 'space-y-3 pt-1' }} opacity-30">
