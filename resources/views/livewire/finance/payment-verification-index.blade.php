@@ -585,6 +585,14 @@
                                 @else
                                     <span class="font-bold text-slate-800 dark:text-gray-200">{{ $pay->spk_number_snapshot }}</span>
                                 @endif
+
+                                {{-- Catatan / Notes --}}
+                                @if($pay->notes)
+                                    <div class="mt-1.5 p-2 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/60 text-[10px] text-amber-900 dark:text-amber-200 italic flex items-start gap-1.5 max-w-xs shadow-2xs" title="{{ $pay->notes }}">
+                                        <span class="flex-shrink-0 text-amber-600 dark:text-amber-400">📝</span>
+                                        <span class="leading-tight break-words">{{ $pay->notes }}</span>
+                                    </div>
+                                @endif
                             </td>
 
                             {{-- Pelanggan & WA --}}
@@ -770,6 +778,13 @@
                             <span class="font-black text-[#B45309] font-mono">
                                 Rp {{ number_format(max(0, $approvingPayment->invoice->total_amount - ($approvingPayment->invoice->paid_amount + $approvingPayment->amount_total)), 0, ',', '.') }}
                             </span>
+                        </div>
+                    @if($approvingPayment->notes)
+                        <div class="border-t pt-2 border-slate-200/60 dark:border-gray-700">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Catatan Customer:</span>
+                            <p class="text-xs text-slate-700 dark:text-slate-300 italic mt-0.5 bg-amber-50/60 dark:bg-amber-950/30 p-2 rounded-xl border border-amber-200/50">
+                                💬 "{{ $approvingPayment->notes }}"
+                            </p>
                         </div>
                     @endif
                 </div>
