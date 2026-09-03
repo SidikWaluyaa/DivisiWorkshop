@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
 
-    <title>{{ $title ?? 'Portal Pembayaran — Shoe Workshop' }}</title>
+    <title>{{ $title ?? 'Konfirmasi Pembayaran — Shoe Workshop' }}</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,6 +26,7 @@
         [x-cloak] { display: none !important; }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F8FAFC;
         }
         .font-poppins {
             font-family: 'Poppins', sans-serif;
@@ -34,28 +35,52 @@
 
     @livewireStyles
 </head>
-<body class="min-h-screen bg-slate-900 text-slate-100 antialiased selection:bg-[#F5C518] selection:text-slate-950">
+<body class="min-h-screen bg-[#F8FAFC] text-slate-900 antialiased selection:bg-[#FFC232] selection:text-slate-950">
     <div class="relative min-h-screen flex flex-col justify-between overflow-x-hidden">
-        {{-- Background Glow Accents --}}
-        <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] pointer-events-none opacity-20 dark:opacity-30">
-            <div class="absolute top-[-10%] left-[20%] w-[400px] h-[400px] bg-emerald-500 rounded-full blur-[120px]"></div>
-            <div class="absolute top-[10%] right-[20%] w-[350px] h-[350px] bg-[#F5C518] rounded-full blur-[130px]"></div>
+        {{-- Subtle Background Glow Elements (Hijau & Kuning) --}}
+        <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[350px] pointer-events-none opacity-15">
+            <div class="absolute top-[-20%] left-[10%] w-[320px] h-[320px] bg-[#22AF85] rounded-full blur-[100px]"></div>
+            <div class="absolute top-[-10%] right-[10%] w-[300px] h-[300px] bg-[#FFC232] rounded-full blur-[110px]"></div>
         </div>
 
-        {{-- Main Slot --}}
+        {{-- Top Brand Bar --}}
+        <header class="relative z-10 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 shadow-xs">
+            <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-[#22AF85] text-white font-black flex items-center justify-center text-xs shadow-md shadow-[#22AF85]/20 transform -rotate-3">
+                        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                            <circle cx="12" cy="12" r="5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="block text-xs font-black font-poppins text-slate-900 leading-tight uppercase italic tracking-tight">Shoe Workshop</span>
+                        <span class="block text-[9px] font-bold text-[#22AF85] uppercase tracking-widest leading-none">Payment Portal</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#22AF85] text-[10px] font-black uppercase tracking-wider">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#22AF85] animate-ping"></span>
+                    <span>Resmi &amp; Aman</span>
+                </div>
+            </div>
+        </header>
+
+        {{-- Main Content --}}
         <main class="relative z-10 flex-1">
             {{ $slot }}
         </main>
 
-        {{-- Minimal Footer --}}
-        <footer class="relative z-10 py-6 text-center text-xs text-slate-500 border-t border-slate-800/80 bg-slate-950/60 backdrop-blur-md">
-            <div class="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 rounded-lg bg-[#F5C518] text-slate-950 font-black flex items-center justify-center text-[10px]">SW</div>
-                    <span class="font-bold text-slate-400">Shoe Workshop & LAF Market</span>
+        {{-- Footer --}}
+        <footer class="relative z-10 py-5 text-center text-xs text-slate-500 border-t border-slate-200 bg-white/80 backdrop-blur-md mt-auto">
+            <div class="max-w-xl mx-auto px-4 flex flex-col items-center justify-center gap-1">
+                <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-slate-700 text-[11px]">PT. Terang Garam Solusindo</span>
+                    <span class="text-slate-300">•</span>
+                    <span class="text-[11px] text-[#22AF85] font-bold">Shoe Workshop</span>
                 </div>
-                <p class="text-[11px] text-slate-500">
-                    &copy; {{ date('Y') }} Sistem Keuangan & Layanan Workshop Resmi.
+                <p class="text-[10px] text-slate-400">
+                    &copy; {{ date('Y') }} Sistem Konfirmasi Pembayaran Digital.
                 </p>
             </div>
         </footer>
@@ -74,8 +99,11 @@
                     showConfirmButton: false,
                     timer: 3500,
                     timerProgressBar: true,
-                    background: '#1E293B',
-                    color: '#F8FAFC'
+                    background: '#FFFFFF',
+                    color: '#0F172A',
+                    customClass: {
+                        popup: 'rounded-2xl shadow-xl border border-slate-100 text-xs font-bold'
+                    }
                 });
             });
         });
