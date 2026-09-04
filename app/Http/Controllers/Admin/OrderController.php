@@ -41,9 +41,23 @@ class OrderController extends Controller
         // All available services for the "add service" dropdown
         $allServices = Service::orderBy('category')->orderBy('name')->get(['id', 'name', 'category', 'price']);
 
-        // All active technicians for the Admin Dynamic Station Hub
-        $technicians = User::where('role', 'technician')
+        // All active technicians and assigned users for the Admin Dynamic Station Hub
+        $technicians = User::where(function($q) use ($order) {
+                $q->where('role', 'technician')
+                  ->orWhereIn('id', array_filter([
+                      $order->prep_washing_by,
+                      $order->prep_sol_by,
+                      $order->prep_upper_by,
+                      $order->prod_sol_by,
+                      $order->prod_upper_by,
+                      $order->prod_cleaning_by,
+                      $order->qc_jahit_by,
+                      $order->qc_cleanup_by,
+                      $order->qc_final_by,
+                  ]));
+            })
             ->where('is_active', true)
+            ->orderByRaw("CASE WHEN role = 'technician' THEN 1 ELSE 2 END")
             ->orderBy('station')
             ->orderBy('name')
             ->get(['id', 'name', 'role', 'station', 'specialization']);

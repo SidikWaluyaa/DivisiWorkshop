@@ -315,9 +315,23 @@
                                                                         <select x-model="st.technician_id" 
                                                                                 class="w-full pl-3 pr-8 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all cursor-pointer">
                                                                             <option value="">-- Kosongkan Penugasan --</option>
-                                                                            <template x-for="tech in getTechniciansForStation(st)" :key="tech.id">
-                                                                                <option :value="String(tech.id)" x-text="`${tech.name} — ${tech.specialization || tech.station || 'Teknisi'} [${tech.station || 'WORKSHOP'}]`"></option>
-                                                                            </template>
+                                                                            @php
+                                                                                $groupedTechs = collect($technicians ?? [])->groupBy(function($u) {
+                                                                                    if ($u->role === 'technician') {
+                                                                                        return 'STASIUN ' . ($u->station ?: 'WORKSHOP');
+                                                                                    }
+                                                                                    return 'ADMIN / STAFF';
+                                                                                });
+                                                                            @endphp
+                                                                            @foreach($groupedTechs as $groupName => $userList)
+                                                                                <optgroup label="{{ $groupName }}">
+                                                                                    @foreach($userList as $u)
+                                                                                        <option value="{{ $u->id }}">
+                                                                                            {{ $u->name }} — {{ $u->specialization ?: $u->station ?: 'Teknisi' }} [{{ $u->role === 'technician' ? ($u->station ?: 'WORKSHOP') : strtoupper($u->role) }}]
+                                                                                        </option>
+                                                                                    @endforeach
+                                                                                </optgroup>
+                                                                            @endforeach
                                                                         </select>
                                                                     </div>
                                                                 </div>
