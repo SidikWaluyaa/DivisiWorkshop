@@ -1,5 +1,24 @@
 <x-workshop-pwa-layout>
-    <div class="py-8 bg-slate-50/50 dark:bg-slate-900 min-h-screen">
+    <div x-data="{
+        showModal: false,
+        selectedWoId: null,
+        selectedSpk: '',
+        selectedShoe: '',
+        station: 'prod_upper',
+        technicianId: '',
+        availableStations: [],
+        openModal(woId, spk, shoe, stations) {
+            this.selectedWoId = woId;
+            this.selectedSpk = spk;
+            this.selectedShoe = shoe;
+            this.availableStations = stations;
+            if (stations.length > 0) {
+                this.station = stations[0].key;
+            }
+            this.technicianId = '';
+            this.showModal = true;
+        }
+    }" class="py-8 bg-slate-50/50 dark:bg-slate-900 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             
             @php
@@ -10,7 +29,48 @@
                 $totalMaterial = $suratJalan->items->sum(function($item) {
                     return $item->workOrder?->materials?->count() ?? 0;
                 });
+
+                // Count incomplete production tasks in this Surat Jalan
+                $incompleteSpkCount = 0;
+                if ($suratJalan->jenis_serah_terima === 'produksi_to_post_qc') {
+                    foreach ($suratJalan->items as $it) {
+                        if ($it->workOrder && !$it->workOrder->is_production_finished) {
+                            $incompleteSpkCount++;
+                        }
+                    }
+                }
             @endphp
+
+            {{-- FLASH NOTIFICATIONS (UI/UX Pro Max) --}}
+            @if(session('success'))
+                <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 flex items-start gap-3 shadow-sm animate-fade-in">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black shrink-0 text-sm">✓</div>
+                    <div class="flex-1 text-xs">
+                        <span class="font-black block text-sm mb-0.5">Berhasil!</span>
+                        <p class="font-medium text-emerald-800 dark:text-emerald-300">{{ session('success') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200 flex items-start gap-3 shadow-sm animate-shake">
+                    <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-black shrink-0 text-sm">✕</div>
+                    <div class="flex-1 text-xs">
+                        <span class="font-black block text-sm mb-0.5">Perhatian / Validasi Diperlukan</span>
+                        <p class="font-medium text-rose-800 dark:text-rose-300">{{ session('error') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if(session('info'))
+                <div class="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-sky-900 dark:text-sky-200 flex items-start gap-3 shadow-sm">
+                    <div class="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center font-black shrink-0 text-sm">ℹ</div>
+                    <div class="flex-1 text-xs">
+                        <span class="font-black block text-sm mb-0.5">Informasi</span>
+                        <p class="font-medium text-sky-800 dark:text-sky-300">{{ session('info') }}</p>
+                    </div>
+                </div>
+            @endif
 
             {{-- 1. TOP METADATA GLASSMORPHISM CARD --}}
             <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-6">
@@ -35,7 +95,7 @@
                             @endif
                         </div>
                         <p class="text-xs text-slate-500 font-medium mt-1">
-                            Dokumen resmi serah-terima fisik antar divisi Workshop (Sortir ➔ Produksi ➔ QC) • Dibuat: <strong>{{ $suratJalan->created_at ? $suratJalan->created_at->translatedFormat('d M Y • H:i') : '-' }} WIB</strong>
+                            Dokumen resmi serah-terima fisik antar divisi Workshop • Dibuat: <strong>{{ $suratJalan->created_at ? $suratJalan->created_at->translatedFormat('d M Y • H:i') : '-' }} WIB</strong>
                         </p>
                     </div>
 
@@ -116,17 +176,24 @@
 
                 </div>
 
+                @if($suratJalan->catatan)
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200/80 dark:border-slate-700 text-xs">
+                        <span class="font-black text-slate-500 uppercase tracking-wider text-[10px] block mb-1">📝 Catatan Surat Jalan:</span>
+                        <p class="text-slate-700 dark:text-slate-200 font-medium">{{ $suratJalan->catatan }}</p>
+                    </div>
+                @endif
+
             </div>
 
-            {{-- 2. SPK ITEMS & MATERIAL TABLE CARD --}}
+            {{-- 2. SPK ITEMS, TEKNISI & MATERIAL TABLE CARD --}}
             <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-6">
                 
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-700/60 pb-4">
                     <div>
                         <h3 class="text-base font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                            <span>📋</span> Rincian Muatan SPK, Layanan Jasa & Bahan Baku
+                            <span>📋</span> Rincian Muatan SPK, Teknisi Stasiun & Bahan Baku
                         </h3>
-                        <p class="text-xs text-slate-500 font-medium mt-0.5">Daftar fisik sepatu dan material yang diserahkan untuk proses pengerjaan</p>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5">Daftar fisik sepatu, teknisi pelaksana, dan material yang diserahterimakan</p>
                     </div>
 
                     <div class="flex items-center gap-2 flex-wrap">
@@ -137,8 +204,13 @@
                             {{ $totalJasa }} Layanan
                         </span>
                         <span class="px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 rounded-full text-xs font-bold">
-                            {{ $totalMaterial }} Material Terpasang
+                            {{ $totalMaterial }} Material
                         </span>
+                        @if($incompleteSpkCount > 0)
+                            <span class="px-3 py-1 bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 rounded-full text-xs font-black animate-pulse">
+                                ⚠️ {{ $incompleteSpkCount }} Belum Lengkap
+                            </span>
+                        @endif
                     </div>
                 </div>
 
@@ -150,10 +222,11 @@
                                 <th class="px-5 py-4 w-12 text-center">No</th>
                                 <th class="px-5 py-4">Nomor SPK & Customer</th>
                                 <th class="px-5 py-4">Merk & Tipe Sepatu</th>
-                                <th class="px-5 py-4">Rincian Jasa / Layanan</th>
-                                <th class="px-5 py-4 bg-emerald-50/40 dark:bg-emerald-950/20">Bahan Baku / Material SPK</th>
+                                <th class="px-5 py-4">Rincian Jasa</th>
+                                <th class="px-5 py-4 bg-indigo-50/40 dark:bg-indigo-950/20">Stasiun & Teknisi Pelaksana</th>
+                                <th class="px-5 py-4 bg-emerald-50/40 dark:bg-emerald-950/20">Bahan Baku / Material</th>
                                 <th class="px-5 py-4 text-center">Est. Selesai</th>
-                                <th class="px-5 py-4 text-center">Klasifikasi</th>
+                                <th class="px-5 py-4 text-center">Status Handover</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60 bg-white dark:bg-slate-800">
@@ -163,8 +236,27 @@
                                     $services = $wo?->services ?? collect();
                                     $materials = $wo?->materials ?? collect();
                                     $estDate = $wo?->new_estimation_date ?? $wo?->estimation_date;
+
+                                    // Build station completion info for this SPK
+                                    $missingStationList = [];
+                                    $hasUpper = $wo?->needs_prod_upper;
+                                    $hasSol = $wo?->needs_prod_sol;
+                                    $hasJahit = $wo?->needs_prod_jahit;
+                                    $hasTreatment = $wo?->needs_prod_treatment;
+
+                                    if ($hasUpper && empty($wo?->prod_upper_completed_at)) {
+                                        $missingStationList[] = ['key' => 'prod_upper', 'label' => 'Reparasi Upper'];
+                                    }
+                                    if ($hasSol && empty($wo?->prod_sol_completed_at)) {
+                                        $missingStationList[] = ['key' => 'prod_sol', 'label' => 'Reparasi Sol'];
+                                    }
+                                    if ($hasJahit && empty($wo?->qc_jahit_completed_at)) {
+                                        $missingStationList[] = ['key' => 'qc_jahit', 'label' => 'QC Jahit'];
+                                    }
+
+                                    $isReadyForQc = empty($missingStationList);
                                 @endphp
-                                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-700/40 transition-colors">
+                                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-700/40 transition-colors {{ !$isReadyForQc && $suratJalan->jenis_serah_terima === 'produksi_to_post_qc' ? 'bg-amber-50/30 dark:bg-amber-950/10' : '' }}">
                                     {{-- Index --}}
                                     <td class="px-5 py-4 text-center font-bold text-slate-400">
                                         {{ $index + 1 }}
@@ -217,7 +309,87 @@
                                         @endif
                                     </td>
 
-                                    {{-- Material Column (NEW / ENHANCED) --}}
+                                    {{-- Stasiun & Teknisi Pelaksana (NEW / ENHANCED) --}}
+                                    <td class="px-5 py-4 bg-indigo-50/20 dark:bg-indigo-950/10">
+                                        <div class="space-y-1.5">
+                                            
+                                            {{-- 1. Reparasi Upper --}}
+                                            @if($hasUpper)
+                                                <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl {{ $wo?->prod_upper_completed_at ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800' }}">
+                                                    <div class="flex items-center gap-1.5 min-w-0">
+                                                        <span class="text-[10px] font-black uppercase {{ $wo?->prod_upper_completed_at ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">👞 Upper:</span>
+                                                        <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
+                                                            {{ $wo?->prodUpperBy?->name ?? 'Belum Ditugaskan' }}
+                                                        </span>
+                                                    </div>
+                                                    @if($wo?->prod_upper_completed_at)
+                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">✓ Selesai</span>
+                                                    @else
+                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">⏳ Belum Selesai</span>
+                                                    @endif
+                                                </div>
+                                            @endif
+
+                                            {{-- 2. Reparasi Sol --}}
+                                            @if($hasSol)
+                                                <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl {{ $wo?->prod_sol_completed_at ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800' }}">
+                                                    <div class="flex items-center gap-1.5 min-w-0">
+                                                        <span class="text-[10px] font-black uppercase {{ $wo?->prod_sol_completed_at ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">👟 Soling:</span>
+                                                        <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
+                                                            {{ $wo?->prodSolBy?->name ?? 'Belum Ditugaskan' }}
+                                                        </span>
+                                                    </div>
+                                                    @if($wo?->prod_sol_completed_at)
+                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">✓ Selesai</span>
+                                                    @else
+                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">⏳ Belum Selesai</span>
+                                                    @endif
+                                                </div>
+                                            @endif
+
+                                            {{-- 3. QC Jahit --}}
+                                            @if($hasJahit)
+                                                <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl {{ $wo?->qc_jahit_completed_at ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800' }}">
+                                                    <div class="flex items-center gap-1.5 min-w-0">
+                                                        <span class="text-[10px] font-black uppercase {{ $wo?->qc_jahit_completed_at ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">🧵 QC Jahit:</span>
+                                                        <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
+                                                            {{ $wo?->qcJahitBy?->name ?? 'Belum Ditugaskan' }}
+                                                        </span>
+                                                    </div>
+                                                    @if($wo?->qc_jahit_completed_at)
+                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">✓ Selesai</span>
+                                                    @else
+                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">⏳ Belum Selesai</span>
+                                                    @endif
+                                                </div>
+                                            @endif
+
+                                            {{-- 4. Treatment (Info) --}}
+                                            @if($hasTreatment)
+                                                <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200/60 dark:border-slate-700">
+                                                    <div class="flex items-center gap-1.5 min-w-0">
+                                                        <span class="text-[10px] font-black uppercase text-slate-500">✨ Treatment:</span>
+                                                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">
+                                                            {{ $wo?->prodCleaningBy?->name ?? 'Dikerjakan di QC' }}
+                                                        </span>
+                                                    </div>
+                                                    <span class="text-[9px] font-bold text-slate-400">Tahap QC</span>
+                                                </div>
+                                            @endif
+
+                                            {{-- Button to open complete technician modal if missing --}}
+                                            @if(!empty($missingStationList) && $suratJalan->status === 'DIKIRIM')
+                                                <button type="button" 
+                                                    @click="openModal('{{ $wo->id }}', '{{ $wo->spk_number }}', '{{ addslashes($wo->shoe_brand . ' ' . $wo->shoe_type) }}', {{ json_encode($missingStationList) }})"
+                                                    class="w-full mt-1.5 px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-[10px] uppercase tracking-wider shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                                                    <span>⚡ Lengkapi Teknisi ({{ count($missingStationList) }})</span>
+                                                </button>
+                                            @endif
+
+                                        </div>
+                                    </td>
+
+                                    {{-- Material Column --}}
                                     <td class="px-5 py-4 bg-emerald-50/20 dark:bg-emerald-950/10">
                                         @if($materials->isNotEmpty())
                                             <ul class="space-y-1.5">
@@ -225,7 +397,6 @@
                                                     @php
                                                         $matStatus = $mat->pivot->status ?? 'ALLOCATED';
                                                         
-                                                        // Accurate Arrival & Readiness Check
                                                         $hasArrived = in_array($matStatus, ['ALLOCATED', 'RECEIVED', 'READY', 'CONSUMED']) 
                                                             || !empty($wo?->material_arrival_date) 
                                                             || ($wo && $wo->materialRequests()->where('status', 'RECEIVED')->exists())
@@ -246,11 +417,11 @@
                                                         <div>
                                                             @if($isAllocated)
                                                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300">
-                                                                    <span>✓</span> READY / TERSEDIA
+                                                                    <span>✓</span> READY
                                                                 </span>
                                                             @else
                                                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300">
-                                                                    <span>⏳</span> BELUM READY (MENUNGGU BELANJA)
+                                                                    <span>⏳</span> BELUM READY
                                                                 </span>
                                                             @endif
                                                         </div>
@@ -281,29 +452,23 @@
                                         @endif
                                     </td>
 
-                                    {{-- Klasifikasi --}}
+                                    {{-- Status Handover --}}
                                     <td class="px-5 py-4 text-center">
-                                        <div class="flex flex-col items-center gap-1">
-                                            @if($wo?->perlu_bongkar)
-                                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-lg bg-orange-100 text-orange-800 dark:bg-orange-950/50 dark:text-orange-300 border border-orange-200">
-                                                    🔨 Bongkar
+                                        @if($suratJalan->jenis_serah_terima === 'produksi_to_post_qc')
+                                            @if($isReadyForQc)
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300">
+                                                    <span>✓</span> SIAP KE QC
                                                 </span>
                                             @else
-                                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400">
-                                                    🔨 Tdk Bongkar
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 animate-pulse">
+                                                    <span>⏳</span> BELUM LENGKAP
                                                 </span>
                                             @endif
-
-                                            @if($wo?->perlu_belanja && empty($wo?->material_arrival_date))
-                                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200">
-                                                    🛒 Belanja
-                                                </span>
-                                            @else
-                                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200">
-                                                    ✅ Stok Siap
-                                                </span>
-                                            @endif
-                                        </div>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300">
+                                                <span>✓</span> SIAP PRODUKSI
+                                            </span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -314,10 +479,20 @@
                 {{-- 3. FINAL ACTION / ACCEPTANCE FOOTER BANNER --}}
                 @if ($suratJalan->status == 'DIKIRIM')
                     <div class="pt-6 border-t border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div class="flex items-center gap-3 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 rounded-2xl border border-amber-200 dark:border-amber-800">
-                            <span class="text-base">⚠️</span>
-                            <span>Pastikan kondisi fisik sepatu dan bahan baku telah dihitung & sesuai sebelum mengonfirmasi penerimaan.</span>
-                        </div>
+                        @if($incompleteSpkCount > 0 && $suratJalan->jenis_serah_terima === 'produksi_to_post_qc')
+                            <div class="flex items-center gap-3 text-xs text-rose-800 dark:text-rose-200 bg-rose-50 dark:bg-rose-950/40 px-4 py-3 rounded-2xl border border-rose-200 dark:border-rose-800">
+                                <span class="text-lg">⚠️</span>
+                                <div>
+                                    <strong class="block font-black">Terdapat {{ $incompleteSpkCount }} SPK yang stasiun produksinya / teknisinya belum selesai.</strong>
+                                    <span>Gunakan tombol kuning <strong>"⚡ Lengkapi Teknisi"</strong> pada tabel di atas untuk melengkapi teknisi sebelum konfirmasi serah terima.</span>
+                                </div>
+                            </div>
+                        @else
+                            <div class="flex items-center gap-3 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 rounded-2xl border border-amber-200 dark:border-amber-800">
+                                <span class="text-base">⚠️</span>
+                                <span>Pastikan kondisi fisik sepatu dan bahan baku telah dihitung & sesuai sebelum mengonfirmasi penerimaan.</span>
+                            </div>
+                        @endif
 
                         <form action="{{ route('surat-jalan.receive', $suratJalan->id) }}" method="POST">
                             @csrf
@@ -349,5 +524,97 @@
             </div>
 
         </div>
+
+        {{-- 4. MODAL LENGKAPI TEKNISI & TUNTASKAN STASIUN (UI/UX PRO MAX) --}}
+        <div x-show="showModal" 
+             x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
+            
+            <div @click.away="showModal = false" 
+                 class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-6 transform transition-all"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95">
+                
+                <div class="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-700/60 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl font-bold">
+                            ⚡
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-slate-900 dark:text-white">Lengkapi Teknisi & Tuntaskan Stasiun</h3>
+                            <p class="text-xs text-slate-500 font-medium">Catat nama teknisi yang mengerjakan stasiun produksi</p>
+                        </div>
+                    </div>
+                    <button @click="showModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                {{-- SPK INFO BADGE --}}
+                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-600 flex items-center justify-between gap-3 text-xs">
+                    <div>
+                        <span class="text-[10px] font-black uppercase text-slate-400 block tracking-wider">TARGET SPK</span>
+                        <span class="font-mono font-black text-indigo-600 dark:text-indigo-400 text-sm" x-text="selectedSpk"></span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-black uppercase text-slate-400 block tracking-wider">SEPATU</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate block max-w-[200px]" x-text="selectedShoe"></span>
+                    </div>
+                </div>
+
+                <form action="{{ route('surat-jalan.complete-technician', $suratJalan->id) }}" method="POST" class="space-y-5">
+                    @csrf
+                    <input type="hidden" name="work_order_id" :value="selectedWoId">
+
+                    {{-- Stasiun Selection --}}
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                            Pilih Stasiun yang Diselesaikan:
+                        </label>
+                        <select name="station" x-model="station" class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                            <template x-for="st in availableStations" :key="st.key">
+                                <option :value="st.key" x-text="st.label"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    {{-- Teknisi Selection --}}
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                            Pilih Teknisi Pelaksana:
+                        </label>
+                        <select name="technician_id" x-model="technicianId" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                            <option value="">-- Pilih Teknisi --</option>
+                            @foreach($technicians as $tech)
+                                <option value="{{ $tech->id }}">{{ $tech->name }} ({{ ucfirst($tech->role ?? 'Teknisi') }})</option>
+                            @endforeach
+                        </select>
+                        <p class="text-[11px] text-slate-400 mt-1 font-medium">Teknisi ini akan dicatat di log audit stasiun dan status stasiun otomatis ditandai selesai.</p>
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/60">
+                        <button type="button" @click="showModal = false" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md shadow-amber-500/20 transition-all active:scale-95 flex items-center gap-2">
+                            <span>Simpan & Tuntaskan Stasiun ➔</span>
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
     </div>
 </x-workshop-pwa-layout>

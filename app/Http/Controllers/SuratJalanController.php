@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\SuratJalan;
 use App\Models\SuratJalanItem;
 use App\Models\WorkOrder;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class SuratJalanController extends Controller
 {
@@ -18,7 +20,16 @@ class SuratJalanController extends Controller
     {
         $jenis = $request->get('jenis', 'sortir_to_produksi');
 
-        $query = SuratJalan::with(['pengirim', 'penerima', 'items.workOrder.customer', 'items.workOrder.workOrderServices.service']);
+        $query = SuratJalan::with([
+            'pengirim', 
+            'penerima', 
+            'items.workOrder.customer', 
+            'items.workOrder.workOrderServices.service',
+            'items.workOrder.prodUpperBy',
+            'items.workOrder.prodSolBy',
+            'items.workOrder.qcJahitBy',
+            'items.workOrder.prodCleaningBy',
+        ]);
 
         if (!empty($jenis) && $jenis !== 'all') {
             $query->where('jenis_serah_terima', $jenis);
@@ -52,7 +63,7 @@ class SuratJalanController extends Controller
                 ->whereDoesntHave('suratJalanItems.suratJalan', function($q) {
                     $q->where('jenis_serah_terima', 'produksi_to_post_qc');
                 })
-                ->with(['customer', 'workOrderServices.service'])
+                ->with(['customer', 'workOrderServices.service', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'prodCleaningBy'])
                 ->get();
         }
 
@@ -95,7 +106,9 @@ class SuratJalanController extends Controller
                 })
                 ->whereDoesntHave('suratJalanItems.suratJalan', function($q) {
                     $q->where('jenis_serah_terima', 'sortir_to_produksi');
-                })->get();
+                })
+                ->with(['customer', 'workOrderServices.service'])
+                ->get();
         } elseif ($jenis === 'produksi_to_post_qc') {
             $availableOrders = WorkOrder::whereIn('status', [\App\Enums\WorkOrderStatus::PRODUCTION, \App\Enums\WorkOrderStatus::QC])
                 ->whereHas('logs', function($lq) {
@@ -104,7 +117,9 @@ class SuratJalanController extends Controller
                 })
                 ->whereDoesntHave('suratJalanItems.suratJalan', function($q) {
                     $q->where('jenis_serah_terima', 'produksi_to_post_qc');
-                })->get();
+                })
+                ->with(['customer', 'workOrderServices.service', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'prodCleaningBy'])
+                ->get();
         }
 
         $nomorSurat = SuratJalan::generateNomorSurat($jenis);
@@ -173,7 +188,12 @@ class SuratJalanController extends Controller
             'items.workOrder.materials',
             'items.workOrder.services',
             'items.workOrder.lead',
-            'items.workOrder.customer'
+            'items.workOrder.customer',
+            'items.workOrder.workOrderServices.service',
+            'items.workOrder.prodUpperBy',
+            'items.workOrder.prodSolBy',
+            'items.workOrder.qcJahitBy',
+            'items.workOrder.prodCleaningBy',
         ])->findOrFail($id);
 
         // Self-healing: Sync any SPK materials whose MaterialRequest is RECEIVED or arrived
@@ -205,10 +225,22 @@ class SuratJalanController extends Controller
         // Reload fresh relations
         $suratJalan->load([
             'items.workOrder.materials',
-            'items.workOrder.services'
+            'items.workOrder.services',
+            'items.workOrder.workOrderServices.service',
+            'items.workOrder.prodUpperBy',
+            'items.workOrder.prodSolBy',
+            'items.workOrder.qcJahitBy',
+            'items.workOrder.prodCleaningBy',
         ]);
 
-        return view('surat-jalan.show', compact('suratJalan'));
+        $technicians = User::where(function($q) {
+            $q->where('role', 'teknisi')
+              ->orWhere('role', 'admin')
+              ->orWhere('role', 'superadmin')
+              ->orWhere('role', 'owner');
+        })->where('is_active', true)->orderBy('name')->get();
+
+        return view('surat-jalan.show', compact('suratJalan', 'technicians'));
     }
 
     /**
@@ -222,10 +254,73 @@ class SuratJalanController extends Controller
             'items.workOrder.materials',
             'items.workOrder.services', 
             'items.workOrder.lead',
-            'items.workOrder.customer'
+            'items.workOrder.customer',
+            'items.workOrder.workOrderServices.service',
+            'items.workOrder.prodUpperBy',
+            'items.workOrder.prodSolBy',
+            'items.workOrder.qcJahitBy',
+            'items.workOrder.prodCleaningBy',
         ])->findOrFail($id);
 
         return view('surat-jalan.print', compact('suratJalan'));
+    }
+
+    /**
+     * Complete or update technician for a specific station directly from Surat Jalan
+     */
+    public function completeStationTechnician(Request $request, $id)
+    {
+        $request->validate([
+            'work_order_id' => 'required|exists:work_orders,id',
+            'station' => 'required|in:prod_upper,prod_sol,qc_jahit,prod_cleaning',
+            'technician_id' => 'required|exists:users,id',
+        ]);
+
+        $wo = WorkOrder::findOrFail($request->work_order_id);
+        $tech = User::findOrFail($request->technician_id);
+
+        $stationFieldBy = $request->station . '_by';
+        $stationFieldAt = $request->station . '_completed_at';
+        $stationFieldStarted = $request->station . '_started_at';
+
+        $wo->update([
+            $stationFieldBy => $tech->id,
+            $stationFieldStarted => $wo->$stationFieldStarted ?: now(),
+            $stationFieldAt => now(),
+        ]);
+
+        // Also assign technician to matching work order services
+        $stationCodeMap = [
+            'prod_upper' => 'UPPER',
+            'prod_sol' => 'SOLING',
+            'qc_jahit' => 'JAHIT',
+            'prod_cleaning' => 'TREATMENT',
+        ];
+        $targetStation = $stationCodeMap[$request->station] ?? '';
+
+        foreach ($wo->workOrderServices as $svc) {
+            $code = \App\Helpers\ProductionStationHelper::getStationCode($svc->category_name ?? $svc->service?->name ?? '');
+            if ($code === $targetStation || ($targetStation === 'JAHIT' && in_array($code, ['SOLING', 'UPPER', 'JAHIT']))) {
+                $svc->update(['technician_id' => $tech->id]);
+            }
+        }
+
+        $stationLabelMap = [
+            'prod_upper' => 'Reparasi Upper',
+            'prod_sol' => 'Reparasi Sol',
+            'qc_jahit' => 'QC Jahit',
+            'prod_cleaning' => 'Treatment/Cleaning',
+        ];
+        $label = $stationLabelMap[$request->station] ?? $request->station;
+
+        $wo->logs()->create([
+            'user_id' => Auth::id() ?? 1,
+            'step' => 'PRODUCTION',
+            'action' => 'TECHNICIAN_ASSIGNED',
+            'description' => "Teknisi stasiun {$label} dicatat & diselesaikan: {$tech->name} via Surat Jalan #{$id}",
+        ]);
+
+        return redirect()->back()->with('success', "Stasiun {$label} untuk SPK #{$wo->spk_number} berhasil diselesaikan oleh teknisi {$tech->name}!");
     }
 
     /**
@@ -233,63 +328,80 @@ class SuratJalanController extends Controller
      */
     public function markAsReceived(Request $request, $id)
     {
-        $suratJalan = SuratJalan::with(['items.workOrder.materials'])->findOrFail($id);
-        
-        DB::transaction(function () use ($suratJalan) {
-            $suratJalan->update([
-                'penerima_id' => Auth::id() ?? 1,
-                'diterima_at' => now(),
-                'status' => 'DITERIMA',
-            ]);
+        $suratJalan = SuratJalan::with([
+            'items.workOrder.materials',
+            'items.workOrder.workOrderServices.service',
+            'items.workOrder.prodUpperBy',
+            'items.workOrder.prodSolBy',
+            'items.workOrder.qcJahitBy',
+            'items.workOrder.prodCleaningBy',
+        ])->findOrFail($id);
 
-            $workflowService = app(\App\Services\WorkflowService::class);
-            $materialService = app(\App\Services\MaterialManagementService::class);
+        if ($suratJalan->status === 'DITERIMA') {
+            return redirect()->back()->with('info', "Surat Jalan {$suratJalan->nomor_surat} sudah pernah diterima sebelumnya.");
+        }
 
-            foreach ($suratJalan->items as $item) {
-                if (!$item->workOrder) continue;
-                $wo = $item->workOrder;
+        try {
+            DB::transaction(function () use ($suratJalan) {
+                $suratJalan->update([
+                    'penerima_id' => Auth::id() ?? 1,
+                    'diterima_at' => now(),
+                    'status' => 'DITERIMA',
+                ]);
 
-                if ($suratJalan->jenis_serah_terima === 'sortir_to_produksi') {
-                    if ($wo->status === \App\Enums\WorkOrderStatus::SORTIR) {
-                        $workflowService->updateStatus($wo, \App\Enums\WorkOrderStatus::PRODUCTION);
-                    }
+                $workflowService = app(\App\Services\WorkflowService::class);
+                $materialService = app(\App\Services\MaterialManagementService::class);
 
-                    // Material handover deduction (KELUAR) for Produksi usage
-                    if ($wo->materials && $wo->materials->isNotEmpty()) {
-                        foreach ($wo->materials as $mat) {
-                            $qty = $mat->pivot->quantity ?? 1;
+                foreach ($suratJalan->items as $item) {
+                    if (!$item->workOrder) continue;
+                    $wo = $item->workOrder;
 
-                            // Check if this material has already been deducted (OUT) for this SPK
-                            $alreadyDeducted = \App\Models\MaterialTransaction::where('reference_type', 'WorkOrder')
-                                ->where('reference_id', $wo->id)
-                                ->where('material_id', $mat->id)
-                                ->where('type', 'OUT')
-                                ->exists();
+                    if ($suratJalan->jenis_serah_terima === 'sortir_to_produksi') {
+                        if ($wo->status === \App\Enums\WorkOrderStatus::SORTIR) {
+                            $workflowService->updateStatus($wo, \App\Enums\WorkOrderStatus::PRODUCTION);
+                        }
 
-                            if (!$alreadyDeducted) {
-                                $freshMat = \App\Models\Material::where('id', $mat->id)->lockForUpdate()->first();
-                                if ($freshMat) {
-                                    $freshMat->decrement('stock', $qty);
-                                    $materialService->logTransaction(
-                                        $freshMat,
-                                        'OUT',
-                                        $qty,
-                                        'WorkOrder',
-                                        $wo->id,
-                                        "Pemakaian fisik material oleh Produksi via Surat Jalan #{$suratJalan->nomor_surat}"
-                                    );
+                        // Material handover deduction (KELUAR) for Produksi usage
+                        if ($wo->materials && $wo->materials->isNotEmpty()) {
+                            foreach ($wo->materials as $mat) {
+                                $qty = $mat->pivot->quantity ?? 1;
+
+                                // Check if this material has already been deducted (OUT) for this SPK
+                                $alreadyDeducted = \App\Models\MaterialTransaction::where('reference_type', 'WorkOrder')
+                                    ->where('reference_id', $wo->id)
+                                    ->where('material_id', $mat->id)
+                                    ->where('type', 'OUT')
+                                    ->exists();
+
+                                if (!$alreadyDeducted) {
+                                    $freshMat = \App\Models\Material::where('id', $mat->id)->lockForUpdate()->first();
+                                    if ($freshMat) {
+                                        $freshMat->decrement('stock', $qty);
+                                        $materialService->logTransaction(
+                                            $freshMat,
+                                            'OUT',
+                                            $qty,
+                                            'WorkOrder',
+                                            $wo->id,
+                                            "Pemakaian fisik material oleh Produksi via Surat Jalan #{$suratJalan->nomor_surat}"
+                                        );
+                                    }
                                 }
                             }
                         }
-                    }
-                } elseif ($suratJalan->jenis_serah_terima === 'produksi_to_post_qc') {
-                    if ($wo->status === \App\Enums\WorkOrderStatus::PRODUCTION) {
-                        $workflowService->updateStatus($wo, \App\Enums\WorkOrderStatus::QC);
+                    } elseif ($suratJalan->jenis_serah_terima === 'produksi_to_post_qc') {
+                        if ($wo->status === \App\Enums\WorkOrderStatus::PRODUCTION) {
+                            $workflowService->updateStatus($wo, \App\Enums\WorkOrderStatus::QC);
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        return redirect()->back()->with('success', "Surat Jalan {$suratJalan->nomor_surat} telah dikonfirmasi diterima. Seluruh SPK otomatis berpindah ke Produksi & pemakaian material tercatat!");
+            $targetName = $suratJalan->jenis_serah_terima === 'sortir_to_produksi' ? 'Produksi' : 'QC';
+            return redirect()->back()->with('success', "Surat Jalan {$suratJalan->nomor_surat} telah dikonfirmasi diterima. Seluruh SPK otomatis berpindah ke {$targetName} & data teknisi tercatat!");
+        } catch (\Throwable $e) {
+            Log::error("Surat Jalan Receive Error (#{$id}): " . $e->getMessage());
+            return redirect()->back()->with('error', "Gagal menerima Surat Jalan: " . $e->getMessage());
+        }
     }
 }
