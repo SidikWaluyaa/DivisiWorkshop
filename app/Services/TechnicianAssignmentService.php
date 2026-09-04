@@ -78,11 +78,7 @@ class TechnicianAssignmentService
 
         $hasUpper = $workOrder->workOrderServices->contains(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'UPPER');
         $hasSol = $workOrder->workOrderServices->contains(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'SOLING');
-        $hasJahit = $hasSol || $hasUpper || $workOrder->workOrderServices->contains(fn($s) => str_contains(strtolower($s->category_name ?? ''), 'jahit') || str_contains(strtolower($s->service?->name ?? ''), 'jahit'));
-
-        if (!$hasSol && !$hasUpper && !$hasJahit) {
-            $hasUpper = true;
-        }
+        $hasJahit = ($hasSol || $hasUpper) && $workOrder->workOrderServices->contains(fn($s) => str_contains(strtolower($s->category_name ?? ''), 'jahit') || str_contains(strtolower($s->service?->name ?? ''), 'jahit'));
 
         $updates = [];
 

@@ -213,13 +213,13 @@
                               $stations = [
                                   'sol' => ['label' => 'Sol', 'by' => 'prodSolBy', 'col' => 'prod_sol_completed_at'],
                                   'upper' => ['label' => 'Upper', 'by' => 'prodUpperBy', 'col' => 'prod_upper_completed_at'],
-                                  'cleaning' => ['label' => 'Cleaning', 'by' => 'prodCleaningBy', 'col' => 'prod_cleaning_completed_at'],
+                                  'jahit' => ['label' => 'QC Jahit', 'by' => 'qcJahitBy', 'col' => 'qc_jahit_completed_at'],
                               ];
                           } else {
                               $stations = [
-                                  'jahit' => ['label' => 'Jahit', 'by' => 'qcJahitBy', 'col' => 'qc_jahit_completed_at'],
-                                  'cleanup' => ['label' => 'Cleanup', 'by' => 'qcCleanupBy', 'col' => 'qc_cleanup_completed_at'],
-                                  'final' => ['label' => 'Final', 'by' => 'qcFinalBy', 'col' => 'qc_final_completed_at'],
+                                  'treatment' => ['label' => 'Treatment', 'by' => 'prodCleaningBy', 'col' => 'prod_cleaning_completed_at'],
+                                  'cleanup' => ['label' => 'QC Cleanup', 'by' => 'qcCleanupBy', 'col' => 'qc_cleanup_completed_at'],
+                                  'final' => ['label' => 'QC Final', 'by' => 'qcFinalBy', 'col' => 'qc_final_completed_at'],
                               ];
                           }
                       @endphp

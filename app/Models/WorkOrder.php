@@ -571,7 +571,7 @@ class WorkOrder extends Model
                                 ->orWhereNotNull('prep_sol_completed_at');
                         })
                         ->where(function ($ssq) {
-                            $ssq->withoutServiceCategory([self::CAT_UPPER, self::CAT_REPAINT])
+                            $ssq->withoutServiceCategory(self::CAT_UPPER)
                                 ->orWhereNotNull('prep_upper_completed_at');
                         });
                   });
@@ -825,7 +825,7 @@ class WorkOrder extends Model
 
     public function getNeedsPrepUpperAttribute(): bool
     {
-        return $this->hasServiceCategory([self::CAT_UPPER, self::CAT_REPAINT]);
+        return $this->hasServiceCategory(self::CAT_UPPER);
     }
 
     public function getMissingPrepTasksAttribute(): string
