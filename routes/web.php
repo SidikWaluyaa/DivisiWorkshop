@@ -305,6 +305,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}', [App\Http\Controllers\SuratJalanController::class, 'show'])->name('show');
         Route::get('/{id}/print', [App\Http\Controllers\SuratJalanController::class, 'print'])->name('print');
         Route::post('/{id}/receive', [App\Http\Controllers\SuratJalanController::class, 'markAsReceived'])->name('receive');
+        Route::post('/{id}/complete-technician', [App\Http\Controllers\SuratJalanController::class, 'completeStationTechnician'])->name('complete-technician');
     });
 
 

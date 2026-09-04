@@ -646,9 +646,11 @@ class WorkOrder extends Model
     // ========================================
     // QC SCOPES ===
 
-    public function scopeQcJahit($query)
+    public function scopeQcTreatment($query)
     {
-        return $query->withServiceCategory(self::CAT_SOL);
+        return $query->whereHas('workOrderServices', function ($q) {
+            $q->whereIn('category_name', [self::CAT_REPAINT, 'Cleaning', 'Treatment', 'Whitening']);
+        });
     }
 
     public function scopeQcCleanup($query)

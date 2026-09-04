@@ -74,26 +74,40 @@
                                 </div>
                             @endif
 
-                            <div class="max-h-72 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-2xl p-3 space-y-2 bg-slate-50/50 custom-scroll">
+                            <div class="max-h-80 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-2xl p-3 space-y-2 bg-slate-50/50 custom-scroll">
                                 @forelse ($availableOrders as $wo)
+                                    @php
+                                        $isProdReady = $jenis === 'produksi_to_post_qc' ? $wo->is_production_finished : true;
+                                    @endphp
                                     <label x-show="!search || '{{ strtolower($wo->spk_number . ' ' . $wo->customer_name . ' ' . $wo->shoe_brand . ' ' . $wo->shoe_type) }}'.includes(search.toLowerCase())" 
                                            class="flex items-center justify-between p-3.5 bg-white dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600 hover:border-indigo-300 transition-all cursor-pointer group shadow-sm">
-                                        <div class="flex items-center gap-3.5">
-                                            <input type="checkbox" name="work_order_ids[]" value="{{ $wo->id }}" class="spk-checkbox rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
-                                            <div>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="font-black text-xs text-slate-800 dark:text-white group-hover:text-indigo-600 transition-colors">{{ $wo->spk_number }}</span>
+                                        <div class="flex items-center gap-3.5 min-w-0">
+                                            <input type="checkbox" name="work_order_ids[]" value="{{ $wo->id }}" class="spk-checkbox rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 shrink-0">
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <span class="font-black text-xs text-slate-800 dark:text-white group-hover:text-indigo-600 transition-colors font-mono">{{ $wo->spk_number }}</span>
                                                     <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider {{ strtolower($wo->priority) == 'urgent' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600' }}">
                                                         {{ $wo->priority ?? 'NORMAL' }}
                                                     </span>
+                                                    @if($jenis === 'produksi_to_post_qc')
+                                                        @if($isProdReady)
+                                                            <span class="px-2 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                                                ✓ Produksi Lengkap
+                                                            </span>
+                                                        @else
+                                                            <span class="px-2 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
+                                                                ⏳ Belum: {{ $wo->missing_production_tasks ?: 'Teknisi Belum Lengkap' }}
+                                                            </span>
+                                                        @endif
+                                                    @endif
                                                 </div>
-                                                <p class="text-[11px] text-slate-500 font-bold mt-0.5">
+                                                <p class="text-[11px] text-slate-500 font-bold mt-0.5 truncate">
                                                     {{ $wo->customer_name }} • <span class="text-slate-700 dark:text-slate-300">{{ $wo->shoe_brand }} {{ $wo->shoe_type }}</span>
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div class="text-right text-[10px] text-slate-400 font-bold">
+                                        <div class="text-right text-[10px] text-slate-400 font-bold shrink-0 ml-3">
                                             {{ $wo->created_at ? $wo->created_at->format('d M Y') : '-' }}
                                         </div>
                                     </label>
