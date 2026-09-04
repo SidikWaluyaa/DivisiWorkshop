@@ -214,19 +214,19 @@
                     </div>
                 </div>
 
-                {{-- MODERN TABLE --}}
+                {{-- MODERN TABLE (BALANCED MIN-WIDTHS) --}}
                 <div class="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-                    <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                    <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300 divide-y divide-slate-100 dark:divide-slate-700/60">
                         <thead class="bg-slate-50 dark:bg-slate-700/50 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-700/80">
                             <tr>
-                                <th class="px-5 py-4 w-12 text-center">No</th>
-                                <th class="px-5 py-4">Nomor SPK & Customer</th>
-                                <th class="px-5 py-4">Merk & Tipe Sepatu</th>
-                                <th class="px-5 py-4">Rincian Jasa</th>
-                                <th class="px-5 py-4 bg-indigo-50/40 dark:bg-indigo-950/20">Stasiun & Teknisi Pelaksana</th>
-                                <th class="px-5 py-4 bg-emerald-50/40 dark:bg-emerald-950/20">Bahan Baku / Material</th>
-                                <th class="px-5 py-4 text-center">Est. Selesai</th>
-                                <th class="px-5 py-4 text-center">Status Handover</th>
+                                <th class="px-4 py-4 w-12 text-center">No</th>
+                                <th class="px-5 py-4 min-w-[170px]">Nomor SPK & Customer</th>
+                                <th class="px-5 py-4 min-w-[150px]">Merk & Tipe Sepatu</th>
+                                <th class="px-5 py-4 min-w-[160px]">Rincian Jasa</th>
+                                <th class="px-5 py-4 min-w-[270px] bg-indigo-50/50 dark:bg-indigo-950/30 text-indigo-950 dark:text-indigo-200">Stasiun & Teknisi Pelaksana</th>
+                                <th class="px-5 py-4 min-w-[210px] bg-emerald-50/40 dark:bg-emerald-950/20 text-emerald-950 dark:text-emerald-200">Bahan Baku / Material</th>
+                                <th class="px-5 py-4 min-w-[110px] text-center">Est. Selesai</th>
+                                <th class="px-5 py-4 min-w-[120px] text-center">Status Handover</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60 bg-white dark:bg-slate-800">
@@ -258,7 +258,7 @@
                                 @endphp
                                 <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-700/40 transition-colors {{ !$isReadyForQc && $suratJalan->jenis_serah_terima === 'produksi_to_post_qc' ? 'bg-amber-50/30 dark:bg-amber-950/10' : '' }}">
                                     {{-- Index --}}
-                                    <td class="px-5 py-4 text-center font-bold text-slate-400">
+                                    <td class="px-4 py-4 text-center font-bold text-slate-400">
                                         {{ $index + 1 }}
                                     </td>
 
@@ -272,7 +272,7 @@
                                                 <span class="px-1.5 py-0.2 bg-amber-500 text-slate-950 text-[9px] font-black rounded">OTO</span>
                                             @endif
                                         </div>
-                                        <span class="text-slate-600 dark:text-slate-300 font-bold block text-[11px]">{{ $wo?->customer_name }}</span>
+                                        <span class="text-slate-700 dark:text-slate-300 font-bold block text-[11px]">{{ $wo?->customer_name }}</span>
                                         @if($wo?->phone)
                                             <span class="text-[10px] text-slate-400">{{ $wo->phone }}</span>
                                         @endif
@@ -309,71 +309,140 @@
                                         @endif
                                     </td>
 
-                                    {{-- Stasiun & Teknisi Pelaksana (NEW / ENHANCED) --}}
+                                    {{-- Stasiun & Teknisi Pelaksana (PRO MAX STACKED MINI-CARDS) --}}
                                     <td class="px-5 py-4 bg-indigo-50/20 dark:bg-indigo-950/10">
-                                        <div class="space-y-1.5">
+                                        <div class="space-y-2">
                                             
                                             {{-- 1. Reparasi Upper --}}
                                             @if($hasUpper)
-                                                <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl {{ $wo?->prod_upper_completed_at ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800' }}">
-                                                    <div class="flex items-center gap-1.5 min-w-0">
-                                                        <span class="text-[10px] font-black uppercase {{ $wo?->prod_upper_completed_at ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">👞 Upper:</span>
-                                                        <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
-                                                            {{ $wo?->prodUpperBy?->name ?? 'Belum Ditugaskan' }}
+                                                <div class="p-2.5 rounded-xl border transition-all shadow-2xs {{ $wo?->prod_upper_completed_at ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/80' : 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/80' }}">
+                                                    <div class="flex items-center justify-between gap-1.5 mb-1">
+                                                        <span class="text-[10px] font-black uppercase tracking-wider {{ $wo?->prod_upper_completed_at ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }} flex items-center gap-1">
+                                                            <span>👞</span> Upper
                                                         </span>
+                                                        @if($wo?->prod_upper_completed_at)
+                                                            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-200/80 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-200">
+                                                                ✓ Selesai
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-200/80 text-rose-900 dark:bg-rose-900 dark:text-rose-200 animate-pulse">
+                                                                ⏳ Belum
+                                                            </span>
+                                                        @endif
                                                     </div>
-                                                    @if($wo?->prod_upper_completed_at)
-                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">✓ Selesai</span>
-                                                    @else
-                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">⏳ Belum Selesai</span>
-                                                    @endif
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-6 h-6 rounded-lg {{ $wo?->prod_upper_completed_at ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-300' }} font-black text-[10px] flex items-center justify-center shrink-0">
+                                                            {{ strtoupper(substr($wo?->prodUpperBy?->name ?? '?', 0, 1)) }}
+                                                        </div>
+                                                        <div class="min-w-0 flex-1">
+                                                            <span class="text-xs font-bold text-slate-900 dark:text-white block truncate leading-tight">
+                                                                {{ $wo?->prodUpperBy?->name ?? 'Belum Ditugaskan' }}
+                                                            </span>
+                                                            <span class="text-[9px] text-slate-500 dark:text-slate-400 font-medium block">
+                                                                {{ $wo?->prod_upper_completed_at ? 'Selesai: ' . $wo->prod_upper_completed_at->format('d M H:i') : 'Menunggu Pengerjaan' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             @endif
 
                                             {{-- 2. Reparasi Sol --}}
                                             @if($hasSol)
-                                                <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl {{ $wo?->prod_sol_completed_at ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800' }}">
-                                                    <div class="flex items-center gap-1.5 min-w-0">
-                                                        <span class="text-[10px] font-black uppercase {{ $wo?->prod_sol_completed_at ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">👟 Soling:</span>
-                                                        <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
-                                                            {{ $wo?->prodSolBy?->name ?? 'Belum Ditugaskan' }}
+                                                <div class="p-2.5 rounded-xl border transition-all shadow-2xs {{ $wo?->prod_sol_completed_at ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/80' : 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/80' }}">
+                                                    <div class="flex items-center justify-between gap-1.5 mb-1">
+                                                        <span class="text-[10px] font-black uppercase tracking-wider {{ $wo?->prod_sol_completed_at ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }} flex items-center gap-1">
+                                                            <span>👟</span> Soling
                                                         </span>
+                                                        @if($wo?->prod_sol_completed_at)
+                                                            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-200/80 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-200">
+                                                                ✓ Selesai
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-200/80 text-rose-900 dark:bg-rose-900 dark:text-rose-200 animate-pulse">
+                                                                ⏳ Belum
+                                                            </span>
+                                                        @endif
                                                     </div>
-                                                    @if($wo?->prod_sol_completed_at)
-                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">✓ Selesai</span>
-                                                    @else
-                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">⏳ Belum Selesai</span>
-                                                    @endif
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-6 h-6 rounded-lg {{ $wo?->prod_sol_completed_at ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-300' }} font-black text-[10px] flex items-center justify-center shrink-0">
+                                                            {{ strtoupper(substr($wo?->prodSolBy?->name ?? '?', 0, 1)) }}
+                                                        </div>
+                                                        <div class="min-w-0 flex-1">
+                                                            <span class="text-xs font-bold text-slate-900 dark:text-white block truncate leading-tight">
+                                                                {{ $wo?->prodSolBy?->name ?? 'Belum Ditugaskan' }}
+                                                            </span>
+                                                            <span class="text-[9px] text-slate-500 dark:text-slate-400 font-medium block">
+                                                                {{ $wo?->prod_sol_completed_at ? 'Selesai: ' . $wo->prod_sol_completed_at->format('d M H:i') : 'Menunggu Pengerjaan' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             @endif
 
                                             {{-- 3. QC Jahit --}}
                                             @if($hasJahit)
-                                                <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl {{ $wo?->qc_jahit_completed_at ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800' }}">
-                                                    <div class="flex items-center gap-1.5 min-w-0">
-                                                        <span class="text-[10px] font-black uppercase {{ $wo?->qc_jahit_completed_at ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">🧵 QC Jahit:</span>
-                                                        <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
-                                                            {{ $wo?->qcJahitBy?->name ?? 'Belum Ditugaskan' }}
+                                                <div class="p-2.5 rounded-xl border transition-all shadow-2xs {{ $wo?->qc_jahit_completed_at ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/80' : 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/80' }}">
+                                                    <div class="flex items-center justify-between gap-1.5 mb-1">
+                                                        <span class="text-[10px] font-black uppercase tracking-wider {{ $wo?->qc_jahit_completed_at ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }} flex items-center gap-1">
+                                                            <span>🧵</span> QC Jahit
                                                         </span>
+                                                        @if($wo?->qc_jahit_completed_at)
+                                                            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-200/80 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-200">
+                                                                ✓ Selesai
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-200/80 text-rose-900 dark:bg-rose-900 dark:text-rose-200 animate-pulse">
+                                                                ⏳ Belum
+                                                            </span>
+                                                        @endif
                                                     </div>
-                                                    @if($wo?->qc_jahit_completed_at)
-                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">✓ Selesai</span>
-                                                    @else
-                                                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">⏳ Belum Selesai</span>
-                                                    @endif
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-6 h-6 rounded-lg {{ $wo?->qc_jahit_completed_at ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-300' }} font-black text-[10px] flex items-center justify-center shrink-0">
+                                                            {{ strtoupper(substr($wo?->qcJahitBy?->name ?? '?', 0, 1)) }}
+                                                        </div>
+                                                        <div class="min-w-0 flex-1">
+                                                            <span class="text-xs font-bold text-slate-900 dark:text-white block truncate leading-tight">
+                                                                {{ $wo?->qcJahitBy?->name ?? 'Belum Ditugaskan' }}
+                                                            </span>
+                                                            <span class="text-[9px] text-slate-500 dark:text-slate-400 font-medium block">
+                                                                {{ $wo?->qc_jahit_completed_at ? 'Selesai: ' . $wo->qc_jahit_completed_at->format('d M H:i') : 'Menunggu Pengerjaan' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             @endif
 
-                                            {{-- 4. Treatment (Info) --}}
+                                            {{-- 4. Treatment (Cleaning/Repaint) --}}
                                             @if($hasTreatment)
-                                                <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200/60 dark:border-slate-700">
-                                                    <div class="flex items-center gap-1.5 min-w-0">
-                                                        <span class="text-[10px] font-black uppercase text-slate-500">✨ Treatment:</span>
-                                                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">
-                                                            {{ $wo?->prodCleaningBy?->name ?? 'Dikerjakan di QC' }}
+                                                <div class="p-2.5 rounded-xl border border-indigo-100 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/30 transition-all shadow-2xs">
+                                                    <div class="flex items-center justify-between gap-1.5 mb-1">
+                                                        <span class="text-[10px] font-black uppercase tracking-wider text-indigo-800 dark:text-indigo-300 flex items-center gap-1">
+                                                            <span>✨</span> Treatment / Cleaning
+                                                        </span>
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                                                            Tahap QC
                                                         </span>
                                                     </div>
-                                                    <span class="text-[9px] font-bold text-slate-400">Tahap QC</span>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-6 h-6 rounded-lg bg-indigo-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
+                                                            {{ strtoupper(substr($wo?->prodCleaningBy?->name ?? 'T', 0, 1)) }}
+                                                        </div>
+                                                        <div class="min-w-0 flex-1">
+                                                            <span class="text-xs font-bold text-slate-900 dark:text-white block truncate leading-tight">
+                                                                {{ $wo?->prodCleaningBy?->name ?? 'Dikerjakan di QC' }}
+                                                            </span>
+                                                            <span class="text-[9px] text-slate-400 font-medium block">
+                                                                Inspeksi & Treatment di QC
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            {{-- If no stations at all --}}
+                                            @if(!$hasUpper && !$hasSol && !$hasJahit && !$hasTreatment)
+                                                <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200/60 dark:border-slate-700 text-center">
+                                                    <span class="text-[10px] font-bold text-slate-400">Standar Workshop (Tanpa Stasiun Khusus)</span>
                                                 </div>
                                             @endif
 
@@ -381,7 +450,7 @@
                                             @if(!empty($missingStationList) && $suratJalan->status === 'DIKIRIM')
                                                 <button type="button" 
                                                     @click="openModal('{{ $wo->id }}', '{{ $wo->spk_number }}', '{{ addslashes($wo->shoe_brand . ' ' . $wo->shoe_type) }}', {{ json_encode($missingStationList) }})"
-                                                    class="w-full mt-1.5 px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-[10px] uppercase tracking-wider shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                                                    class="w-full mt-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-[10px] uppercase tracking-wider shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1.5">
                                                     <span>⚡ Lengkapi Teknisi ({{ count($missingStationList) }})</span>
                                                 </button>
                                             @endif
@@ -416,12 +485,12 @@
                                                         </div>
                                                         <div>
                                                             @if($isAllocated)
-                                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300">
+                                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300">
                                                                     <span>✓</span> READY
                                                                 </span>
                                                             @else
-                                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300">
-                                                                    <span>⏳</span> BELUM READY
+                                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300">
+                                                                    <span>⏳</span> BELUM
                                                                 </span>
                                                             @endif
                                                         </div>
@@ -429,10 +498,10 @@
                                                 @endforeach
                                             </ul>
                                             <span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 mt-1.5 block">
-                                                Total {{ $materials->count() }} Bahan Baku Terkait
+                                                Total {{ $materials->count() }} Bahan Baku
                                             </span>
                                         @else
-                                            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-dashed border-slate-200 dark:border-slate-600 text-center">
+                                            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-dashed border-slate-200 dark:border-slate-600 text-center">
                                                 <span class="text-slate-400 dark:text-slate-500 font-semibold text-[10px] block">
                                                     ℹ️ Tidak butuh bahan baku tambahan
                                                 </span>
@@ -443,7 +512,7 @@
                                     {{-- Est. Selesai --}}
                                     <td class="px-5 py-4 text-center">
                                         @if($estDate)
-                                            <span class="font-black text-slate-800 dark:text-white block text-xs">
+                                            <span class="font-black text-slate-800 dark:text-white block text-xs font-mono">
                                                 {{ $estDate->translatedFormat('d M Y') }}
                                             </span>
                                             <span class="text-[10px] text-slate-400 font-medium">Target SPK</span>
@@ -456,16 +525,16 @@
                                     <td class="px-5 py-4 text-center">
                                         @if($suratJalan->jenis_serah_terima === 'produksi_to_post_qc')
                                             @if($isReadyForQc)
-                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300">
+                                                <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 shadow-2xs">
                                                     <span>✓</span> SIAP KE QC
                                                 </span>
                                             @else
-                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 animate-pulse">
+                                                <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 animate-pulse shadow-2xs">
                                                     <span>⏳</span> BELUM LENGKAP
                                                 </span>
                                             @endif
                                         @else
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300">
+                                            <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 shadow-2xs">
                                                 <span>✓</span> SIAP PRODUKSI
                                             </span>
                                         @endif
@@ -480,23 +549,23 @@
                 @if ($suratJalan->status == 'DIKIRIM')
                     <div class="pt-6 border-t border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-4">
                         @if($incompleteSpkCount > 0 && $suratJalan->jenis_serah_terima === 'produksi_to_post_qc')
-                            <div class="flex items-center gap-3 text-xs text-rose-800 dark:text-rose-200 bg-rose-50 dark:bg-rose-950/40 px-4 py-3 rounded-2xl border border-rose-200 dark:border-rose-800">
-                                <span class="text-lg">⚠️</span>
+                            <div class="flex items-center gap-3 text-xs text-rose-800 dark:text-rose-200 bg-rose-50 dark:bg-rose-950/40 px-4 py-3.5 rounded-2xl border border-rose-200 dark:border-rose-800 w-full sm:w-auto">
+                                <span class="text-lg shrink-0">⚠️</span>
                                 <div>
                                     <strong class="block font-black">Terdapat {{ $incompleteSpkCount }} SPK yang stasiun produksinya / teknisinya belum selesai.</strong>
-                                    <span>Gunakan tombol kuning <strong>"⚡ Lengkapi Teknisi"</strong> pada tabel di atas untuk melengkapi teknisi sebelum konfirmasi serah terima.</span>
+                                    <span class="text-rose-700 dark:text-rose-300">Gunakan tombol kuning <strong>"⚡ Lengkapi Teknisi"</strong> pada tabel di atas untuk melengkapi teknisi sebelum konfirmasi serah terima.</span>
                                 </div>
                             </div>
                         @else
-                            <div class="flex items-center gap-3 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 rounded-2xl border border-amber-200 dark:border-amber-800">
-                                <span class="text-base">⚠️</span>
+                            <div class="flex items-center gap-3 text-xs text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 px-4 py-3.5 rounded-2xl border border-amber-200 dark:border-amber-800 w-full sm:w-auto">
+                                <span class="text-base shrink-0">⚠️</span>
                                 <span>Pastikan kondisi fisik sepatu dan bahan baku telah dihitung & sesuai sebelum mengonfirmasi penerimaan.</span>
                             </div>
                         @endif
 
-                        <form action="{{ route('surat-jalan.receive', $suratJalan->id) }}" method="POST">
+                        <form action="{{ route('surat-jalan.receive', $suratJalan->id) }}" method="POST" class="shrink-0 w-full sm:w-auto">
                             @csrf
-                            <button type="submit" class="px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center gap-2">
+                            <button type="submit" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 <span>Konfirmasi Terima Surat Jalan Ini</span>
                             </button>
