@@ -6,6 +6,7 @@ use App\Models\SuratJalan;
 use App\Models\SuratJalanItem;
 use App\Models\WorkOrder;
 use App\Models\User;
+use App\Services\TechnicianAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -233,12 +234,12 @@ class SuratJalanController extends Controller
             'items.workOrder.prodCleaningBy',
         ]);
 
-        $technicians = User::where(function($q) {
-            $q->where('role', 'teknisi')
-              ->orWhere('role', 'admin')
-              ->orWhere('role', 'superadmin')
-              ->orWhere('role', 'owner');
-        })->where('is_active', true)->orderBy('name')->get();
+        // Load ONLY technicians with their station and specialization
+        $technicians = User::where('role', 'technician')
+            ->where('is_active', true)
+            ->orderBy('station')
+            ->orderBy('name')
+            ->get(['id', 'name', 'role', 'station', 'specialization']);
 
         return view('surat-jalan.show', compact('suratJalan', 'technicians'));
     }
@@ -263,6 +264,88 @@ class SuratJalanController extends Controller
         ])->findOrFail($id);
 
         return view('surat-jalan.print', compact('suratJalan'));
+    }
+
+    /**
+     * Helper to auto-assign missing technicians and complete production stations for a WorkOrder
+     */
+    public function completeProductionForWorkOrder(WorkOrder $wo, int $suratJalanId): void
+    {
+        $techAssignmentService = app(TechnicianAssignmentService::class);
+        $techAssignmentService->autoAssignProductionTechnicians($wo, false);
+        $wo->refresh();
+
+        $updates = [];
+
+        // 1. Upper
+        if ($wo->needs_prod_upper) {
+            if (!$wo->prod_upper_by) {
+                $tech = User::where('role', 'technician')->where('station', 'UPPER')->where('is_active', true)->first();
+                if ($tech) $updates['prod_upper_by'] = $tech->id;
+            }
+            if (!$wo->prod_upper_started_at) $updates['prod_upper_started_at'] = now();
+            if (!$wo->prod_upper_completed_at) $updates['prod_upper_completed_at'] = now();
+        }
+
+        // 2. Soling
+        if ($wo->needs_prod_sol) {
+            if (!$wo->prod_sol_by) {
+                $tech = User::where('role', 'technician')->where('station', 'SOLING')->where('is_active', true)->first();
+                if ($tech) $updates['prod_sol_by'] = $tech->id;
+            }
+            if (!$wo->prod_sol_started_at) $updates['prod_sol_started_at'] = now();
+            if (!$wo->prod_sol_completed_at) $updates['prod_sol_completed_at'] = now();
+        }
+
+        // 3. QC Jahit
+        if ($wo->needs_prod_jahit) {
+            if (!$wo->qc_jahit_by) {
+                $tech = User::where('role', 'technician')
+                    ->where(function($q) {
+                        $q->where('specialization', 'QC Jahit')
+                          ->orWhere('station', 'QC')
+                          ->orWhere('station', 'SOLING');
+                    })
+                    ->where('is_active', true)
+                    ->first();
+                if ($tech) $updates['qc_jahit_by'] = $tech->id;
+            }
+            if (!$wo->qc_jahit_started_at) $updates['qc_jahit_started_at'] = now();
+            if (!$wo->qc_jahit_completed_at) $updates['qc_jahit_completed_at'] = now();
+        }
+
+        if (!empty($updates)) {
+            $wo->update($updates);
+            $wo->logs()->create([
+                'user_id' => Auth::id() ?? 1,
+                'step' => 'PRODUCTION',
+                'action' => 'TECHNICIAN_AUTO_COMPLETED',
+                'description' => "Seluruh stasiun produksi otomatis dilengkapi teknisi & dituntaskan via Surat Jalan #{$suratJalanId}",
+            ]);
+        }
+    }
+
+    /**
+     * 1-Click action to auto-complete all missing technicians & stations for all SPKs in Surat Jalan
+     */
+    public function autoCompleteTechnicians(Request $request, $id)
+    {
+        $suratJalan = SuratJalan::with(['items.workOrder.workOrderServices'])->findOrFail($id);
+
+        $completedCount = 0;
+        foreach ($suratJalan->items as $item) {
+            if (!$item->workOrder) continue;
+            $wo = $item->workOrder;
+
+            if ($suratJalan->jenis_serah_terima === 'produksi_to_post_qc') {
+                if (!$wo->is_production_finished) {
+                    $this->completeProductionForWorkOrder($wo, $suratJalan->id);
+                    $completedCount++;
+                }
+            }
+        }
+
+        return redirect()->back()->with('success', "Berhasil! Sebanyak {$completedCount} SPK telah otomatis dilengkapi teknisi stasiun & dituntaskan.");
     }
 
     /**
@@ -320,7 +403,7 @@ class SuratJalanController extends Controller
             'description' => "Teknisi stasiun {$label} dicatat & diselesaikan: {$tech->name} via Surat Jalan #{$id}",
         ]);
 
-        return redirect()->back()->with('success', "Stasiun {$label} untuk SPK #{$wo->spk_number} berhasil diselesaikan oleh teknisi {$tech->name}!");
+        return redirect()->back()->with('success', "Stasiun {$label} untuk SPK #{$wo->spk_number} berhasil diselesaikan oleh teknisi {$tech->name} ({$tech->specialization})!");
     }
 
     /**
@@ -391,6 +474,11 @@ class SuratJalanController extends Controller
                         }
                     } elseif ($suratJalan->jenis_serah_terima === 'produksi_to_post_qc') {
                         if ($wo->status === \App\Enums\WorkOrderStatus::PRODUCTION) {
+                            // Auto-complete any missing production tasks with matching technicians
+                            if (!$wo->is_production_finished) {
+                                $this->completeProductionForWorkOrder($wo, $suratJalan->id);
+                                $wo->refresh();
+                            }
                             $workflowService->updateStatus($wo, \App\Enums\WorkOrderStatus::QC);
                         }
                     }

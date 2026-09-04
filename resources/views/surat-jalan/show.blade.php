@@ -7,16 +7,54 @@
         station: 'prod_upper',
         technicianId: '',
         availableStations: [],
-        openModal(woId, spk, shoe, stations) {
+        allTechnicians: {{ Js::from($technicians) }},
+        get filteredTechnicians() {
+            if (!this.station) return this.allTechnicians;
+            const stationMap = {
+                'prod_upper': 'UPPER',
+                'prod_sol': 'SOLING',
+                'qc_jahit': 'QC',
+                'prod_cleaning': 'TREATMENT'
+            };
+            const targetStation = stationMap[this.station] || '';
+            
+            let list = this.allTechnicians.filter(t => {
+                const spec = (t.specialization || '').toLowerCase();
+                const st = (t.station || '').toUpperCase();
+                
+                if (this.station === 'prod_upper') {
+                    return st === 'UPPER' || spec.includes('upper');
+                }
+                if (this.station === 'prod_sol') {
+                    return st === 'SOLING' || spec.includes('sol');
+                }
+                if (this.station === 'qc_jahit') {
+                    return st === 'QC' || spec.includes('jahit') || st === 'SOLING';
+                }
+                if (this.station === 'prod_cleaning') {
+                    return st === 'TREATMENT' || spec.includes('treatment') || spec.includes('clean') || spec.includes('repaint');
+                }
+                return st === targetStation;
+            });
+
+            return list.length > 0 ? list : this.allTechnicians;
+        },
+        openModal(woId, spk, shoe, stations, defaultTechId = '') {
             this.selectedWoId = woId;
             this.selectedSpk = spk;
             this.selectedShoe = shoe;
             this.availableStations = stations;
             if (stations.length > 0) {
                 this.station = stations[0].key;
+                this.technicianId = stations[0].current_tech_id ? String(stations[0].current_tech_id) : '';
+            } else {
+                this.technicianId = defaultTechId ? String(defaultTechId) : '';
             }
-            this.technicianId = '';
             this.showModal = true;
+        },
+        onStationChange() {
+            const found = this.availableStations.find(s => s.key === this.station);
+            this.technicianId = found && found.current_tech_id ? String(found.current_tech_id) : '';
         }
     }" class="py-8 bg-slate-50/50 dark:bg-slate-900 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -100,6 +138,15 @@
                     </div>
 
                     <div class="flex items-center gap-3 flex-wrap">
+                        @if($incompleteSpkCount > 0 && $suratJalan->status === 'DIKIRIM' && $suratJalan->jenis_serah_terima === 'produksi_to_post_qc')
+                            <form action="{{ route('surat-jalan.auto-complete-technicians', $suratJalan->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider shadow-md shadow-amber-500/20 transition-all active:scale-95 flex items-center gap-2">
+                                    <span>⚡ Lengkapi & Tuntaskan Otomatis ({{ $incompleteSpkCount }} SPK)</span>
+                                </button>
+                            </form>
+                        @endif
+
                         <a href="{{ route('surat-jalan.index') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs">
                             <span>← Kembali</span>
                         </a>
@@ -245,13 +292,25 @@
                                     $hasTreatment = $wo?->needs_prod_treatment;
 
                                     if ($hasUpper && empty($wo?->prod_upper_completed_at)) {
-                                        $missingStationList[] = ['key' => 'prod_upper', 'label' => 'Reparasi Upper'];
+                                        $missingStationList[] = [
+                                            'key' => 'prod_upper', 
+                                            'label' => 'Reparasi Upper (Stasiun UPPER)',
+                                            'current_tech_id' => $wo?->prod_upper_by
+                                        ];
                                     }
                                     if ($hasSol && empty($wo?->prod_sol_completed_at)) {
-                                        $missingStationList[] = ['key' => 'prod_sol', 'label' => 'Reparasi Sol'];
+                                        $missingStationList[] = [
+                                            'key' => 'prod_sol', 
+                                            'label' => 'Reparasi Sol (Stasiun SOLING)',
+                                            'current_tech_id' => $wo?->prod_sol_by
+                                        ];
                                     }
                                     if ($hasJahit && empty($wo?->qc_jahit_completed_at)) {
-                                        $missingStationList[] = ['key' => 'qc_jahit', 'label' => 'QC Jahit'];
+                                        $missingStationList[] = [
+                                            'key' => 'qc_jahit', 
+                                            'label' => 'QC Jahit (Stasiun QC / Jahit)',
+                                            'current_tech_id' => $wo?->qc_jahit_by
+                                        ];
                                     }
 
                                     $isReadyForQc = empty($missingStationList);
@@ -553,7 +612,7 @@
                                 <span class="text-lg shrink-0">⚠️</span>
                                 <div>
                                     <strong class="block font-black">Terdapat {{ $incompleteSpkCount }} SPK yang stasiun produksinya / teknisinya belum selesai.</strong>
-                                    <span class="text-rose-700 dark:text-rose-300">Gunakan tombol kuning <strong>"⚡ Lengkapi Teknisi"</strong> pada tabel di atas untuk melengkapi teknisi sebelum konfirmasi serah terima.</span>
+                                    <span class="text-rose-700 dark:text-rose-300">Gunakan tombol <strong>"⚡ Lengkapi & Tuntaskan Otomatis"</strong> di atas atau tombol pada tabel sebelum serah terima.</span>
                                 </div>
                             </div>
                         @else
@@ -594,7 +653,7 @@
 
         </div>
 
-        {{-- 4. MODAL LENGKAPI TEKNISI & TUNTASKAN STASIUN (UI/UX PRO MAX) --}}
+        {{-- 4. MODAL LENGKAPI TEKNISI & TUNTASKAN STASIUN (FILTERED BY ROLE TECHNICIAN, STATION & SPECIALIZATION) --}}
         <div x-show="showModal" 
              x-cloak
              class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
@@ -621,7 +680,7 @@
                         </div>
                         <div>
                             <h3 class="text-base font-black text-slate-900 dark:text-white">Lengkapi Teknisi & Tuntaskan Stasiun</h3>
-                            <p class="text-xs text-slate-500 font-medium">Catat nama teknisi yang mengerjakan stasiun produksi</p>
+                            <p class="text-xs text-slate-500 font-medium">Pilih teknisi sesuai spesialisasi stasiun pengerjaan</p>
                         </div>
                     </div>
                     <button @click="showModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition">
@@ -650,25 +709,26 @@
                         <label class="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                             Pilih Stasiun yang Diselesaikan:
                         </label>
-                        <select name="station" x-model="station" class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                        <select name="station" x-model="station" @change="onStationChange()" class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-amber-500 focus:border-transparent">
                             <template x-for="st in availableStations" :key="st.key">
                                 <option :value="st.key" x-text="st.label"></option>
                             </template>
                         </select>
                     </div>
 
-                    {{-- Teknisi Selection --}}
+                    {{-- Teknisi Selection (Filtered by Role Technician + Station & Specialization) --}}
                     <div>
-                        <label class="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                            Pilih Teknisi Pelaksana:
+                        <label class="flex items-center justify-between text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                            <span>Pilih Teknisi Pelaksana:</span>
+                            <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold" x-text="`${filteredTechnicians.length} Teknisi Tersedia`"></span>
                         </label>
                         <select name="technician_id" x-model="technicianId" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-amber-500 focus:border-transparent">
-                            <option value="">-- Pilih Teknisi --</option>
-                            @foreach($technicians as $tech)
-                                <option value="{{ $tech->id }}">{{ $tech->name }} ({{ ucfirst($tech->role ?? 'Teknisi') }})</option>
-                            @endforeach
+                            <option value="">-- Pilih Teknisi Stasiun --</option>
+                            <template x-for="tech in filteredTechnicians" :key="tech.id">
+                                <option :value="tech.id" x-text="`${tech.name} — ${tech.specialization || tech.station || 'Teknisi'} [${tech.station || 'WORKSHOP'}]`"></option>
+                            </template>
                         </select>
-                        <p class="text-[11px] text-slate-400 mt-1 font-medium">Teknisi ini akan dicatat di log audit stasiun dan status stasiun otomatis ditandai selesai.</p>
+                        <p class="text-[11px] text-slate-400 mt-1.5 font-medium">Hanya menampilkan teknisi (Role: Technician) yang sesuai dengan stasiun & keahlian spesialisasi terpilih.</p>
                     </div>
 
                     {{-- Actions --}}
