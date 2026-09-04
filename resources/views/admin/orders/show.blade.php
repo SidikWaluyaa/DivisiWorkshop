@@ -149,6 +149,188 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             Stasiun
                         </a>
+
+                        @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'owner']))
+                            {{-- Admin Dynamic Station & Technician Management Hub --}}
+                            <div x-data="stationManagerHandler()" x-cloak>
+                                <button type="button" 
+                                        @click="showModal = true" 
+                                        class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl font-bold text-sm shadow-xl shadow-teal-200 transition-all hover:-translate-y-1 whitespace-nowrap active:scale-95">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    <span>Kelola Teknisi & Stasiun</span>
+                                </button>
+
+                                {{-- MODAL PUSAT KENDALI TEKNISI & STASIUN --}}
+                                <template x-teleport="body">
+                                    <div x-show="showModal" class="fixed inset-0 z-[999] overflow-y-auto" style="display: none;">
+                                        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                                            <!-- Overlay -->
+                                            <div x-show="showModal" 
+                                                 x-transition:enter="transition ease-out duration-300" 
+                                                 x-transition:enter-start="opacity-0" 
+                                                 x-transition:enter-end="opacity-100" 
+                                                 x-transition:leave="transition ease-in duration-200" 
+                                                 x-transition:leave-start="opacity-100" 
+                                                 x-transition:leave-end="opacity-0" 
+                                                 @click="showModal = false"
+                                                 class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+
+                                            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+                                            <!-- Modal Content -->
+                                            <div x-show="showModal" 
+                                                 x-transition:enter="transition ease-out duration-300" 
+                                                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                                                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                                                 x-transition:leave="transition ease-in duration-200" 
+                                                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                                                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                                                 class="relative inline-block w-full max-w-4xl my-8 overflow-hidden text-left align-middle bg-white rounded-3xl shadow-2xl transform transition-all border border-slate-100">
+                                                
+                                                <!-- Modal Header -->
+                                                <div class="px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-between">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="w-10 h-10 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center text-xl font-bold border border-teal-500/30">
+                                                            🛠️
+                                                        </div>
+                                                        <div>
+                                                            <div class="flex items-center gap-2">
+                                                                <h3 class="text-base font-black tracking-wide">Pusat Kendali Teknisi & Stasiun</h3>
+                                                                <span class="px-2 py-0.5 bg-teal-500/20 text-teal-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-teal-500/30">Khusus Admin</span>
+                                                            </div>
+                                                            <p class="text-xs text-slate-400 font-medium">SPK #{{ $order->spk_number }} • {{ $order->customer_name }} ({{ $order->shoe_brand }} {{ $order->shoe_type }})</p>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" @click="showModal = false" class="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
+
+                                                <!-- Tabs 3 Tahap -->
+                                                <div class="px-6 pt-4 bg-slate-50 border-b border-slate-200/80 flex gap-2">
+                                                    <button type="button" 
+                                                            @click="activeTab = 'prep'"
+                                                            :class="activeTab === 'prep' ? 'bg-white text-teal-700 border-b-2 border-teal-600 font-black shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-bold'"
+                                                            class="px-5 py-3 rounded-t-2xl text-xs uppercase tracking-wider transition-all flex items-center gap-2">
+                                                        <span>🧼 1. Preparation</span>
+                                                    </button>
+                                                    <button type="button" 
+                                                            @click="activeTab = 'prod'"
+                                                            :class="activeTab === 'prod' ? 'bg-white text-teal-700 border-b-2 border-teal-600 font-black shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-bold'"
+                                                            class="px-5 py-3 rounded-t-2xl text-xs uppercase tracking-wider transition-all flex items-center gap-2">
+                                                        <span>🔨 2. Production</span>
+                                                    </button>
+                                                    <button type="button" 
+                                                            @click="activeTab = 'qc'"
+                                                            :class="activeTab === 'qc' ? 'bg-white text-teal-700 border-b-2 border-teal-600 font-black shadow-2xs' : 'text-slate-500 hover:text-slate-800 font-bold'"
+                                                            class="px-5 py-3 rounded-t-2xl text-xs uppercase tracking-wider transition-all flex items-center gap-2">
+                                                        <span>✨ 3. QC & Finishing</span>
+                                                    </button>
+                                                </div>
+
+                                                <!-- Modal Body -->
+                                                <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                                                    <template x-for="st in filteredStations" :key="st.key">
+                                                        <div class="p-4.5 rounded-2xl border transition-all"
+                                                             :class="{
+                                                                'bg-emerald-50/40 border-emerald-200': st.status === 'COMPLETED',
+                                                                'bg-amber-50/40 border-amber-200': st.status === 'IN_PROGRESS',
+                                                                'bg-slate-50/60 border-slate-200': st.status === 'NOT_STARTED'
+                                                             }">
+                                                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                                <!-- Station Header Info -->
+                                                                <div class="flex items-start gap-3 min-w-[220px]">
+                                                                    <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-2xs shrink-0"
+                                                                         :class="{
+                                                                            'bg-emerald-100 text-emerald-700': st.status === 'COMPLETED',
+                                                                            'bg-amber-100 text-amber-700': st.status === 'IN_PROGRESS',
+                                                                            'bg-slate-200 text-slate-700': st.status === 'NOT_STARTED'
+                                                                         }">
+                                                                        <span x-text="st.icon"></span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div class="flex items-center gap-2">
+                                                                            <h4 class="font-black text-sm text-slate-900" x-text="st.name"></h4>
+                                                                            <span x-show="st.completed_at" class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full" x-text="'Selesai: ' + st.completed_at"></span>
+                                                                        </div>
+                                                                        <p class="text-[11px] text-slate-500 font-medium" x-text="st.desc"></p>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Controls: Select Technician & Status Radio -->
+                                                                <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                    <!-- Select Technician -->
+                                                                    <div>
+                                                                        <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                                                            Teknisi Pelaksana:
+                                                                        </label>
+                                                                        <select x-model="st.technician_id" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                                                            <option value="">-- Kosongkan Penugasan --</option>
+                                                                            <template x-for="tech in getTechniciansForStation(st)" :key="tech.id">
+                                                                                <option :value="String(tech.id)" x-text="`${tech.name} — ${tech.specialization || tech.station || 'Teknisi'} [${tech.station || 'WORKSHOP'}]`"></option>
+                                                                            </template>
+                                                                        </select>
+                                                                    </div>
+
+                                                                    <!-- Status Selector -->
+                                                                    <div>
+                                                                        <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                                                            Status Stasiun:
+                                                                        </label>
+                                                                        <div class="grid grid-cols-3 gap-1 p-1 bg-slate-200/70 rounded-xl">
+                                                                            <button type="button" 
+                                                                                    @click="st.status = 'NOT_STARTED'"
+                                                                                    :class="st.status === 'NOT_STARTED' ? 'bg-white text-slate-900 font-black shadow-2xs' : 'text-slate-600 font-bold hover:text-slate-900'"
+                                                                                    class="py-1.5 text-[10px] rounded-lg transition-all text-center">
+                                                                                ⏳ Belum
+                                                                            </button>
+                                                                            <button type="button" 
+                                                                                    @click="st.status = 'IN_PROGRESS'"
+                                                                                    :class="st.status === 'IN_PROGRESS' ? 'bg-amber-500 text-white font-black shadow-2xs' : 'text-slate-600 font-bold hover:text-slate-900'"
+                                                                                    class="py-1.5 text-[10px] rounded-lg transition-all text-center">
+                                                                                🏃 Jalan
+                                                                            </button>
+                                                                            <button type="button" 
+                                                                                    @click="st.status = 'COMPLETED'"
+                                                                                    :class="st.status === 'COMPLETED' ? 'bg-emerald-600 text-white font-black shadow-2xs' : 'text-slate-600 font-bold hover:text-slate-900'"
+                                                                                    class="py-1.5 text-[10px] rounded-lg transition-all text-center">
+                                                                                ✓ Selesai
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+
+                                                <!-- Modal Footer -->
+                                                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                                    <p class="text-[11px] text-slate-500 font-medium">
+                                                        ℹ️ Perubahan otomatis mencatat riwayat audit log dan menyinkronkan penugasan ke item jasa SPK.
+                                                    </p>
+                                                    <div class="flex items-center gap-2.5 w-full sm:w-auto">
+                                                        <button type="button" 
+                                                                @click="showModal = false" 
+                                                                class="px-5 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition">
+                                                            Tutup
+                                                        </button>
+                                                        <button type="button" 
+                                                                @click="saveAll()" 
+                                                                :disabled="isSubmitting"
+                                                                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-teal-600/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2">
+                                                            <svg x-show="isSubmitting" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                            <span x-text="isSubmitting ? 'Menyimpan...' : '💾 Simpan Perubahan Stasiun'"></span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        @endif
                         @if($order->before_report_url)
                             <a href="{{ $order->before_report_url }}" target="_blank" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all hover:-translate-y-1 whitespace-nowrap">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -4336,6 +4518,217 @@ function bypassOrderHandler() {
             } finally {
                 this.isLoading = false;
                 this.showModal = false;
+            }
+        }
+    };
+}
+
+function stationManagerHandler() {
+    return {
+        showModal: false,
+        activeTab: 'prep',
+        isSubmitting: false,
+        stations: [
+            // Tahap 1: Preparation
+            {
+                key: 'prep_washing',
+                stage: 'prep',
+                stageLabel: 'Preparation',
+                name: 'Washing (Cuci)',
+                icon: '🧼',
+                desc: 'Pencucian & pembersihan awal sepatu',
+                technician_id: '{{ $order->prep_washing_by ?? '' }}',
+                status: '{{ $order->prep_washing_completed_at ? 'COMPLETED' : ($order->prep_washing_started_at ? 'IN_PROGRESS' : 'NOT_STARTED') }}',
+                started_at: '{{ $order->prep_washing_started_at ? $order->prep_washing_started_at->format('d/m H:i') : '' }}',
+                completed_at: '{{ $order->prep_washing_completed_at ? $order->prep_washing_completed_at->format('d/m H:i') : '' }}',
+                target_station: 'PREPARATION',
+            },
+            {
+                key: 'prep_sol',
+                stage: 'prep',
+                stageLabel: 'Preparation',
+                name: 'Bongkar / Prep Sol',
+                icon: '👟',
+                desc: 'Preparasi & bongkar sol sebelum reparasi',
+                technician_id: '{{ $order->prep_sol_by ?? '' }}',
+                status: '{{ $order->prep_sol_completed_at ? 'COMPLETED' : ($order->prep_sol_started_at ? 'IN_PROGRESS' : 'NOT_STARTED') }}',
+                started_at: '{{ $order->prep_sol_started_at ? $order->prep_sol_started_at->format('d/m H:i') : '' }}',
+                completed_at: '{{ $order->prep_sol_completed_at ? $order->prep_sol_completed_at->format('d/m H:i') : '' }}',
+                target_station: 'SOLING',
+            },
+            {
+                key: 'prep_upper',
+                stage: 'prep',
+                stageLabel: 'Preparation',
+                name: 'Bongkar / Prep Upper',
+                icon: '👞',
+                desc: 'Preparasi & bongkar upper sebelum reparasi',
+                technician_id: '{{ $order->prep_upper_by ?? '' }}',
+                status: '{{ $order->prep_upper_completed_at ? 'COMPLETED' : ($order->prep_upper_started_at ? 'IN_PROGRESS' : 'NOT_STARTED') }}',
+                started_at: '{{ $order->prep_upper_started_at ? $order->prep_upper_started_at->format('d/m H:i') : '' }}',
+                completed_at: '{{ $order->prep_upper_completed_at ? $order->prep_upper_completed_at->format('d/m H:i') : '' }}',
+                target_station: 'UPPER',
+            },
+
+            // Tahap 2: Production
+            {
+                key: 'prod_sol',
+                stage: 'prod',
+                stageLabel: 'Production',
+                name: 'Reparasi Soling',
+                icon: '👟',
+                desc: 'Pengerjaan reparasi / pasang sol',
+                technician_id: '{{ $order->prod_sol_by ?? '' }}',
+                status: '{{ $order->prod_sol_completed_at ? 'COMPLETED' : ($order->prod_sol_started_at ? 'IN_PROGRESS' : 'NOT_STARTED') }}',
+                started_at: '{{ $order->prod_sol_started_at ? $order->prod_sol_started_at->format('d/m H:i') : '' }}',
+                completed_at: '{{ $order->prod_sol_completed_at ? $order->prod_sol_completed_at->format('d/m H:i') : '' }}',
+                target_station: 'SOLING',
+            },
+            {
+                key: 'prod_upper',
+                stage: 'prod',
+                stageLabel: 'Production',
+                name: 'Reparasi Upper',
+                icon: '👞',
+                desc: 'Pengerjaan reparasi / jahit upper',
+                technician_id: '{{ $order->prod_upper_by ?? '' }}',
+                status: '{{ $order->prod_upper_completed_at ? 'COMPLETED' : ($order->prod_upper_started_at ? 'IN_PROGRESS' : 'NOT_STARTED') }}',
+                started_at: '{{ $order->prod_upper_started_at ? $order->prod_upper_started_at->format('d/m H:i') : '' }}',
+                completed_at: '{{ $order->prod_upper_completed_at ? $order->prod_upper_completed_at->format('d/m H:i') : '' }}',
+                target_station: 'UPPER',
+            },
+            {
+                key: 'qc_jahit',
+                stage: 'prod',
+                stageLabel: 'Production',
+                name: 'QC Jahit',
+                icon: '🧵',
+                desc: 'Inspeksi jahitan & perakitan produksi',
+                technician_id: '{{ $order->qc_jahit_by ?? '' }}',
+                status: '{{ $order->qc_jahit_completed_at ? 'COMPLETED' : ($order->qc_jahit_started_at ? 'IN_PROGRESS' : 'NOT_STARTED') }}',
+                started_at: '{{ $order->qc_jahit_started_at ? $order->qc_jahit_started_at->format('d/m H:i') : '' }}',
+                completed_at: '{{ $order->qc_jahit_completed_at ? $order->qc_jahit_completed_at->format('d/m H:i') : '' }}',
+                target_station: 'QC',
+            },
+
+            // Tahap 3: QC & Finishing
+            {
+                key: 'prod_cleaning',
+                stage: 'qc',
+                stageLabel: 'QC & Finishing',
+                name: 'Treatment',
+                icon: '✨',
+                desc: 'Repaint, detailing & treatment akhir di QC',
+                technician_id: '{{ $order->prod_cleaning_by ?? '' }}',
+                status: '{{ $order->prod_cleaning_completed_at ? 'COMPLETED' : ($order->prod_cleaning_started_at ? 'IN_PROGRESS' : 'NOT_STARTED') }}',
+                started_at: '{{ $order->prod_cleaning_started_at ? $order->prod_cleaning_started_at->format('d/m H:i') : '' }}',
+                completed_at: '{{ $order->prod_cleaning_completed_at ? $order->prod_cleaning_completed_at->format('d/m H:i') : '' }}',
+                target_station: 'TREATMENT',
+            },
+            {
+                key: 'qc_cleanup',
+                stage: 'qc',
+                stageLabel: 'QC & Finishing',
+                name: 'QC Cleanup',
+                icon: '🧹',
+                desc: 'Pembersihan lem, sisa pengerjaan & debu',
+                technician_id: '{{ $order->qc_cleanup_by ?? '' }}',
+                status: '{{ $order->qc_cleanup_completed_at ? 'COMPLETED' : ($order->qc_cleanup_started_at ? 'IN_PROGRESS' : 'NOT_STARTED') }}',
+                started_at: '{{ $order->qc_cleanup_started_at ? $order->qc_cleanup_started_at->format('d/m H:i') : '' }}',
+                completed_at: '{{ $order->qc_cleanup_completed_at ? $order->qc_cleanup_completed_at->format('d/m H:i') : '' }}',
+                target_station: 'QC',
+            },
+            {
+                key: 'qc_final',
+                stage: 'qc',
+                stageLabel: 'QC & Finishing',
+                name: 'QC Final',
+                icon: '🏷️',
+                desc: 'Pemeriksaan akhir standar kelolosan (Gate QC)',
+                technician_id: '{{ $order->qc_final_by ?? '' }}',
+                status: '{{ $order->qc_final_completed_at ? 'COMPLETED' : ($order->qc_final_started_at ? 'IN_PROGRESS' : 'NOT_STARTED') }}',
+                started_at: '{{ $order->qc_final_started_at ? $order->qc_final_started_at->format('d/m H:i') : '' }}',
+                completed_at: '{{ $order->qc_final_completed_at ? $order->qc_final_completed_at->format('d/m H:i') : '' }}',
+                target_station: 'QC',
+            },
+        ],
+        allTechnicians: {{ Js::from($technicians ?? []) }},
+        get filteredStations() {
+            return this.stations.filter(s => s.stage === this.activeTab);
+        },
+        getTechniciansForStation(st) {
+            if (!st) return this.allTechnicians;
+            const target = st.target_station || '';
+            const list = this.allTechnicians.filter(t => {
+                const spec = (t.specialization || '').toLowerCase();
+                const userSt = (t.station || '').toUpperCase();
+
+                if (st.key === 'prep_washing') return userSt === 'PREPARATION' || spec.includes('wash') || spec.includes('cuci');
+                if (st.key === 'prep_sol' || st.key === 'prod_sol') return userSt === 'SOLING' || spec.includes('sol');
+                if (st.key === 'prep_upper' || st.key === 'prod_upper') return userSt === 'UPPER' || spec.includes('upper');
+                if (st.key === 'qc_jahit') return userSt === 'QC' || spec.includes('jahit') || userSt === 'SOLING';
+                if (st.key === 'prod_cleaning') return userSt === 'TREATMENT' || spec.includes('treatment') || spec.includes('repaint') || spec.includes('clean');
+                if (st.key === 'qc_cleanup' || st.key === 'qc_final') return userSt === 'QC' || spec.includes('qc');
+                return userSt === target;
+            });
+            return list.length > 0 ? list : this.allTechnicians;
+        },
+        async saveAll() {
+            this.isSubmitting = true;
+            try {
+                const payload = {
+                    stations: this.stations.map(s => ({
+                        key: s.key,
+                        technician_id: s.technician_id ? parseInt(s.technician_id) : null,
+                        status: s.status
+                    }))
+                };
+                const res = await fetch('{{ route('admin.orders.manage-stations', $order->id) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: data.message || 'Stasiun teknisi berhasil diperbarui.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        alert(data.message || 'Stasiun teknisi berhasil diperbarui.');
+                    }
+                    window.location.reload();
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: data.message || 'Terjadi kesalahan saat menyimpan data.'
+                        });
+                    } else {
+                        alert(data.message || 'Terjadi kesalahan saat menyimpan data.');
+                    }
+                }
+            } catch (err) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kesalahan Server',
+                        text: err.message || 'Gagal terhubung ke server.'
+                    });
+                } else {
+                    alert(err.message || 'Gagal terhubung ke server.');
+                }
+            } finally {
+                this.isSubmitting = false;
             }
         }
     };

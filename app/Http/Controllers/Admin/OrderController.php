@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\WorkOrder;
 use App\Models\Service;
 use App\Models\WorkOrderService;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -39,7 +41,14 @@ class OrderController extends Controller
         // All available services for the "add service" dropdown
         $allServices = Service::orderBy('category')->orderBy('name')->get(['id', 'name', 'category', 'price']);
 
-        return view('admin.orders.show', compact('order', 'allServices'));
+        // All active technicians for the Admin Dynamic Station Hub
+        $technicians = User::where('role', 'technician')
+            ->where('is_active', true)
+            ->orderBy('station')
+            ->orderBy('name')
+            ->get(['id', 'name', 'role', 'station', 'specialization']);
+
+        return view('admin.orders.show', compact('order', 'allServices', 'technicians'));
     }
 
     public function printShippingLabel($id)
@@ -1047,6 +1056,130 @@ class OrderController extends Controller
         }
 
         return back()->with('success', 'Nomor resi customer berhasil diperbarui.');
+    }
+
+    /**
+     * Admin Dynamic Technician & Station Management Hub
+     */
+    public function manageStations(Request $request, $id)
+    {
+        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'owner'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya akun Admin atau Owner yang memiliki hak akses untuk mengelola stasiun ini.'
+            ], 403);
+        }
+
+        $request->validate([
+            'stations' => 'required|array',
+            'stations.*.key' => 'required|string|in:prep_washing,prep_sol,prep_upper,prod_sol,prod_upper,qc_jahit,prod_cleaning,qc_cleanup,qc_final',
+            'stations.*.technician_id' => 'nullable|exists:users,id',
+            'stations.*.status' => 'required|string|in:NOT_STARTED,IN_PROGRESS,COMPLETED',
+        ]);
+
+        $order = WorkOrder::with(['workOrderServices.service'])->findOrFail($id);
+
+        $stationLabels = [
+            'prep_washing' => 'Washing (Cuci)',
+            'prep_sol'     => 'Prep Sol',
+            'prep_upper'   => 'Prep Upper',
+            'prod_sol'     => 'Soling',
+            'prod_upper'   => 'Upper',
+            'qc_jahit'     => 'QC Jahit',
+            'prod_cleaning'=> 'Treatment',
+            'qc_cleanup'   => 'QC Cleanup',
+            'qc_final'     => 'QC Final',
+        ];
+
+        $stationServiceCodeMap = [
+            'prod_upper'    => 'UPPER',
+            'prep_upper'    => 'UPPER',
+            'prod_sol'      => 'SOLING',
+            'prep_sol'      => 'SOLING',
+            'qc_jahit'      => 'JAHIT',
+            'prod_cleaning' => 'TREATMENT',
+        ];
+
+        $changesLog = [];
+
+        DB::transaction(function() use ($request, $order, $stationLabels, $stationServiceCodeMap, &$changesLog) {
+            $updates = [];
+
+            foreach ($request->stations as $st) {
+                $key = $st['key'];
+                $techId = !empty($st['technician_id']) ? (int)$st['technician_id'] : null;
+                $status = $st['status'];
+
+                $byCol = "{$key}_by";
+                $startedCol = "{$key}_started_at";
+                $completedCol = "{$key}_completed_at";
+
+                $oldTechId = $order->{$byCol};
+                $oldStarted = $order->{$startedCol};
+                $oldCompleted = $order->{$completedCol};
+
+                $newStarted = $oldStarted;
+                $newCompleted = $oldCompleted;
+
+                if ($status === 'NOT_STARTED') {
+                    $newStarted = null;
+                    $newCompleted = null;
+                } elseif ($status === 'IN_PROGRESS') {
+                    $newStarted = $oldStarted ?: now();
+                    $newCompleted = null;
+                } elseif ($status === 'COMPLETED') {
+                    $newStarted = $oldStarted ?: now();
+                    $newCompleted = $oldCompleted ?: now();
+                }
+
+                // Check if anything changed
+                $techChanged = ($oldTechId != $techId);
+                $startedChanged = ($oldStarted != $newStarted);
+                $completedChanged = ($oldCompleted != $newCompleted);
+
+                if ($techChanged || $startedChanged || $completedChanged) {
+                    $updates[$byCol] = $techId;
+                    $updates[$startedCol] = $newStarted;
+                    $updates[$completedCol] = $newCompleted;
+
+                    $label = $stationLabels[$key] ?? $key;
+                    $oldTechName = $oldTechId ? (User::find($oldTechId)?->name ?? "ID $oldTechId") : 'Kosong';
+                    $newTechName = $techId ? (User::find($techId)?->name ?? "ID $techId") : 'Kosong';
+
+                    $changesLog[] = "{$label}: Teknisi [{$oldTechName} ➔ {$newTechName}], Status: {$status}";
+
+                    // Sync technician to workOrderServices if applicable
+                    if (isset($stationServiceCodeMap[$key])) {
+                        $targetCode = $stationServiceCodeMap[$key];
+                        foreach ($order->workOrderServices as $svc) {
+                            $svcCode = \App\Helpers\ProductionStationHelper::getStationCode($svc->category_name ?? $svc->service?->name ?? '');
+                            if ($svcCode === $targetCode || ($targetCode === 'JAHIT' && in_array($svcCode, ['SOLING', 'UPPER', 'JAHIT']))) {
+                                $svc->update(['technician_id' => $techId]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!empty($updates)) {
+                $order->update($updates);
+
+                $adminName = auth()->user()->name ?? 'Admin';
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $order->id,
+                    'user_id'       => auth()->id(),
+                    'step'          => $order->status->value ?? 'WORKSHOP',
+                    'action'        => 'ADMIN_MANAGE_STATIONS',
+                    'description'   => "Admin {$adminName} memperbarui stasiun teknisi: " . implode('; ', $changesLog),
+                ]);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data teknisi & status stasiun berhasil diperbarui!',
+            'changes' => $changesLog,
+        ]);
     }
 }
 
