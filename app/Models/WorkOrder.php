@@ -615,9 +615,8 @@ class WorkOrder extends Model
                                 ->orWhereNotNull('prod_sol_completed_at');
                         })
                         ->where(function ($ssq) {
-                            $ssq->whereDoesntHave('workOrderServices', function($tsq) {
-                                $tsq->whereIn('category_name', [self::CAT_SOL, 'Sol', 'Reparasi Sol', self::CAT_UPPER, 'Upper', 'Reparasi Upper', 'Jahit']);
-                            })->orWhereNotNull('qc_jahit_completed_at');
+                            $ssq->withoutServiceCategory([self::CAT_SOL, self::CAT_UPPER, 'Jahit'])
+                                ->orWhereNotNull('qc_jahit_completed_at');
                         });
                   });
             });

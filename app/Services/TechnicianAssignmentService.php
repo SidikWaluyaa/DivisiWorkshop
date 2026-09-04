@@ -70,50 +70,33 @@ class TechnicianAssignmentService
 
     /**
      * 2. STATION PRODUCTION: Auto-assign technicians for all services in Production stage
-     * Sub-tasks: Reparasi Sol (Soling), Reparasi Upper (Upper), Reparasi Treatment (Treatment)
+     * Sub-tasks: 1. Reparasi Upper (Upper), 2. Reparasi Sol (Soling), 3. QC Jahit
      */
     public function autoAssignProductionTechnicians(WorkOrder $workOrder, bool $forceReassign = false): void
     {
-        $workOrder->loadMissing(['workOrderServices.service', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy']);
+        $workOrder->loadMissing(['workOrderServices.service', 'prodUpperBy', 'prodSolBy', 'qcJahitBy']);
 
-        $hasSol = $workOrder->workOrderServices->contains(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'SOLING');
         $hasUpper = $workOrder->workOrderServices->contains(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'UPPER');
-        $hasTreatment = $workOrder->workOrderServices->contains(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'TREATMENT');
+        $hasSol = $workOrder->workOrderServices->contains(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'SOLING');
+        $hasJahit = $hasSol || $hasUpper || $workOrder->workOrderServices->contains(fn($s) => str_contains(strtolower($s->category_name ?? ''), 'jahit') || str_contains(strtolower($s->service?->name ?? ''), 'jahit'));
 
-        if (!$hasSol && !$hasUpper) {
-            $hasTreatment = true;
+        if (!$hasSol && !$hasUpper && !$hasJahit) {
+            $hasUpper = true;
         }
 
         $updates = [];
 
         // Helper check for unstarted / placeholder tech
-        $isDrShoeSol = str_contains($workOrder->prodSolBy?->name ?? '', 'Dr. Shoe');
         $isDrShoeUpper = str_contains($workOrder->prodUpperBy?->name ?? '', 'Dr. Shoe');
-        $isDrShoeClean = str_contains($workOrder->prodCleaningBy?->name ?? '', 'Dr. Shoe');
+        $isDrShoeSol = str_contains($workOrder->prodSolBy?->name ?? '', 'Dr. Shoe');
+        $isDrShoeJahit = str_contains($workOrder->qcJahitBy?->name ?? '', 'Dr. Shoe');
 
-        // a. Reparasi Sol (Station: SOLING, Spec: Reparasi Sol)
-        if ($hasSol && (!$workOrder->prod_sol_by || $isDrShoeSol || (!$workOrder->prod_sol_started_at && $forceReassign))) {
-            $solServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'SOLING');
-            $serviceIds = $solServices->pluck('service_id')->filter()->toArray();
-
-            $tech = $this->findBestTechnicianForStationAndServices('SOLING', $serviceIds, ['Reparasi Sol', 'Sol Repair']);
-            if ($tech) {
-                $updates['prod_sol_by'] = $tech->id;
-                foreach ($solServices as $woService) {
-                    if (!$woService->started_at) {
-                        $woService->update(['technician_id' => $tech->id]);
-                    }
-                }
-                Log::info("Auto-assigned Soling for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
-            }
-        }
-
-        // b. Reparasi Upper (Station: UPPER, Spec: Reparasi Upper)
+        // a. Reparasi Upper (Station: UPPER, Spec: Reparasi Upper)
         if ($hasUpper && (!$workOrder->prod_upper_by || $isDrShoeUpper || (!$workOrder->prod_upper_started_at && $forceReassign))) {
             $upperServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'UPPER');
             $serviceIds = $upperServices->pluck('service_id')->filter()->toArray();
 
-            $tech = $this->findBestTechnicianForStationAndServices('UPPER', $serviceIds, ['Reparasi Upper', 'Upper Repair']);
+            $tech = $this->findBestTechnicianForStationAndServices('UPPER', $serviceIds, ['Reparasi Upper', 'Upper Repair', 'Upper']);
             if ($tech) {
                 $updates['prod_upper_by'] = $tech->id;
                 foreach ($upperServices as $woService) {
@@ -125,20 +108,29 @@ class TechnicianAssignmentService
             }
         }
 
-        // c. Reparasi Treatment (Station: TREATMENT, Spec: Reparasi Treatment)
-        if ($hasTreatment && (!$workOrder->prod_cleaning_by || $isDrShoeClean || (!$workOrder->prod_cleaning_started_at && $forceReassign))) {
-            $treatmentServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'TREATMENT');
-            $serviceIds = $treatmentServices->pluck('service_id')->filter()->toArray();
+        // b. Reparasi Sol (Station: SOLING, Spec: Reparasi Sol)
+        if ($hasSol && (!$workOrder->prod_sol_by || $isDrShoeSol || (!$workOrder->prod_sol_started_at && $forceReassign))) {
+            $solServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'SOLING');
+            $serviceIds = $solServices->pluck('service_id')->filter()->toArray();
 
-            $tech = $this->findBestTechnicianForStationAndServices('TREATMENT', $serviceIds, ['Reparasi Treatment', 'Treatment', 'Repaint']);
+            $tech = $this->findBestTechnicianForStationAndServices('SOLING', $serviceIds, ['Reparasi Sol', 'Sol Repair', 'Soling']);
             if ($tech) {
-                $updates['prod_cleaning_by'] = $tech->id;
-                foreach ($workOrder->workOrderServices as $woService) {
+                $updates['prod_sol_by'] = $tech->id;
+                foreach ($solServices as $woService) {
                     if (!$woService->started_at) {
                         $woService->update(['technician_id' => $tech->id]);
                     }
                 }
-                Log::info("Auto-assigned Treatment for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
+                Log::info("Auto-assigned Soling for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
+            }
+        }
+
+        // c. QC Jahit (Spec: QC Jahit / Jahit)
+        if ($hasJahit && (!$workOrder->qc_jahit_by || $isDrShoeJahit || (!$workOrder->qc_jahit_started_at && $forceReassign))) {
+            $tech = $this->findBestTechnicianForStationAndServices('QC', [], ['QC Jahit', 'Jahit']);
+            if ($tech) {
+                $updates['qc_jahit_by'] = $tech->id;
+                Log::info("Auto-assigned QC Jahit for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
             }
         }
 
@@ -149,31 +141,41 @@ class TechnicianAssignmentService
 
     /**
      * 3. STATION QC: Auto-assign technicians for all stations in QC stage
-     * Sub-tasks: QC Jahit, QC Cleanup, QC Final
+     * Sub-tasks: 1. Reparasi Treatment (Cleaning/Repaint/Treatment), 2. QC Cleanup, 3. QC Final
      */
     public function autoAssignQcTechnicians(WorkOrder $workOrder, bool $forceReassign = false): void
     {
         $updates = [];
-        $workOrder->loadMissing(['workOrderServices.service', 'qcJahitBy', 'qcCleanupBy', 'qcFinalBy']);
+        $workOrder->loadMissing(['workOrderServices.service', 'prodCleaningBy', 'qcCleanupBy', 'qcFinalBy']);
 
-        $hasJahitQc = $workOrder->workOrderServices->contains(fn($s) => 
-            str_contains(strtolower($s->category_name ?? ''), 'sol') || 
-            str_contains(strtolower($s->service?->name ?? ''), 'sol') ||
-            str_contains(strtolower($s->category_name ?? ''), 'upper') || 
-            str_contains(strtolower($s->service?->name ?? ''), 'upper') ||
-            str_contains(strtolower($s->category_name ?? ''), 'jahit') || 
-            str_contains(strtolower($s->service?->name ?? ''), 'jahit')
+        $hasTreatment = $workOrder->workOrderServices->contains(fn($s) => 
+            str_contains(strtolower($s->category_name ?? ''), 'clean') || 
+            str_contains(strtolower($s->category_name ?? ''), 'wash') || 
+            str_contains(strtolower($s->category_name ?? ''), 'treatment') || 
+            str_contains(strtolower($s->category_name ?? ''), 'repaint') || 
+            str_contains(strtolower($s->category_name ?? ''), 'whitening') || 
+            str_contains(strtolower($s->service?->name ?? ''), 'clean') || 
+            str_contains(strtolower($s->service?->name ?? ''), 'treatment')
         );
 
-        $isDrShoeJahit = str_contains($workOrder->qcJahitBy?->name ?? '', 'Dr. Shoe');
+        $isDrShoeClean = str_contains($workOrder->prodCleaningBy?->name ?? '', 'Dr. Shoe');
         $isDrShoeCleanup = str_contains($workOrder->qcCleanupBy?->name ?? '', 'Dr. Shoe');
         $isDrShoeFinal = str_contains($workOrder->qcFinalBy?->name ?? '', 'Dr. Shoe');
 
-        // a. QC Jahit (Spec: QC Jahit)
-        if ($hasJahitQc && (!$workOrder->qc_jahit_by || $isDrShoeJahit || (!$workOrder->qc_jahit_started_at && $forceReassign))) {
-            $tech = $this->findBestTechnicianForStationAndServices('QC', [], ['QC Jahit', 'Jahit']);
+        // a. Reparasi Treatment (Station: TREATMENT, Spec: Treatment / Repaint / Cleaning)
+        if ($hasTreatment && (!$workOrder->prod_cleaning_by || $isDrShoeClean || (!$workOrder->prod_cleaning_started_at && $forceReassign))) {
+            $treatmentServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'TREATMENT');
+            $serviceIds = $treatmentServices->pluck('service_id')->filter()->toArray();
+
+            $tech = $this->findBestTechnicianForStationAndServices('TREATMENT', $serviceIds, ['Reparasi Treatment', 'Treatment', 'Repaint', 'Cleaning', 'Whitening']);
             if ($tech) {
-                $updates['qc_jahit_by'] = $tech->id;
+                $updates['prod_cleaning_by'] = $tech->id;
+                foreach ($treatmentServices as $woService) {
+                    if (!$woService->started_at) {
+                        $woService->update(['technician_id' => $tech->id]);
+                    }
+                }
+                Log::info("Auto-assigned Treatment for SPK #{$workOrder->spk_number} to Technician: {$tech->name} (ID: {$tech->id})");
             }
         }
 

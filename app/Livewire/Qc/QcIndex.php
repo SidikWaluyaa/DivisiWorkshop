@@ -74,17 +74,18 @@ class QcIndex extends Component
         $allActiveTechs = User::where('is_active', true)
             ->whereIn('role', ['technician', 'pic', 'admin'])
             ->where('name', 'not like', '%Dr. Shoe%')
-            ->select('id', 'name', 'specialization')
+            ->select('id', 'name', 'specialization', 'station')
             ->orderBy('name')
             ->get();
 
-        $jahit = User::where('is_active', true)
+        $treatment = User::where('is_active', true)
             ->where('name', 'not like', '%Dr. Shoe%')
             ->where(function($q) {
-                $q->whereIn('specialization', ['QC Jahit', 'Jahit'])
+                $q->whereIn('specialization', ['Repaint', 'Cleaning', 'Treatment', 'Whitening', 'Washing'])
+                  ->orWhere('station', 'TREATMENT')
                   ->orWhere('station', 'QC');
-            })->select('id', 'name', 'specialization')->get();
-        if ($jahit->isEmpty()) $jahit = $allActiveTechs;
+            })->select('id', 'name', 'specialization', 'station')->get();
+        if ($treatment->isEmpty()) $treatment = $allActiveTechs;
 
         $cleanup = User::where('is_active', true)
             ->where('name', 'not like', '%Dr. Shoe%')
@@ -99,7 +100,7 @@ class QcIndex extends Component
             ->where(function($q) {
                 $q->whereNull('station')->orWhere('station', '!=', 'PREPARATION');
             })
-            ->select('id', 'name', 'specialization')
+            ->select('id', 'name', 'specialization', 'station')
             ->orderBy('name')
             ->get();
         if ($cleanup->isEmpty()) $cleanup = $allActiveTechs;
@@ -109,11 +110,11 @@ class QcIndex extends Component
             ->where(function($q) {
                 $q->whereIn('specialization', ['QC Final', 'PIC QC'])
                   ->orWhere('station', 'QC');
-            })->select('id', 'name', 'specialization')->get();
+            })->select('id', 'name', 'specialization', 'station')->get();
         if ($final->isEmpty()) $final = $allActiveTechs;
 
         return [
-            'jahit' => $jahit,
+            'treatment' => $treatment,
             'cleanup' => $cleanup,
             'final' => $final,
             'all' => $allActiveTechs,
@@ -130,8 +131,9 @@ class QcIndex extends Component
                 $q->whereNull('qc_cleanup_completed_at')
                   ->orWhereNull('qc_final_completed_at')
                   ->orWhere(function($sq) {
-                      $sq->withServiceCategory(WorkOrder::CAT_SOL)
-                        ->whereNull('qc_jahit_completed_at');
+                      $sq->whereHas('workOrderServices', function($tsq) {
+                          $tsq->whereIn('category_name', ['Repaint', 'Cleaning', 'Treatment', 'Whitening']);
+                      })->whereNull('prod_cleaning_completed_at');
                   });
             })->count(),
             'review' => (clone $baseQuery)->qcReview()->count(),
@@ -203,13 +205,12 @@ class QcIndex extends Component
             $now = now();
             $authId = Auth::id();
 
-            // 1. Pass QC Jahit (if required or uncompleted)
-            $needsJahit = $order->hasServiceCategory([WorkOrder::CAT_SOL, WorkOrder::CAT_UPPER, 'Sol', 'Upper', 'Repaint', 'Jahit']) ||
-                          $order->needs_sol || $order->needs_upper || !empty($order->qc_jahit_by);
-            if ($needsJahit && !$order->qc_jahit_completed_at) {
-                if (!$order->qc_jahit_by) $order->qc_jahit_by = $authId;
-                if (!$order->qc_jahit_started_at) $order->qc_jahit_started_at = $now;
-                $order->qc_jahit_completed_at = $now;
+            // 1. Pass Treatment (if required & incomplete)
+            $needsTreatment = $order->hasServiceCategory(['Repaint', 'Cleaning', 'Treatment', 'Whitening']);
+            if ($needsTreatment && !$order->prod_cleaning_completed_at) {
+                if (!$order->prod_cleaning_by) $order->prod_cleaning_by = $authId;
+                if (!$order->prod_cleaning_started_at) $order->prod_cleaning_started_at = $now;
+                $order->prod_cleaning_completed_at = $now;
             }
 
             // 2. Pass QC Cleanup (if incomplete)
@@ -233,7 +234,7 @@ class QcIndex extends Component
                 'user_id'     => Auth::id(),
                 'step'        => 'QC',
                 'action'      => 'FULL_EXPRESS_PASS',
-                'description' => "1-Click Full Pass QC (3 Tahapan Tuntas). SPK berpindah ke Siap Selesai (Review Admin).",
+                'description' => "1-Click Full Pass QC (Treatment, Cleanup, Final Tuntas). SPK berpindah ke Siap Selesai (Review Admin).",
             ]);
 
             unset($this->orders);
@@ -250,11 +251,11 @@ class QcIndex extends Component
 
         $unassignedOrders = WorkOrder::where('status', WorkOrderStatus::QC)
             ->where(function($q) use ($drShoeIds) {
-                $q->whereNull('qc_jahit_by')
+                $q->whereNull('prod_cleaning_by')
                   ->orWhereNull('qc_cleanup_by')
                   ->orWhereNull('qc_final_by');
                 if (!empty($drShoeIds)) {
-                    $q->orWhereIn('qc_jahit_by', $drShoeIds)
+                    $q->orWhereIn('prod_cleaning_by', $drShoeIds)
                       ->orWhereIn('qc_cleanup_by', $drShoeIds)
                       ->orWhereIn('qc_final_by', $drShoeIds);
                 }
@@ -432,7 +433,7 @@ class QcIndex extends Component
     public function orders()
     {
         $query = WorkOrder::query()
-            ->with(['customer', 'workOrderServices', 'qcJahitBy', 'qcCleanupBy', 'qcFinalBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions']);
+            ->with(['customer', 'workOrderServices', 'prodCleaningBy', 'qcCleanupBy', 'qcFinalBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions']);
 
         // Base Status Filter (QC)
         $query->where('status', WorkOrderStatus::QC);
@@ -452,8 +453,9 @@ class QcIndex extends Component
                 $q->whereNull('qc_cleanup_completed_at')
                   ->orWhereNull('qc_final_completed_at')
                   ->orWhere(function($sq) {
-                      $sq->withServiceCategory(WorkOrder::CAT_SOL)
-                        ->whereNull('qc_jahit_completed_at');
+                      $sq->whereHas('workOrderServices', function($tsq) {
+                          $tsq->whereIn('category_name', ['Repaint', 'Cleaning', 'Treatment', 'Whitening']);
+                      })->whereNull('prod_cleaning_completed_at');
                   });
             });
         } elseif ($this->activeTab === 'review') {
@@ -464,7 +466,7 @@ class QcIndex extends Component
         if ($this->onlyInProgress && $this->activeTab === 'qc') {
             $query->where(function($q) {
                 $q->where(function($q2) {
-                    $q2->whereNotNull('qc_jahit_started_at')->whereNull('qc_jahit_completed_at');
+                    $q2->whereNotNull('prod_cleaning_started_at')->whereNull('prod_cleaning_completed_at');
                 })->orWhere(function($q2) {
                     $q2->whereNotNull('qc_cleanup_started_at')->whereNull('qc_cleanup_completed_at');
                 })->orWhere(function($q2) {
@@ -483,7 +485,7 @@ class QcIndex extends Component
         }
 
         // Sorting (In Progress items ALWAYS float to the top)
-        $query->orderByRaw("CASE WHEN (qc_jahit_started_at IS NOT NULL AND qc_jahit_completed_at IS NULL) OR (qc_cleanup_started_at IS NOT NULL AND qc_cleanup_completed_at IS NULL) OR (qc_final_started_at IS NOT NULL AND qc_final_completed_at IS NULL) THEN 0 ELSE 1 END");
+        $query->orderByRaw("CASE WHEN (prod_cleaning_started_at IS NOT NULL AND prod_cleaning_completed_at IS NULL) OR (qc_cleanup_started_at IS NOT NULL AND qc_cleanup_completed_at IS NULL) OR (qc_final_started_at IS NOT NULL AND qc_final_completed_at IS NULL) THEN 0 ELSE 1 END");
         $query->orderByRaw("CASE WHEN EXISTS (SELECT 1 FROM cx_issues WHERE cx_issues.work_order_id = work_orders.id AND cx_issues.status = 'RESOLVED') THEN 0 ELSE 1 END");
         $query->orderByRaw("CASE WHEN fast_track_status = 'yes' THEN 0 ELSE 1 END");
         $query->orderByRaw("CASE WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 0 ELSE 1 END");
