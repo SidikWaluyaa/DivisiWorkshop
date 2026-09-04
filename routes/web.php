@@ -115,6 +115,7 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/services', [App\Http\Controllers\Admin\OrderController::class, 'addService'])->name('orders.services.add');
         Route::put('orders/{id}/services/{serviceId}', [App\Http\Controllers\Admin\OrderController::class, 'updateService'])->name('orders.services.update');
         Route::delete('orders/{id}/services/{serviceId}', [App\Http\Controllers\Admin\OrderController::class, 'removeService'])->name('orders.services.remove');
+        Route::post('orders/{id}/manage-stations', [App\Http\Controllers\Admin\OrderController::class, 'manageStations'])->name('orders.manage-stations');
         
         // Services
         Route::middleware('access:admin.services')->group(function () {

@@ -476,7 +476,7 @@
                                                 <div class="p-2.5 rounded-xl border border-indigo-100 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/30 transition-all shadow-2xs">
                                                     <div class="flex items-center justify-between gap-1.5 mb-1">
                                                         <span class="text-[10px] font-black uppercase tracking-wider text-indigo-800 dark:text-indigo-300 flex items-center gap-1">
-                                                            <span>✨</span> Treatment / Cleaning
+                                                            <span>✨</span> Treatment
                                                         </span>
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
                                                             Tahap QC
