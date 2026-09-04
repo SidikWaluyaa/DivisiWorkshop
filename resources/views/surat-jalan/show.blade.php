@@ -718,7 +718,7 @@
 
                     {{-- Teknisi Selection (Filtered by Role Technician + Station & Specialization) --}}
                     <div>
-                        <label class="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 flex items-center justify-between">
+                        <label class="flex items-center justify-between text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                             <span>Pilih Teknisi Pelaksana:</span>
                             <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold" x-text="`${filteredTechnicians.length} Teknisi Tersedia`"></span>
                         </label>
