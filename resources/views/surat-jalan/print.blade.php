@@ -266,7 +266,7 @@
                                         $serviceName = $srv->pivot->custom_service_name ?? $srv->name ?? $srv->service_name ?? 'Layanan Servis';
                                     @endphp
                                     <li>{{ $serviceName }}</li>
-                                endforeach
+                                @endforeach
                             </ul>
                         @else
                             <span style="color: #94a3b8; font-style: italic;">- Tidak Ada Jasa -</span>
