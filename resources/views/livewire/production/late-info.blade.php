@@ -23,7 +23,7 @@
             </div>
 
             <div class="flex items-center gap-4">
-                <div class="flex flex-col items-end mr-2 hidden sm:flex">
+                <div class="hidden sm:flex flex-col items-end mr-2">
                     <span class="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status Sistem</span>
                     <span class="text-xs font-bold text-emerald-400">Stabil & Aman</span>
                 </div>
@@ -259,7 +259,7 @@
                                                 @endif
 
                                                 <label for="photo-upload-{{ $order->id }}" 
-                                                       class="relative block w-14 h-14 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center cursor-pointer transition-all hover:bg-gray-100 hover:border-gray-400 group-hover:shadow-lg overflow-hidden">
+                                                       class="relative w-14 h-14 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center cursor-pointer transition-all hover:bg-gray-100 hover:border-gray-400 group-hover:shadow-lg overflow-hidden">
                                                     
                                                     @if($order->material_photo_url)
                                                         <div class="relative h-full w-full">
