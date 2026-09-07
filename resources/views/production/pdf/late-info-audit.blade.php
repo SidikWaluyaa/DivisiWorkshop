@@ -306,18 +306,17 @@
         <thead>
             <tr>
                 <th width="3%">NO</th>
-                <th width="9%">NO. SPK</th>
-                <th width="11%">PELANGGAN</th>
-                <th width="12%">SEPATU</th>
-                <th width="11%">LAYANAN JASA</th>
-                <th width="9%">TEKNISI</th>
-                <th width="6%">TGL MASUK</th>
-                <th width="7%">ESTIMASI</th>
+                <th width="10%">NO. SPK</th>
+                <th width="13%">PELANGGAN</th>
+                <th width="14%">SEPATU</th>
+                <th width="14%">LAYANAN JASA</th>
+                <th width="7%">TGL MASUK</th>
+                <th width="8%">ESTIMASI</th>
                 <th width="8%">SISA WAKTU</th>
                 <th width="7%">STATUS</th>
                 <th width="9%" class="audit-header">[AUDIT] CEK FISIK</th>
-                <th width="8%" class="audit-header">[AUDIT] LOKASI RAK</th>
-                <th width="0%" class="audit-header">[AUDIT] CATATAN FISIK</th>
+                <th width="7%" class="audit-header">[AUDIT] LOKASI RAK</th>
+                <th width="10%" class="audit-header">[AUDIT] CATATAN FISIK</th>
             </tr>
         </thead>
         <tbody>
@@ -336,13 +335,6 @@
                         $servicesList = $order->services->pluck('name')->filter()->toArray();
                     }
                     $servicesStr = count($servicesList) > 0 ? implode(', ', $servicesList) : '-';
-
-                    // Technicians list
-                    $techs = [];
-                    if ($order->prodUpperBy) $techs[] = 'U: ' . $order->prodUpperBy->name;
-                    if ($order->prodSolBy) $techs[] = 'S: ' . $order->prodSolBy->name;
-                    if ($order->qcJahitBy) $techs[] = 'QC: ' . $order->qcJahitBy->name;
-                    $techsStr = count($techs) > 0 ? implode(' | ', $techs) : '-';
 
                     // Storage Rack
                     $rackName = '-';
@@ -384,7 +376,6 @@
                         @endif
                     </td>
                     <td style="font-size: 7.5px; color: #334155;">{{ $servicesStr }}</td>
-                    <td style="font-size: 7px; color: #475569;">{{ $techsStr }}</td>
                     <td style="text-align: center; font-size: 7.5px;">{{ $entryDateStr }}</td>
                     <td style="text-align: center; font-size: 7.5px; font-weight: bold;">{{ $estDateStr }}</td>
                     <td style="text-align: center;">
@@ -422,7 +413,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="13" style="text-align: center; padding: 25px; color: #64748b; font-weight: bold; font-size: 10px;">
+                    <td colspan="12" style="text-align: center; padding: 25px; color: #64748b; font-weight: bold; font-size: 10px;">
                         Tidak ada data antrean produksi sesuai parameter filter.
                     </td>
                 </tr>

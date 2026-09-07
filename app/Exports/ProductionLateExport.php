@@ -77,7 +77,6 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
                 'NAMA PELANGGAN',
                 'MERK & TIPE SEPATU',
                 'LAYANAN JASA',
-                'TEKNISI BERTUGAS',
                 'TGL MASUK (ENTRY)',
                 'ESTIMASI SELESAI',
                 'SISA WAKTU / TELAT',
@@ -90,7 +89,7 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
         ];
 
         if ($this->orders->isEmpty()) {
-            $rows[] = ['Tidak ada data produksi terlambat yang cocok dengan filter yang dipilih.', '', '', '', '', '', '', '', '', '', '', '', '', ''];
+            $rows[] = ['Tidak ada data produksi terlambat yang cocok dengan filter yang dipilih.', '', '', '', '', '', '', '', '', '', '', '', ''];
             $this->dataRowCount = 1;
         } else {
             $index = 1;
@@ -101,13 +100,6 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
                     $services = $order->services->pluck('name')->filter()->toArray();
                 }
                 $servicesStr = !empty($services) ? implode(', ', $services) : '- Standar -';
-
-                // Teknisi
-                $techs = [];
-                if ($order->prodUpperBy) $techs[] = 'Upper: ' . $order->prodUpperBy->name;
-                if ($order->prodSolBy) $techs[] = 'Sol: ' . $order->prodSolBy->name;
-                if ($order->qcJahitBy) $techs[] = 'QC: ' . $order->qcJahitBy->name;
-                $techsStr = !empty($techs) ? implode(' | ', $techs) : 'Belum Ditugaskan';
 
                 // Dates
                 $entryDateStr = $order->entry_date ? $order->entry_date->format('d/m/Y') : '-';
@@ -146,7 +138,6 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
                     $order->customer_name ?? '-',
                     ($order->shoe_brand ?? '') . ' ' . ($order->shoe_type ?? '') . ($order->shoe_size ? ' (Size: ' . $order->shoe_size . ')' : ''),
                     $servicesStr,
-                    $techsStr,
                     $entryDateStr,
                     $estDateStr,
                     $diffStr,
@@ -172,9 +163,8 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
             '',
             '',
             '',
-            '',
-            '',
             'KOORDINATOR / PIC WORKSHOP PRODUKSI',
+            '',
             '',
             '',
             '',
@@ -190,9 +180,8 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
             '',
             '',
             '',
-            '',
-            '',
             '( ........................................................... )',
+            '',
             '',
             '',
             '',
@@ -206,9 +195,8 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
             '',
             '',
             '',
-            '',
-            '',
             'Tgl Verifikasi: ____ / ____ / 2026',
+            '',
             '',
             '',
             '',
@@ -225,16 +213,16 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
         $sheet->getPageSetup()->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
 
         // 1. Merge Header Rows
-        $sheet->mergeCells('A1:N1');
-        $sheet->mergeCells('A2:N2');
-        $sheet->mergeCells('A3:N3');
+        $sheet->mergeCells('A1:M1');
+        $sheet->mergeCells('A2:M2');
+        $sheet->mergeCells('A3:M3');
 
         // Merge KPI Summary Box Cells
         $sheet->mergeCells('A5:B5');
         $sheet->mergeCells('C5:D5');
         $sheet->mergeCells('E5:F5');
         $sheet->mergeCells('G5:H5');
-        $sheet->mergeCells('L5:N5');
+        $sheet->mergeCells('K5:M5');
 
         // Style Title Banner (Row 1)
         $sheet->getStyle('A1')->applyFromArray([
@@ -306,7 +294,7 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '059669']], // Green
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
         ]);
-        $sheet->getStyle('L5:N5')->applyFromArray([
+        $sheet->getStyle('K5:M5')->applyFromArray([
             'font' => ['bold' => true, 'color' => ['rgb' => '0F172A'], 'size' => 8.5, 'italic' => true],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FEF3C7']], // Yellow Note
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
@@ -315,8 +303,8 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
         $sheet->getRowDimension(5)->setRowHeight(24);
 
         // 2. Style Table Headers (Row 7)
-        // System Data Columns (A7:K7)
-        $sheet->getStyle('A7:K7')->applyFromArray([
+        // System Data Columns (A7:J7)
+        $sheet->getStyle('A7:J7')->applyFromArray([
             'font' => [
                 'name' => 'Calibri',
                 'size' => 9,
@@ -340,8 +328,8 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
             ],
         ]);
 
-        // Field Audit Columns (L7:N7) - Highlighted in Amber Gold
-        $sheet->getStyle('L7:N7')->applyFromArray([
+        // Field Audit Columns (K7:M7) - Highlighted in Amber Gold
+        $sheet->getStyle('K7:M7')->applyFromArray([
             'font' => [
                 'name' => 'Calibri',
                 'size' => 9,
@@ -371,7 +359,7 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
         $endRow = $startRow + max(0, $this->dataRowCount - 1);
 
         if ($this->dataRowCount > 0 && !$this->orders->isEmpty()) {
-            $sheet->getStyle("A{$startRow}:N{$endRow}")->applyFromArray([
+            $sheet->getStyle("A{$startRow}:M{$endRow}")->applyFromArray([
                 'font' => [
                     'name' => 'Calibri',
                     'size' => 9,
@@ -396,15 +384,15 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
                 $sheet->getStyle("A{$currentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle("B{$currentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle("B{$currentRow}")->getFont()->setBold(true);
+                $sheet->getStyle("F{$currentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle("G{$currentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle("H{$currentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle("I{$currentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("J{$currentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("K{$currentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle("L{$currentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("M{$currentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                 // Field Audit Column background (Soft Gray/Cream to highlight editable fields)
-                $sheet->getStyle("L{$currentRow}:N{$currentRow}")->applyFromArray([
+                $sheet->getStyle("K{$currentRow}:M{$currentRow}")->applyFromArray([
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
                         'startColor' => ['rgb' => 'F8FAFC'],
@@ -417,26 +405,26 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
                     ],
                 ]);
 
-                // Conditional Formatting for Status Column (Col J) & Days (Col I)
+                // Conditional Formatting for Status Column (Col I) & Days (Col H)
                 $status = $order->warning_status ?? 'ON TRACK';
                 if ($status === 'LATE') {
-                    $sheet->getStyle("J{$currentRow}")->applyFromArray([
+                    $sheet->getStyle("I{$currentRow}")->applyFromArray([
                         'font' => ['bold' => true, 'color' => ['rgb' => '991B1B']],
                         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FEE2E2']], // Soft Red
                     ]);
-                    $sheet->getStyle("I{$currentRow}")->applyFromArray([
+                    $sheet->getStyle("H{$currentRow}")->applyFromArray([
                         'font' => ['bold' => true, 'color' => ['rgb' => 'DC2626']],
                     ]);
                 } elseif ($status === 'WARNING') {
-                    $sheet->getStyle("J{$currentRow}")->applyFromArray([
+                    $sheet->getStyle("I{$currentRow}")->applyFromArray([
                         'font' => ['bold' => true, 'color' => ['rgb' => '92400E']],
                         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FEF3C7']], // Soft Yellow
                     ]);
-                    $sheet->getStyle("I{$currentRow}")->applyFromArray([
+                    $sheet->getStyle("H{$currentRow}")->applyFromArray([
                         'font' => ['bold' => true, 'color' => ['rgb' => 'D97706']],
                     ]);
                 } else {
-                    $sheet->getStyle("J{$currentRow}")->applyFromArray([
+                    $sheet->getStyle("I{$currentRow}")->applyFromArray([
                         'font' => ['bold' => true, 'color' => ['rgb' => '065F46']],
                         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'D1FAE5']], // Soft Green
                     ]);
@@ -451,23 +439,23 @@ class ProductionLateExport implements FromArray, ShouldAutoSize, WithStyles, Wit
         $signRow2 = $signRow1 + 3;
         $signRow3 = $signRow2 + 1;
 
-        $sheet->mergeCells("A{$signRow1}:E{$signRow1}");
-        $sheet->mergeCells("J{$signRow1}:N{$signRow1}");
-        $sheet->getStyle("A{$signRow1}:N{$signRow1}")->applyFromArray([
+        $sheet->mergeCells("A{$signRow1}:D{$signRow1}");
+        $sheet->mergeCells("H{$signRow1}:M{$signRow1}");
+        $sheet->getStyle("A{$signRow1}:M{$signRow1}")->applyFromArray([
             'font' => ['bold' => true, 'size' => 9.5, 'color' => ['rgb' => '0F172A']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
-        $sheet->mergeCells("A{$signRow2}:E{$signRow2}");
-        $sheet->mergeCells("J{$signRow2}:N{$signRow2}");
-        $sheet->getStyle("A{$signRow2}:N{$signRow2}")->applyFromArray([
+        $sheet->mergeCells("A{$signRow2}:D{$signRow2}");
+        $sheet->mergeCells("H{$signRow2}:M{$signRow2}");
+        $sheet->getStyle("A{$signRow2}:M{$signRow2}")->applyFromArray([
             'font' => ['bold' => true, 'size' => 9.5],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
-        $sheet->mergeCells("A{$signRow3}:E{$signRow3}");
-        $sheet->mergeCells("J{$signRow3}:N{$signRow3}");
-        $sheet->getStyle("A{$signRow3}:N{$signRow3}")->applyFromArray([
+        $sheet->mergeCells("A{$signRow3}:D{$signRow3}");
+        $sheet->mergeCells("H{$signRow3}:M{$signRow3}");
+        $sheet->getStyle("A{$signRow3}:M{$signRow3}")->applyFromArray([
             'font' => ['size' => 8.5, 'color' => ['rgb' => '64748B']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
