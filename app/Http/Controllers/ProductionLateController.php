@@ -191,25 +191,44 @@ class ProductionLateController extends Controller
     }
 
     /**
-     * JSON API for Google Sheets or other external sync tools.
+     * Export late production orders to Excel for field physical audit.
      */
-    public function sync(Request $request)
+    public function export(Request $request)
     {
-        // Simple token security for sync
-        $envToken = config('app.sync_token', 'SECRET_TOKEN_12345');
-        if ($request->get('token') !== $envToken) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        $query = WorkOrder::productionLate()
+            ->with([
+                'workOrderServices',
+                'services',
+                'prodUpperBy',
+                'prodSolBy',
+                'qcJahitBy',
+                'storageAssignments.rack'
+            ]);
+        
+        // Status Filter
+        if ($request->filled('status')) {
+            $status = strtoupper($request->status);
+            if (in_array($status, ['LATE', 'WARNING', 'ON TRACK'])) {
+                $query->having('warning_status', '=', $status);
+            }
         }
 
-        $orders = WorkOrder::productionLate()->get();
+        // Search Filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_name', 'LIKE', "%{$search}%");
+            });
+        }
 
-        return response()->json([
-            'status' => 'success',
-            'count' => $orders->count(),
-            'data' => $orders->map(function($order) {
-                // Ensure late_description is explicitly included or just return the model
-                return $order;
-            })
-        ]);
+        $orders = $query->get();
+        $fileName = 'Audit_Cek_Fisik_Produksi_Terlambat_' . date('Ymd_His') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ProductionLateExport($orders, $request->status, $request->search),
+            $fileName
+        );
     }
 }
+

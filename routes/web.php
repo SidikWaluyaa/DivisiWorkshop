@@ -381,7 +381,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/update-station', [ProductionController::class, 'updateStation'])->name('update-station');
         Route::post('/{id}/finish', [ProductionController::class, 'finish'])->name('finish');
         Route::post('/{id}/approve', [ProductionController::class, 'approve'])->name('approve');
-        Route::post('/{id}/reject', [ProductionController::class, 'reject'])->name('reject');
+        Route::get('/late-info/export', [\App\Http\Controllers\ProductionLateController::class, 'export'])->name('late-info.export');
         Route::get('/late-info', \App\Livewire\Production\LateInfo::class)->name('late-info');
         Route::post('/bulk-update', [ProductionController::class, 'bulkUpdate'])->name('bulk-update');
     });

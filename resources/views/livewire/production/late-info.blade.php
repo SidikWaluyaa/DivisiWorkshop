@@ -74,34 +74,35 @@
                 </div>
             </div>
 
-            {{-- Advanced Filters --}}
-            <div class="mb-8 flex flex-col xl:flex-row justify-between items-end gap-6">
-                <div class="w-full xl:w-auto">
-                    <div class="flex flex-wrap items-center gap-3 p-1.5 bg-gray-200/50 backdrop-blur-sm rounded-[1.5rem] border border-gray-200/50 w-fit">
+            {{-- Advanced Filters & Actions --}}
+            <div class="mb-8 flex flex-col xl:flex-row justify-between items-stretch xl:items-end gap-4">
+                <div class="w-full xl:w-auto overflow-x-auto no-scrollbar pb-1">
+                    <div class="flex flex-wrap items-center gap-2 p-1.5 bg-gray-200/50 backdrop-blur-sm rounded-[1.5rem] border border-gray-200/50 w-fit">
                         <button wire:click="setStatus('')" 
-                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all {{ !$status ? 'bg-white text-gray-900 shadow-xl scale-105 z-10' : 'text-gray-500 hover:text-gray-900' }}">
+                           class="px-5 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all {{ !$status ? 'bg-white text-gray-900 shadow-xl scale-105 z-10' : 'text-gray-500 hover:text-gray-900' }}">
                             SEMUA DATA
                         </button>
                         <button wire:click="setStatus('LATE')" 
-                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $status == 'LATE' ? 'bg-red-500 text-white shadow-lg shadow-red-200 scale-105 z-10' : 'text-gray-500 hover:text-red-500' }}">
+                           class="px-5 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $status == 'LATE' ? 'bg-red-500 text-white shadow-lg shadow-red-200 scale-105 z-10' : 'text-gray-500 hover:text-red-500' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $status == 'LATE' ? 'bg-white' : 'bg-red-500' }}"></span>
                             TERLAMBAT
                         </button>
                         <button wire:click="setStatus('WARNING')" 
-                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $status == 'WARNING' ? 'bg-orange-500 text-white shadow-lg shadow-orange-200 scale-105 z-10' : 'text-gray-500 hover:text-orange-500' }}">
+                           class="px-5 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $status == 'WARNING' ? 'bg-orange-500 text-white shadow-lg shadow-orange-200 scale-105 z-10' : 'text-gray-500 hover:text-orange-500' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $status == 'WARNING' ? 'bg-white' : 'bg-orange-500' }}"></span>
                             WARNING (<= 5 HARI)
                         </button>
                         <button wire:click="setStatus('ON TRACK')" 
-                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $status == 'ON TRACK' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 scale-105 z-10' : 'text-gray-500 hover:text-emerald-500' }}">
+                           class="px-5 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $status == 'ON TRACK' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 scale-105 z-10' : 'text-gray-500 hover:text-emerald-500' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $status == 'ON TRACK' ? 'bg-white' : 'bg-emerald-500' }}"></span>
                             STABIL
                         </button>
                     </div>
                 </div>
 
-                <div class="w-full xl:w-96">
-                    <div class="relative group">
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+                    {{-- Search Input --}}
+                    <div class="relative group w-full sm:w-80">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400 group-focus-within:text-gray-900 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -109,21 +110,30 @@
                         </div>
                         <input type="text" 
                                wire:model.live.debounce.300ms="search"
-                               class="block w-full pl-12 pr-12 py-4 bg-white border-2 border-gray-100 rounded-[2rem] text-sm font-bold placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all shadow-xl shadow-gray-200/50" 
-                               placeholder="Cari No SPK atau Pelanggan...">
+                               class="block w-full pl-12 pr-12 py-3.5 bg-white border-2 border-gray-100 rounded-2xl text-xs font-bold placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all shadow-md shadow-gray-200/50" 
+                               placeholder="Cari No SPK / Pelanggan...">
                         
                         @if($search)
                             <button wire:click="clearSearch" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-300 hover:text-red-500 transition-all active:scale-95">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         @endif
                         
                         <div wire:loading wire:target="search" class="absolute inset-y-0 right-10 pr-2 flex items-center">
-                            <svg class="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         </div>
                     </div>
+
+                    {{-- Export Excel Button --}}
+                    <a href="{{ route('production.late-info.export', ['status' => $status, 'search' => $search]) }}" 
+                       target="_blank"
+                       title="Download Lembar Audit & Cek Fisik Lapangan"
+                       class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 active:scale-95 whitespace-nowrap">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span>Export Excel (Cek Fisik)</span>
+                    </a>
                 </div>
             </div>
 

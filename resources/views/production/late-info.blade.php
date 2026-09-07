@@ -74,37 +74,38 @@
                 </div>
             </div>
 
-            {{-- Advanced Filters --}}
-            <div class="mb-8 flex flex-col xl:flex-row justify-between items-end gap-6">
-                <div class="w-full xl:w-auto">
-                    <div class="flex flex-wrap items-center gap-3 p-1.5 bg-gray-200/50 backdrop-blur-sm rounded-[1.5rem] border border-gray-200/50 w-fit">
+            {{-- Advanced Filters & Actions --}}
+            <div class="mb-8 flex flex-col xl:flex-row justify-between items-stretch xl:items-end gap-4">
+                <div class="w-full xl:w-auto overflow-x-auto no-scrollbar pb-1">
+                    <div class="flex flex-wrap items-center gap-2 p-1.5 bg-gray-200/50 backdrop-blur-sm rounded-[1.5rem] border border-gray-200/50 w-fit">
                         @php
                             $currentStatus = request('status');
                         @endphp
                         <a href="{{ route('production.late-info') }}" 
-                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all {{ !$currentStatus ? 'bg-white text-gray-900 shadow-xl scale-105 z-10' : 'text-gray-500 hover:text-gray-900' }}">
+                           class="px-5 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all {{ !$currentStatus ? 'bg-white text-gray-900 shadow-xl scale-105 z-10' : 'text-gray-500 hover:text-gray-900' }}">
                             SEMUA DATA
                         </a>
                         <a href="{{ route('production.late-info', ['status' => 'LATE', 'search' => request('search')]) }}" 
-                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $currentStatus == 'LATE' ? 'bg-red-500 text-white shadow-lg shadow-red-200 scale-105 z-10' : 'text-gray-500 hover:text-red-500' }}">
+                           class="px-5 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $currentStatus == 'LATE' ? 'bg-red-500 text-white shadow-lg shadow-red-200 scale-105 z-10' : 'text-gray-500 hover:text-red-500' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus == 'LATE' ? 'bg-white' : 'bg-red-500' }}"></span>
                             TERLAMBAT
                         </a>
                         <a href="{{ route('production.late-info', ['status' => 'WARNING', 'search' => request('search')]) }}" 
-                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $currentStatus == 'WARNING' ? 'bg-orange-500 text-white shadow-lg shadow-orange-200 scale-105 z-10' : 'text-gray-500 hover:text-orange-500' }}">
+                           class="px-5 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $currentStatus == 'WARNING' ? 'bg-orange-500 text-white shadow-lg shadow-orange-200 scale-105 z-10' : 'text-gray-500 hover:text-orange-500' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus == 'WARNING' ? 'bg-white' : 'bg-orange-500' }}"></span>
                             WARNING (<= 5 HARI)
                         </a>
                         <a href="{{ route('production.late-info', ['status' => 'ON TRACK', 'search' => request('search')]) }}" 
-                           class="px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $currentStatus == 'ON TRACK' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 scale-105 z-10' : 'text-gray-500 hover:text-emerald-500' }}">
+                           class="px-5 py-2.5 rounded-2xl text-[11px] font-black tracking-widest transition-all flex items-center gap-2 {{ $currentStatus == 'ON TRACK' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 scale-105 z-10' : 'text-gray-500 hover:text-emerald-500' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $currentStatus == 'ON TRACK' ? 'bg-white' : 'bg-emerald-500' }}"></span>
                             STABIL
                         </a>
                     </div>
                 </div>
 
-                <div class="w-full xl:w-96">
-                    <form action="{{ route('production.late-info') }}" method="GET" class="relative group">
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+                    {{-- Search Form --}}
+                    <form action="{{ route('production.late-info') }}" method="GET" class="relative group w-full sm:w-80">
                         @if(request('status'))
                             <input type="hidden" name="status" value="{{ request('status') }}">
                         @endif
@@ -116,17 +117,26 @@
                         <input type="text" 
                                name="search" 
                                value="{{ request('search') }}"
-                               class="block w-full pl-12 pr-12 py-4 bg-white border-2 border-gray-100 rounded-[2rem] text-sm font-bold placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all shadow-xl shadow-gray-200/50" 
-                               placeholder="Cari No SPK atau Pelanggan...">
+                               class="block w-full pl-12 pr-12 py-3.5 bg-white border-2 border-gray-100 rounded-2xl text-xs font-bold placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all shadow-md shadow-gray-200/50" 
+                               placeholder="Cari No SPK / Pelanggan...">
                         
                         @if(request('search'))
                             <a href="{{ route('production.late-info', ['status' => request('status')]) }}" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-300 hover:text-red-500 transition-all active:scale-95">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </a>
                         @endif
                     </form>
+
+                    {{-- Export Excel Button --}}
+                    <a href="{{ route('production.late-info.export', ['status' => request('status'), 'search' => request('search')]) }}" 
+                       target="_blank"
+                       title="Download Lembar Audit & Cek Fisik Lapangan"
+                       class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 active:scale-95 whitespace-nowrap">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span>Export Excel (Cek Fisik)</span>
+                    </a>
                 </div>
             </div>
 
