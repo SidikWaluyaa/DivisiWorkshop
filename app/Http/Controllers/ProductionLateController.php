@@ -230,5 +230,63 @@ class ProductionLateController extends Controller
             $fileName
         );
     }
+
+    /**
+     * Export late production orders to PDF for direct printing & physical field audit.
+     */
+    public function exportPdf(Request $request)
+    {
+        $query = WorkOrder::productionLate()
+            ->with([
+                'workOrderServices',
+                'services',
+                'prodUpperBy',
+                'prodSolBy',
+                'qcJahitBy',
+                'storageAssignments.rack'
+            ]);
+        
+        // Status Filter
+        if ($request->filled('status')) {
+            $status = strtoupper($request->status);
+            if (in_array($status, ['LATE', 'WARNING', 'ON TRACK'])) {
+                $query->having('warning_status', '=', $status);
+            }
+        }
+
+        // Search Filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_name', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $orders = $query->get();
+
+        // Summary metrics
+        $totalOrders = $orders->count();
+        $lateCount = $orders->where('warning_status', 'LATE')->count();
+        $warningCount = $orders->where('warning_status', 'WARNING')->count();
+        $onTrackCount = $orders->where('warning_status', 'ON TRACK')->count();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('production.pdf.late-info-audit', [
+            'orders' => $orders,
+            'totalOrders' => $totalOrders,
+            'lateCount' => $lateCount,
+            'warningCount' => $warningCount,
+            'onTrackCount' => $onTrackCount,
+            'statusFilter' => $request->status ? strtoupper($request->status) : 'SEMUA',
+            'searchQuery' => $request->search ?: '-',
+            'printedAt' => now()->translatedFormat('d F Y, H:i') . ' WIB',
+            'printedBy' => auth()->user()?->name ?? 'Staff Workshop'
+        ])->setPaper('a4', 'landscape');
+
+        $fileName = 'Audit_Cek_Fisik_Produksi_Terlambat_' . date('Ymd_His') . '.pdf';
+
+        return $pdf->stream($fileName);
+    }
 }
+
 
