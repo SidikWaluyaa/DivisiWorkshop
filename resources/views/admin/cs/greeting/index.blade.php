@@ -1,35 +1,82 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-            <div>
-                <h2 class="font-bold text-2xl text-gray-800 dark:text-gray-200 leading-tight">
-                    {{ __('Customer Service Greeting') }}
-                </h2>
-                <p class="text-sm text-gray-500 mt-1">Kelola data chat masuk dan performa greeting awal CS.</p>
-            </div>
-            
-            <div class="flex items-center space-x-3">
-                <a href="{{ route('cs.greeting.template') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-xl font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="C4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Template
-                </a>
-                
-                <button x-data @click="$dispatch('open-modal', 'import-modal')"
-                        class="inline-flex items-center px-4 py-2 bg-crimson-red border border-transparent rounded-xl font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-lg shadow-red-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="C7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    Import Chat
-                </button>
-            </div>
+        <div class="flex items-center gap-2 text-sm">
+            <a href="{{ route('cs.dashboard') }}" class="font-bold tracking-wider text-teal-100 hover:text-white uppercase text-xs transition">Divisi CS</a>
+            <span class="text-white/40">/</span>
+            <span class="font-black text-white text-base tracking-wide">{{ __('Customer Service Greeting') }}</span>
         </div>
     </x-slot>
 
     <div class="py-12" x-data="greetingManager()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            
+            {{-- Executive Glassmorphism Hero Header --}}
+            <div class="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white via-white/95 to-purple-50/40 dark:from-gray-800 dark:via-gray-800/95 dark:to-purple-950/30 p-6 sm:p-8 border border-white/80 dark:border-gray-700 shadow-[0_20px_50px_rgba(147,51,234,0.08)] mb-8 backdrop-blur-xl">
+                {{-- Decorative background glow --}}
+                <div class="absolute -right-20 -top-20 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-20 -bottom-20 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    {{-- Left info --}}
+                    <div class="flex items-start sm:items-center gap-4 sm:gap-5">
+                        <div class="relative shrink-0">
+                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-purple-700 via-indigo-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30 ring-4 ring-white dark:ring-gray-700">
+                                <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                            </div>
+                            <span class="absolute -top-1 -right-1 flex h-4 w-4">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-4 w-4 bg-purple-500 border-2 border-white"></span>
+                            </span>
+                        </div>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300 border border-purple-200/60 inline-flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                                    Stage 1: Greeting & Initial Intake
+                                </span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/50 border border-gray-200/60 dark:border-gray-600 inline-flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
+                                </span>
+                            </div>
+                            <h1 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+                                Customer Service Greeting
+                            </h1>
+                            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                                Kelola data chat masuk, alokasi customer ke staf CS, dan rekap respon greeting awal.
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Right actions & navigation --}}
+                    <div class="flex flex-wrap items-center gap-3 lg:self-center">
+                        <a href="{{ route('cs.greeting.template') }}" 
+                           class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            <span>Download Template</span>
+                        </a>
+
+                        <button type="button" @click="$dispatch('open-modal', 'import-modal')"
+                                class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest text-white bg-gradient-to-r from-rose-600 via-rose-500 to-pink-500 shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <span>Import Chat</span>
+                        </button>
+
+                        <a href="{{ route('cs.dashboard') }}" 
+                           class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                            <span>⬅️ CS Hub</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
             
             @if(session('import_errors'))
                 <div class="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-xl shadow-sm">

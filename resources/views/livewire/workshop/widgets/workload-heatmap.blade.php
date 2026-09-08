@@ -49,12 +49,9 @@
             </div>
         </div>
         <div class="relative p-6 space-y-6">
-            {{-- Loading Overlay --}}
-            <div wire:loading class="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-center justify-center z-10 transition-all duration-300">
-                <div class="flex flex-col items-center gap-2">
-                    <div class="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span class="text-xs font-bold text-teal-700 uppercase tracking-widest">Updating</span>
-                </div>
+            {{-- Branded Loading Overlay --}}
+            <div wire:loading class="absolute inset-0 z-10">
+                <x-branded-loader text="Memuat Heatmap Beban Kerja..." size="sm" />
             </div>
             {{-- Station Queue --}}
             <div>

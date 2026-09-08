@@ -1010,9 +1010,8 @@
                                     </div>
 
                                     {{-- Loading Overlay --}}
-                                    <div x-show="isLoading" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center backdrop-blur-sm z-10">
-                                        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-400 mb-2"></div>
-                                        <span class="text-xs text-amber-400 font-bold uppercase tracking-widest">Memproses...</span>
+                                    <div x-show="isLoading" class="absolute inset-0 z-10">
+                                        <x-branded-loader text="Memproses Foto..." size="sm" />
                                     </div>
                                 </div>
                                 </template>

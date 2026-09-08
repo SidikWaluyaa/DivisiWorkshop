@@ -1,26 +1,67 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg bg-[#22AF85]">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </div>
-                <div>
-                    <h2 class="font-black text-2xl text-gray-900 leading-tight tracking-tight uppercase">
-                        {{ __('Closing Leads') }}
-                    </h2>
-                    <p class="text-xs font-bold text-gray-500 tracking-widest uppercase opacity-70">Data Lead Siap Transaksi (SPK)</p>
-                </div>
-            </div>
-            <a href="{{ route('cs.dashboard') }}" class="bg-gray-100 text-gray-600 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm hover:bg-gray-200 transition">
-                ⬅️ Dashboard Hub
-            </a>
+        <div class="flex items-center gap-2 text-sm">
+            <a href="{{ route('cs.dashboard') }}" class="font-bold tracking-wider text-teal-100 hover:text-white uppercase text-xs transition">Divisi CS</a>
+            <span class="text-white/40">/</span>
+            <span class="font-black text-white text-base tracking-wide">{{ __('Closing Leads') }}</span>
         </div>
     </x-slot>
 
     <div class="py-12 bg-gray-50/50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
+            {{-- Executive Glassmorphism Hero Header --}}
+            <div class="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white via-white/95 to-emerald-50/40 p-6 sm:p-8 border border-white/80 shadow-[0_20px_50px_rgba(34,175,133,0.08)] mb-8 backdrop-blur-xl">
+                {{-- Decorative background glow --}}
+                <div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-20 -bottom-20 w-72 h-72 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    {{-- Left info --}}
+                    <div class="flex items-start sm:items-center gap-4 sm:gap-5">
+                        <div class="relative shrink-0">
+                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 via-[#22AF85] to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 ring-4 ring-white">
+                                <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <span class="absolute -top-1 -right-1 flex h-4 w-4">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
+                            </span>
+                        </div>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-emerald-100 text-emerald-800 border border-emerald-200/60 inline-flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Stage 4: Closing & SPK Generation
+                                </span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold text-gray-500 bg-gray-100 border border-gray-200/60 inline-flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
+                                </span>
+                            </div>
+                            <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                                Closing Leads Pipeline
+                            </h1>
+                            <p class="text-xs sm:text-sm text-gray-500 font-medium mt-0.5">
+                                Data penawaran yang telah disetujui (Deal) dan siap diterbitkan Surat Perintah Kerja (SPK) resmi.
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Right navigation / shortcuts --}}
+                    <div class="flex flex-wrap items-center gap-3 lg:self-center">
+                        <a href="{{ route('cs.dashboard') }}" 
+                           class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-700 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                            <span>⬅️ CS Hub Dashboard</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-8 border-b border-gray-50 flex flex-wrap items-center justify-between gap-4">
                     <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight">Final Stage Conversion</h3>

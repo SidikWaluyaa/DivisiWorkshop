@@ -467,14 +467,8 @@
                 <div class="p-12 overflow-y-auto bg-gray-50/20 custom-scrollbar">
                     {{-- Loading Sequence --}}
                     <template x-if="isLoading">
-                        <div class="flex flex-col items-center justify-center py-24 space-y-8">
-                            <div class="relative">
-                                <div class="w-24 h-24 border-8 border-primary-green/5 border-t-primary-green rounded-full animate-spin"></div>
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="w-5 h-5 bg-accent-yellow rounded-full animate-ping"></div>
-                                </div>
-                            </div>
-                            <p class="text-xs font-black text-primary-green animate-pulse uppercase tracking-[0.5em]">Synchronizing Master Data...</p>
+                        <div class="py-16">
+                            <x-branded-loader text="Sinkronisasi Rak Penyimpanan..." size="lg" :overlay="false" />
                         </div>
                     </template>
 

@@ -1,4 +1,9 @@
 <div>
+    {{-- Full-Screen Branded Loading Overlay --}}
+    <div wire:loading wire:target="setTab, setSubstate, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, gotoPage, previousPage, nextPage, autoAssignUnassignedTechnicians, approveAll, bulkAction">
+        <x-branded-loader text="Sinkronisasi Data Produksi..." size="lg" :fullscreen="true" />
+    </div>
+
     <x-slot name="header">
          <div class="flex flex-col md:flex-row justify-between items-center gap-4">
              <div class="flex items-center gap-4">
@@ -158,7 +163,8 @@
              </div>
 
              {{-- Content Area --}}
-             <div class="space-y-6" wire:loading.class="opacity-50 transition-opacity">
+              <div class="space-y-6">
+
                  @if($activeTab !== 'review')
                  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                      <div class="p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 border-indigo-250 border-b flex flex-wrap justify-between items-center gap-3">
@@ -191,15 +197,6 @@
                           </div>
                      </div>
                      <div class="p-4 bg-gray-50/50 relative min-h-[400px]">
-                         {{-- Professional Loading Overlay --}}
-                         <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress" 
-                              class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
-                             <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
-                                 <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                                 <div class="text-[10px] font-black text-indigo-700 mt-4 tracking-widest uppercase">Sinkronisasi Data Produksi...</div>
-                             </div>
-                         </div>
-                         
                          <div class="overflow-x-auto bg-white rounded-xl border border-gray-200">
                              <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
                                  <thead class="bg-gray-50 dark:bg-gray-700">
@@ -242,14 +239,6 @@
                  @else
                  {{-- ADMIN REVIEW SECTION --}}
                  <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border-2 border-indigo-500 relative">
-                      {{-- Professional Loading Overlay --}}
-                      <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress" 
-                           class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
-                          <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
-                              <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                              <div class="text-[10px] font-black text-indigo-700 mt-4 tracking-widest uppercase">Sinkronisasi Data Produksi...</div>
-                          </div>
-                      </div>
                      <div class="bg-gradient-to-r from-indigo-650 to-slate-900 p-4 text-white flex justify-between items-center">
                          <h3 class="text-lg font-bold flex items-center gap-2">
                              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
