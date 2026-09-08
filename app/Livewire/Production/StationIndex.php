@@ -97,35 +97,13 @@ class StationIndex extends Component
     #[Computed]
     public function counts()
     {
-        $baseQuery = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
-            ->whereDoesntHave('logs', function($lq) {
-                $lq->where('step', 'PRODUCTION')
-                   ->where('action', 'PRODUCTION_APPROVED');
-            });
+        $baseQuery = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value);
 
         $reviewCount = (clone $baseQuery)->productionReview()->count();
         $totalProduction = (clone $baseQuery)->count();
         $reparasiCount = max(0, $totalProduction - $reviewCount);
 
-        $reparasiQuery = (clone $baseQuery)->where(function ($q) {
-            $q->whereHas('workOrderServices')
-              ->where(function ($sq) {
-                  $sq->where(function ($ssq) {
-                      $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Upper%'))
-                          ->whereNull('prod_upper_completed_at');
-                  })
-                  ->orWhere(function ($ssq) {
-                      $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%'))
-                          ->whereNull('prod_sol_completed_at');
-                  })
-                  ->orWhere(function ($ssq) {
-                      $ssq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%')->orWhere('category_name', 'like', '%Upper%')->orWhere('category_name', 'like', '%Jahit%'))
-                          ->whereNull('qc_jahit_completed_at');
-                  });
-              });
-        });
-
-        $inProgressCount = (clone $reparasiQuery)->where(function($q) {
+        $inProgressCount = (clone $baseQuery)->where(function($q) {
             $q->where(function($sq) {
                 $sq->whereNotNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
             })
@@ -491,10 +469,6 @@ class StationIndex extends Component
         try {
             $techService = app(\App\Services\TechnicianAssignmentService::class);
             $unassignedOrders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
-                ->whereDoesntHave('logs', function($lq) {
-                    $lq->where('step', 'PRODUCTION')
-                       ->where('action', 'PRODUCTION_APPROVED');
-                })
                 ->where(function($q) {
                     $q->whereNull('prod_upper_by')
                       ->orWhereNull('prod_sol_by')
@@ -518,75 +492,68 @@ class StationIndex extends Component
         $query = WorkOrder::query()
             ->with(['customer', 'workOrderServices', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions']);
 
-        // Search Filter
-        if ($this->search) {
-            $query->where(function($q) {
-                $q->where('spk_number', 'like', '%' . $this->search . '%')
-                  ->orWhere('customer_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('shoe_brand', 'like', '%' . $this->search . '%');
-            });
-        }
+        // Base Filter: Only show items in PRODUCTION status
+        $query->where('status', WorkOrderStatus::PRODUCTION->value);
 
-        // Base Filter: Only show items in PRODUCTION status (that are not yet approved for QC)
-        $query->where('status', WorkOrderStatus::PRODUCTION->value)
-            ->whereDoesntHave('logs', function($lq) {
-                $lq->where('step', 'PRODUCTION')
-                   ->where('action', 'PRODUCTION_APPROVED');
-            });
-
-        // Tab Filter
-        if ($this->activeTab === 'review') {
-            $query->productionReview();
-        } else {
-            // Tab 'reparasi' (Not in review, meaning at least one required stasiun is not completed)
-            $query->where(function ($q) {
-                $q->whereHas('workOrderServices')
-                  ->where(function ($sq) {
-                      $sq->where(function ($ssq) {
-                          $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'like', '%Upper%'); })
-                              ->whereNull('prod_upper_completed_at');
-                      })
-                      ->orWhere(function ($ssq) {
-                          $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'like', '%Sol%'); })
-                              ->whereNull('prod_sol_completed_at');
-                      })
-                      ->orWhere(function ($ssq) {
-                          $ssq->whereHas('workOrderServices', function($x) { $x->where('category_name', 'like', '%Sol%')->orWhere('category_name', 'like', '%Upper%')->orWhere('category_name', 'like', '%Jahit%'); })
-                              ->whereNull('qc_jahit_completed_at');
-                      });
+        // Universal Search Filter (Searches across all production orders when query is given)
+        if (!empty(trim($this->search))) {
+            $searchTerm = trim($this->search);
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('spk_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('customer_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('shoe_brand', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('customer_phone', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('customer', function($cq) use ($searchTerm) {
+                      $cq->where('name', 'like', '%' . $searchTerm . '%')
+                         ->orWhere('phone', 'like', '%' . $searchTerm . '%');
                   });
             });
-        }
-
-        // Substate Filter for Reparasi Tab
-        if ($this->activeTab === 'reparasi' && $this->substate !== 'all') {
-            if ($this->substate === 'in_progress') {
-                $query->where(function($q) {
-                    $q->where(function($sq) {
-                        $sq->whereNotNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
-                    })
-                    ->orWhere(function($sq) {
-                        $sq->whereNotNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
-                    })
-                    ->orWhere(function($sq) {
-                        $sq->whereNotNull('qc_jahit_started_at')->whereNull('qc_jahit_completed_at');
-                    });
+        } else {
+            // Tab Filter
+            if ($this->activeTab === 'review') {
+                $query->productionReview();
+            } else {
+                // Tab 'reparasi' (Not in review, meaning still needs processing)
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('workOrderServices')
+                      ->orWhereHas('workOrderServices', function ($sq) {
+                          $sq->where(function ($ssq) {
+                              $ssq->where('category_name', 'like', '%Upper%')
+                                  ->whereNull('work_orders.prod_upper_completed_at');
+                          })
+                          ->orWhere(function ($ssq) {
+                              $ssq->where('category_name', 'like', '%Sol%')
+                                  ->whereNull('work_orders.prod_sol_completed_at');
+                          })
+                          ->orWhere(function ($ssq) {
+                              $ssq->where(function ($x) { $x->where('category_name', 'like', '%Sol%')->orWhere('category_name', 'like', '%Upper%')->orWhere('category_name', 'like', '%Jahit%'); })
+                                  ->whereNull('work_orders.qc_jahit_completed_at');
+                          });
+                      });
                 });
-            } elseif ($this->substate === 'queued') {
-                $query->where(function($q) {
-                    $q->where(function($sq) {
-                        $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Upper%'))
-                           ->whereNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
-                    })
-                    ->orWhere(function($sq) {
-                        $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%'))
-                           ->whereNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
-                    })
-                    ->orWhere(function($sq) {
-                        $sq->whereHas('workOrderServices', fn($x) => $x->where('category_name', 'like', '%Sol%')->orWhere('category_name', 'like', '%Upper%')->orWhere('category_name', 'like', '%Jahit%'))
+            }
+
+            // Substate Filter for Reparasi Tab
+            if ($this->activeTab === 'reparasi' && $this->substate !== 'all') {
+                if ($this->substate === 'in_progress') {
+                    $query->where(function($q) {
+                        $q->where(function($sq) {
+                            $sq->whereNotNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
+                        })
+                        ->orWhere(function($sq) {
+                            $sq->whereNotNull('prod_sol_started_at')->whereNull('prod_sol_completed_at');
+                        })
+                        ->orWhere(function($sq) {
+                            $sq->whereNotNull('qc_jahit_started_at')->whereNull('qc_jahit_completed_at');
+                        });
+                    });
+                } elseif ($this->substate === 'queued') {
+                    $query->where(function($q) {
+                        $q->whereNull('prod_upper_started_at')->whereNull('prod_upper_completed_at')
+                           ->whereNull('prod_sol_started_at')->whereNull('prod_sol_completed_at')
                            ->whereNull('qc_jahit_started_at')->whereNull('qc_jahit_completed_at');
                     });
-                });
+                }
             }
         }
 
@@ -642,10 +609,6 @@ class StationIndex extends Component
 
         // 3. Then by custom sort (Latest/Oldest)
         $query->orderBy('id', $this->sort === 'desc' ? 'desc' : 'asc');
-
-        if ($this->activeTab === 'review' && empty($this->search)) {
-            $query->productionReview();
-        }
 
         // Reduced per-page to 50 for faster rendering of cards
         return $query->paginate(50);
