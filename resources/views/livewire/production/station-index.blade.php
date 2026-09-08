@@ -191,13 +191,9 @@
                           </div>
                      </div>
                      <div class="p-4 bg-gray-50/50 relative min-h-[400px]">
-                         {{-- Professional Loading Overlay --}}
-                         <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress" 
-                              class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
-                             <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
-                                 <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                                 <div class="text-[10px] font-black text-indigo-700 mt-4 tracking-widest uppercase">Sinkronisasi Data Produksi...</div>
-                             </div>
+                         {{-- Branded Loading Overlay --}}
+                         <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress">
+                             <x-branded-loader text="Sinkronisasi Data Produksi..." />
                          </div>
                          
                          <div class="overflow-x-auto bg-white rounded-xl border border-gray-200">
@@ -242,13 +238,9 @@
                  @else
                  {{-- ADMIN REVIEW SECTION --}}
                  <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border-2 border-indigo-500 relative">
-                      {{-- Professional Loading Overlay --}}
-                      <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress" 
-                           class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
-                          <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
-                              <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                              <div class="text-[10px] font-black text-indigo-700 mt-4 tracking-widest uppercase">Sinkronisasi Data Produksi...</div>
-                          </div>
+                      {{-- Branded Loading Overlay --}}
+                      <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress">
+                          <x-branded-loader text="Sinkronisasi Data Produksi..." />
                       </div>
                      <div class="bg-gradient-to-r from-indigo-650 to-slate-900 p-4 text-white flex justify-between items-center">
                          <h3 class="text-lg font-bold flex items-center gap-2">
