@@ -239,23 +239,53 @@
               {{-- Column 6: Action Buttons for Review & Toggle --}}
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
                   <div class="flex items-center justify-end gap-2">
-                       <button wire:click="performApprove({{ $order->id }})" 
-                               wire:confirm="{{ str_starts_with($type, 'prep') ? 'Preparation sudah OK semua? Lanjut ke Sortir?' : (str_starts_with($type, 'prod') ? 'Sudah dicek dan OK? Lanjut ke QC?' : 'QC Akhir sudah OK semua? Order akan masuk Staging Outbound.') }}"
-                               class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow transition-all active:scale-95">
-                           {{ str_starts_with($type, 'qc') ? 'Lolos QC' : 'Approve' }}
-                       </button>
+                       @php
+                           $isProdApproved = false;
+                           $activeSj = null;
+                           if (str_starts_with($type, 'prod')) {
+                               $isProdApproved = $order->logs->where('step', 'PRODUCTION')->where('action', 'PRODUCTION_APPROVED')->isNotEmpty() 
+                                   || $order->current_location === 'Produksi (Siap Handover)';
+                               $activeSj = $order->suratJalanItems?->first(fn($item) => $item->suratJalan && $item->suratJalan->jenis_serah_terima === 'produksi_to_post_qc')?->suratJalan;
+                           }
+                       @endphp
 
-                       <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" 
-                               class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer">
-                           Revisi
-                       </button>
+                       @if($isProdApproved || $activeSj)
+                           @if($activeSj)
+                               <a href="{{ route('surat-jalan.show', $activeSj->id) }}" 
+                                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all shadow-xs"
+                                  title="Lihat Surat Jalan: {{ $activeSj->nomor_surat }}">
+                                   <span>🚚</span>
+                                   <span>SJ #{{ $activeSj->nomor_surat }}</span>
+                               </a>
+                           @else
+                               <a href="{{ route('surat-jalan.index', ['jenis' => 'produksi_to_post_qc', 'search' => $order->spk_number]) }}" 
+                                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all shadow-xs"
+                                  title="SPK Sudah Disetujui. Siap dibuatkan atau dimasukkan ke Surat Jalan Handover QC">
+                                   <span>✅</span>
+                                   <span>Siap Handover QC</span>
+                               </a>
+                           @endif
+                       @else
+                           <button wire:click="performApprove({{ $order->id }})" 
+                                   wire:confirm="{{ str_starts_with($type, 'prep') ? 'Preparation sudah OK semua? Lanjut ke Sortir?' : (str_starts_with($type, 'prod') ? 'Sudah dicek dan OK? Lanjut ke QC?' : 'QC Akhir sudah OK semua? Order akan masuk Staging Outbound.') }}"
+                                   class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow transition-all active:scale-95">
+                               {{ str_starts_with($type, 'qc') ? 'Lolos QC' : 'Approve' }}
+                           </button>
+
+                           <button @click="$dispatch('open-revision-modal', { id: {{ $order->id }}, number: '{{ $order->spk_number }}' })" 
+                                   class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 cursor-pointer">
+                               Revisi
+                           </button>
+                       @endif
 
                       <button @click="expanded = !expanded" class="p-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-gray-750 text-teal-600 dark:text-teal-400 transition-colors">
                           <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transform transition-transform duration-250" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                           </svg>
                       </button>
-                  </div>          @else
+                  </div>
+              </td>
+          @else
               @if(str_starts_with($type, 'prep_') && !$isReviewTab)
                   {{-- Column 5: Progress Tugas Prep --}}
                   <td class="px-6 py-4" @click.stop>
