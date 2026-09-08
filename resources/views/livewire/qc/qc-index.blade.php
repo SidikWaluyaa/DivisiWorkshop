@@ -119,23 +119,8 @@
         <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-h-[500px] relative">
             
             {{-- Universal Branded Loading Overlay --}}
-            <div wire:loading.delay.50ms wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, autoAssignUnassignedTechnicians, approveAll, bulkAction"
-                 class="absolute inset-0 z-40 flex items-center justify-center bg-white/75 dark:bg-gray-900/75 backdrop-blur-md rounded-2xl transition-all duration-200">
-                <div wire:loading wire:target="setTab('qc')">
-                    <x-branded-loader text="Memuat Antrean Quality Control..." size="md" :overlay="false" />
-                </div>
-                <div wire:loading wire:target="setTab('review')">
-                    <x-branded-loader text="Memuat Pemeriksaan Akhir Admin..." size="md" :overlay="false" />
-                </div>
-                <div wire:loading wire:target="search, priority, technicianFilter, sort, onlyInProgress">
-                    <x-branded-loader text="Menyaring Data QC..." size="md" :overlay="false" />
-                </div>
-                <div wire:loading wire:target="autoAssignUnassignedTechnicians">
-                    <x-branded-loader text="Menugaskan Petugas QC Otomatis..." size="md" :overlay="false" />
-                </div>
-                <div wire:loading wire:target="approveAll, bulkAction">
-                    <x-branded-loader text="Memproses Approval QC..." size="md" :overlay="false" />
-                </div>
+            <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, autoAssignUnassignedTechnicians, approveAll, bulkAction">
+                <x-branded-loader text="Verifikasi Data QC..." size="md" />
             </div>
 
             @php

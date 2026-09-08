@@ -160,48 +160,8 @@
              {{-- Content Area --}}
               <div class="space-y-6 relative min-h-[420px]">
                   {{-- Universal Branded Loading Overlay --}}
-                  <div wire:loading.delay.50ms wire:target="setTab, setSubstate, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, gotoPage, previousPage, nextPage, autoAssignUnassignedTechnicians, approveAll, bulkAction"
-                       class="absolute inset-0 z-40 flex items-center justify-center bg-white/75 dark:bg-gray-900/75 backdrop-blur-md rounded-2xl transition-all duration-200">
-                      
-                      {{-- Contextual Target 1: Tab Antrean Reparasi --}}
-                      <div wire:loading wire:target="setTab('reparasi')">
-                          <x-branded-loader text="Memuat Antrean Reparasi..." size="md" :overlay="false" />
-                      </div>
-
-                      {{-- Contextual Target 2: Tab Siap Approval --}}
-                      <div wire:loading wire:target="setTab('review')">
-                          <x-branded-loader text="Memuat Data Siap Approval..." size="md" :overlay="false" />
-                      </div>
-
-                      {{-- Contextual Target 3: Sub-Tab Filter --}}
-                      <div wire:loading wire:target="setSubstate">
-                          <x-branded-loader text="Memfilter Status Antrean..." size="md" :overlay="false" />
-                      </div>
-
-                      {{-- Contextual Target 4: Search & Filters --}}
-                      <div wire:loading wire:target="search, priority, technicianFilter, sort, onlyInProgress">
-                          <x-branded-loader text="Menyaring Data Produksi..." size="md" :overlay="false" />
-                      </div>
-
-                      {{-- Contextual Target 5: Auto-Assign --}}
-                      <div wire:loading wire:target="autoAssignUnassignedTechnicians">
-                          <x-branded-loader text="Menugaskan Teknisi Otomatis..." size="md" :overlay="false" />
-                      </div>
-
-                      {{-- Contextual Target 6: Bulk Actions & Approvals --}}
-                      <div wire:loading wire:target="approveAll, bulkAction">
-                          <x-branded-loader text="Memproses Persetujuan SPK..." size="md" :overlay="false" />
-                      </div>
-
-                      {{-- Contextual Target 7: Pagination --}}
-                      <div wire:loading wire:target="gotoPage, previousPage, nextPage">
-                          <x-branded-loader text="Memuat Halaman Antrean..." size="md" :overlay="false" />
-                      </div>
-
-                      {{-- Contextual Target 8: Selection --}}
-                      <div wire:loading wire:target="selectedItems, selectAll">
-                          <x-branded-loader text="Memperbarui Pilihan SPK..." size="md" :overlay="false" />
-                      </div>
+                  <div wire:loading wire:target="setTab, setSubstate, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, gotoPage, previousPage, nextPage, autoAssignUnassignedTechnicians, approveAll, bulkAction">
+                      <x-branded-loader text="Sinkronisasi Data Produksi..." size="md" />
                   </div>
 
                  @if($activeTab !== 'review')
