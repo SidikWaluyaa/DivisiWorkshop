@@ -99,11 +99,37 @@ class StationIndex extends Component
     {
         $baseQuery = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value);
 
-        $reviewCount = (clone $baseQuery)->productionReview()->count();
-        $totalProduction = (clone $baseQuery)->count();
-        $reparasiCount = max(0, $totalProduction - $reviewCount);
+        // SPK yang fisik pengerjaannya selesai dan menunggu review/approval Admin
+        // (Belum disetujui Admin dan belum masuk Surat Jalan)
+        $reviewQuery = (clone $baseQuery)->productionReview()
+            ->whereDoesntHave('logs', fn($lq) => $lq->where('step', 'PRODUCTION')->where('action', 'PRODUCTION_APPROVED'))
+            ->whereDoesntHave('suratJalanItems.suratJalan', fn($q) => $q->where('jenis_serah_terima', 'produksi_to_post_qc'));
 
-        $inProgressCount = (clone $baseQuery)->where(function($q) {
+        $reviewCount = (clone $reviewQuery)->count();
+
+        // SPK antrean pengerjaan fisik aktif (belum selesai & belum disetujui)
+        $reparasiQuery = (clone $baseQuery)->where(function ($q) {
+            $q->whereDoesntHave('workOrderServices')
+              ->orWhereHas('workOrderServices', function ($sq) {
+                  $sq->where(function ($ssq) {
+                      $ssq->where('category_name', 'like', '%Upper%')
+                          ->whereNull('work_orders.prod_upper_completed_at');
+                  })
+                  ->orWhere(function ($ssq) {
+                      $ssq->where('category_name', 'like', '%Sol%')
+                          ->whereNull('work_orders.prod_sol_completed_at');
+                  })
+                  ->orWhere(function ($ssq) {
+                      $ssq->where(function ($x) { $x->where('category_name', 'like', '%Sol%')->orWhere('category_name', 'like', '%Upper%')->orWhere('category_name', 'like', '%Jahit%'); })
+                          ->whereNull('work_orders.qc_jahit_completed_at');
+                  });
+              });
+        })->whereDoesntHave('logs', fn($lq) => $lq->where('step', 'PRODUCTION')->where('action', 'PRODUCTION_APPROVED'))
+          ->whereDoesntHave('suratJalanItems.suratJalan', fn($q) => $q->where('jenis_serah_terima', 'produksi_to_post_qc'));
+
+        $reparasiCount = (clone $reparasiQuery)->count();
+
+        $inProgressCount = (clone $reparasiQuery)->where(function($q) {
             $q->where(function($sq) {
                 $sq->whereNotNull('prod_upper_started_at')->whereNull('prod_upper_completed_at');
             })
@@ -490,7 +516,7 @@ class StationIndex extends Component
         $this->autoAssignUnassignedOrders();
 
         $query = WorkOrder::query()
-            ->with(['customer', 'workOrderServices', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions']);
+            ->with(['customer', 'workOrderServices', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions', 'suratJalanItems.suratJalan']);
 
         // Base Filter: Only show items in PRODUCTION status
         $query->where('status', WorkOrderStatus::PRODUCTION->value);
@@ -511,7 +537,9 @@ class StationIndex extends Component
         } else {
             // Tab Filter
             if ($this->activeTab === 'review') {
-                $query->productionReview();
+                $query->productionReview()
+                    ->whereDoesntHave('logs', fn($lq) => $lq->where('step', 'PRODUCTION')->where('action', 'PRODUCTION_APPROVED'))
+                    ->whereDoesntHave('suratJalanItems.suratJalan', fn($q) => $q->where('jenis_serah_terima', 'produksi_to_post_qc'));
             } else {
                 // Tab 'reparasi' (Not in review, meaning still needs processing)
                 $query->where(function ($q) {
@@ -530,7 +558,8 @@ class StationIndex extends Component
                                   ->whereNull('work_orders.qc_jahit_completed_at');
                           });
                       });
-                });
+                })->whereDoesntHave('logs', fn($lq) => $lq->where('step', 'PRODUCTION')->where('action', 'PRODUCTION_APPROVED'))
+                  ->whereDoesntHave('suratJalanItems.suratJalan', fn($q) => $q->where('jenis_serah_terima', 'produksi_to_post_qc'));
             }
 
             // Substate Filter for Reparasi Tab
