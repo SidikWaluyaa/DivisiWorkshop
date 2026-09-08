@@ -219,10 +219,28 @@
                 @endif
             </div>
 
-            <div class="overflow-x-auto relative">
-                {{-- Branded Loading Overlay --}}
-                <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, toggleManifest">
-                    <x-branded-loader text="Memuat Antrean Preparation..." />
+            <div class="overflow-x-auto relative min-h-[350px]">
+                {{-- Universal Branded Loading Overlay --}}
+                <div wire:loading.delay.50ms wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, toggleManifest, approveAll"
+                     class="absolute inset-0 z-40 flex items-center justify-center bg-white/75 dark:bg-gray-900/75 backdrop-blur-md rounded-2xl transition-all duration-200">
+                    <div wire:loading wire:target="setTab('queue')">
+                        <x-branded-loader text="Memuat Antrean Preparation..." size="md" :overlay="false" />
+                    </div>
+                    <div wire:loading wire:target="setTab('in_progress')">
+                        <x-branded-loader text="Memuat Unit Sedang Dicuci..." size="md" :overlay="false" />
+                    </div>
+                    <div wire:loading wire:target="setTab('review')">
+                        <x-branded-loader text="Memuat Data Review Admin..." size="md" :overlay="false" />
+                    </div>
+                    <div wire:loading wire:target="search, priority, technicianFilter, sort, onlyInProgress">
+                        <x-branded-loader text="Menyaring Data Preparation..." size="md" :overlay="false" />
+                    </div>
+                    <div wire:loading wire:target="toggleManifest">
+                        <x-branded-loader text="Memuat Rincian Manifest..." size="md" :overlay="false" />
+                    </div>
+                    <div wire:loading wire:target="approveAll">
+                        <x-branded-loader text="Menyetujui Batch Preparation..." size="md" :overlay="false" />
+                    </div>
                 </div>
                 <table class="min-w-full w-full divide-y divide-gray-250 dark:divide-gray-700 text-left font-sans">
                     <thead class="bg-gray-100 dark:bg-gray-750">

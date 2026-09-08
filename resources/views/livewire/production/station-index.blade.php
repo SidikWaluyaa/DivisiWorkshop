@@ -158,7 +158,52 @@
              </div>
 
              {{-- Content Area --}}
-             <div class="space-y-6" wire:loading.class="opacity-50 transition-opacity">
+              <div class="space-y-6 relative min-h-[420px]">
+                  {{-- Universal Branded Loading Overlay --}}
+                  <div wire:loading.delay.50ms wire:target="setTab, setSubstate, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, gotoPage, previousPage, nextPage, autoAssignUnassignedTechnicians, approveAll, bulkAction"
+                       class="absolute inset-0 z-40 flex items-center justify-center bg-white/75 dark:bg-gray-900/75 backdrop-blur-md rounded-2xl transition-all duration-200">
+                      
+                      {{-- Contextual Target 1: Tab Antrean Reparasi --}}
+                      <div wire:loading wire:target="setTab('reparasi')">
+                          <x-branded-loader text="Memuat Antrean Reparasi..." size="md" :overlay="false" />
+                      </div>
+
+                      {{-- Contextual Target 2: Tab Siap Approval --}}
+                      <div wire:loading wire:target="setTab('review')">
+                          <x-branded-loader text="Memuat Data Siap Approval..." size="md" :overlay="false" />
+                      </div>
+
+                      {{-- Contextual Target 3: Sub-Tab Filter --}}
+                      <div wire:loading wire:target="setSubstate">
+                          <x-branded-loader text="Memfilter Status Antrean..." size="md" :overlay="false" />
+                      </div>
+
+                      {{-- Contextual Target 4: Search & Filters --}}
+                      <div wire:loading wire:target="search, priority, technicianFilter, sort, onlyInProgress">
+                          <x-branded-loader text="Menyaring Data Produksi..." size="md" :overlay="false" />
+                      </div>
+
+                      {{-- Contextual Target 5: Auto-Assign --}}
+                      <div wire:loading wire:target="autoAssignUnassignedTechnicians">
+                          <x-branded-loader text="Menugaskan Teknisi Otomatis..." size="md" :overlay="false" />
+                      </div>
+
+                      {{-- Contextual Target 6: Bulk Actions & Approvals --}}
+                      <div wire:loading wire:target="approveAll, bulkAction">
+                          <x-branded-loader text="Memproses Persetujuan SPK..." size="md" :overlay="false" />
+                      </div>
+
+                      {{-- Contextual Target 7: Pagination --}}
+                      <div wire:loading wire:target="gotoPage, previousPage, nextPage">
+                          <x-branded-loader text="Memuat Halaman Antrean..." size="md" :overlay="false" />
+                      </div>
+
+                      {{-- Contextual Target 8: Selection --}}
+                      <div wire:loading wire:target="selectedItems, selectAll">
+                          <x-branded-loader text="Memperbarui Pilihan SPK..." size="md" :overlay="false" />
+                      </div>
+                  </div>
+
                  @if($activeTab !== 'review')
                  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                      <div class="p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 border-indigo-250 border-b flex flex-wrap justify-between items-center gap-3">
@@ -191,11 +236,6 @@
                           </div>
                      </div>
                      <div class="p-4 bg-gray-50/50 relative min-h-[400px]">
-                         {{-- Branded Loading Overlay --}}
-                         <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress">
-                             <x-branded-loader text="Sinkronisasi Data Produksi..." />
-                         </div>
-                         
                          <div class="overflow-x-auto bg-white rounded-xl border border-gray-200">
                              <table class="min-w-full w-full divide-y divide-gray-200 dark:divide-gray-700 text-left">
                                  <thead class="bg-gray-50 dark:bg-gray-700">
@@ -238,10 +278,6 @@
                  @else
                  {{-- ADMIN REVIEW SECTION --}}
                  <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border-2 border-indigo-500 relative">
-                      {{-- Branded Loading Overlay --}}
-                      <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress">
-                          <x-branded-loader text="Sinkronisasi Data Produksi..." />
-                      </div>
                      <div class="bg-gradient-to-r from-indigo-650 to-slate-900 p-4 text-white flex justify-between items-center">
                          <h3 class="text-lg font-bold flex items-center gap-2">
                              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
