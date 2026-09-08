@@ -220,12 +220,9 @@
             </div>
 
             <div class="overflow-x-auto relative">
-                {{-- Local Loading Overlay --}}
-                <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress" 
-                     class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-xl transition-all duration-300">
-                    <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
-                        <div class="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
+                {{-- Branded Loading Overlay --}}
+                <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, toggleManifest">
+                    <x-branded-loader text="Memuat Antrean Preparation..." />
                 </div>
                 <table class="min-w-full w-full divide-y divide-gray-250 dark:divide-gray-700 text-left font-sans">
                     <thead class="bg-gray-100 dark:bg-gray-750">
