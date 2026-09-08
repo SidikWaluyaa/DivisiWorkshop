@@ -92,53 +92,6 @@
                 </div>
             @endif
 
-            {{-- Monitoring Pembayaran Workshop --}}
-            @if(count($workshopPayments) > 0)
-            <div class="mb-8 bg-white rounded-[2rem] shadow-lg overflow-hidden border border-orange-100 flex flex-col md:flex-row">
-                <div class="bg-gradient-to-b from-orange-400 to-orange-600 p-6 flex flex-col justify-center text-white md:w-64">
-                    <svg class="w-8 h-8 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <h3 class="font-black text-xl leading-tight mb-2">Penagihan Workshop</h3>
-                    <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">{{ count($workshopPayments) }} Unit Menunggu</p>
-                </div>
-                <div class="flex-1 p-4 overflow-x-auto max-h-[350px] overflow-y-auto relative">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-gray-400 uppercase text-[9px] font-black tracking-widest border-b border-gray-50 sticky top-0 bg-white z-10 shadow-sm">
-                            <tr>
-                                <th class="px-4 py-3">Customer</th>
-                                <th class="px-4 py-3">Status</th>
-                                <th class="px-4 py-3">Tagihan</th>
-                                <th class="px-4 py-3 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-50">
-                            @foreach($workshopPayments as $order)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-4 py-3">
-                                    <div class="font-black text-gray-900">{{ $order->spk_number }}</div>
-                                    <div class="text-[10px] font-bold text-gray-400 uppercase">{{ $order->customer_name }}</div>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter" style="background-color: #FFC232; color: white">
-                                        {{ $order->status->label() }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="font-black text-gray-900 text-base">Rp {{ number_format($order->total_amount_due, 0, ',', '.') }}</div>
-                                </td>
-                                <td class="px-4 py-3 text-right">
-                                    <button @click="openPaymentModal({ id: {{ $order->id }}, spk_number: '{{ $order->spk_number }}', total_amount_due: {{ $order->total_amount_due }} })" 
-                                            class="text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg transition transform hover:scale-105" style="background-color: #FFC232">
-                                        Bayar
-                                    </button>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            @endif
-
             {{-- Utilities Bar --}}
             <div class="bg-white rounded-3xl shadow-sm p-4 mb-6 border border-gray-50 flex flex-wrap items-center justify-between gap-4">
                 <form action="{{ route('cs.dashboard') }}" method="GET" class="flex-1 min-w-[300px] relative">
@@ -247,81 +200,6 @@
 
         @include('cs.leads.partials.create-modal')
 
-        {{-- Modal: Workshop Payment Confirmation --}}
-        <div x-show="paymentModalOpen" 
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 scale-90"
-             x-transition:enter-end="opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-90"
-             class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm overflow-y-auto h-full w-full z-[60] flex items-center justify-center"
-             style="display: none;">
-             
-            <div @click.outside="paymentModalOpen = false" class="relative mx-auto p-0 border w-full max-w-md shadow-2xl rounded-3xl bg-white overflow-hidden m-4">
-                <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex justify-between items-center text-white">
-                    <div>
-                        <h3 class="text-lg font-black uppercase tracking-tight">Konfirmasi Bayar</h3>
-                        <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest" x-text="'Order #' + paymentData.spk_number">Order #---</p>
-                    </div>
-                    <button @click="paymentModalOpen = false" class="hover:bg-white/20 p-1 rounded-xl transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
-
-                <form :action="paymentData.action" method="POST" enctype="multipart/form-data" @submit="if(isSubmitting) { $event.preventDefault(); return; } isSubmitting = true" class="p-0 m-0" x-data="{ isSubmitting: false }">
-                    @csrf
-                    <div class="p-6 space-y-5">
-                        <div class="bg-orange-50 rounded-3xl p-6 border border-orange-100 text-center">
-                            <p class="text-[10px] text-orange-600 font-black uppercase tracking-widest mb-1">Total Tagihan</p>
-                            <p class="text-4xl font-black text-orange-700" x-text="paymentData.formatted_amount">Rp 0</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 text-center">Metode Pembayaran</label>
-                            <div class="grid grid-cols-2 gap-3">
-                                @foreach(['Transfer', 'Tunai', 'EDC', 'Lainnya'] as $method)
-                                <label class="cursor-pointer">
-                                    <input type="radio" name="payment_method" value="{{ $method }}" required class="peer hidden">
-                                    <div class="peer-checked:bg-orange-500 peer-checked:text-white border-none bg-gray-50 rounded-2xl p-4 text-center transition font-black text-[10px] uppercase tracking-widest">
-                                        {{ $method }}
-                                    </div>
-                                </label>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Bukti Bayar</label>
-                            <input type="file" name="proof_image" id="proof_image" required accept="image/*" class="hidden" @change="previewPaymentImage">
-                            <label for="proof_image" class="flex flex-col items-center justify-center w-full h-48 bg-gray-50 rounded-3xl cursor-pointer hover:bg-orange-50/50 overflow-hidden transition relative border-2 border-dashed border-gray-100">
-                                <template x-if="!paymentProofPreview">
-                                    <div class="flex flex-col items-center">
-                                        <svg class="w-12 h-12 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                    </div>
-                                </template>
-                                <template x-if="paymentProofPreview">
-                                    <img :src="paymentProofPreview" class="absolute inset-0 w-full h-full object-cover">
-                                </template>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 p-6 flex gap-3">
-                        <button type="button" @click="paymentModalOpen = false" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Batal</button>
-                        <button type="submit" :disabled="isSubmitting" :class="isSubmitting ? 'opacity-50 cursor-not-allowed' : ''" class="flex-1 py-4 bg-orange-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                            <template x-if="isSubmitting">
-                                <svg class="animate-spin h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </template>
-                            <span x-text="isSubmitting ? 'Memproses...' : 'Proses Bayar'"></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
     </div>
 
     {{-- Scripts --}}
@@ -330,15 +208,6 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('csDashboard', () => ({
                 leadModalOpen: false,
-                paymentModalOpen: false,
-                paymentData: {
-                    id: null,
-                    spk_number: '',
-                    amount: 0,
-                    formatted_amount: 'Rp 0',
-                    action: ''
-                },
-                paymentProofPreview: null,
                 
                 init() {
                     const columns = ['GREETING', 'KONSULTASI', 'FOLLOW_UP', 'CLOSING'];
@@ -359,30 +228,6 @@
 
                 openNewLeadModal() {
                     this.leadModalOpen = true;
-                },
-
-                openPaymentModal(order) {
-                    this.paymentData = {
-                        id: order.id,
-                        spk_number: order.spk_number,
-                        amount: order.total_amount_due,
-                        formatted_amount: new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(order.total_amount_due),
-                        action: `/cs/workshop-payment/${order.id}`
-                    };
-                    this.paymentModalOpen = true;
-                    this.paymentProofPreview = null;
-                    document.getElementById('proof_image').value = ''; // Reset file input
-                },
-
-                previewPaymentImage(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            this.paymentProofPreview = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    }
                 },
 
                 updateLeadStatus(id, status) {

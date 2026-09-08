@@ -62,11 +62,7 @@ class CsLeadController extends Controller
             ->orderBy('name')
             ->get();
 
-        $workshopPayments = WorkOrder::where('status', WorkOrderStatus::WAITING_PAYMENT->value)
-            ->orderBy('updated_at', 'desc')
-            ->get();
-
-        return view('cs.dashboard', compact('greetingLeads', 'konsultasiLeads', 'followUpLeads', 'closingLeads', 'metrics', 'csUsers', 'workshopPayments'));
+        return view('cs.dashboard', compact('greetingLeads', 'konsultasiLeads', 'followUpLeads', 'closingLeads', 'metrics', 'csUsers'));
     }
 
     public function konsultasi(Request $request)

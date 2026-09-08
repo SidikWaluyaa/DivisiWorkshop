@@ -536,9 +536,6 @@ Route::middleware('auth')->group(function () {
             // Activities
             Route::post('/leads/{id}/activities', [App\Http\Controllers\CsLeadController::class, 'storeActivity'])->name('activities.store');
             Route::post('/leads/{id}/set-follow-up', [App\Http\Controllers\CsLeadController::class, 'setFollowUp'])->name('leads.set-follow-up');
-            
-            // Workshop Payment
-            Route::post('/workshop-payment/{id}', [App\Http\Controllers\CsLeadController::class, 'confirmWorkshopPayment'])->name('workshop-payment');
 
             // After Photo Gallery
             Route::get('/after-photos', App\Livewire\Cs\AfterPhotoGallery::class)->name('after-photos');
