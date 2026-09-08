@@ -2,6 +2,7 @@
     'text' => 'Memuat Data...',
     'size' => 'md',
     'overlay' => true,
+    'fullscreen' => false,
 ])
 
 @php
@@ -28,8 +29,9 @@
 @endphp
 
 <div @class([
-    'absolute inset-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-[3px] z-30 flex items-center justify-center rounded-2xl transition-all duration-300' => $overlay,
-    'flex items-center justify-center p-4' => !$overlay,
+    'fixed inset-0 bg-slate-950/40 dark:bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center transition-all duration-300' => $fullscreen,
+    'absolute inset-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-[3px] z-30 flex items-center justify-center rounded-2xl transition-all duration-300' => ($overlay && !$fullscreen),
+    'flex items-center justify-center p-4' => (!$overlay && !$fullscreen),
 ]) {{ $attributes }}>
     <div class="flex flex-col items-center bg-white/95 dark:bg-gray-800/95 {{ $sizeClasses['card'] }} shadow-[0_20px_50px_rgba(0,0,0,0.12)] border border-white/80 dark:border-gray-700/80 backdrop-blur-xl transition-transform transform scale-100">
         {{-- Logo with Orbit Animation --}}

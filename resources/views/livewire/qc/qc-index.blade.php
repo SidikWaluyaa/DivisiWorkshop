@@ -1,4 +1,9 @@
 <div class="py-6 bg-gray-50 min-h-screen" x-data="{ selectedItems: @entangle('selectedItems') }">
+    {{-- Full-Screen Branded Loading Overlay --}}
+    <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, autoAssignUnassignedTechnicians, approveAll, bulkAction">
+        <x-branded-loader text="Verifikasi Data QC..." size="lg" :fullscreen="true" />
+    </div>
+
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         
         {{-- 2 Main Cards Overview --}}
@@ -116,12 +121,7 @@
         </div>
 
         {{-- Main Content --}}
-        <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-h-[500px] relative">
-            
-            {{-- Universal Branded Loading Overlay --}}
-            <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, autoAssignUnassignedTechnicians, approveAll, bulkAction">
-                <x-branded-loader text="Verifikasi Data QC..." size="md" />
-            </div>
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-h-[500px]">
 
             @php
                 $tabInfo = match($activeTab) {

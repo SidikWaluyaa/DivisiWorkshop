@@ -14,6 +14,11 @@
         }
     }
 }">
+    {{-- Full-Screen Branded Loading Overlay --}}
+    <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, toggleManifest, approveAll">
+        <x-branded-loader text="Memuat Antrean Preparation..." size="lg" :fullscreen="true" />
+    </div>
+
     {{-- Header Banner --}}
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-6">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-gradient-to-r from-[#22AF85] to-emerald-700 p-6 rounded-3xl shadow-lg text-white">
@@ -219,11 +224,7 @@
                 @endif
             </div>
 
-            <div class="overflow-x-auto relative min-h-[350px]">
-                {{-- Universal Branded Loading Overlay --}}
-                <div wire:loading wire:target="setTab, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, toggleManifest, approveAll">
-                    <x-branded-loader text="Memuat Antrean Preparation..." size="md" />
-                </div>
+            <div class="overflow-x-auto relative">
                 <table class="min-w-full w-full divide-y divide-gray-250 dark:divide-gray-700 text-left font-sans">
                     <thead class="bg-gray-100 dark:bg-gray-750">
                         <tr>

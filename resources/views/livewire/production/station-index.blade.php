@@ -1,4 +1,9 @@
 <div>
+    {{-- Full-Screen Branded Loading Overlay --}}
+    <div wire:loading wire:target="setTab, setSubstate, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, gotoPage, previousPage, nextPage, autoAssignUnassignedTechnicians, approveAll, bulkAction">
+        <x-branded-loader text="Sinkronisasi Data Produksi..." size="lg" :fullscreen="true" />
+    </div>
+
     <x-slot name="header">
          <div class="flex flex-col md:flex-row justify-between items-center gap-4">
              <div class="flex items-center gap-4">
@@ -158,11 +163,7 @@
              </div>
 
              {{-- Content Area --}}
-              <div class="space-y-6 relative min-h-[420px]">
-                  {{-- Universal Branded Loading Overlay --}}
-                  <div wire:loading wire:target="setTab, setSubstate, search, priority, technicianFilter, sort, selectedItems, selectAll, onlyInProgress, gotoPage, previousPage, nextPage, autoAssignUnassignedTechnicians, approveAll, bulkAction">
-                      <x-branded-loader text="Sinkronisasi Data Produksi..." size="md" />
-                  </div>
+              <div class="space-y-6">
 
                  @if($activeTab !== 'review')
                  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
