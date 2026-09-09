@@ -588,6 +588,7 @@
                                     $stepUpper = strtoupper($log->step ?? '');
                                     $dotBg = match(true) {
                                         str_contains($stepUpper, 'PENDING') || str_contains($stepUpper, 'CS') => 'bg-purple-500 ring-purple-100 dark:ring-purple-950',
+                                        str_contains($stepUpper, 'INBOUND') || str_contains($stepUpper, 'DITERIMA') => 'bg-indigo-500 ring-indigo-100 dark:ring-indigo-950',
                                         str_contains($stepUpper, 'SORTIR') => 'bg-sky-500 ring-sky-100 dark:ring-sky-950',
                                         str_contains($stepUpper, 'PREP') => 'bg-amber-500 ring-amber-100 dark:ring-amber-950',
                                         str_contains($stepUpper, 'PROD') => 'bg-blue-500 ring-blue-100 dark:ring-blue-950',
@@ -602,6 +603,7 @@
 
                                     $badgeClass = match(true) {
                                         str_contains($stepUpper, 'PENDING') || str_contains($stepUpper, 'CS') => 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+                                        str_contains($stepUpper, 'INBOUND') || str_contains($stepUpper, 'DITERIMA') => 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
                                         str_contains($stepUpper, 'SORTIR') => 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800',
                                         str_contains($stepUpper, 'PREP') => 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
                                         str_contains($stepUpper, 'PROD') => 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
@@ -615,11 +617,19 @@
                                     };
 
                                     $displayStep = match(strtoupper($log->step ?? '')) {
-                                        'SPK_PENDING' => 'SPK DIBUAT (PENDING)',
+                                        'SPK_PENDING' => 'SPK DIBUAT (CS)',
                                         'CS_INTAKE' => 'CS INTAKE',
+                                        'INBOUND', 'GUDANG_INBOUND' => 'GUDANG INBOUND',
+                                        'SORTIR' => 'STASIUN SORTIR',
+                                        'PREPARATION', 'PREP' => 'STASIUN PREPARATION',
+                                        'PRODUCTION', 'PRODUKSI' => 'STASIUN PRODUKSI',
                                         'HANDOVER' => 'SERAH TERIMA (SJ)',
+                                        'QC', 'QUALITY CONTROL' => 'QUALITY CONTROL',
                                         'STAGING_OUTBOUND' => 'STAGING OUTBOUND',
                                         'OUTBOUND_QC' => 'MANIFEST OUTBOUND',
+                                        'OTO' => 'STASIUN OTO',
+                                        'REVISION', 'REVISI' => 'REVISI TEKNIK',
+                                        'SELESAI', 'FINISH', 'GUDANG' => 'GUDANG SELESAI',
                                         default => ($log->step ?: 'SYSTEM')
                                     };
                                 @endphp
