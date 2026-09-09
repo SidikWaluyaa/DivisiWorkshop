@@ -8,23 +8,39 @@
 
 @php
     $servicesText = strtolower($oto->proposed_services ?? '');
-    
-    // Automatic Station Detection from Services Text
-    $hasSol = str_contains($servicesText, 'sol') || str_contains($servicesText, 'reglue') || str_contains($servicesText, 'heel') || str_contains($servicesText, 'jahit sol');
-    $hasUpper = str_contains($servicesText, 'upper') || str_contains($servicesText, 'lining') || str_contains($servicesText, 'insole') || str_contains($servicesText, 'patch') || str_contains($servicesText, 'jahit upper');
-    $hasTreatment = str_contains($servicesText, 'clean') || str_contains($servicesText, 'wash') || str_contains($servicesText, 'repaint') || str_contains($servicesText, 'recolor') || str_contains($servicesText, 'treatment') || str_contains($servicesText, 'whitening') || str_contains($servicesText, 'unyellowing') || str_contains($servicesText, 'leather');
+    $order = $oto->workOrder;
 
-    // Default fallback if no specific keywords matched
+    // Comprehensive Keyword Dictionaries
+    $upperKeywords = ['upper', 'lining', 'insole', 'patch', 'jahit', 'zipper', 'resleting', 'strap', 'buckle', 'gesper', 'elastis', 'counter', 'tongue', 'lidah', 'eyelet', 'tali', 'velcro', 'karet', 'pad'];
+    $solKeywords = ['sol', 'sole', 'midsole', 'outsole', 'reglue', 'lem', 'heel', 'hak', 'tapak', 'welt', 'tpr', 'vibram', 'stuck on', 'sponge', 'lapis'];
+    $treatmentKeywords = ['clean', 'wash', 'cuci', 'repaint', 'recolor', 'cat', 'treatment', 'whitening', 'unyellow', 'leather', 'lotion', 'polish', 'semir', 'waterproof', 'nano'];
+
+    // 1. Keyword check from OTO proposed_services text
+    $hasSol = \Illuminate\Support\Str::contains($servicesText, $solKeywords);
+    $hasUpper = \Illuminate\Support\Str::contains($servicesText, $upperKeywords);
+    $hasTreatment = \Illuminate\Support\Str::contains($servicesText, $treatmentKeywords);
+
+    // 2. Check from attached WorkOrderServices with 'OTO:' prefix if available
+    if ($order && $order->relationLoaded('workOrderServices')) {
+        foreach ($order->workOrderServices as $wos) {
+            if (str_starts_with($wos->custom_service_name ?? '', 'OTO:')) {
+                $cat = strtolower($wos->category_name ?? ($wos->service?->category ?? ''));
+                if (str_contains($cat, 'sol')) $hasSol = true;
+                if (str_contains($cat, 'upper') || str_contains($cat, 'jahit')) $hasUpper = true;
+                if (str_contains($cat, 'clean') || str_contains($cat, 'repaint') || str_contains($cat, 'treatment') || str_contains($cat, 'wash')) $hasTreatment = true;
+            }
+        }
+    }
+
+    // Default fallback if no specific keywords matched (defaults to Upper if repair, Treatment if general)
     if (!$hasSol && !$hasUpper && !$hasTreatment) {
-        $hasTreatment = true;
+        $hasUpper = true;
     }
 
     $allStationsFinished = true;
     if ($hasSol && !$oto->oto_sol_completed_at) $allStationsFinished = false;
     if ($hasUpper && !$oto->oto_upper_completed_at) $allStationsFinished = false;
     if ($hasTreatment && !$oto->oto_treatment_completed_at) $allStationsFinished = false;
-
-    $order = $oto->workOrder;
 @endphp
 
 <tbody x-data="{ expanded: false }" class="divide-y divide-gray-100 dark:divide-gray-800 border-b border-gray-150 dark:border-gray-800 hover:bg-amber-50/20 dark:hover:bg-amber-950/10 transition-colors">
