@@ -138,7 +138,10 @@
                             // 2. Determine status code and colors
                             $statusVal = $spk->status->value ?? $spk->status;
 
-                            if ($spk->has_active_oto) {
+                            $isUndergoingOto = $spk->latestOto && in_array($spk->latestOto->status, ['ACCEPTED', 'IN_PROGRESS']);
+                            $isPendingLeadOto = $spk->latestOto && in_array($spk->latestOto->status, ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER']);
+
+                            if ($isUndergoingOto) {
                                 $statusLabel = 'PENGERJAAN OTO';
                                 $statusTheme = [
                                     'badge' => 'bg-amber-50 text-amber-800 border-amber-200/60',
@@ -259,9 +262,13 @@
                                             <div x-show="copied" x-cloak class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 bg-slate-800 text-white text-[9px] font-bold rounded-lg shadow-md" style="width: max-content !important; min-width: max-content !important; white-space: nowrap !important; z-index: 30;">Disalin!</div>
                                         </div>
 
-                                        @if($spk->has_active_oto)
+                                        @if($isUndergoingOto)
                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-[10px] rounded-lg shadow-sm">
-                                                <span>✨ OTO</span>
+                                                <span>✨ OTO WORKSHOP</span>
+                                            </span>
+                                        @elseif($isPendingLeadOto)
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-300 font-black text-[10px] rounded-lg shadow-sm">
+                                                <span>🟡 PROSPEK OTO (CX)</span>
                                             </span>
                                         @elseif($spk->is_revising || $statusVal === 'REVISI')
                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-rose-500 to-red-600 text-white font-black text-[10px] rounded-lg shadow-sm">
@@ -508,7 +515,7 @@
                                 @endif
 
                                   {{-- Status Info & Transition Timestamp --}}
-                                  <div class="px-3.5 py-3 {{ $spk->has_active_oto ? 'bg-amber-50/40 border-amber-200/60' : ($spk->is_revising ? 'bg-rose-50/40 border-rose-200/60' : 'bg-slate-50/80 border-slate-150') }} border rounded-2xl flex flex-col gap-2.5 mb-4 mt-2 select-none w-full shadow-2xs transition-colors">
+                                  <div class="px-3.5 py-3 {{ $isUndergoingOto ? 'bg-amber-50/40 border-amber-200/60' : ($spk->is_revising ? 'bg-rose-50/40 border-rose-200/60' : 'bg-slate-50/80 border-slate-150') }} border rounded-2xl flex flex-col gap-2.5 mb-4 mt-2 select-none w-full shadow-2xs transition-colors">
                                       {{-- Top Row: Status Sekarang & Waktu Status --}}
                                       <div class="flex items-center justify-between w-full">
                                           <div class="flex flex-col">
@@ -530,8 +537,8 @@
                                           </div>
                                       </div>
 
-                                      {{-- 1. OTO Active Sub-Status --}}
-                                      @if($spk->has_active_oto)
+                                      {{-- 1. OTO Active Undergoing Sub-Status --}}
+                                      @if($isUndergoingOto)
                                           @php
                                               $otoActiveTechs = [];
                                               if ($spk->latestOto) {
@@ -574,7 +581,22 @@
                                               @endif
                                           </div>
 
-                                      {{-- 2. Revisi Active Sub-Status --}}
+                                      {{-- 2. OTO Pending Lead Sub-Status (Baru Penawaran) --}}
+                                      @elseif($isPendingLeadOto)
+                                          <div class="pt-2.5 border-t border-amber-200/50 flex flex-col gap-1.5 text-xs w-full">
+                                              <div class="flex items-center justify-between">
+                                                  <span class="text-[9px] font-black text-amber-700 uppercase tracking-wider">Penawaran OTO (CX)</span>
+                                                  <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                                                      {{ $spk->latestOto?->status === 'PENDING_CX' ? 'Menunggu CS Follow Up' : 'Menunggu Respon Customer' }}
+                                                  </span>
+                                              </div>
+                                              <div class="flex items-center justify-between text-[10px] text-slate-600 bg-white/80 px-2.5 py-1 rounded-lg border border-amber-100">
+                                                  <span class="font-medium truncate max-w-[180px]">{{ $spk->latestOto?->proposed_services }}</span>
+                                                  <span class="font-bold text-emerald-600">{{ $spk->latestOto?->total_oto_price }}</span>
+                                              </div>
+                                          </div>
+
+                                      {{-- 3. Revisi Active Sub-Status --}}
                                       @elseif($spk->is_revising || $statusVal === 'REVISI')
                                           <div class="pt-2.5 border-t border-rose-200/50 flex flex-col gap-1.5 text-xs w-full">
                                               <div class="flex items-center justify-between">
