@@ -138,39 +138,55 @@
                             // 2. Determine status code and colors
                             $statusVal = $spk->status->value ?? $spk->status;
 
-                            $statusLabel = str_replace('_', ' ', $spk->status->name ?? $spk->status->value);
-                            $statusTheme = match($statusVal) {
-                                'SELESAI', 'DIANTAR' => [
-                                    'badge' => 'bg-emerald-50 text-emerald-800 border-emerald-200/60',
-                                    'dot' => 'bg-emerald-500',
-                                    'text' => 'text-emerald-800',
-                                ],
-                                'PRODUCTION' => [
-                                    'badge' => 'bg-blue-50 text-blue-800 border-blue-200/60',
-                                    'dot' => 'bg-blue-500',
-                                    'text' => 'text-blue-800',
-                                ],
-                                'QC' => [
-                                    'badge' => 'bg-purple-50 text-purple-800 border-purple-200/60',
-                                    'dot' => 'bg-purple-500',
-                                    'text' => 'text-purple-800',
-                                ],
-                                'PREPARATION', 'SORTIR' => [
-                                    'badge' => 'bg-indigo-50 text-indigo-800 border-indigo-200/60',
-                                    'dot' => 'bg-indigo-500',
-                                    'text' => 'text-indigo-800',
-                                ],
-                                'ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION' => [
+                            if ($spk->has_active_oto) {
+                                $statusLabel = 'PENGERJAAN OTO';
+                                $statusTheme = [
                                     'badge' => 'bg-amber-50 text-amber-800 border-amber-200/60',
                                     'dot' => 'bg-amber-500',
-                                    'text' => 'text-amber-800',
-                                ],
-                                default => [
-                                    'badge' => 'bg-slate-50 text-slate-800 border-slate-200/60',
-                                    'dot' => 'bg-slate-500',
-                                    'text' => 'text-slate-900',
-                                ],
-                            };
+                                    'text' => 'text-amber-700',
+                                ];
+                            } elseif ($spk->is_revising || $statusVal === 'REVISI') {
+                                $statusLabel = 'DALAM REVISI';
+                                $statusTheme = [
+                                    'badge' => 'bg-rose-50 text-rose-800 border-rose-200/60',
+                                    'dot' => 'bg-rose-500',
+                                    'text' => 'text-rose-700',
+                                ];
+                            } else {
+                                $statusLabel = str_replace('_', ' ', $spk->status->name ?? $spk->status->value);
+                                $statusTheme = match($statusVal) {
+                                    'SELESAI', 'DIANTAR' => [
+                                        'badge' => 'bg-emerald-50 text-emerald-800 border-emerald-200/60',
+                                        'dot' => 'bg-emerald-500',
+                                        'text' => 'text-emerald-800',
+                                    ],
+                                    'PRODUCTION' => [
+                                        'badge' => 'bg-blue-50 text-blue-800 border-blue-200/60',
+                                        'dot' => 'bg-blue-500',
+                                        'text' => 'text-blue-800',
+                                    ],
+                                    'QC' => [
+                                        'badge' => 'bg-purple-50 text-purple-800 border-purple-200/60',
+                                        'dot' => 'bg-purple-500',
+                                        'text' => 'text-purple-800',
+                                    ],
+                                    'PREPARATION', 'SORTIR' => [
+                                        'badge' => 'bg-indigo-50 text-indigo-800 border-indigo-200/60',
+                                        'dot' => 'bg-indigo-500',
+                                        'text' => 'text-indigo-800',
+                                    ],
+                                    'ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION' => [
+                                        'badge' => 'bg-amber-50 text-amber-800 border-amber-200/60',
+                                        'dot' => 'bg-amber-500',
+                                        'text' => 'text-amber-800',
+                                    ],
+                                    default => [
+                                        'badge' => 'bg-slate-50 text-slate-800 border-slate-200/60',
+                                        'dot' => 'bg-slate-500',
+                                        'text' => 'text-slate-900',
+                                    ],
+                                };
+                            }
                             
                             // WhatsApp direct link builder
                             $phone = $spk->customer_phone ?? optional($spk->customer)->phone ?? '';
@@ -215,31 +231,43 @@
                             <div class="p-5 flex flex-col flex-grow">
                                 {{-- Card Header: SPK & Invoice Badges --}}
                                 <div class="flex flex-col items-start gap-2 mb-4 select-none">
-                                    {{-- Row 1: SPK Badge --}}
-                                    <div x-data="{ 
-                                        copied: false,
-                                        copyText() {
-                                            const text = '{{ $spk->spk_number }}';
-                                            if (navigator.clipboard && navigator.clipboard.writeText) {
-                                                navigator.clipboard.writeText(text);
-                                            } else {
-                                                const el = document.createElement('textarea');
-                                                el.value = text;
-                                                document.body.appendChild(el);
-                                                el.select();
-                                                document.execCommand('copy');
-                                                document.body.removeChild(el);
+                                    {{-- Row 1: SPK & Special Mode Badges --}}
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <div x-data="{ 
+                                            copied: false,
+                                            copyText() {
+                                                const text = '{{ $spk->spk_number }}';
+                                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                                    navigator.clipboard.writeText(text);
+                                                } else {
+                                                    const el = document.createElement('textarea');
+                                                    el.value = text;
+                                                    document.body.appendChild(el);
+                                                    el.select();
+                                                    document.execCommand('copy');
+                                                    document.body.removeChild(el);
+                                                }
+                                                this.copied = true;
+                                                setTimeout(() => this.copied = false, 1500);
                                             }
-                                            this.copied = true;
-                                            setTimeout(() => this.copied = false, 1500);
-                                        }
-                                    }" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#eefcf7] text-[#0f766e] font-mono text-xs font-bold rounded-lg border border-[#ccfbf1] shadow-sm relative whitespace-nowrap">
-                                        <span>{{ $spk->spk_number }}</span>
-                                        <button @click="copyText()" class="hover:text-[#042f2e] focus:outline-none transition-colors cursor-pointer flex items-center justify-center" title="Salin SPK">
-                                            <svg x-show="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                                            <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path></svg>
-                                        </button>
-                                        <div x-show="copied" x-cloak class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 bg-slate-800 text-white text-[9px] font-bold rounded-lg shadow-md" style="width: max-content !important; min-width: max-content !important; white-space: nowrap !important; z-index: 30;">Disalin!</div>
+                                        }" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#eefcf7] text-[#0f766e] font-mono text-xs font-bold rounded-lg border border-[#ccfbf1] shadow-sm relative whitespace-nowrap">
+                                            <span>{{ $spk->spk_number }}</span>
+                                            <button @click="copyText()" class="hover:text-[#042f2e] focus:outline-none transition-colors cursor-pointer flex items-center justify-center" title="Salin SPK">
+                                                <svg x-show="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                                <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path></svg>
+                                            </button>
+                                            <div x-show="copied" x-cloak class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 bg-slate-800 text-white text-[9px] font-bold rounded-lg shadow-md" style="width: max-content !important; min-width: max-content !important; white-space: nowrap !important; z-index: 30;">Disalin!</div>
+                                        </div>
+
+                                        @if($spk->has_active_oto)
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-[10px] rounded-lg shadow-sm">
+                                                <span>✨ OTO</span>
+                                            </span>
+                                        @elseif($spk->is_revising || $statusVal === 'REVISI')
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-rose-500 to-red-600 text-white font-black text-[10px] rounded-lg shadow-sm">
+                                                <span>🔄 REVISI</span>
+                                            </span>
+                                        @endif
                                     </div>
 
                                     {{-- Row 2: Invoice Badge --}}
@@ -499,10 +527,67 @@
                                                  {{ $statusTime ? $statusTime->format('d/m/Y') : '-' }}
                                              </span>
                                          </div>
-                                     </div>
+                                                               {{-- 1. OTO Active Sub-Status --}}
+                                     @if($spk->has_active_oto)
+                                         @php
+                                             $otoActiveTechs = [];
+                                             if ($spk->latestOto) {
+                                                 if ($spk->latestOto->oto_sol_started_at && !$spk->latestOto->oto_sol_completed_at) {
+                                                     $otoActiveTechs[] = "Sol: " . ($spk->latestOto->otoSolBy->name ?? 'Teknisi');
+                                                 }
+                                                 if ($spk->latestOto->oto_upper_started_at && !$spk->latestOto->oto_upper_completed_at) {
+                                                     $otoActiveTechs[] = "Upper: " . ($spk->latestOto->otoUpperBy->name ?? 'Teknisi');
+                                                 }
+                                                 if ($spk->latestOto->oto_treatment_started_at && !$spk->latestOto->oto_treatment_completed_at) {
+                                                     $otoActiveTechs[] = "Treatment: " . ($spk->latestOto->otoTreatmentBy->name ?? 'Teknisi');
+                                                 }
+                                             }
+                                         @endphp
+                                         <div class="pt-2.5 border-t border-slate-200/70 flex flex-col gap-1.5 text-xs">
+                                             <div class="flex items-start justify-between gap-2">
+                                                 <div class="flex flex-col">
+                                                     <span class="text-[9px] font-black text-amber-600 uppercase tracking-wider">Layanan OTO</span>
+                                                     <span class="text-[11px] font-black text-slate-800 tracking-wide mt-0.5">
+                                                         {{ $spk->latestOto?->proposed_services ?? 'Layanan OTO Tambahan' }}
+                                                     </span>
+                                                 </div>
+                                                 @if($spk->latestOto?->total_oto_price)
+                                                     <div class="text-right flex flex-col">
+                                                         <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Nilai OTO</span>
+                                                         <span class="text-[11px] font-black text-emerald-600 mt-0.5 font-mono">
+                                                             {{ $spk->latestOto->total_oto_price }}
+                                                         </span>
+                                                     </div>
+                                                 @endif
+                                             </div>
+                                             @if(!empty($otoActiveTechs))
+                                                 <div class="flex items-center justify-between text-[10px] text-slate-600 font-semibold bg-amber-50/60 px-2 py-1 rounded-md border border-amber-200/40">
+                                                     <span class="font-bold text-amber-800">Sedang Dikerjakan:</span>
+                                                     <span class="font-black text-slate-900">{{ implode(', ', $otoActiveTechs) }}</span>
+                                                 </div>
+                                             @else
+                                                 <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium bg-slate-100/70 px-2 py-0.5 rounded">
+                                                     <span>Lokasi Fisik:</span>
+                                                     <span class="font-bold text-amber-700">Stasiun OTO (Workshop)</span>
+                                                 </div>
+                                             @endif
+                                         </div>
 
-                                     {{-- Integrated Production Sub-Status & Active Station (Clean Key-Value 2-Column, No Emojis) --}}
-                                     @if($statusVal === 'PRODUCTION')
+                                     {{-- 2. Revisi Active Sub-Status --}}
+                                     @elseif($spk->is_revising || $statusVal === 'REVISI')
+                                         <div class="pt-2.5 border-t border-slate-200/70 flex flex-col gap-1 text-xs">
+                                             <div class="flex items-center justify-between">
+                                                 <span class="text-[9px] font-black text-rose-600 uppercase tracking-wider">Sub-Status</span>
+                                                 <span class="text-[10px] font-bold text-rose-700">Dalam Perbaikan Workshop</span>
+                                             </div>
+                                             <div class="flex items-center justify-between text-[10px] text-slate-500">
+                                                 <span>Lokasi Fisik:</span>
+                                                 <span class="font-bold text-slate-700">{{ $spk->current_location ?? 'Stasiun Revisi' }}</span>
+                                             </div>
+                                         </div>
+
+                                     {{-- 3. Production Sub-Status --}}
+                                     @elseif($statusVal === 'PRODUCTION')
                                          @php
                                              $prodInProgress = false;
                                              $activeInfo = [];

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Enums\WorkOrderStatus;
 
@@ -490,6 +491,12 @@ class WorkOrder extends Model
                 return route('qc.index', ['search' => $this->spk_number, 'tab' => $qcTab, 'highlight' => $this->spk_number]);
             case 'SELESAI':
             case 'DIANTAR':
+                if ($this->has_active_oto) {
+                    return route('oto.index', ['search' => $this->spk_number]);
+                }
+                if ($this->is_revising) {
+                    return route('revision.index', ['search' => $this->spk_number]);
+                }
                 return route('finish.index', ['search' => $this->spk_number, 'highlight' => $this->spk_number]);
             case 'WAITING_PAYMENT':
             case 'WAITING_VERIFICATION':
