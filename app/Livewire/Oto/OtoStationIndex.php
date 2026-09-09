@@ -14,7 +14,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('layouts.app')]
+#[Layout('layouts.workshop-pwa')]
 class OtoStationIndex extends Component
 {
     use WithPagination;
@@ -149,12 +149,21 @@ class OtoStationIndex extends Component
                     });
                 });
         } else {
-            // Antrean Baru / Belum Berjalan
+            // Antrean Pengerjaan: Active OTO yang tidak sedang in-progress
             $query->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])
                 ->where(function($q) {
-                    $q->whereNull('oto_sol_started_at')
-                      ->whereNull('oto_upper_started_at')
-                      ->whereNull('oto_treatment_started_at');
+                    $q->where(function($sq) {
+                        $sq->whereNull('oto_sol_started_at')
+                           ->orWhereNotNull('oto_sol_completed_at');
+                    })
+                    ->where(function($sq) {
+                        $sq->whereNull('oto_upper_started_at')
+                           ->orWhereNotNull('oto_upper_completed_at');
+                    })
+                    ->where(function($sq) {
+                        $sq->whereNull('oto_treatment_started_at')
+                           ->orWhereNotNull('oto_treatment_completed_at');
+                    });
                 });
         }
 
@@ -361,6 +370,6 @@ class OtoStationIndex extends Component
             'otos'   => $this->otos,
             'counts' => $this->counts,
             'techs'  => $this->techs,
-        ]);
+        ])->layout('layouts.workshop-pwa');
     }
 }
