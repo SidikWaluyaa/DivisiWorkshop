@@ -518,7 +518,7 @@ class FinishController extends Controller
                     'valid_until' => now()->addDays((int) $request->valid_days),
                     'status' => 'PENDING_CX', // Directly to CX Pool
                     'dp_required' => $formatPrice($totalOTO * 0.5), // 50% DP
-                    'send_automation' => $request->boolean('send_automation', true),
+                    'send_automation' => $request->boolean('send_automation'),
                     'created_by' => Auth::id(),
                 ]);
 

@@ -874,6 +874,7 @@
                                 </div>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="hidden" name="send_automation" value="0">
                                 <input type="checkbox" name="send_automation" value="1" checked class="sr-only peer">
                                 <div class="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
                             </label>
