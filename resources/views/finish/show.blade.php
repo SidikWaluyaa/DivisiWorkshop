@@ -578,27 +578,57 @@
                             </span>
                         </div>
 
-                        {{-- Real-time Audit Logs Feed Ordered from Oldest to Newest --}}
+                        {{-- Real-time Audit Logs Feed Ordered from Oldest to Newest (SPK_PENDING / Dibuat ➔ Selesai) --}}
                         <div class="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-                            @forelse($order->logs()->with('user')->oldest('id')->get() as $log)
+                            @php
+                                $orderedLogs = $order->logs()->with('user')->orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
+                            @endphp
+                            @forelse($orderedLogs as $log)
                                 @php
-                                    $dotBg = match(strtoupper($log->step ?? '')) {
-                                        'SORTIR' => 'bg-indigo-500 ring-indigo-100 dark:ring-indigo-950',
-                                        'PREPARATION', 'PREP' => 'bg-amber-500 ring-amber-100 dark:ring-amber-950',
-                                        'PRODUCTION', 'PRODUKSI' => 'bg-blue-500 ring-blue-100 dark:ring-blue-950',
-                                        'QC', 'QUALITY CONTROL' => 'bg-teal-500 ring-teal-100 dark:ring-teal-950',
-                                        'OTO' => 'bg-orange-500 ring-orange-100 dark:ring-orange-950',
-                                        'REVISION', 'REVISI' => 'bg-rose-500 ring-rose-100 dark:ring-rose-950',
-                                        'FINISH', 'STORAGE', 'GUDANG', 'SELESAI' => 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-950',
+                                    $stepUpper = strtoupper($log->step ?? '');
+                                    $dotBg = match(true) {
+                                        str_contains($stepUpper, 'PENDING') || str_contains($stepUpper, 'CS') => 'bg-purple-500 ring-purple-100 dark:ring-purple-950',
+                                        str_contains($stepUpper, 'SORTIR') => 'bg-sky-500 ring-sky-100 dark:ring-sky-950',
+                                        str_contains($stepUpper, 'PREP') => 'bg-amber-500 ring-amber-100 dark:ring-amber-950',
+                                        str_contains($stepUpper, 'PROD') => 'bg-blue-500 ring-blue-100 dark:ring-blue-950',
+                                        str_contains($stepUpper, 'HANDOVER') || str_contains($stepUpper, 'SURAT') => 'bg-slate-500 ring-slate-100 dark:ring-slate-900',
+                                        str_contains($stepUpper, 'QC') => 'bg-teal-500 ring-teal-100 dark:ring-teal-950',
+                                        str_contains($stepUpper, 'OUTBOUND') => 'bg-cyan-500 ring-cyan-100 dark:ring-cyan-950',
+                                        str_contains($stepUpper, 'OTO') => 'bg-orange-500 ring-orange-100 dark:ring-orange-950',
+                                        str_contains($stepUpper, 'REVIS') => 'bg-rose-500 ring-rose-100 dark:ring-rose-950',
+                                        str_contains($stepUpper, 'FINISH') || str_contains($stepUpper, 'STORAGE') || str_contains($stepUpper, 'GUDANG') || str_contains($stepUpper, 'SELESAI') => 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-950',
                                         default => 'bg-slate-400 ring-slate-100 dark:ring-slate-800',
+                                    };
+
+                                    $badgeClass = match(true) {
+                                        str_contains($stepUpper, 'PENDING') || str_contains($stepUpper, 'CS') => 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+                                        str_contains($stepUpper, 'SORTIR') => 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800',
+                                        str_contains($stepUpper, 'PREP') => 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+                                        str_contains($stepUpper, 'PROD') => 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                                        str_contains($stepUpper, 'HANDOVER') || str_contains($stepUpper, 'SURAT') => 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+                                        str_contains($stepUpper, 'QC') => 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800',
+                                        str_contains($stepUpper, 'OUTBOUND') => 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
+                                        str_contains($stepUpper, 'OTO') => 'bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+                                        str_contains($stepUpper, 'REVIS') => 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+                                        str_contains($stepUpper, 'FINISH') || str_contains($stepUpper, 'STORAGE') || str_contains($stepUpper, 'GUDANG') || str_contains($stepUpper, 'SELESAI') => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+                                        default => 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600',
+                                    };
+
+                                    $displayStep = match(strtoupper($log->step ?? '')) {
+                                        'SPK_PENDING' => 'SPK DIBUAT (PENDING)',
+                                        'CS_INTAKE' => 'CS INTAKE',
+                                        'HANDOVER' => 'SERAH TERIMA (SJ)',
+                                        'STAGING_OUTBOUND' => 'STAGING OUTBOUND',
+                                        'OUTBOUND_QC' => 'MANIFEST OUTBOUND',
+                                        default => ($log->step ?: 'SYSTEM')
                                     };
                                 @endphp
                                 <div class="relative pl-6 pb-4 border-l-2 border-gray-150 dark:border-gray-700 last:pb-0">
                                     <span class="absolute -left-[6px] top-1.5 w-3 h-3 rounded-full {{ $dotBg }} ring-4"></span>
                                     
                                     <div class="flex items-center justify-between gap-2 mb-1">
-                                        <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                                            {{ $loop->iteration }}. {{ $log->step ?: 'SYSTEM' }}
+                                        <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border {{ $badgeClass }}">
+                                            {{ $loop->iteration }}. {{ $displayStep }}
                                         </span>
                                         <span class="text-[10px] text-gray-400 font-semibold" title="{{ $log->created_at->format('d M Y H:i:s') }}">
                                             {{ $log->created_at->format('d M H:i') }}
@@ -612,7 +642,7 @@
                                     <div class="flex items-center gap-2 mt-1 text-[10px] text-gray-400">
                                         <span>👤 {{ $log->user->name ?? 'Sistem Workshop' }}</span>
                                         @if($log->action)
-                                            <span>• <span class="font-mono text-[9px] bg-slate-100 dark:bg-gray-800 px-1 py-0.5 rounded">{{ $log->action }}</span></span>
+                                            <span>• <span class="font-mono text-[9px] bg-slate-100 dark:bg-gray-800 px-1 py-0.5 rounded text-gray-500 dark:text-gray-400">{{ $log->action }}</span></span>
                                         @endif
                                     </div>
                                 </div>
