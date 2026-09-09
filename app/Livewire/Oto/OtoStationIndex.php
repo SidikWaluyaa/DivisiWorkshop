@@ -279,6 +279,7 @@ class OtoStationIndex extends Component
             // Update Work Order to Ready for Pickup / Finished
             if ($oto->workOrder) {
                 $oto->workOrder->update([
+                    'status'           => \App\Enums\WorkOrderStatus::SELESAI->value,
                     'has_active_oto'   => false,
                     'current_location' => 'Rak Selesai / Pickup Area (Gudang)',
                     'finished_date'    => $oto->workOrder->finished_date ?: now(),
