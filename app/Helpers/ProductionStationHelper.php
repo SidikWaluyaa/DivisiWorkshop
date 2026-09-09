@@ -28,7 +28,8 @@ class ProductionStationHelper
         $cat = strtolower(trim($categoryName));
 
         // Stasiun 1: Soling / Bongkar Sol
-        if (str_contains($cat, 'sol')) {
+        $solKeywords = ['sol', 'sole', 'midsole', 'outsole', 'reglue', 'lem', 'heel', 'hak', 'tapak', 'welt', 'tpr', 'vibram', 'stuck on', 'sponge', 'lapis'];
+        if (\Illuminate\Support\Str::contains($cat, $solKeywords)) {
             return [
                 'code'  => 'SOLING',
                 'name'  => 'Stasiun Soling',
@@ -36,8 +37,9 @@ class ProductionStationHelper
             ];
         }
 
-        // Stasiun 2: Upper / Jahit
-        if (str_contains($cat, 'upper') || str_contains($cat, 'jahit')) {
+        // Stasiun 2: Upper / Jahit / Zipper
+        $upperKeywords = ['upper', 'lining', 'insole', 'patch', 'jahit', 'zipper', 'resleting', 'sleting', 'strap', 'buckle', 'gesper', 'elastis', 'counter', 'tongue', 'lidah', 'eyelet', 'tali', 'velcro', 'karet', 'pad'];
+        if (\Illuminate\Support\Str::contains($cat, $upperKeywords)) {
             return [
                 'code'  => 'UPPER',
                 'name'  => 'Stasiun Upper',

@@ -7,32 +7,34 @@
 ])
 
 @php
-    $servicesText = strtolower($oto->proposed_services ?? '');
     $order = $oto->workOrder;
 
-    // Comprehensive Keyword Dictionaries
-    $upperKeywords = ['upper', 'lining', 'insole', 'patch', 'jahit', 'zipper', 'resleting', 'strap', 'buckle', 'gesper', 'elastis', 'counter', 'tongue', 'lidah', 'eyelet', 'tali', 'velcro', 'karet', 'pad'];
-    $solKeywords = ['sol', 'sole', 'midsole', 'outsole', 'reglue', 'lem', 'heel', 'hak', 'tapak', 'welt', 'tpr', 'vibram', 'stuck on', 'sponge', 'lapis'];
-    $treatmentKeywords = ['clean', 'wash', 'cuci', 'repaint', 'recolor', 'cat', 'treatment', 'whitening', 'unyellow', 'leather', 'lotion', 'polish', 'semir', 'waterproof', 'nano'];
+    // Detect required stations from proposed_services (supports comma-separated multiple services)
+    $servicesList = array_filter(array_map('trim', explode(',', (string) ($oto->proposed_services ?? ''))));
+    $hasSol = false;
+    $hasUpper = false;
+    $hasTreatment = false;
 
-    // 1. Keyword check from OTO proposed_services text
-    $hasSol = \Illuminate\Support\Str::contains($servicesText, $solKeywords);
-    $hasUpper = \Illuminate\Support\Str::contains($servicesText, $upperKeywords);
-    $hasTreatment = \Illuminate\Support\Str::contains($servicesText, $treatmentKeywords);
+    foreach ($servicesList as $srvName) {
+        $stationCode = \App\Helpers\ProductionStationHelper::getStationCode($srvName);
+        if ($stationCode === 'SOLING') $hasSol = true;
+        elseif ($stationCode === 'UPPER') $hasUpper = true;
+        elseif ($stationCode === 'TREATMENT') $hasTreatment = true;
+    }
 
-    // 2. Check from attached WorkOrderServices with 'OTO:' prefix if available
-    if ($order && $order->relationLoaded('workOrderServices')) {
+    // Secondary inspection from attached OTO work order services if proposed_services string was empty
+    if (!$hasSol && !$hasUpper && !$hasTreatment && $order && $order->relationLoaded('workOrderServices')) {
         foreach ($order->workOrderServices as $wos) {
             if (str_starts_with($wos->custom_service_name ?? '', 'OTO:')) {
-                $cat = strtolower($wos->category_name ?? ($wos->service?->category ?? ''));
-                if (str_contains($cat, 'sol')) $hasSol = true;
-                if (str_contains($cat, 'upper') || str_contains($cat, 'jahit')) $hasUpper = true;
-                if (str_contains($cat, 'clean') || str_contains($cat, 'repaint') || str_contains($cat, 'treatment') || str_contains($cat, 'wash')) $hasTreatment = true;
+                $stationCode = \App\Helpers\ProductionStationHelper::getStationCode($wos->custom_service_name ?? $wos->category_name ?? '');
+                if ($stationCode === 'SOLING') $hasSol = true;
+                elseif ($stationCode === 'UPPER') $hasUpper = true;
+                elseif ($stationCode === 'TREATMENT') $hasTreatment = true;
             }
         }
     }
 
-    // Default fallback if no specific keywords matched (defaults to Upper if repair, Treatment if general)
+    // Default fallback if absolutely no services could be parsed
     if (!$hasSol && !$hasUpper && !$hasTreatment) {
         $hasUpper = true;
     }

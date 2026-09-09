@@ -233,19 +233,12 @@ class CXOTOController extends Controller
 
                 if ($serviceToAttach) {
                     // Determine production category name
-                    $categoryName = $serviceToAttach->category ?: 'Repaint';
-
-                    // If OTO category fallback, infer actual production category from name
-                    if ($categoryName === 'OTO') {
-                        $lowerName = strtolower($serviceToAttach->name);
-                        if (str_contains($lowerName, 'sol') || str_contains($lowerName, 'reglue')) {
-                            $categoryName = 'Reparasi Sol';
-                        } elseif (str_contains($lowerName, 'upper') || str_contains($lowerName, 'jahit')) {
-                            $categoryName = 'Reparasi Upper';
-                        } else {
-                            $categoryName = 'Repaint';
-                        }
-                    }
+                    $stationCode = \App\Helpers\ProductionStationHelper::getStationCode($serviceToAttach->name . ' ' . $serviceToAttach->category);
+                    $categoryName = match($stationCode) {
+                        'SOLING' => 'Reparasi Sol',
+                        'UPPER' => 'Reparasi Upper',
+                        default => 'Treatment',
+                    };
 
                     $oto->workOrder->services()->attach($serviceToAttach->id, [
                         'cost' => $cost,
