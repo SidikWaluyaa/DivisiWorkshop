@@ -186,6 +186,7 @@ class WorkOrder extends Model
         'warranty_expires_at',
         'is_manual_estimasi',
         'discount',
+        'has_active_oto',
     ];
 
     public function cxHandler()
@@ -224,6 +225,7 @@ class WorkOrder extends Model
         'payment_due_date' => 'datetime',
         'last_reminder_at' => 'datetime',
         'donated_at' => 'datetime',
+        'has_active_oto' => 'boolean',
         // Preparation
         'prep_washing_started_at' => 'datetime',
         'prep_washing_completed_at' => 'datetime',

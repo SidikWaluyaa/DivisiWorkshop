@@ -82,7 +82,10 @@ class FinishController extends Controller
 
         // 1. Ready for Pickup (SELESAI) - Paginate this for better performance and completeness
         $readyQuery = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
-                        ->whereNull('taken_date'); // Ensure only items still in shop
+                        ->whereNull('taken_date') // Ensure only items still in shop
+                        ->where(function($q) {
+                            $q->whereNull('has_active_oto')->orWhere('has_active_oto', false);
+                        });
 
         $applyFilters($readyQuery);
 
@@ -740,7 +743,10 @@ class FinishController extends Controller
         $priorityFilter = $request->input('priority_filter');
 
         $query = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
-                    ->whereNull('taken_date');
+                    ->whereNull('taken_date')
+                    ->where(function($q) {
+                        $q->whereNull('has_active_oto')->orWhere('has_active_oto', false);
+                    });
 
         if ($search) {
             $query->where(function($q) use ($search) {
