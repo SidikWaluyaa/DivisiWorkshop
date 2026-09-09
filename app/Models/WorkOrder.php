@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Enums\WorkOrderStatus;
 
@@ -186,6 +187,7 @@ class WorkOrder extends Model
         'warranty_expires_at',
         'is_manual_estimasi',
         'discount',
+        'has_active_oto',
     ];
 
     public function cxHandler()
@@ -224,6 +226,7 @@ class WorkOrder extends Model
         'payment_due_date' => 'datetime',
         'last_reminder_at' => 'datetime',
         'donated_at' => 'datetime',
+        'has_active_oto' => 'boolean',
         // Preparation
         'prep_washing_started_at' => 'datetime',
         'prep_washing_completed_at' => 'datetime',
@@ -488,6 +491,12 @@ class WorkOrder extends Model
                 return route('qc.index', ['search' => $this->spk_number, 'tab' => $qcTab, 'highlight' => $this->spk_number]);
             case 'SELESAI':
             case 'DIANTAR':
+                if ($this->has_active_oto) {
+                    return route('oto.index', ['search' => $this->spk_number]);
+                }
+                if ($this->is_revising) {
+                    return route('revision.index', ['search' => $this->spk_number]);
+                }
                 return route('finish.index', ['search' => $this->spk_number, 'highlight' => $this->spk_number]);
             case 'WAITING_PAYMENT':
             case 'WAITING_VERIFICATION':
@@ -805,6 +814,11 @@ class WorkOrder extends Model
     public function otos()
     {
         return $this->hasMany(OTO::class);
+    }
+
+    public function latestOto()
+    {
+        return $this->hasOne(OTO::class)->latestOfMany();
     }
 
     public function revisions()

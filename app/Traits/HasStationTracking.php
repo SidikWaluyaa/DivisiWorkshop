@@ -42,10 +42,11 @@ trait HasStationTracking
         // e.g. 'prep_washing', 'prod_sol', 'qc_final'.
         
         if ($action === 'start') {
-            if (!$assigneeId) {
-                throw new \Exception('Pilih teknisi terlebih dahulu.');
+            $finalTechId = $assigneeId ?: $order->{"{$columnPrefix}_by"};
+            if (!$finalTechId) {
+                throw new \Exception('Pilih teknisi terlebih dahulu sebelum memulai stasiun.');
             }
-            $order->{"{$columnPrefix}_by"} = $assigneeId;
+            $order->{"{$columnPrefix}_by"} = (int)$finalTechId;
             $order->{"{$columnPrefix}_started_at"} = $now;
         
             $logDescription = "Memulai proses " . $this->formatStationName($type);
@@ -56,7 +57,7 @@ trait HasStationTracking
             $order->{"{$columnPrefix}_completed_at"} = $completionTime;
             // Do not overwrite assigned technician if it exists, unless explicitly provided
             if ($assigneeId) {
-                $order->{"{$columnPrefix}_by"} = $assigneeId;
+                $order->{"{$columnPrefix}_by"} = (int)$assigneeId;
             } elseif (!$order->{"{$columnPrefix}_by"}) {
                 throw new \Exception("SPK {$order->spk_number} belum ditugaskan ke teknisi. Silakan pilih teknisi terlebih dahulu sebelum menyelesaikan.");
             }
@@ -68,8 +69,8 @@ trait HasStationTracking
         // Determine who should be logged as the actor
         $logUserId = $techId;
 
-        if ($action === 'start' && $assigneeId) {
-            $logUserId = $assigneeId; // Log the starting action as the assigned technician
+        if ($action === 'start') {
+            $logUserId = $order->{"{$columnPrefix}_by"} ?: $techId;
         } elseif ($action === 'finish') {
             // If finishing, try to attribute to the assigned technician if they exist
             // This is useful when Admin finishes a task on behalf of a technician

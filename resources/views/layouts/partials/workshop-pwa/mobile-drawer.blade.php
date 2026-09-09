@@ -216,6 +216,15 @@
                         <p class="text-[10px] font-bold text-slate-500 mt-0.5">Laporan &amp; daftar aktif garansi sepatu</p>
                     </div>
                 </a>
+
+                <a href="{{ route('oto.index') }}" class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-center justify-between active:scale-95 transition-all">
+                    <div>
+                        <div class="font-black text-xs text-amber-700 flex items-center gap-1.5">
+                            <span>🔥</span> Stasiun OTO
+                        </div>
+                        <p class="text-[10px] font-bold text-amber-900/70 mt-0.5">Pengerjaan paket layanan One Time Offer</p>
+                    </div>
+                </a>
             </div>
         </div>
 

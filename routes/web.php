@@ -447,6 +447,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/print', [App\Http\Controllers\WarrantyController::class, 'printSpk'])->name('print');
     });
 
+    // Dedicated OTO Station (Livewire)
+    Route::prefix('oto')->name('oto.')->middleware('access:production')->group(function () {
+        Route::get('/', \App\Livewire\Oto\OtoStationIndex::class)->name('index');
+    });
+
     // Shipping Routes
     Route::controller(App\Http\Controllers\ShippingController::class)->group(function () {
         Route::get('/shipping', 'index')->name('shipping.index');
