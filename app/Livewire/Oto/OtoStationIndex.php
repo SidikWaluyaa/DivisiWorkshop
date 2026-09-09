@@ -78,9 +78,13 @@ class OtoStationIndex extends Component
     #[Computed]
     public function counts()
     {
-        $baseActiveQuery = OTO::whereIn('status', ['ACCEPTED', 'IN_PROGRESS']);
+        $baseActiveQuery = OTO::whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])
+            ->whereHas('workOrder', fn($q) => $q->whereNull('taken_date'));
         $antreanCount = (clone $baseActiveQuery)->count();
-        $completedCount = OTO::where('status', 'COMPLETED')->count();
+        $completedCount = OTO::where(function($q) {
+            $q->where('status', 'COMPLETED')
+              ->orWhereHas('workOrder', fn($wq) => $wq->whereNotNull('taken_date'));
+        })->count();
 
         // Financial Calculation Helper
         $parsePrice = fn($str) => (int) preg_replace('/[^0-9]/', '', (string) $str);
@@ -118,9 +122,13 @@ class OtoStationIndex extends Component
 
         // Tab Filter: 2 Tabs (Antrean & Selesai)
         if ($this->activeTab === 'completed') {
-            $query->where('status', 'COMPLETED');
+            $query->where(function($q) {
+                $q->where('status', 'COMPLETED')
+                  ->orWhereHas('workOrder', fn($wq) => $wq->whereNotNull('taken_date'));
+            });
         } else {
-            $query->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']);
+            $query->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])
+                  ->whereHas('workOrder', fn($wq) => $wq->whereNull('taken_date'));
         }
 
         // Search Filter
