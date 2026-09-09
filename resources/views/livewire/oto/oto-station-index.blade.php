@@ -63,7 +63,7 @@
             {{-- 1. Antrean OTO --}}
             <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
                 <div>
-                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Antrean Belum Mulai</span>
+                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Antrean Pengerjaan</span>
                     <span class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ $counts['antrean'] }}</span>
                     <span class="text-[10px] text-gray-400 block mt-0.5">Menunggu pengerjaan</span>
                 </div>
@@ -72,19 +72,7 @@
                 </div>
             </div>
 
-            {{-- 2. Sedang Dikerjakan --}}
-            <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Sedang Dikerjakan</span>
-                    <span class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ $counts['in_progress'] }}</span>
-                    <span class="text-[10px] text-blue-500 font-semibold block mt-0.5">Teknisi aktif</span>
-                </div>
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-xl text-blue-600 border border-blue-200 dark:border-blue-800">
-                    🏃
-                </div>
-            </div>
-
-            {{-- 3. Selesai Hari Ini --}}
+            {{-- 2. Selesai Hari Ini --}}
             <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
                 <div>
                     <span class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Selesai Hari Ini</span>
@@ -93,6 +81,18 @@
                 </div>
                 <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center text-xl text-emerald-600 border border-emerald-200 dark:border-emerald-800">
                     ✅
+                </div>
+            </div>
+
+            {{-- 3. Potensi Omset --}}
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Potensi Omset OTO</span>
+                    <span class="text-base font-black text-emerald-600 dark:text-emerald-400">Rp {{ number_format($counts['potential_revenue'], 0, ',', '.') }}</span>
+                    <span class="text-[10px] text-gray-400 block mt-0.5">Dari antrean aktif</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center text-xl text-emerald-600 border border-emerald-200 dark:border-emerald-800">
+                    💰
                 </div>
             </div>
 
@@ -112,7 +112,7 @@
         {{-- Tab Navigation & Controls --}}
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-3">
             <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-                {{-- Tab 1: Antrean Belum Mulai --}}
+                {{-- Tab 1: Antrean Pengerjaan --}}
                 <button wire:click="$set('activeTab', 'antrean')" 
                         class="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer {{ $activeTab === 'antrean' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
                     <span>⏳ Antrean Pengerjaan</span>
@@ -121,16 +121,7 @@
                     </span>
                 </button>
 
-                {{-- Tab 2: Sedang Dikerjakan --}}
-                <button wire:click="$set('activeTab', 'in_progress')" 
-                        class="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer {{ $activeTab === 'in_progress' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
-                    <span>🏃 Sedang Dikerjakan</span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $activeTab === 'in_progress' ? 'bg-white text-blue-700' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' }}">
-                        {{ $counts['in_progress'] }}
-                    </span>
-                </button>
-
-                {{-- Tab 3: Riwayat Selesai --}}
+                {{-- Tab 2: Riwayat Selesai --}}
                 <button wire:click="$set('activeTab', 'completed')" 
                         class="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer {{ $activeTab === 'completed' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
                     <span>✅ Riwayat Selesai</span>

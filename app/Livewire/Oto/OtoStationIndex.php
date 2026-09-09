@@ -79,22 +79,7 @@ class OtoStationIndex extends Component
     public function counts()
     {
         $baseActiveQuery = OTO::whereIn('status', ['ACCEPTED', 'IN_PROGRESS']);
-
-        // In-progress: Ada stasiun yang sudah mulai dan belum selesai
-        $inProgressCount = (clone $baseActiveQuery)->where(function($q) {
-            $q->where(function($sq) {
-                $sq->whereNotNull('oto_sol_started_at')->whereNull('oto_sol_completed_at');
-            })
-            ->orWhere(function($sq) {
-                $sq->whereNotNull('oto_upper_started_at')->whereNull('oto_upper_completed_at');
-            })
-            ->orWhere(function($sq) {
-                $sq->whereNotNull('oto_treatment_started_at')->whereNull('oto_treatment_completed_at');
-            });
-        })->count();
-
-        $totalActive = (clone $baseActiveQuery)->count();
-        $antreanCount = max(0, $totalActive - $inProgressCount);
+        $antreanCount = (clone $baseActiveQuery)->count();
         $completedCount = OTO::where('status', 'COMPLETED')->count();
 
         // Financial Calculation Helper
@@ -108,10 +93,9 @@ class OtoStationIndex extends Component
 
         return [
             'antrean'            => $antreanCount,
-            'in_progress'        => $inProgressCount,
             'completed'          => $completedCount,
             'completed_today'    => $completedTodayCount,
-            'total_active'       => $totalActive,
+            'total_active'       => $antreanCount,
             'potential_revenue'  => $totalPotentialRevenue,
         ];
     }
@@ -132,39 +116,11 @@ class OtoStationIndex extends Component
                 'otoCompletedBy'
             ]);
 
-        // Tab Filter
+        // Tab Filter: 2 Tabs (Antrean & Selesai)
         if ($this->activeTab === 'completed') {
             $query->where('status', 'COMPLETED');
-        } elseif ($this->activeTab === 'in_progress') {
-            $query->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])
-                ->where(function($q) {
-                    $q->where(function($sq) {
-                        $sq->whereNotNull('oto_sol_started_at')->whereNull('oto_sol_completed_at');
-                    })
-                    ->orWhere(function($sq) {
-                        $sq->whereNotNull('oto_upper_started_at')->whereNull('oto_upper_completed_at');
-                    })
-                    ->orWhere(function($sq) {
-                        $sq->whereNotNull('oto_treatment_started_at')->whereNull('oto_treatment_completed_at');
-                    });
-                });
         } else {
-            // Antrean Pengerjaan: Active OTO yang tidak sedang in-progress
-            $query->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])
-                ->where(function($q) {
-                    $q->where(function($sq) {
-                        $sq->whereNull('oto_sol_started_at')
-                           ->orWhereNotNull('oto_sol_completed_at');
-                    })
-                    ->where(function($sq) {
-                        $sq->whereNull('oto_upper_started_at')
-                           ->orWhereNotNull('oto_upper_completed_at');
-                    })
-                    ->where(function($sq) {
-                        $sq->whereNull('oto_treatment_started_at')
-                           ->orWhereNotNull('oto_treatment_completed_at');
-                    });
-                });
+            $query->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']);
         }
 
         // Search Filter
@@ -367,9 +323,11 @@ class OtoStationIndex extends Component
     public function render()
     {
         return view('livewire.oto.oto-station-index', [
-            'otos'   => $this->otos,
-            'counts' => $this->counts,
-            'techs'  => $this->techs,
+            'otos'          => $this->otos,
+            'counts'        => $this->counts,
+            'techs'         => $this->techs,
+            'activeTab'     => $this->activeTab,
+            'selectedItems' => $this->selectedItems,
         ])->layout('layouts.workshop-pwa');
     }
 }

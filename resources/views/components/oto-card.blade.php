@@ -119,94 +119,62 @@
         {{-- Column 5: Multi-Station Progress & Penugasan Teknisi --}}
         <td class="px-6 py-4" @click.stop>
             @if($isCompletedTab)
-                <div class="flex items-center gap-2">
-                    <span class="px-3 py-1.5 bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 font-bold text-xs rounded-xl border border-green-200 dark:border-green-800 flex items-center gap-1.5">
-                        <span>✅ Selesai Dikerjakan</span>
-                    </span>
+                <div class="flex flex-col gap-1 min-w-[200px]">
+                    <div class="flex items-center gap-1.5">
+                        <span class="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-xs rounded-xl border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                            <span>✅ Selesai Dikerjakan</span>
+                        </span>
+                    </div>
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 flex flex-wrap gap-x-2 pt-0.5">
+                        @if($hasSol && $oto->otoSolBy) <span>Sol: <b>{{ $oto->otoSolBy->name }}</b></span> @endif
+                        @if($hasUpper && $oto->otoUpperBy) <span>Upper: <b>{{ $oto->otoUpperBy->name }}</b></span> @endif
+                        @if($hasTreatment && $oto->otoTreatmentBy) <span>Treatment: <b>{{ $oto->otoTreatmentBy->name }}</b></span> @endif
+                    </div>
                     @if($oto->completed_at)
-                        <span class="text-[10px] text-gray-400 font-semibold">{{ $oto->completed_at->format('d M H:i') }}</span>
+                        <span class="text-[10px] text-gray-400">🕒 {{ $oto->completed_at->format('d M Y H:i') }}</span>
                     @endif
                 </div>
             @else
-                <div class="flex flex-col gap-1.5 min-w-[240px]">
+                <div class="flex flex-col gap-1.5 min-w-[220px]">
                     {{-- 1. Soling --}}
                     @if($hasSol)
-                        <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
-                            <span class="font-bold text-orange-500 uppercase">Soling:</span>
-                            @if($oto->oto_sol_completed_at)
-                                <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $oto->oto_sol_completed_at->format('d M H:i') }}">
-                                    ✓ {{ $oto->otoSolBy->name ?? 'Selesai' }}
-                                </span>
-                            @else
-                                <div class="flex items-center gap-1">
-                                    <select wire:change="updateStationTechnician({{ $oto->id }}, 'sol', $event.target.value)"
-                                            class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-orange-500 cursor-pointer max-w-[110px]">
-                                        <option value="">-- Pilih --</option>
-                                        @foreach($techs['sol'] ?? [] as $t)
-                                            <option value="{{ $t->id }}" {{ $oto->oto_sol_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @if($oto->oto_sol_started_at)
-                                        <button type="button" wire:click="finishStationTask({{ $oto->id }}, 'sol')" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-0.5 rounded transition-all active:scale-95 cursor-pointer">Selesai</button>
-                                    @elseif($oto->oto_sol_by)
-                                        <button type="button" wire:click="startStationTask({{ $oto->id }}, 'sol', {{ $oto->oto_sol_by }})" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-0.5 rounded transition-all active:scale-95 cursor-pointer">Mulai</button>
-                                    @endif
-                                </div>
-                            @endif
+                        <div class="flex items-center justify-between gap-2 text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                            <span class="font-black text-orange-600 dark:text-orange-400 uppercase text-[10px] tracking-wide">Soling:</span>
+                            <select wire:change="updateStationTechnician({{ $oto->id }}, 'sol', $event.target.value)"
+                                    class="text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded-lg px-2 py-1 focus:ring-2 focus:ring-amber-500 cursor-pointer min-w-[130px]">
+                                <option value="">-- Pilih Teknisi --</option>
+                                @foreach($techs['sol'] ?? [] as $t)
+                                    <option value="{{ $t->id }}" {{ $oto->oto_sol_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     @endif
 
                     {{-- 2. Upper --}}
                     @if($hasUpper)
-                        <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
-                            <span class="font-bold text-purple-600 uppercase">Upper:</span>
-                            @if($oto->oto_upper_completed_at)
-                                <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $oto->oto_upper_completed_at->format('d M H:i') }}">
-                                    ✓ {{ $oto->otoUpperBy->name ?? 'Selesai' }}
-                                </span>
-                            @else
-                                <div class="flex items-center gap-1">
-                                    <select wire:change="updateStationTechnician({{ $oto->id }}, 'upper', $event.target.value)"
-                                            class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-purple-500 cursor-pointer max-w-[110px]">
-                                        <option value="">-- Pilih --</option>
-                                        @foreach($techs['upper'] ?? [] as $t)
-                                            <option value="{{ $t->id }}" {{ $oto->oto_upper_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @if($oto->oto_upper_started_at)
-                                        <button type="button" wire:click="finishStationTask({{ $oto->id }}, 'upper')" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-0.5 rounded transition-all active:scale-95 cursor-pointer">Selesai</button>
-                                    @elseif($oto->oto_upper_by)
-                                        <button type="button" wire:click="startStationTask({{ $oto->id }}, 'upper', {{ $oto->oto_upper_by }})" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-0.5 rounded transition-all active:scale-95 cursor-pointer">Mulai</button>
-                                    @endif
-                                </div>
-                            @endif
+                        <div class="flex items-center justify-between gap-2 text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                            <span class="font-black text-purple-600 dark:text-purple-400 uppercase text-[10px] tracking-wide">Upper:</span>
+                            <select wire:change="updateStationTechnician({{ $oto->id }}, 'upper', $event.target.value)"
+                                    class="text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded-lg px-2 py-1 focus:ring-2 focus:ring-amber-500 cursor-pointer min-w-[130px]">
+                                <option value="">-- Pilih Teknisi --</option>
+                                @foreach($techs['upper'] ?? [] as $t)
+                                    <option value="{{ $t->id }}" {{ $oto->oto_upper_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     @endif
 
                     {{-- 3. Treatment / Cleaning / Repaint --}}
                     @if($hasTreatment)
-                        <div class="flex items-center justify-between text-[11px] pb-1">
-                            <span class="font-bold text-teal-600 uppercase">Treatment:</span>
-                            @if($oto->oto_treatment_completed_at)
-                                <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $oto->oto_treatment_completed_at->format('d M H:i') }}">
-                                    ✓ {{ $oto->otoTreatmentBy->name ?? 'Selesai' }}
-                                </span>
-                            @else
-                                <div class="flex items-center gap-1">
-                                    <select wire:change="updateStationTechnician({{ $oto->id }}, 'treatment', $event.target.value)"
-                                            class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-teal-500 cursor-pointer max-w-[110px]">
-                                        <option value="">-- Pilih --</option>
-                                        @foreach($techs['treatment'] ?? [] as $t)
-                                            <option value="{{ $t->id }}" {{ $oto->oto_treatment_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @if($oto->oto_treatment_started_at)
-                                        <button type="button" wire:click="finishStationTask({{ $oto->id }}, 'treatment')" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-0.5 rounded transition-all active:scale-95 cursor-pointer">Selesai</button>
-                                    @elseif($oto->oto_treatment_by)
-                                        <button type="button" wire:click="startStationTask({{ $oto->id }}, 'treatment', {{ $oto->oto_treatment_by }})" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-0.5 rounded transition-all active:scale-95 cursor-pointer">Mulai</button>
-                                    @endif
-                                </div>
-                            @endif
+                        <div class="flex items-center justify-between gap-2 text-[11px] pb-1">
+                            <span class="font-black text-teal-600 dark:text-teal-400 uppercase text-[10px] tracking-wide">Treatment:</span>
+                            <select wire:change="updateStationTechnician({{ $oto->id }}, 'treatment', $event.target.value)"
+                                    class="text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded-lg px-2 py-1 focus:ring-2 focus:ring-amber-500 cursor-pointer min-w-[130px]">
+                                <option value="">-- Pilih Teknisi --</option>
+                                @foreach($techs['treatment'] ?? [] as $t)
+                                    <option value="{{ $t->id }}" {{ $oto->oto_treatment_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     @endif
                 </div>
