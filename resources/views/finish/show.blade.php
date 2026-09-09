@@ -1,39 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div>
-                <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1">
-                    <a href="{{ route('finish.index') }}" class="hover:text-teal-600 transition-colors">Workshop</a>
-                    <span class="text-slate-300">/</span>
-                    <a href="{{ route('finish.index') }}" class="hover:text-teal-600 transition-colors">Gudang & Finish</a>
-                    <span class="text-slate-300">/</span>
-                    <span class="text-slate-900 dark:text-white font-bold">{{ $order->spk_number }}</span>
-                </nav>
-                <h2 class="font-black text-xl sm:text-2xl text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <span>Detail SPK Gudang</span>
-                    <span class="px-2.5 py-0.5 bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 text-xs font-mono font-bold rounded-lg border border-teal-200 dark:border-teal-800">
-                        {{ $order->spk_number }}
-                    </span>
-                </h2>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ url('/track?spk=' . $order->spk_number) }}" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <span>Lacak SPK</span>
-                </a>
-                <a href="{{ route('finish.index') }}" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-teal-600/20 flex items-center gap-1.5 active:scale-95">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    <span>Kembali</span>
-                </a>
-            </div>
+        <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold text-teal-100">Order Detail:</span>
+            <span class="font-mono bg-white/20 px-2.5 py-0.5 rounded-lg border border-white/30 text-white font-black text-sm tracking-wide">{{ $order->spk_number }}</span>
         </div>
     </x-slot>
 
     @php
         $isLunas = ($order->invoice && $order->invoice->status === 'Lunas') || (!$order->invoice && in_array($order->status_pembayaran, ['L', 'Lunas']));
-        $shippingCost = $order->invoice ? $order->invoice->shipping_cost : $order->shipping_cost;
-        $totalBill = $order->invoice ? $order->invoice->total_amount : $order->total_amount;
-        $remainingBill = $order->invoice ? $order->invoice->remaining_amount : ($isLunas ? 0 : $totalBill);
+        $shippingCost = (float)($order->invoice ? $order->invoice->shipping_cost : $order->shipping_cost);
+        $totalServicesCost = (float)($order->workOrderServices->sum(fn($w) => (float)($w->cost ?: ($w->service->price ?? 0))));
+        $totalBill = (float)($order->invoice ? $order->invoice->total_amount : ($order->total_amount ?: ($totalServicesCost + $shippingCost)));
+        $remainingBill = (float)($order->invoice ? $order->invoice->remaining_amount : ($isLunas ? 0 : $totalBill));
 
         // Workshop Team Names
         $sortir = $order->picSortirSol->name ?? $order->picSortirUpper->name ?? '-';
@@ -43,14 +21,6 @@
         }
         $produksi = $order->prodSolBy->name ?? $order->prodUpperBy->name ?? $order->prodCleaningBy->name ?? $order->technicianProduction->name ?? '-';
         $qc = $order->qcFinalBy->name ?? $order->qcFinalPic->name ?? $order->qcCleanupBy->name ?? $order->qcJahitBy->name ?? '-';
-
-        // Stepper State Calculation
-        $stepSortirDone = !empty($order->sortir_date) || $sortir !== '-';
-        $stepPrepDone = !empty($order->preparation_date) || $prep !== '-';
-        $stepProdDone = !empty($order->production_date) || $produksi !== '-';
-        $stepQcDone = !empty($order->qc_date) || $qc !== '-';
-        $stepFinishDone = !empty($order->finished_date) || $order->status?->value === 'SELESAI' || $order->status === 'SELESAI';
-        $stepTakenDone = !is_null($order->taken_date);
     @endphp
 
     @push('scripts')
@@ -207,8 +177,29 @@
     </script>
     @endpush
 
-    <div class="py-8" x-data="finishShowApp(@js($services))">
+    <div class="py-6" x-data="finishShowApp(@js($services))">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+            {{-- Top Navigation & Breadcrumbs Bar --}}
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs">
+                <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                    <a href="{{ route('finish.index') }}" class="hover:text-teal-600 transition-colors">Workshop</a>
+                    <span class="text-slate-300">/</span>
+                    <a href="{{ route('finish.index') }}" class="hover:text-teal-600 transition-colors">Gudang & Finish</a>
+                    <span class="text-slate-300">/</span>
+                    <span class="text-slate-900 dark:text-white font-bold">{{ $order->spk_number }}</span>
+                </nav>
+                <div class="flex items-center gap-2">
+                    <a href="{{ url('/track?spk=' . $order->spk_number) }}" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-700 dark:text-gray-200 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <span>Lacak SPK</span>
+                    </a>
+                    <a href="{{ route('finish.index') }}" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-teal-600/20 flex items-center gap-1.5 active:scale-95">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        <span>Kembali ke Gudang</span>
+                    </a>
+                </div>
+            </div>
 
             {{-- MAIN 2-COLUMN GRID --}}
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -282,7 +273,7 @@
                                         </span>
                                     @endif
                                 </div>
-                                <div class="text-xl font-black text-gray-900 dark:text-white">
+                                <div class="text-2xl font-black text-gray-900 dark:text-white">
                                     Rp {{ number_format($totalBill, 0, ',', '.') }}
                                 </div>
                                 @if(!$isLunas && $remainingBill > 0)
@@ -357,6 +348,9 @@
                         </div>
                         <div class="divide-y divide-gray-100 dark:divide-gray-700">
                             @forelse($order->workOrderServices as $wos)
+                                @php
+                                    $itemCost = (float)($wos->cost ?: ($wos->service->price ?? 0));
+                                @endphp
                                 <div class="p-4 flex items-center justify-between gap-3">
                                     <div class="flex items-center gap-3 min-w-0">
                                         <div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-xs font-black text-slate-600 dark:text-gray-300 shrink-0">
@@ -376,7 +370,7 @@
                                     </div>
                                     <div class="text-right shrink-0">
                                         <span class="font-black text-xs text-gray-900 dark:text-white">
-                                            Rp {{ number_format($wos->price, 0, ',', '.') }}
+                                            Rp {{ number_format($itemCost, 0, ',', '.') }}
                                         </span>
                                     </div>
                                 </div>
@@ -572,106 +566,58 @@
                         </div>
                     </div>
 
-                    {{-- 2. Workshop Activity Timeline --}}
-                    <div class="bg-white dark:bg-gray-800 shadow-md rounded-3xl p-6 border border-gray-200 dark:border-gray-700 space-y-6">
+                    {{-- 2. Workshop Activity Timeline (Chronological: Awal / Pending ➔ Selesai) --}}
+                    <div class="bg-white dark:bg-gray-800 shadow-md rounded-3xl p-6 border border-gray-200 dark:border-gray-700 space-y-5">
                         
                         <div class="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 pb-3">
                             <h3 class="font-black text-xs uppercase tracking-wider text-gray-800 dark:text-gray-200 flex items-center gap-2">
                                 <span>⏱️</span> Workshop Activity Timeline
                             </h3>
-                            <span class="px-2 py-0.5 bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 text-[10px] font-bold rounded-full">
-                                {{ $order->logs->count() }} Aktivitas
+                            <span class="px-2.5 py-0.5 bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 text-[10px] font-black rounded-full border border-teal-200 dark:border-teal-800">
+                                {{ $order->logs->count() }} Aktivitas (Kronologis)
                             </span>
                         </div>
 
-                        {{-- Visual Stepper Milestones --}}
-                        <div class="bg-slate-50 dark:bg-gray-900/40 p-4 rounded-2xl border border-gray-150 dark:border-gray-700">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Milestone Pengerjaan:</p>
-                            <div class="grid grid-cols-5 gap-1 text-center">
-                                
-                                {{-- 1. Sortir --}}
-                                <div class="flex flex-col items-center">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mb-1 {{ $stepSortirDone ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-200 text-gray-400' }}">
-                                        {{ $stepSortirDone ? '✓' : '1' }}
-                                    </div>
-                                    <span class="text-[9px] font-bold {{ $stepSortirDone ? 'text-indigo-600' : 'text-gray-400' }}">Sortir</span>
-                                </div>
-
-                                {{-- 2. Prep --}}
-                                <div class="flex flex-col items-center">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mb-1 {{ $stepPrepDone ? 'bg-amber-500 text-white shadow-sm' : 'bg-gray-200 text-gray-400' }}">
-                                        {{ $stepPrepDone ? '✓' : '2' }}
-                                    </div>
-                                    <span class="text-[9px] font-bold {{ $stepPrepDone ? 'text-amber-600' : 'text-gray-400' }}">Prep</span>
-                                </div>
-
-                                {{-- 3. Prod --}}
-                                <div class="flex flex-col items-center">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mb-1 {{ $stepProdDone ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-200 text-gray-400' }}">
-                                        {{ $stepProdDone ? '✓' : '3' }}
-                                    </div>
-                                    <span class="text-[9px] font-bold {{ $stepProdDone ? 'text-blue-600' : 'text-gray-400' }}">Produksi</span>
-                                </div>
-
-                                {{-- 4. QC --}}
-                                <div class="flex flex-col items-center">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mb-1 {{ $stepQcDone ? 'bg-teal-600 text-white shadow-sm' : 'bg-gray-200 text-gray-400' }}">
-                                        {{ $stepQcDone ? '✓' : '4' }}
-                                    </div>
-                                    <span class="text-[9px] font-bold {{ $stepQcDone ? 'text-teal-600' : 'text-gray-400' }}">QC</span>
-                                </div>
-
-                                {{-- 5. Diambil --}}
-                                <div class="flex flex-col items-center">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mb-1 {{ $stepTakenDone ? 'bg-emerald-600 text-white shadow-sm' : 'bg-gray-200 text-gray-400' }}">
-                                        {{ $stepTakenDone ? '✓' : '5' }}
-                                    </div>
-                                    <span class="text-[9px] font-bold {{ $stepTakenDone ? 'text-emerald-600' : 'text-gray-400' }}">Diambil</span>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        {{-- Real-time Audit Logs Feed --}}
-                        <div class="space-y-4 max-h-[550px] overflow-y-auto pr-1">
-                            @forelse($order->logs()->with('user')->latest()->get() as $log)
+                        {{-- Real-time Audit Logs Feed Ordered from Oldest to Newest --}}
+                        <div class="space-y-4 max-h-[600px] overflow-y-auto pr-1">
+                            @forelse($order->logs()->with('user')->oldest('id')->get() as $log)
                                 @php
                                     $dotBg = match(strtoupper($log->step ?? '')) {
-                                        'SORTIR' => 'bg-indigo-500',
-                                        'PREPARATION', 'PREP' => 'bg-amber-500',
-                                        'PRODUCTION', 'PRODUKSI' => 'bg-blue-500',
-                                        'QC', 'QUALITY CONTROL' => 'bg-teal-500',
-                                        'OTO' => 'bg-orange-500',
-                                        'REVISION', 'REVISI' => 'bg-rose-500',
-                                        'FINISH', 'STORAGE', 'GUDANG' => 'bg-emerald-500',
-                                        default => 'bg-slate-400',
+                                        'SORTIR' => 'bg-indigo-500 ring-indigo-100 dark:ring-indigo-950',
+                                        'PREPARATION', 'PREP' => 'bg-amber-500 ring-amber-100 dark:ring-amber-950',
+                                        'PRODUCTION', 'PRODUKSI' => 'bg-blue-500 ring-blue-100 dark:ring-blue-950',
+                                        'QC', 'QUALITY CONTROL' => 'bg-teal-500 ring-teal-100 dark:ring-teal-950',
+                                        'OTO' => 'bg-orange-500 ring-orange-100 dark:ring-orange-950',
+                                        'REVISION', 'REVISI' => 'bg-rose-500 ring-rose-100 dark:ring-rose-950',
+                                        'FINISH', 'STORAGE', 'GUDANG', 'SELESAI' => 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-950',
+                                        default => 'bg-slate-400 ring-slate-100 dark:ring-slate-800',
                                     };
                                 @endphp
-                                <div class="relative pl-6 pb-4 border-l-2 border-gray-100 dark:border-gray-700 last:pb-0">
-                                    <span class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full {{ $dotBg }} ring-4 ring-white dark:ring-gray-800"></span>
+                                <div class="relative pl-6 pb-4 border-l-2 border-gray-150 dark:border-gray-700 last:pb-0">
+                                    <span class="absolute -left-[6px] top-1.5 w-3 h-3 rounded-full {{ $dotBg }} ring-4"></span>
                                     
                                     <div class="flex items-center justify-between gap-2 mb-1">
-                                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                                            {{ $log->step ?: 'SYSTEM' }}
+                                        <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                                            {{ $loop->iteration }}. {{ $log->step ?: 'SYSTEM' }}
                                         </span>
                                         <span class="text-[10px] text-gray-400 font-semibold" title="{{ $log->created_at->format('d M Y H:i:s') }}">
-                                            {{ $log->created_at->diffForHumans() }}
+                                            {{ $log->created_at->format('d M H:i') }}
                                         </span>
                                     </div>
 
-                                    <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 leading-relaxed">
+                                    <p class="text-xs font-bold text-gray-800 dark:text-gray-200 leading-relaxed">
                                         {{ $log->description }}
                                     </p>
 
                                     <div class="flex items-center gap-2 mt-1 text-[10px] text-gray-400">
                                         <span>👤 {{ $log->user->name ?? 'Sistem Workshop' }}</span>
                                         @if($log->action)
-                                            <span>• <code>{{ $log->action }}</code></span>
+                                            <span>• <span class="font-mono text-[9px] bg-slate-100 dark:bg-gray-800 px-1 py-0.5 rounded">{{ $log->action }}</span></span>
                                         @endif
                                     </div>
                                 </div>
                             @empty
-                                <div class="p-8 text-center text-gray-400 text-xs">
+                                <div class="p-8 text-center text-gray-400 text-xs font-medium">
                                     Belum ada catatan aktivitas workshop pada SPK ini.
                                 </div>
                             @endforelse
