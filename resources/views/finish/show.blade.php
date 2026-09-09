@@ -220,7 +220,11 @@
                                     </span>
                                     @if($order->has_active_oto)
                                         <span class="px-2.5 py-1 bg-amber-500 text-white font-black text-[10px] uppercase tracking-wider rounded-full shadow-xs animate-pulse">
-                                            🔥 Ada OTO Aktif
+                                            🔥 OTO Disetujui (Sedang Dikerjakan)
+                                        </span>
+                                    @elseif($order->pendingOto)
+                                        <span class="px-2.5 py-1 bg-amber-400 text-amber-950 font-black text-[10px] uppercase tracking-wider rounded-full shadow-xs flex items-center gap-1">
+                                            <span>🟡 Prospek OTO ({{ $order->pendingOto->status }})</span>
                                         </span>
                                     @endif
                                 </div>
@@ -390,6 +394,28 @@
                             </h3>
                             <span class="text-[10px] font-bold text-gray-400">Eksekusi Status</span>
                         </div>
+
+                        @if($order->pendingOto && is_null($order->taken_date))
+                            {{-- Info Banner: Penawaran OTO Sedang Berjalan di CX --}}
+                            <div class="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl shrink-0">
+                                        ⚡
+                                    </div>
+                                    <div>
+                                        <h4 class="font-black text-xs text-amber-900 dark:text-amber-200 uppercase tracking-wide">
+                                            Penawaran OTO Sedang Berjalan ({{ $order->pendingOto->status }})
+                                        </h4>
+                                        <p class="text-[11px] text-amber-700 dark:text-amber-300 font-medium">
+                                            Layanan: <span class="font-bold">{{ $order->pendingOto->proposed_services }}</span> • Nilai: <span class="font-bold">{{ $order->pendingOto->total_oto_price }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="text-[10px] bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 px-2.5 py-1 rounded-lg font-bold">
+                                    Menunggu Konfirmasi Customer / CX
+                                </div>
+                            </div>
+                        @endif
 
                         @if(is_null($order->taken_date))
                             {{-- Action Group A: Opsi Pengambilan (Selaras dengan /finish) --}}
