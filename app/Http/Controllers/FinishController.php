@@ -199,7 +199,17 @@ class FinishController extends Controller
 
             $order->save();
             
-            // 3. Auto-cancel and soft-delete pending OTOs
+            // 3. Handle OTO status on pickup:
+            // Complete accepted / in_progress OTOs since shoes are now finished and handed over
+            \App\Models\OTO::where('work_order_id', $order->id)
+                ->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])
+                ->update([
+                    'status' => 'COMPLETED',
+                    'completed_at' => now(),
+                    'oto_completed_by' => $request->user()?->id ?? Auth::id(),
+                ]);
+
+            // Auto-cancel and soft-delete unaccepted pending OTOs
             \App\Models\OTO::where('work_order_id', $order->id)
                 ->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])
                 ->update(['status' => 'CANCELLED']);
@@ -251,7 +261,17 @@ class FinishController extends Controller
 
             $order->save();
             
-            // 3. Auto-cancel and soft-delete pending OTOs
+            // 3. Handle OTO status on delivery pickup:
+            // Complete accepted / in_progress OTOs since shoes are now finished and dispatched
+            \App\Models\OTO::where('work_order_id', $order->id)
+                ->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])
+                ->update([
+                    'status' => 'COMPLETED',
+                    'completed_at' => now(),
+                    'oto_completed_by' => $request->user()?->id ?? Auth::id(),
+                ]);
+
+            // Auto-cancel and soft-delete unaccepted pending OTOs
             \App\Models\OTO::where('work_order_id', $order->id)
                 ->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])
                 ->update(['status' => 'CANCELLED']);
