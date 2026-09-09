@@ -507,125 +507,126 @@
                                     </div>
                                 @endif
 
-                                 {{-- Status Info & Transition Timestamp --}}
-                                 <div class="px-3.5 py-3 bg-[#fafbfc] border border-slate-100 rounded-xl flex flex-col gap-2.5 mb-4 mt-2 select-none w-full shadow-2xs">
-                                     <div class="flex items-center justify-between">
-                                         <div class="flex flex-col">
-                                             <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Status Sekarang</span>
-                                             <span class="inline-flex items-center gap-1.5 text-xs font-black {{ $statusTheme['text'] ?? 'text-slate-700' }} uppercase tracking-wide mt-0.5">
-                                                 <span class="w-1.5 h-1.5 rounded-full {{ $statusTheme['dot'] ?? 'bg-slate-500' }} animate-pulse"></span>
-                                                 {{ $statusLabel }}
-                                             </span>
-                                         </div>
-                                         <div class="text-right flex flex-col">
-                                             <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Waktu Status</span>
-                                             @php
-                                                 $statusLog = $spk->logs ? $spk->logs->where('step', $statusVal)->sortByDesc('created_at')->first() : null;
-                                                 $statusTime = $statusLog ? $statusLog->created_at : $spk->updated_at;
-                                             @endphp
-                                             <span class="text-xs font-black text-slate-900 mt-0.5">
-                                                 {{ $statusTime ? $statusTime->format('d/m/Y') : '-' }}
-                                             </span>
-                                         </div>
-                                                               {{-- 1. OTO Active Sub-Status --}}
-                                     @if($spk->has_active_oto)
-                                         @php
-                                             $otoActiveTechs = [];
-                                             if ($spk->latestOto) {
-                                                 if ($spk->latestOto->oto_sol_started_at && !$spk->latestOto->oto_sol_completed_at) {
-                                                     $otoActiveTechs[] = "Sol: " . ($spk->latestOto->otoSolBy->name ?? 'Teknisi');
-                                                 }
-                                                 if ($spk->latestOto->oto_upper_started_at && !$spk->latestOto->oto_upper_completed_at) {
-                                                     $otoActiveTechs[] = "Upper: " . ($spk->latestOto->otoUpperBy->name ?? 'Teknisi');
-                                                 }
-                                                 if ($spk->latestOto->oto_treatment_started_at && !$spk->latestOto->oto_treatment_completed_at) {
-                                                     $otoActiveTechs[] = "Treatment: " . ($spk->latestOto->otoTreatmentBy->name ?? 'Teknisi');
-                                                 }
-                                             }
-                                         @endphp
-                                         <div class="pt-2.5 border-t border-slate-200/70 flex flex-col gap-1.5 text-xs">
-                                             <div class="flex items-start justify-between gap-2">
-                                                 <div class="flex flex-col">
-                                                     <span class="text-[9px] font-black text-amber-600 uppercase tracking-wider">Layanan OTO</span>
-                                                     <span class="text-[11px] font-black text-slate-800 tracking-wide mt-0.5">
-                                                         {{ $spk->latestOto?->proposed_services ?? 'Layanan OTO Tambahan' }}
-                                                     </span>
-                                                 </div>
-                                                 @if($spk->latestOto?->total_oto_price)
-                                                     <div class="text-right flex flex-col">
-                                                         <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Nilai OTO</span>
-                                                         <span class="text-[11px] font-black text-emerald-600 mt-0.5 font-mono">
-                                                             {{ $spk->latestOto->total_oto_price }}
-                                                         </span>
-                                                     </div>
-                                                 @endif
-                                             </div>
-                                             @if(!empty($otoActiveTechs))
-                                                 <div class="flex items-center justify-between text-[10px] text-slate-600 font-semibold bg-amber-50/60 px-2 py-1 rounded-md border border-amber-200/40">
-                                                     <span class="font-bold text-amber-800">Sedang Dikerjakan:</span>
-                                                     <span class="font-black text-slate-900">{{ implode(', ', $otoActiveTechs) }}</span>
-                                                 </div>
-                                             @else
-                                                 <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium bg-slate-100/70 px-2 py-0.5 rounded">
-                                                     <span>Lokasi Fisik:</span>
-                                                     <span class="font-bold text-amber-700">Stasiun OTO (Workshop)</span>
-                                                 </div>
-                                             @endif
-                                         </div>
+                                  {{-- Status Info & Transition Timestamp --}}
+                                  <div class="px-3.5 py-3 {{ $spk->has_active_oto ? 'bg-amber-50/40 border-amber-200/60' : ($spk->is_revising ? 'bg-rose-50/40 border-rose-200/60' : 'bg-slate-50/80 border-slate-150') }} border rounded-2xl flex flex-col gap-2.5 mb-4 mt-2 select-none w-full shadow-2xs transition-colors">
+                                      {{-- Top Row: Status Sekarang & Waktu Status --}}
+                                      <div class="flex items-center justify-between w-full">
+                                          <div class="flex flex-col">
+                                              <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status Sekarang</span>
+                                              <span class="inline-flex items-center gap-1.5 text-xs font-black {{ $statusTheme['text'] ?? 'text-slate-700' }} uppercase tracking-wide mt-0.5">
+                                                  <span class="w-1.5 h-1.5 rounded-full {{ $statusTheme['dot'] ?? 'bg-slate-500' }} animate-pulse"></span>
+                                                  {{ $statusLabel }}
+                                              </span>
+                                          </div>
+                                          <div class="text-right flex flex-col">
+                                              <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Waktu Status</span>
+                                              @php
+                                                  $statusLog = $spk->logs ? $spk->logs->where('step', $statusVal)->sortByDesc('created_at')->first() : null;
+                                                  $statusTime = $statusLog ? $statusLog->created_at : $spk->updated_at;
+                                              @endphp
+                                              <span class="text-xs font-black text-slate-800 font-mono mt-0.5">
+                                                  {{ $statusTime ? $statusTime->format('d/m/Y') : '-' }}
+                                              </span>
+                                          </div>
+                                      </div>
 
-                                     {{-- 2. Revisi Active Sub-Status --}}
-                                     @elseif($spk->is_revising || $statusVal === 'REVISI')
-                                         <div class="pt-2.5 border-t border-slate-200/70 flex flex-col gap-1 text-xs">
-                                             <div class="flex items-center justify-between">
-                                                 <span class="text-[9px] font-black text-rose-600 uppercase tracking-wider">Sub-Status</span>
-                                                 <span class="text-[10px] font-bold text-rose-700">Dalam Perbaikan Workshop</span>
-                                             </div>
-                                             <div class="flex items-center justify-between text-[10px] text-slate-500">
-                                                 <span>Lokasi Fisik:</span>
-                                                 <span class="font-bold text-slate-700">{{ $spk->current_location ?? 'Stasiun Revisi' }}</span>
-                                             </div>
-                                         </div>
+                                      {{-- 1. OTO Active Sub-Status --}}
+                                      @if($spk->has_active_oto)
+                                          @php
+                                              $otoActiveTechs = [];
+                                              if ($spk->latestOto) {
+                                                  if ($spk->latestOto->oto_sol_started_at && !$spk->latestOto->oto_sol_completed_at) {
+                                                      $otoActiveTechs[] = "Sol: " . ($spk->latestOto->otoSolBy->name ?? 'Teknisi');
+                                                  }
+                                                  if ($spk->latestOto->oto_upper_started_at && !$spk->latestOto->oto_upper_completed_at) {
+                                                      $otoActiveTechs[] = "Upper: " . ($spk->latestOto->otoUpperBy->name ?? 'Teknisi');
+                                                  }
+                                                  if ($spk->latestOto->oto_treatment_started_at && !$spk->latestOto->oto_treatment_completed_at) {
+                                                      $otoActiveTechs[] = "Treatment: " . ($spk->latestOto->otoTreatmentBy->name ?? 'Teknisi');
+                                                  }
+                                              }
+                                          @endphp
+                                          <div class="pt-2.5 border-t border-amber-200/50 flex flex-col gap-2 text-xs w-full">
+                                              <div class="flex items-center justify-between gap-2">
+                                                  <div class="flex items-center gap-1.5 flex-wrap">
+                                                      <span class="text-[9px] font-black text-amber-700 uppercase tracking-wider">Layanan OTO:</span>
+                                                      <span class="px-2 py-0.5 bg-amber-500/10 text-amber-900 border border-amber-500/20 font-black text-[10px] rounded-md">
+                                                          {{ $spk->latestOto?->proposed_services ?? 'Layanan OTO Tambahan' }}
+                                                      </span>
+                                                  </div>
+                                                  @if($spk->latestOto?->total_oto_price)
+                                                      <span class="font-black text-emerald-600 font-mono text-[11px] whitespace-nowrap">
+                                                          + {{ $spk->latestOto->total_oto_price }}
+                                                      </span>
+                                                  @endif
+                                              </div>
+                                              
+                                              @if(!empty($otoActiveTechs))
+                                                  <div class="flex items-center justify-between text-[10px] bg-white/80 px-2.5 py-1.5 rounded-lg border border-amber-200/60 shadow-xs">
+                                                      <span class="font-bold text-amber-800">Sedang Dikerjakan:</span>
+                                                      <span class="font-black text-slate-800">{{ implode(', ', $otoActiveTechs) }}</span>
+                                                  </div>
+                                              @else
+                                                  <div class="flex items-center justify-between text-[10px] text-slate-500 bg-white/60 px-2.5 py-1 rounded-lg border border-amber-100">
+                                                      <span class="font-semibold">Lokasi Fisik:</span>
+                                                      <span class="font-bold text-amber-800">Stasiun OTO (Workshop)</span>
+                                                  </div>
+                                              @endif
+                                          </div>
 
-                                     {{-- 3. Production Sub-Status --}}
-                                     @elseif($statusVal === 'PRODUCTION')
-                                         @php
-                                             $prodInProgress = false;
-                                             $activeInfo = [];
+                                      {{-- 2. Revisi Active Sub-Status --}}
+                                      @elseif($spk->is_revising || $statusVal === 'REVISI')
+                                          <div class="pt-2.5 border-t border-rose-200/50 flex flex-col gap-1.5 text-xs w-full">
+                                              <div class="flex items-center justify-between">
+                                                  <span class="text-[9px] font-black text-rose-700 uppercase tracking-wider">Sub-Status</span>
+                                                  <span class="text-[10px] font-bold text-rose-700 bg-rose-100/60 px-2 py-0.5 rounded border border-rose-200/60">Dalam Perbaikan Workshop</span>
+                                              </div>
+                                              <div class="flex items-center justify-between text-[10px] text-slate-500 bg-white/60 px-2.5 py-1 rounded-lg border border-rose-100">
+                                                  <span class="font-semibold">Lokasi Fisik:</span>
+                                                  <span class="font-bold text-slate-700">{{ $spk->current_location ?? 'Stasiun Revisi' }}</span>
+                                              </div>
+                                          </div>
 
-                                             if ($spk->prod_sol_started_at && !$spk->prod_sol_completed_at) {
-                                                 $prodInProgress = true;
-                                                 $techName = $spk->prodSolBy->name ?? 'Sol';
-                                                 $activeInfo[] = "Soling - $techName";
-                                             }
-                                             if ($spk->prod_upper_started_at && !$spk->prod_upper_completed_at) {
-                                                 $prodInProgress = true;
-                                                 $techName = $spk->prodUpperBy->name ?? 'Upper';
-                                                 $activeInfo[] = "Upper - $techName";
-                                             }
-                                             if ($spk->prod_cleaning_started_at && !$spk->prod_cleaning_completed_at) {
-                                                 $prodInProgress = true;
-                                                 $techName = $spk->prodCleaningBy->name ?? 'Treatment';
-                                                 $activeInfo[] = "Treatment - $techName";
-                                             }
-                                         @endphp
-                                         <div class="pt-2.5 border-t border-slate-200/70 flex items-start justify-between gap-2 text-xs">
-                                             <div class="flex flex-col">
-                                                 <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Sub-Status</span>
-                                                 <span class="text-[11px] font-black {{ $prodInProgress ? 'text-blue-600' : 'text-amber-600' }} uppercase tracking-wide mt-0.5">
-                                                     {{ $prodInProgress ? 'Sedang Dikerjakan' : 'Dalam Antrean' }}
-                                                 </span>
-                                             </div>
-                                             @if($prodInProgress && !empty($activeInfo))
-                                                 <div class="text-right flex flex-col">
-                                                     <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Stasiun Aktif</span>
-                                                     <span class="text-[11px] font-black text-slate-800 uppercase tracking-wide mt-0.5">
-                                                         {{ implode(', ', $activeInfo) }}
-                                                     </span>
-                                                 </div>
-                                             @endif
-                                         </div>
-                                     @endif
-                                 </div>
+                                      {{-- 3. Production Sub-Status --}}
+                                      @elseif($statusVal === 'PRODUCTION')
+                                          @php
+                                              $prodInProgress = false;
+                                              $activeInfo = [];
+
+                                              if ($spk->prod_sol_started_at && !$spk->prod_sol_completed_at) {
+                                                  $prodInProgress = true;
+                                                  $techName = $spk->prodSolBy->name ?? 'Sol';
+                                                  $activeInfo[] = "Soling - $techName";
+                                              }
+                                              if ($spk->prod_upper_started_at && !$spk->prod_upper_completed_at) {
+                                                  $prodInProgress = true;
+                                                  $techName = $spk->prodUpperBy->name ?? 'Upper';
+                                                  $activeInfo[] = "Upper - $techName";
+                                              }
+                                              if ($spk->prod_cleaning_started_at && !$spk->prod_cleaning_completed_at) {
+                                                  $prodInProgress = true;
+                                                  $techName = $spk->prodCleaningBy->name ?? 'Treatment';
+                                                  $activeInfo[] = "Treatment - $techName";
+                                              }
+                                          @endphp
+                                          <div class="pt-2.5 border-t border-slate-200/70 flex items-start justify-between gap-2 text-xs w-full">
+                                              <div class="flex flex-col">
+                                                  <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Sub-Status</span>
+                                                  <span class="text-[11px] font-black {{ $prodInProgress ? 'text-blue-600' : 'text-amber-600' }} uppercase tracking-wide mt-0.5">
+                                                      {{ $prodInProgress ? 'Sedang Dikerjakan' : 'Dalam Antrean' }}
+                                                  </span>
+                                              </div>
+                                              @if($prodInProgress && !empty($activeInfo))
+                                                  <div class="text-right flex flex-col">
+                                                      <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Stasiun Aktif</span>
+                                                      <span class="text-[11px] font-black text-slate-800 uppercase tracking-wide mt-0.5">
+                                                          {{ implode(', ', $activeInfo) }}
+                                                      </span>
+                                                  </div>
+                                              @endif
+                                          </div>
+                                      @endif
+                                  </div>
 
                                 {{-- Card Footer Actions (STASIUN and HISTORY buttons side-by-side) --}}
                                 <div class="grid grid-cols-2 gap-3 mt-auto select-none w-full">
