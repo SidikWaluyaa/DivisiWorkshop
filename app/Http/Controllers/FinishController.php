@@ -150,8 +150,15 @@ class FinishController extends Controller
     public function show($id)
     {
         $order = WorkOrder::with([
+            'customer',
             'services', 
-            'logs', 
+            'workOrderServices.service',
+            'logs.user', 
+            'photos',
+            'invoice',
+            'latestOto',
+            'revisions.creator',
+            'revisions.resolver',
             'picSortirSol', 
             'picSortirUpper', 
             'prepWashingBy',
