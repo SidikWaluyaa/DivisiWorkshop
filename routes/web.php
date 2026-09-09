@@ -449,7 +449,7 @@ Route::middleware('auth')->group(function () {
 
     // Dedicated OTO Station (Livewire)
     Route::prefix('oto')->name('oto.')->middleware('access:production')->group(function () {
-        Route::get('/', \App\Livewire\Oto\OtoStationIndex::class)->lazy()->name('index');
+        Route::get('/', \App\Livewire\Oto\OtoStationIndex::class)->name('index');
     });
 
     // Shipping Routes

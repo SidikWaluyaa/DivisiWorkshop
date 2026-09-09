@@ -1,6 +1,8 @@
 <div>
-    {{-- Full-Screen Branded Logo Loader Overlay --}}
-    <x-branded-loader text="Memuat Data Stasiun OTO..." :fullscreen="true" />
+    {{-- Full-Screen Branded Logo Loading Overlay --}}
+    <div wire:loading wire:target="activeTab, search, technicianFilter, serviceFilter, sort, selectedItems, selectAll, updateStationTechnician, startStationTask, finishStationTask, completeOto, bulkComplete, gotoPage, previousPage, nextPage">
+        <x-branded-loader text="Memuat Data Stasiun OTO..." size="lg" :fullscreen="true" />
+    </div>
 
     <x-slot name="header">
         <div class="flex items-center justify-between">
