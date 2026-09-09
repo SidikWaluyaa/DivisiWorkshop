@@ -863,6 +863,21 @@
                             </div>
                             <p class="text-[10px] text-amber-600 dark:text-amber-400 mt-2 font-bold">Berlaku sampai: <span x-text="validUntil"></span></p>
                         </div>
+
+                        {{-- WhatsApp Automation Option --}}
+                        <div class="mt-4 p-3 bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40 rounded-2xl flex items-center justify-between gap-3 text-left">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-lg">📲</span>
+                                <div>
+                                    <p class="text-xs font-black text-gray-800 dark:text-gray-100">Kirim Otomatis via WhatsApp</p>
+                                    <p class="text-[10px] text-gray-500 font-semibold">Otomatis kirim draft penawaran ke WhatsApp customer melalui antrean CX</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="send_automation" value="1" checked class="sr-only peer">
+                                <div class="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                            </label>
+                        </div>
                     </form>
                 </div>
 

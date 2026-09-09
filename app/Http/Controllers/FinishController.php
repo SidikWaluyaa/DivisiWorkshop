@@ -463,7 +463,7 @@ class FinishController extends Controller
             'services.*.custom_name' => 'nullable|string|max:255',
             'valid_days' => 'required|in:3,7,14',
             'description' => 'required|string|max:1000',
-            'send_automation' => 'required|boolean',
+            'send_automation' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -518,7 +518,7 @@ class FinishController extends Controller
                     'valid_until' => now()->addDays((int) $request->valid_days),
                     'status' => 'PENDING_CX', // Directly to CX Pool
                     'dp_required' => $formatPrice($totalOTO * 0.5), // 50% DP
-                    'send_automation' => (bool) $request->send_automation,
+                    'send_automation' => $request->boolean('send_automation', true),
                     'created_by' => Auth::id(),
                 ]);
 
