@@ -821,6 +821,13 @@ class WorkOrder extends Model
         return $this->hasOne(OTO::class)->latestOfMany();
     }
 
+    public function pendingOto()
+    {
+        return $this->hasOne(OTO::class)
+            ->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])
+            ->latestOfMany();
+    }
+
     public function revisions()
     {
         return $this->hasMany(WorkOrderRevision::class);

@@ -89,7 +89,7 @@ class FinishController extends Controller
 
         $applyFilters($readyQuery);
 
-        $ready = $readyQuery->with(['workOrderServices.service', 'invoice', 'photos'])
+        $ready = $readyQuery->with(['workOrderServices.service', 'invoice', 'photos', 'pendingOto'])
                     ->orderByRaw("CASE WHEN priority = 'Prioritas' THEN 0 ELSE 1 END")
                     ->orderBy('finished_date', 'desc')
                     ->paginate(100, ['*'], 'ready_page')
@@ -525,9 +525,9 @@ class FinishController extends Controller
                 // Soft reserve materials
                 $this->materialService->softReserveForOTO($oto);
 
-                // Update work order
+                // Keep has_active_oto as false so the SPK remains visible in Gudang Selesai (/finish) while still a lead
                 $order->update([
-                    'has_active_oto' => true,
+                    'has_active_oto' => false,
                 ]);
 
                 // [AUDIT LOG] Record OTO creation

@@ -134,6 +134,11 @@
                                                     BELUM LUNAS
                                                 </span>
                                             @endif
+                                            @if($order->pendingOto)
+                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500 text-white shadow-xs" title="Penawaran OTO {{ $order->pendingOto->total_oto_price }} sedang ditangani CX ({{ $order->pendingOto->status }})">
+                                                    <span>⚡ Prospek OTO (CX)</span>
+                                                </span>
+                                            @endif
                                         </div>
                                         <div class="text-[10px] text-gray-400">Merek & Warna</div>
                                         <div class="font-medium text-xs text-gray-600 dark:text-gray-300 truncate">{{ $order->shoe_brand }} - {{ $order->shoe_color }}</div>
@@ -330,6 +335,11 @@
                                             @if(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
                                                     PRIORITAS
+                                                </span>
+                                            @endif
+                                            @if($order->pendingOto)
+                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500 text-white shadow-xs" title="Penawaran OTO {{ $order->pendingOto->total_oto_price }} sedang ditangani CX ({{ $order->pendingOto->status }})">
+                                                    <span>⚡ Prospek OTO (CX)</span>
                                                 </span>
                                             @endif
                                         </div>
