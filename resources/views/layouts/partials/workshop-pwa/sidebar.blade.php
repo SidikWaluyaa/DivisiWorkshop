@@ -64,6 +64,7 @@
             'revisi' => WorkOrderRevision::where('status', 'OPEN')->count(),
             'garansiActive' => WorkOrderWarranty::count(),
             'listGaransi' => WorkOrder::whereNotNull('warranty_expires_at')->count(),
+            'otoActive' => \App\Models\OTO::whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->count(),
             'materialTotal' => Material::count(),
             'materialRequests' => Schema::hasTable('material_requests') ? MaterialRequest::where('status', 'PENDING')->count() : 0,
             'disbursement' => Schema::hasTable('material_disbursements') ? MaterialDisbursement::where('status', 'PENDING')->count() : 0,
@@ -86,6 +87,7 @@
     $countRevisi = $wsCounts['revisi'];
     $countGaransiActive = $wsCounts['garansiActive'];
     $countListGaransi = $wsCounts['listGaransi'];
+    $countOtoActive = $wsCounts['otoActive'];
     $countMaterialTotal = $wsCounts['materialTotal'];
     $countMaterialRequests = $wsCounts['materialRequests'];
     $countDisbursement = $wsCounts['disbursement'];
@@ -127,7 +129,7 @@
              openDashboard: {{ request()->routeIs('dashboard', 'workshop.dashboard-v2', 'workshop.fast-track.*', 'internal-tracking.*') ? 'true' : 'false' }},
              openLayanan: {{ request()->routeIs('production.technician-assistant', 'admin.technicians.index', 'admin.technician-skills', 'admin.services.*', 'admin.performance.*') ? 'true' : 'false' }},
              openUtilitas: {{ request()->routeIs('production.late-info', 'surat-jalan.*') ? 'true' : 'false' }},
-             openGaransi: {{ request()->routeIs('revision.*', 'garansi.*', 'finish.list-garansi') ? 'true' : 'false' }},
+             openGaransi: {{ request()->routeIs('revision.*', 'garansi.*', 'finish.list-garansi', 'oto.*') ? 'true' : 'false' }},
              openMaterial: {{ request()->routeIs('admin.materials.*', 'material-requests.*', 'storage.disbursement.*', 'storage.history') ? 'true' : 'false' }}
          }"
          x-init="
@@ -954,6 +956,39 @@
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
                         <span>List Garansi</span>
                         <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countListGaransi }}</span>
+                    </div>
+                </a>
+
+                {{-- Stasiun OTO --}}
+                <a href="{{ route('oto.index') }}" 
+                   title="Stasiun OTO ({{ $countOtoActive }})"
+                   class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
+                   {{ request()->routeIs('oto.*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
+                   :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
+                    
+                    @if(request()->routeIs('oto.*'))
+                        <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-slate-950 rounded-r-full shadow-sm" x-show="!sidebarCollapsed"></span>
+                    @endif
+
+                    <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('oto.*') ? 'text-slate-950' : 'text-amber-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Stasiun OTO</span>
+                    @if($countOtoActive > 0)
+                        <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black {{ request()->routeIs('oto.*') ? 'bg-slate-950 text-[#FFC232]' : 'bg-amber-400 text-slate-950' }}">
+                            {{ $countOtoActive }}
+                        </span>
+                        <span x-show="sidebarCollapsed" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm border-2 border-white">
+                            {{ $countOtoActive }}
+                        </span>
+                    @endif
+
+                    {{-- Compact Hover Tooltip --}}
+                    <div x-show="sidebarCollapsed" x-cloak 
+                         class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
+                        <span>Stasiun OTO</span>
+                        <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countOtoActive }}</span>
                     </div>
                 </a>
             </div>

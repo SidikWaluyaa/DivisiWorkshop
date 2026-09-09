@@ -807,6 +807,11 @@ class WorkOrder extends Model
         return $this->hasMany(OTO::class);
     }
 
+    public function latestOto()
+    {
+        return $this->hasOne(OTO::class)->latestOfMany();
+    }
+
     public function revisions()
     {
         return $this->hasMany(WorkOrderRevision::class);

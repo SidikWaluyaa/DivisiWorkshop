@@ -45,6 +45,17 @@ class OTO extends Model
         'cx_contact_method',
         'cx_notes',
         'cx_follow_up_count',
+        'oto_sol_by',
+        'oto_sol_started_at',
+        'oto_sol_completed_at',
+        'oto_upper_by',
+        'oto_upper_started_at',
+        'oto_upper_completed_at',
+        'oto_treatment_by',
+        'oto_treatment_started_at',
+        'oto_treatment_completed_at',
+        'oto_completed_by',
+        'oto_notes',
     ];
 
     protected $casts = [
@@ -59,6 +70,12 @@ class OTO extends Model
         'completed_at' => 'datetime',
         'dp_paid_at' => 'datetime',
         'cx_contacted_at' => 'datetime',
+        'oto_sol_started_at' => 'datetime',
+        'oto_sol_completed_at' => 'datetime',
+        'oto_upper_started_at' => 'datetime',
+        'oto_upper_completed_at' => 'datetime',
+        'oto_treatment_started_at' => 'datetime',
+        'oto_treatment_completed_at' => 'datetime',
         'is_fast_track' => 'boolean',
         'dp_paid' => 'boolean',
         'materials_reserved' => 'boolean',
@@ -80,6 +97,38 @@ class OTO extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the technician assigned to Sol station
+     */
+    public function otoSolBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'oto_sol_by');
+    }
+
+    /**
+     * Get the technician assigned to Upper station
+     */
+    public function otoUpperBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'oto_upper_by');
+    }
+
+    /**
+     * Get the technician assigned to Treatment station
+     */
+    public function otoTreatmentBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'oto_treatment_by');
+    }
+
+    /**
+     * Get the user who completed the OTO
+     */
+    public function otoCompletedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'oto_completed_by');
     }
 
     /**

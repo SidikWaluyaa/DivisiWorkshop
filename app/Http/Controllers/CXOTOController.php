@@ -267,51 +267,24 @@ class CXOTOController extends Controller
             
             $otoHkDays = (int) ($oto->estimated_days ?? 0);
 
-            // Reset Workflow Timestamps for clean OTO tracking
-            $resetData = [
-                'status' => \App\Enums\WorkOrderStatus::PRODUCTION, // Direct to Production as requested
-                'taken_date' => null,
-                'finished_date' => null,
-                'has_active_oto' => true, // Keep flag active for UI badges
-                'hk_days' => ($oto->workOrder->hk_days ?? 0) + $otoHkDays, // Add OTO HK to SPK
-                
-                // Always reset QC columns (Timestamps AND Technicians) to ensure re-verification
-                'qc_jahit_started_at' => null, 'qc_jahit_completed_at' => null, 'qc_jahit_technician_id' => null,
-                'qc_cleanup_started_at' => null, 'qc_cleanup_completed_at' => null, 'qc_cleanup_technician_id' => null,
-                'qc_final_started_at' => null, 'qc_final_completed_at' => null, 'qc_final_pic_id' => null,
-            ];
-
-            if ($needsSol) {
-                $resetData['prod_sol_started_at'] = null;
-                $resetData['prod_sol_completed_at'] = null;
-                $resetData['prod_sol_by'] = null; 
-            }
-            
-            if ($needsUpper) {
-                $resetData['prod_upper_started_at'] = null;
-                $resetData['prod_upper_completed_at'] = null;
-                $resetData['prod_upper_by'] = null; 
-            }
-            
-            if ($needsCleaning) {
-                $resetData['prod_cleaning_started_at'] = null;
-                $resetData['prod_cleaning_completed_at'] = null;
-                $resetData['prod_cleaning_by'] = null; 
-            }
-
-            $oto->workOrder->update($resetData);
+            // Update Work Order metadata while keeping status SELESAI
+            $oto->workOrder->update([
+                'has_active_oto' => true,
+                'current_location' => 'Stasiun OTO (Workshop)',
+                'hk_days' => ($oto->workOrder->hk_days ?? 0) + $otoHkDays,
+            ]);
 
             // [AUDIT LOG] Record OTO acceptance
             \App\Models\WorkOrderLog::create([
                 'work_order_id' => $oto->work_order_id,
                 'user_id' => Auth::id(),
-                'step' => 'PRODUCTION',
+                'step' => 'OTO',
                 'action' => 'OTO_ACCEPTED',
-                'description' => "Customer SETUJU OTO: {$oto->proposed_services} (Harga: {$oto->total_oto_price}). Order kembali ke Produksi."
+                'description' => "Customer SETUJU OTO: {$oto->proposed_services} (Harga: {$oto->total_oto_price}). Masuk ke Stasiun Khusus OTO."
             ]);
         });
         
-        return back()->with('success', 'OTO diterima customer! Order kembali ke proses produksi.');
+        return back()->with('success', 'OTO diterima customer! SPK masuk ke Stasiun Khusus OTO.');
     }
     
     /**
