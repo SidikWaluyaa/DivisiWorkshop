@@ -10,12 +10,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Reset has_active_oto = false for work orders that do not have an active ACCEPTED or IN_PROGRESS OTO
+        // 1. Set has_active_oto = 1 for all work orders with ongoing OTO execution (ACCEPTED or IN_PROGRESS)
+        DB::statement("
+            UPDATE work_orders 
+            SET has_active_oto = 1 
+            WHERE id IN (
+                SELECT DISTINCT work_order_id 
+                FROM otos 
+                WHERE status IN ('ACCEPTED', 'IN_PROGRESS') 
+                AND deleted_at IS NULL
+            )
+        ");
+
+        // 2. Reset has_active_oto = 0 for work orders that do not have an active ACCEPTED or IN_PROGRESS OTO
         DB::statement("
             UPDATE work_orders 
             SET has_active_oto = 0 
-            WHERE has_active_oto = 1 
-            AND id NOT IN (
+            WHERE id NOT IN (
                 SELECT DISTINCT work_order_id 
                 FROM otos 
                 WHERE status IN ('ACCEPTED', 'IN_PROGRESS') 

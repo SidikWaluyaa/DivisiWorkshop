@@ -83,8 +83,8 @@ class FinishController extends Controller
         // 1. Ready for Pickup (SELESAI) - Paginate this for better performance and completeness
         $readyQuery = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
                         ->whereNull('taken_date') // Ensure only items still in shop
-                        ->where(function($q) {
-                            $q->whereNull('has_active_oto')->orWhere('has_active_oto', false);
+                        ->whereDoesntHave('otos', function($q) {
+                            $q->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']);
                         });
 
         $applyFilters($readyQuery);
@@ -771,8 +771,8 @@ class FinishController extends Controller
 
         $query = WorkOrder::where('status', WorkOrderStatus::SELESAI->value)
                     ->whereNull('taken_date')
-                    ->where(function($q) {
-                        $q->whereNull('has_active_oto')->orWhere('has_active_oto', false);
+                    ->whereDoesntHave('otos', function($q) {
+                        $q->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']);
                     });
 
         if ($search) {
