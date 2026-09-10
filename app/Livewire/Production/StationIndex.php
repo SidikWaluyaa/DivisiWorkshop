@@ -97,7 +97,8 @@ class StationIndex extends Component
     #[Computed]
     public function counts()
     {
-        $baseQuery = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value);
+        $baseQuery = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+            ->whereDoesntHave('otos', fn($q) => $q->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']));
 
         // SPK yang fisik pengerjaannya selesai dan menunggu review/approval Admin
         // (Belum disetujui Admin dan belum masuk Surat Jalan)
@@ -518,8 +519,9 @@ class StationIndex extends Component
         $query = WorkOrder::query()
             ->with(['customer', 'workOrderServices', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions', 'suratJalanItems.suratJalan']);
 
-        // Base Filter: Only show items in PRODUCTION status
-        $query->where('status', WorkOrderStatus::PRODUCTION->value);
+        // Base Filter: Only show items in PRODUCTION status (excluding active OTOs which are handled in Stasiun OTO)
+        $query->where('status', WorkOrderStatus::PRODUCTION->value)
+            ->whereDoesntHave('otos', fn($q) => $q->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']));
 
         // Universal Search Filter (Searches across all production orders when query is given)
         if (!empty(trim($this->search))) {

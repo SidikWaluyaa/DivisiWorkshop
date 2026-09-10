@@ -154,11 +154,6 @@
                          FAST TRACK
                      </span>
                  @endif
-                 @if($order->has_active_oto)
-                     <span class="px-2 py-0.5 rounded text-[8px] font-black bg-orange-500 text-white animate-pulse tracking-widest shadow-sm">
-                         OTO
-                     </span>
-                 @endif
                  @if($resolvedIssue)
                      <span class="px-2 py-0.5 rounded text-[8px] font-black bg-emerald-600 text-white tracking-widest shadow-xs inline-flex items-center gap-1" title="Laporan kendala CX telah diselesaikan (Resolved)">
                          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
@@ -184,6 +179,7 @@
          <td class="px-6 py-4 whitespace-nowrap">
              @php
                  $priority = $order->priority ?? 'Regular';
+                 $displayPriority = $priority === 'OTO' ? 'Prioritas' : $priority;
                  $isUrgent = in_array($priority, ['Prioritas', 'Urgent', 'Express', 'OTO', 'Prioritas/Urgent']);
              @endphp
              <span class="inline-flex items-center text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider
@@ -191,9 +187,9 @@
                              ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/40 animate-pulse' 
                              : 'bg-gray-105 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700' }}">
                  @if($isUrgent)
-                     🔥 {{ $priority }}
+                     🔥 {{ $displayPriority }}
                  @else
-                     ⚡ {{ $priority }}
+                     ⚡ {{ $displayPriority }}
                  @endif
              </span>
          </td>
