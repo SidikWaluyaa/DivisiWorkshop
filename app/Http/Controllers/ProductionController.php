@@ -73,17 +73,21 @@ class ProductionController extends Controller
 
     private function getTabCounts(): array
     {
+        $base = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+            ->whereDoesntHave('otos', fn($q) => $q->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']));
+
         return [
-            'countSol' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionSol()->whereNull('prod_sol_completed_at')->count(),
-            'countUpper' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionUpper()->whereNull('prod_upper_completed_at')->count(),
-            'countTreatment' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->productionTreatment()->whereNull('prod_cleaning_completed_at')->count(),
-            'countAll' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)->get()->filter(fn($o) => $o->is_production_finished)->count(),
+            'countSol' => (clone $base)->productionSol()->whereNull('prod_sol_completed_at')->count(),
+            'countUpper' => (clone $base)->productionUpper()->whereNull('prod_upper_completed_at')->count(),
+            'countTreatment' => (clone $base)->productionTreatment()->whereNull('prod_cleaning_completed_at')->count(),
+            'countAll' => (clone $base)->get()->filter(fn($o) => $o->is_production_finished)->count(),
         ];
     }
 
     private function buildBaseQuery()
     {
         return WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+            ->whereDoesntHave('otos', fn($q) => $q->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']))
             ->with(['customer', 'services', 'workOrderServices', 'materials', 'technicianProduction', 'cxIssues', 
                     'prodSolBy', 'prodUpperBy', 'prodCleaningBy',
                     'logs' => function($query) {
