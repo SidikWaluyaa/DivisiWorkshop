@@ -33,6 +33,40 @@ class CsLead extends Model
     // Channel Constants
     const CHANNEL_ONLINE = 'ONLINE';
     const CHANNEL_OFFLINE = 'OFFLINE';
+    const CHANNEL_FOLLOW_UP = 'FOLLOW_UP';
+
+    /**
+     * Get available channels with their metadata.
+     */
+    public static function getChannels(): array
+    {
+        return [
+            self::CHANNEL_ONLINE => [
+                'label' => 'Online',
+                'badge' => '🟢 Online',
+                'color' => 'indigo',
+                'bg_class' => 'bg-indigo-500',
+                'text_class' => 'text-indigo-600 dark:text-indigo-400',
+                'badge_class' => 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800',
+            ],
+            self::CHANNEL_OFFLINE => [
+                'label' => 'Offline',
+                'badge' => '🟠 Offline',
+                'color' => 'amber',
+                'bg_class' => 'bg-[#FFC232]',
+                'text_class' => 'text-amber-600 dark:text-amber-400',
+                'badge_class' => 'bg-amber-50 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800',
+            ],
+            self::CHANNEL_FOLLOW_UP => [
+                'label' => 'Follow Up',
+                'badge' => '🟣 Follow Up',
+                'color' => 'violet',
+                'bg_class' => 'bg-violet-600',
+                'text_class' => 'text-violet-600 dark:text-violet-400',
+                'badge_class' => 'bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800',
+            ],
+        ];
+    }
 
     protected $fillable = [
         'customer_name',

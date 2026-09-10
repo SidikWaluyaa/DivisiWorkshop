@@ -300,7 +300,7 @@ class CsDashboardController extends Controller
      */
     private function getChannelStats($start, $end, $csId = null)
     {
-        $channels = [CsLead::CHANNEL_ONLINE, CsLead::CHANNEL_OFFLINE];
+        $channels = [CsLead::CHANNEL_ONLINE, CsLead::CHANNEL_OFFLINE, CsLead::CHANNEL_FOLLOW_UP];
         $result = [];
 
         foreach ($channels as $channel) {
@@ -329,12 +329,14 @@ class CsDashboardController extends Controller
             }
 
             $conversionRate = $leads > 0 ? round(($closings / $leads) * 100, 1) : 0;
+            $aov = $closings > 0 ? round($revenue / $closings) : 0;
 
             $result[] = [
                 'channel' => $channel,
                 'leads' => $leads,
                 'closings' => $closings,
                 'revenue' => $revenue,
+                'aov' => $aov,
                 'conversion_rate' => $conversionRate,
             ];
         }

@@ -450,15 +450,46 @@
                     <div class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
                         <div class="p-7 space-y-8">
                             @foreach($channelStats as $stat)
-                            <div>
-                                <div class="flex justify-between items-end mb-3">
+                            @php
+                                $channelColor = match($stat['channel']) {
+                                    'ONLINE' => 'bg-indigo-500 shadow-indigo-200 dark:shadow-none',
+                                    'OFFLINE' => 'bg-[#FFC232] shadow-yellow-200 dark:shadow-none',
+                                    'FOLLOW_UP' => 'bg-violet-600 shadow-violet-200 dark:shadow-none',
+                                    default => 'bg-slate-400'
+                                };
+                                $channelDot = match($stat['channel']) {
+                                    'ONLINE' => 'bg-indigo-500',
+                                    'OFFLINE' => 'bg-[#FFC232]',
+                                    'FOLLOW_UP' => 'bg-violet-600',
+                                    default => 'bg-slate-400'
+                                };
+                                $channelLabel = match($stat['channel']) {
+                                    'ONLINE' => 'Online',
+                                    'OFFLINE' => 'Offline',
+                                    'FOLLOW_UP' => 'Follow Up',
+                                    default => $stat['channel']
+                                };
+                            @endphp
+                            <div class="p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-800/80 transition-all hover:border-violet-200 dark:hover:border-violet-800/50">
+                                <div class="flex justify-between items-start mb-3">
                                     <div>
                                         <div class="flex items-center gap-2">
-                                            <span class="w-3 h-3 rounded-full {{ $stat['channel'] == 'ONLINE' ? 'bg-indigo-500' : 'bg-[#FFC232]' }}"></span>
-                                            <span class="text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-wider">{{ $stat['channel'] }}</span>
+                                            <span class="w-3 h-3 rounded-full {{ $channelDot }}"></span>
+                                            <span class="text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-wider">{{ $channelLabel }}</span>
+                                            @if($stat['channel'] === 'FOLLOW_UP')
+                                                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300">Target AOV</span>
+                                            @endif
                                         </div>
-                                        <div class="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">
-                                            Rev: Rp {{ number_format($stat['revenue'], 0, ',', '.') }}
+                                        <div class="flex flex-col gap-0.5 mt-1.5">
+                                            <div class="text-[11px] font-extrabold text-gray-700 dark:text-gray-300 tracking-tight">
+                                                Rev: <span class="text-gray-900 dark:text-white">Rp {{ number_format($stat['revenue'], 0, ',', '.') }}</span>
+                                            </div>
+                                            <div class="text-[11px] font-bold text-violet-600 dark:text-violet-400 tracking-tight flex items-center gap-1">
+                                                <span>AOV:</span>
+                                                <span class="font-black bg-violet-50 dark:bg-violet-900/40 px-1.5 py-0.5 rounded-md border border-violet-100 dark:border-violet-800/60">
+                                                    Rp {{ number_format($stat['aov'] ?? 0, 0, ',', '.') }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="text-right">
@@ -466,13 +497,15 @@
                                         <span class="text-[10px] font-bold text-gray-400 uppercase ml-1 block">Leads</span>
                                     </div>
                                 </div>
-                                <div class="h-4 w-full bg-gray-50 dark:bg-gray-700 rounded-full overflow-hidden flex shadow-inner">
-                                    <div class="{{ $stat['channel'] == 'ONLINE' ? 'bg-indigo-500 shadow-indigo-200' : 'bg-[#FFC232] shadow-yellow-200' }} h-full transition-all duration-1000 rounded-full" 
+                                <div class="h-3 w-full bg-gray-200/60 dark:bg-gray-700 rounded-full overflow-hidden flex shadow-inner">
+                                    <div class="{{ $channelColor }} h-full transition-all duration-1000 rounded-full" 
                                          style="width: {{ $overview['total_leads'] > 0 ? ($stat['leads'] / $overview['total_leads'] * 100) : 0 }}%"></div>
                                 </div>
-                                <div class="flex justify-between mt-2">
-                                    <span class="text-[10px] font-bold text-gray-400">Closing: {{ $stat['closings'] }}</span>
-                                    <span class="text-[10px] font-black text-green-600">CR: {{ $stat['conversion_rate'] }}%</span>
+                                <div class="flex justify-between items-center mt-2.5 pt-2 border-t border-gray-100 dark:border-gray-800 text-[10px]">
+                                    <span class="font-bold text-gray-500 dark:text-gray-400">Closing: <strong class="text-gray-800 dark:text-gray-200">{{ $stat['closings'] }}</strong></span>
+                                    <span class="font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-800/60">
+                                        CR: {{ $stat['conversion_rate'] }}%
+                                    </span>
                                 </div>
                             </div>
                             @endforeach
