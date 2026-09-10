@@ -127,6 +127,7 @@
                         <select name="channel" required x-model="channel" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-[#22AF85] focus:border-[#22AF85] font-bold transition-all">
                             <option value="ONLINE">🟢 Online</option>
                             <option value="OFFLINE">🟠 Offline</option>
+                            <option value="FOLLOW_UP">🟣 Follow Up</option>
                         </select>
                     </div>
                 </div>

@@ -60,10 +60,17 @@ class KpiCsExport implements FromArray, ShouldAutoSize, WithStyles
         $rows[] = [];
 
         // Section 3: Channel
-        $rows[] = ['SECTION 3: PENJUALAN PER CHANNEL'];
-        $rows[] = ['Channel', 'Total Leads', 'Total Closing', 'Revenue', 'Conversion Rate %'];
-        $rows[] = ['Online', $channel['ONLINE']['leads'], $channel['ONLINE']['closings'], 'Rp ' . number_format($channel['ONLINE']['revenue'], 0, ',', '.'), $channel['ONLINE']['cr'] . '%'];
-        $rows[] = ['Offline', $channel['OFFLINE']['leads'], $channel['OFFLINE']['closings'], 'Rp ' . number_format($channel['OFFLINE']['revenue'], 0, ',', '.'), $channel['OFFLINE']['cr'] . '%'];
+        $rows[] = ['SECTION 3: PENJUALAN PER CHANNEL & AOV'];
+        $rows[] = ['Channel', 'Total Leads', 'Total Closing', 'Revenue', 'AOV (Average Order Value)', 'Conversion Rate %'];
+        if (isset($channel['ONLINE'])) {
+            $rows[] = ['Online', $channel['ONLINE']['leads'], $channel['ONLINE']['closings'], 'Rp ' . number_format($channel['ONLINE']['revenue'], 0, ',', '.'), 'Rp ' . number_format($channel['ONLINE']['aov'] ?? 0, 0, ',', '.'), $channel['ONLINE']['cr'] . '%'];
+        }
+        if (isset($channel['OFFLINE'])) {
+            $rows[] = ['Offline', $channel['OFFLINE']['leads'], $channel['OFFLINE']['closings'], 'Rp ' . number_format($channel['OFFLINE']['revenue'], 0, ',', '.'), 'Rp ' . number_format($channel['OFFLINE']['aov'] ?? 0, 0, ',', '.'), $channel['OFFLINE']['cr'] . '%'];
+        }
+        if (isset($channel['FOLLOW_UP'])) {
+            $rows[] = ['Follow Up', $channel['FOLLOW_UP']['leads'], $channel['FOLLOW_UP']['closings'], 'Rp ' . number_format($channel['FOLLOW_UP']['revenue'], 0, ',', '.'), 'Rp ' . number_format($channel['FOLLOW_UP']['aov'] ?? 0, 0, ',', '.'), $channel['FOLLOW_UP']['cr'] . '%'];
+        }
         $rows[] = [];
 
         // Section 4: Leaderboard

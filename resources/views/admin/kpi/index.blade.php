@@ -1036,19 +1036,23 @@
                     <h2 class="text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-[0.2em]">CHANNEL</h2>
                 </div>
 
-                <div class="space-y-6">
+                <div class="space-y-4">
                     {{-- Online --}}
-                    <div class="p-4 bg-gray-50 dark:bg-gray-750 rounded-2xl border border-gray-100 dark:border-gray-700">
+                    @if(isset($csSummary['channel_stats']['ONLINE']))
+                    <div class="p-3.5 bg-gray-50 dark:bg-gray-750 rounded-2xl border border-gray-100 dark:border-gray-700">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
                                 <span class="text-xs font-black text-gray-800 dark:text-white uppercase tracking-wider">ONLINE</span>
                             </div>
-                            <span class="text-xl font-black text-gray-900 dark:text-white">{{ number_format($csSummary['channel_stats']['ONLINE']['leads']) }} <span class="text-[9px] text-gray-400 font-bold">LEADS</span></span>
+                            <span class="text-base font-black text-gray-900 dark:text-white">{{ number_format($csSummary['channel_stats']['ONLINE']['leads']) }} <span class="text-[9px] text-gray-400 font-bold">LEADS</span></span>
                         </div>
-                        <p class="text-[10px] font-bold text-gray-400 mb-2">REV: RP {{ number_format($csSummary['channel_stats']['ONLINE']['revenue'], 0, ',', '.') }}</p>
+                        <div class="flex justify-between text-[10px] font-bold text-gray-400 mb-1.5">
+                            <span>REV: RP {{ number_format($csSummary['channel_stats']['ONLINE']['revenue'], 0, ',', '.') }}</span>
+                            <span class="text-violet-600 dark:text-violet-400">AOV: RP {{ number_format($csSummary['channel_stats']['ONLINE']['aov'] ?? 0, 0, ',', '.') }}</span>
+                        </div>
                         
-                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 overflow-hidden mb-2">
+                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 overflow-hidden mb-1.5">
                             <div class="bg-indigo-500 h-1.5 rounded-full" style="width: {{ min(100, $csSummary['channel_stats']['ONLINE']['cr']) }}%"></div>
                         </div>
                         
@@ -1057,19 +1061,24 @@
                             <span class="text-emerald-500">CR: {{ $csSummary['channel_stats']['ONLINE']['cr'] }}%</span>
                         </div>
                     </div>
+                    @endif
 
                     {{-- Offline --}}
-                    <div class="p-4 bg-gray-50 dark:bg-gray-750 rounded-2xl border border-gray-100 dark:border-gray-700">
+                    @if(isset($csSummary['channel_stats']['OFFLINE']))
+                    <div class="p-3.5 bg-gray-50 dark:bg-gray-750 rounded-2xl border border-gray-100 dark:border-gray-700">
                         <div class="flex justify-between items-center mb-1">
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                                 <span class="text-xs font-black text-gray-800 dark:text-white uppercase tracking-wider">OFFLINE</span>
                             </div>
-                            <span class="text-xl font-black text-gray-900 dark:text-white">{{ number_format($csSummary['channel_stats']['OFFLINE']['leads']) }} <span class="text-[9px] text-gray-400 font-bold">LEADS</span></span>
+                            <span class="text-base font-black text-gray-900 dark:text-white">{{ number_format($csSummary['channel_stats']['OFFLINE']['leads']) }} <span class="text-[9px] text-gray-400 font-bold">LEADS</span></span>
                         </div>
-                        <p class="text-[10px] font-bold text-gray-400 mb-2">REV: RP {{ number_format($csSummary['channel_stats']['OFFLINE']['revenue'], 0, ',', '.') }}</p>
+                        <div class="flex justify-between text-[10px] font-bold text-gray-400 mb-1.5">
+                            <span>REV: RP {{ number_format($csSummary['channel_stats']['OFFLINE']['revenue'], 0, ',', '.') }}</span>
+                            <span class="text-violet-600 dark:text-violet-400">AOV: RP {{ number_format($csSummary['channel_stats']['OFFLINE']['aov'] ?? 0, 0, ',', '.') }}</span>
+                        </div>
                         
-                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 overflow-hidden mb-2">
+                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 overflow-hidden mb-1.5">
                             <div class="bg-amber-500 h-1.5 rounded-full" style="width: {{ min(100, $csSummary['channel_stats']['OFFLINE']['cr']) }}%"></div>
                         </div>
                         
@@ -1078,6 +1087,33 @@
                             <span class="text-emerald-500">CR: {{ $csSummary['channel_stats']['OFFLINE']['cr'] }}%</span>
                         </div>
                     </div>
+                    @endif
+
+                    {{-- Follow Up --}}
+                    @if(isset($csSummary['channel_stats']['FOLLOW_UP']))
+                    <div class="p-3.5 bg-violet-50/50 dark:bg-violet-950/20 rounded-2xl border border-violet-100 dark:border-violet-800/40">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-violet-600"></span>
+                                <span class="text-xs font-black text-violet-900 dark:text-violet-200 uppercase tracking-wider">FOLLOW UP</span>
+                            </div>
+                            <span class="text-base font-black text-gray-900 dark:text-white">{{ number_format($csSummary['channel_stats']['FOLLOW_UP']['leads']) }} <span class="text-[9px] text-gray-400 font-bold">LEADS</span></span>
+                        </div>
+                        <div class="flex justify-between text-[10px] font-bold text-gray-400 mb-1.5">
+                            <span>REV: RP {{ number_format($csSummary['channel_stats']['FOLLOW_UP']['revenue'], 0, ',', '.') }}</span>
+                            <span class="text-violet-600 dark:text-violet-300 font-black">AOV: RP {{ number_format($csSummary['channel_stats']['FOLLOW_UP']['aov'] ?? 0, 0, ',', '.') }}</span>
+                        </div>
+                        
+                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 overflow-hidden mb-1.5">
+                            <div class="bg-violet-600 h-1.5 rounded-full" style="width: {{ min(100, $csSummary['channel_stats']['FOLLOW_UP']['cr']) }}%"></div>
+                        </div>
+                        
+                        <div class="flex justify-between text-[10px] font-bold">
+                            <span class="text-gray-500">Closing: {{ number_format($csSummary['channel_stats']['FOLLOW_UP']['closings']) }}</span>
+                            <span class="text-emerald-500">CR: {{ $csSummary['channel_stats']['FOLLOW_UP']['cr'] }}%</span>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
 

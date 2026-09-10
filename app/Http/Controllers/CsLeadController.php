@@ -163,7 +163,7 @@ class CsLeadController extends Controller
             'priority' => 'required|in:HOT,WARM,COLD',
             'notes' => 'nullable|string',
             'cs_id' => 'nullable|exists:users,id',
-            'channel' => 'nullable|in:ONLINE,OFFLINE',
+            'channel' => 'nullable|in:ONLINE,OFFLINE,FOLLOW_UP',
             'customer_address' => 'nullable|string',
             'customer_city' => 'nullable|string',
             'customer_province' => 'nullable|string',

@@ -200,6 +200,19 @@
                                 <span class="badge-premium {{ $lead->status === 'LOST' ? 'bg-red-500 text-white' : 'badge-emerald' }}">
                                     {{ $lead->status }}
                                 </span>
+                                @if($lead->channel === 'FOLLOW_UP')
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-400/30">
+                                        🟣 Follow Up
+                                    </span>
+                                @elseif($lead->channel === 'OFFLINE')
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                                        🟠 Offline
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                                        🟢 Online
+                                    </span>
+                                @endif
                                 <span class="text-xs font-bold text-white/40 tracking-widest">#LD-{{ str_pad($lead->id, 5, '0', STR_PAD_LEFT) }}</span>
                             </div>
                             <h1 class="text-4xl md:text-5xl font-black font-display tracking-tight">{{ $lead->customer_name ?: 'Pelanggan Anonim' }}</h1>
@@ -2170,15 +2183,11 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest px-2">Channel Akuisisi</label>
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest px-2">Tipe Lead / Channel</label>
                             <select wire:model="profileData.channel" class="w-full bg-slate-50 border-slate-100 rounded-2xl p-4 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 transition-all">
-                                <option value="WhatsApp">WhatsApp</option>
-                                <option value="Instagram">Instagram</option>
-                                <option value="Walk-In">Walk-In (Toko)</option>
-                                <option value="TikTok">TikTok</option>
-                                <option value="Shopee">Shopee</option>
-                                <option value="Tokopedia">Tokopedia</option>
-                                <option value="Lainnya">Lainnya</option>
+                                <option value="ONLINE">🟢 Online</option>
+                                <option value="OFFLINE">🟠 Offline</option>
+                                <option value="FOLLOW_UP">🟣 Follow Up</option>
                             </select>
                         </div>
                         <div>

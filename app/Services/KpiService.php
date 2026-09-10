@@ -429,7 +429,7 @@ class KpiService
         ];
 
         // 3. Channel Stats
-        $channels = [\App\Models\CsLead::CHANNEL_ONLINE, \App\Models\CsLead::CHANNEL_OFFLINE];
+        $channels = [\App\Models\CsLead::CHANNEL_ONLINE, \App\Models\CsLead::CHANNEL_OFFLINE, \App\Models\CsLead::CHANNEL_FOLLOW_UP];
         $channelStats = [];
 
         foreach ($channels as $ch) {
@@ -452,11 +452,13 @@ class KpiService
             }
 
             $chCr = $chLeads > 0 ? round(($chClosings / $chLeads) * 100, 1) : 0;
+            $chAov = $chClosings > 0 ? round($chRevenue / $chClosings) : 0;
 
             $channelStats[$ch] = [
                 'leads' => $chLeads,
                 'closings' => $chClosings,
                 'revenue' => $chRevenue,
+                'aov' => $chAov,
                 'cr' => $chCr,
             ];
         }
