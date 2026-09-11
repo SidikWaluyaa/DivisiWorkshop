@@ -1,3 +1,113 @@
+@php
+    $totalSpk = $suratJalan->items->count();
+    $totalJasa = $suratJalan->items->sum(function($item) {
+        $wo = $item->workOrder;
+        if (!$wo) return 0;
+        return ($wo->workOrderServices && $wo->workOrderServices->isNotEmpty()) 
+            ? $wo->workOrderServices->count() 
+            : ($wo->services?->count() ?? 0);
+    });
+    $totalMaterial = $suratJalan->items->sum(function($item) {
+        return $item->workOrder?->materials?->count() ?? 0;
+    });
+
+    // Breakdown Layanan Jasa & Materials Mapping for Interactive Modal
+    $serviceBreakdown = [];
+    $servicesModalMap = [];
+    $materialBreakdown = [];
+    $materialsModalMap = [];
+
+    foreach ($suratJalan->items as $item) {
+        $wo = $item->workOrder;
+        if (!$wo) continue;
+
+        // Resolve cover photo
+        $coverPhoto = $wo->photos ? ($wo->photos->firstWhere('is_spk_cover', true) ?: $wo->photos->first()) : null;
+        $coverPhotoUrl = $coverPhoto?->photo_url;
+
+        // Technicians list
+        $techs = [];
+        if ($wo->needs_prod_upper) {
+            $techs[] = ['station' => 'Upper', 'name' => $wo->prodUpperBy?->name ?? 'Belum Ditugaskan', 'role_color' => 'amber'];
+        }
+        if ($wo->needs_prod_sol) {
+            $techs[] = ['station' => 'Soling', 'name' => $wo->prodSolBy?->name ?? 'Belum Ditugaskan', 'role_color' => 'blue'];
+        }
+        if ($wo->needs_prod_jahit) {
+            $techs[] = ['station' => 'QC Jahit', 'name' => $wo->qcJahitBy?->name ?? 'Belum Ditugaskan', 'role_color' => 'purple'];
+        }
+
+        $spkPayload = [
+            'id' => $wo->id,
+            'spk_number' => $wo->spk_number,
+            'customer_name' => $wo->customer_name,
+            'shoe_brand' => $wo->shoe_brand ?? '-',
+            'shoe_type' => $wo->shoe_type ?? '-',
+            'shoe_size' => $wo->shoe_size ?? '-',
+            'has_active_oto' => (bool)$wo->has_active_oto,
+            'status_label' => $wo->status?->label() ?? ($wo->status?->value ?? 'DIPROSES'),
+            'estimation_date' => $wo->new_estimation_date ? $wo->new_estimation_date->format('d M Y') : ($wo->estimation_date ? $wo->estimation_date->format('d M Y') : '-'),
+            'cover_photo_url' => $coverPhotoUrl,
+            'technicians' => $techs,
+            'detail_url' => url('/order-tracking/detail/' . $wo->id),
+        ];
+
+        // Services mapping
+        $services = ($wo->workOrderServices && $wo->workOrderServices->isNotEmpty())
+            ? $wo->workOrderServices
+            : ($wo->services ?? collect());
+
+        foreach ($services as $srv) {
+            $serviceName = is_a($srv, \App\Models\WorkOrderService::class)
+                ? ($srv->custom_service_name ?: ($srv->service?->name ?: ($srv->category_name ?: 'Layanan Servis')))
+                : ($srv->pivot->custom_service_name ?? $srv->name ?? $srv->service_name ?? 'Layanan Servis');
+
+            $serviceBreakdown[$serviceName] = ($serviceBreakdown[$serviceName] ?? 0) + 1;
+
+            if (!isset($servicesModalMap[$serviceName])) {
+                $servicesModalMap[$serviceName] = [];
+            }
+            $servicesModalMap[$serviceName][] = $spkPayload;
+        }
+
+        // Materials mapping
+        if ($wo->materials && $wo->materials->isNotEmpty()) {
+            foreach ($wo->materials as $mat) {
+                $matName = $mat->name;
+                $qty = (float)($mat->pivot->quantity ?? 1);
+                $unit = $mat->unit ?? 'pcs';
+                if (!isset($materialBreakdown[$matName])) {
+                    $materialBreakdown[$matName] = ['qty' => 0, 'unit' => $unit];
+                }
+                $materialBreakdown[$matName]['qty'] += $qty;
+
+                if (!isset($materialsModalMap[$matName])) {
+                    $materialsModalMap[$matName] = [
+                        'unit' => $unit,
+                        'items' => []
+                    ];
+                }
+                $matPayload = $spkPayload;
+                $matPayload['quantity'] = $qty;
+                $matPayload['unit'] = $unit;
+                $materialsModalMap[$matName]['items'][] = $matPayload;
+            }
+        }
+    }
+    arsort($serviceBreakdown);
+    uasort($materialBreakdown, fn($a, $b) => $b['qty'] <=> $a['qty']);
+
+    // Count incomplete production tasks in this Surat Jalan
+    $incompleteSpkCount = 0;
+    if ($suratJalan->jenis_serah_terima === 'produksi_to_post_qc') {
+        foreach ($suratJalan->items as $it) {
+            if ($it->workOrder && !$it->workOrder->is_production_finished) {
+                $incompleteSpkCount++;
+            }
+        }
+    }
+@endphp
+
 <x-workshop-pwa-layout>
     <div x-data="{
         showModal: false,
@@ -8,6 +118,32 @@
         technicianId: '',
         availableStations: [],
         allTechnicians: {{ Js::from($technicians) }},
+        
+        // Breakdown Modal State (UI/UX Pro Max)
+        showBreakdownModal: false,
+        breakdownModalType: 'jasa',
+        breakdownModalTitle: '',
+        breakdownModalSubtitle: '',
+        breakdownModalItems: [],
+        servicesMap: {{ Js::from($servicesModalMap) }},
+        materialsMap: {{ Js::from($materialsModalMap) }},
+        
+        openBreakdownModal(type, name) {
+            this.breakdownModalType = type;
+            this.breakdownModalTitle = name;
+            if (type === 'jasa') {
+                const items = this.servicesMap[name] || [];
+                this.breakdownModalItems = items;
+                this.breakdownModalSubtitle = `${items.length} SPK yang menggunakan layanan ini`;
+            } else {
+                const matData = this.materialsMap[name] || { unit: 'item', items: [] };
+                this.breakdownModalItems = matData.items || [];
+                const totalQty = (matData.items || []).reduce((acc, curr) => acc + (parseFloat(curr.quantity) || 1), 0);
+                this.breakdownModalSubtitle = `Total ${totalQty} ${matData.unit || 'item'} pada ${matData.items.length} SPK`;
+            }
+            this.showBreakdownModal = true;
+        },
+
         get filteredTechnicians() {
             if (!this.station) return this.allTechnicians;
             const stationMap = {
@@ -58,67 +194,6 @@
         }
     }" class="py-8 bg-slate-50/50 dark:bg-slate-900 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-            
-            @php
-                $totalSpk = $suratJalan->items->count();
-                $totalJasa = $suratJalan->items->sum(function($item) {
-                    $wo = $item->workOrder;
-                    if (!$wo) return 0;
-                    return ($wo->workOrderServices && $wo->workOrderServices->isNotEmpty()) 
-                        ? $wo->workOrderServices->count() 
-                        : ($wo->services?->count() ?? 0);
-                });
-                $totalMaterial = $suratJalan->items->sum(function($item) {
-                    return $item->workOrder?->materials?->count() ?? 0;
-                });
-
-                // Breakdown Layanan Jasa (Mendukung workOrderServices & services)
-                $serviceBreakdown = [];
-                foreach ($suratJalan->items as $item) {
-                    $wo = $item->workOrder;
-                    if (!$wo) continue;
-
-                    $services = ($wo->workOrderServices && $wo->workOrderServices->isNotEmpty())
-                        ? $wo->workOrderServices
-                        : ($wo->services ?? collect());
-
-                    foreach ($services as $srv) {
-                        $serviceName = is_a($srv, \App\Models\WorkOrderService::class)
-                            ? ($srv->custom_service_name ?: ($srv->service?->name ?: ($srv->category_name ?: 'Layanan Servis')))
-                            : ($srv->pivot->custom_service_name ?? $srv->name ?? $srv->service_name ?? 'Layanan Servis');
-
-                        $serviceBreakdown[$serviceName] = ($serviceBreakdown[$serviceName] ?? 0) + 1;
-                    }
-                }
-                arsort($serviceBreakdown);
-
-                // Breakdown Bahan Baku / Material
-                $materialBreakdown = [];
-                foreach ($suratJalan->items as $item) {
-                    if ($item->workOrder && $item->workOrder->materials) {
-                        foreach ($item->workOrder->materials as $mat) {
-                            $matName = $mat->name;
-                            $qty = (float)($mat->pivot->quantity ?? 1);
-                            $unit = $mat->unit ?? 'pcs';
-                            if (!isset($materialBreakdown[$matName])) {
-                                $materialBreakdown[$matName] = ['qty' => 0, 'unit' => $unit];
-                            }
-                            $materialBreakdown[$matName]['qty'] += $qty;
-                        }
-                    }
-                }
-                uasort($materialBreakdown, fn($a, $b) => $b['qty'] <=> $a['qty']);
-
-                // Count incomplete production tasks in this Surat Jalan
-                $incompleteSpkCount = 0;
-                if ($suratJalan->jenis_serah_terima === 'produksi_to_post_qc') {
-                    foreach ($suratJalan->items as $it) {
-                        if ($it->workOrder && !$it->workOrder->is_production_finished) {
-                            $incompleteSpkCount++;
-                        }
-                    }
-                }
-            @endphp
 
             {{-- FLASH NOTIFICATIONS (UI/UX Pro Max) --}}
             @if(session('success'))
@@ -264,9 +339,9 @@
 
                 </div>
 
-                {{-- BREAKDOWN SUMMARY CHIPS CARD (UI/UX PRO MAX) --}}
+                {{-- BREAKDOWN SUMMARY CHIPS CARD (UI/UX PRO MAX - CLICKABLE WITH MODAL) --}}
                 @if(!empty($serviceBreakdown) || !empty($materialBreakdown))
-                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700 space-y-3">
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700 space-y-3.5">
                         @if(!empty($serviceBreakdown))
                             <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                                 <div class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 shrink-0 min-w-[130px]">
@@ -275,31 +350,39 @@
                                 </div>
                                 <div class="flex flex-wrap gap-2 flex-1">
                                     @foreach($serviceBreakdown as $name => $count)
-                                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs text-xs font-bold text-slate-800 dark:text-slate-100 hover:border-indigo-400 transition-all">
-                                            <span>{{ $name }}</span>
-                                            <span class="px-2 py-0.5 rounded-lg bg-indigo-600 text-white font-black text-[10px]">
+                                        <button type="button"
+                                                @click="openBreakdownModal('jasa', '{{ addslashes($name) }}')"
+                                                title="Klik untuk melihat SPK dengan jasa {{ $name }}"
+                                                class="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs text-xs font-bold text-slate-800 dark:text-slate-100 hover:border-indigo-500 hover:ring-2 hover:ring-indigo-400/30 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer">
+                                            <span class="group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ $name }}</span>
+                                            <span class="px-2 py-0.5 rounded-lg bg-indigo-600 group-hover:bg-indigo-700 text-white font-black text-[10px] transition-colors">
                                                 {{ $count }}x
                                             </span>
-                                        </div>
+                                            <span class="text-[10px] text-indigo-400 group-hover:translate-x-0.5 transition-transform">🔍</span>
+                                        </button>
                                     @endforeach
                                 </div>
                             </div>
                         @endif
 
                         @if(!empty($materialBreakdown))
-                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 {{ !empty($serviceBreakdown) ? 'pt-2.5 border-t border-slate-200/60 dark:border-slate-600/60' : '' }}">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 {{ !empty($serviceBreakdown) ? 'pt-3 border-t border-slate-200/60 dark:border-slate-600/60' : '' }}">
                                 <div class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 shrink-0 min-w-[130px]">
                                     <span>🧵</span>
                                     <span>Rekap Bahan ({{ count($materialBreakdown) }}):</span>
                                 </div>
                                 <div class="flex flex-wrap gap-2 flex-1">
                                     @foreach($materialBreakdown as $name => $data)
-                                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800/80 shadow-2xs text-xs font-bold text-slate-800 dark:text-slate-100 hover:border-emerald-400 transition-all">
-                                            <span>{{ $name }}</span>
-                                            <span class="px-2 py-0.5 rounded-lg bg-emerald-600 text-white font-black text-[10px]">
+                                        <button type="button"
+                                                @click="openBreakdownModal('material', '{{ addslashes($name) }}')"
+                                                title="Klik untuk melihat SPK dengan bahan {{ $name }}"
+                                                class="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800/80 shadow-2xs text-xs font-bold text-slate-800 dark:text-slate-100 hover:border-emerald-500 hover:ring-2 hover:ring-emerald-400/30 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer">
+                                            <span class="group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ $name }}</span>
+                                            <span class="px-2 py-0.5 rounded-lg bg-emerald-600 group-hover:bg-emerald-700 text-white font-black text-[10px] transition-colors">
                                                 {{ $data['qty'] }} {{ $data['unit'] }}
                                             </span>
-                                        </div>
+                                            <span class="text-[10px] text-emerald-400 group-hover:translate-x-0.5 transition-transform">🔍</span>
+                                        </button>
                                     @endforeach
                                 </div>
                             </div>
@@ -829,6 +912,150 @@
                         </button>
                     </div>
                 </form>
+
+            </div>
+        </div>
+
+        {{-- 5. MODAL INTERAKTIF RINCIAN REKAP JASA & BAHAN (UI/UX PRO MAX) --}}
+        <div x-show="showBreakdownModal" 
+             x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-md"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
+            
+            <div @click.away="showBreakdownModal = false" 
+                 class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] space-y-5 transform transition-all"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95">
+                
+                {{-- MODAL HEADER --}}
+                <div class="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4 shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-inner"
+                             :class="breakdownModalType === 'jasa' ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'">
+                            <span x-text="breakdownModalType === 'jasa' ? '🔨' : '🧵'"></span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider"
+                                      :class="breakdownModalType === 'jasa' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'"
+                                      x-text="breakdownModalType === 'jasa' ? 'RINCIAN LAYANAN JASA' : 'RINCIAN BAHAN BAKU / MATERIAL'"></span>
+                            </div>
+                            <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5" x-text="breakdownModalTitle"></h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold" x-text="breakdownModalSubtitle"></p>
+                        </div>
+                    </div>
+                    <button @click="showBreakdownModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                {{-- MODAL BODY: SPK CARDS GRID (SCROLLABLE) --}}
+                <div class="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
+                    <template x-if="breakdownModalItems.length > 0">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                            <template x-for="(item, idx) in breakdownModalItems" :key="item.id + '-' + idx">
+                                <div class="bg-slate-50/80 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all flex flex-col justify-between gap-3 group">
+                                    
+                                    <div class="flex items-start gap-3">
+                                        {{-- Thumbnail Cover Photo --}}
+                                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-700 shrink-0 border border-slate-200 dark:border-slate-600 relative group-hover:scale-102 transition-transform">
+                                            <template x-if="item.cover_photo_url">
+                                                <img :src="item.cover_photo_url" :alt="item.spk_number" class="w-full h-full object-cover">
+                                            </template>
+                                            <template x-if="!item.cover_photo_url">
+                                                <div class="w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs font-bold gap-0.5">
+                                                    <span>👟</span>
+                                                    <span class="text-[9px]">No Photo</span>
+                                                </div>
+                                            </template>
+                                            <template x-if="item.has_active_oto">
+                                                <span class="absolute top-1 left-1 px-1 py-0.2 bg-amber-500 text-slate-950 font-black text-[8px] rounded shadow">OTO</span>
+                                            </template>
+                                        </div>
+
+                                        {{-- SPK Info & Specs --}}
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center justify-between gap-1 mb-0.5">
+                                                <span class="font-mono font-black text-slate-900 dark:text-white text-xs" x-text="item.spk_number"></span>
+                                                <span class="px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px]" x-text="item.status_label"></span>
+                                            </div>
+
+                                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block truncate" x-text="item.customer_name"></span>
+                                            
+                                            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                                                <span class="font-semibold text-slate-700 dark:text-slate-300" x-text="item.shoe_brand"></span>
+                                                <span>•</span>
+                                                <span class="truncate" x-text="item.shoe_type"></span>
+                                                <span class="px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-bold shrink-0" x-text="'Sz ' + item.shoe_size"></span>
+                                            </div>
+
+                                            {{-- If material: quantity pill --}}
+                                            <template x-if="breakdownModalType === 'material' && item.quantity">
+                                                <div class="mt-1.5">
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 text-[10px] font-black border border-emerald-200 dark:border-emerald-800">
+                                                        <span>🧵 Pemakaian:</span>
+                                                        <span x-text="item.quantity + ' ' + (item.unit || 'pcs')"></span>
+                                                    </span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    {{-- Technicians & Timeline Footer --}}
+                                    <div class="pt-2.5 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-2 text-[10px]">
+                                        {{-- Assigned Technicians Mini Pills --}}
+                                        <div class="flex flex-wrap gap-1 items-center flex-1">
+                                            <template x-if="item.technicians && item.technicians.length > 0">
+                                                <div class="flex flex-wrap gap-1">
+                                                    <template x-for="tech in item.technicians" :key="tech.station">
+                                                        <span class="px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-slate-700 dark:text-slate-200"
+                                                              :title="tech.station + ': ' + tech.name"
+                                                              x-text="tech.station + ': ' + tech.name"></span>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <template x-if="!item.technicians || item.technicians.length === 0">
+                                                <span class="text-slate-400 italic font-medium">Stasiun standar</span>
+                                            </template>
+                                        </div>
+
+                                        {{-- Link Quick Action --}}
+                                        <a :href="item.detail_url" target="_blank" 
+                                           class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 font-bold transition-all shrink-0 flex items-center gap-1 border border-indigo-200 dark:border-indigo-800">
+                                            <span>Buka SPK</span>
+                                            <span>↗</span>
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="breakdownModalItems.length === 0">
+                        <div class="py-12 text-center text-slate-400 space-y-2">
+                            <span class="text-4xl block">🔍</span>
+                            <p class="font-bold text-sm">Tidak ada data SPK yang ditemukan untuk item ini.</p>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- MODAL FOOTER --}}
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+                    <span class="text-xs text-slate-400 font-bold" x-text="`Total ${breakdownModalItems.length} SPK dalam Surat Jalan ini`"></span>
+                    <button type="button" @click="showBreakdownModal = false" class="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition">
+                        Tutup
+                    </button>
+                </div>
 
             </div>
         </div>
