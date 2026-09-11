@@ -3,26 +3,39 @@
         
         {{-- Navigation Tabs --}}
         <div class="flex flex-col gap-4 mb-6">
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+                {{-- 1. Tab Butuh Follow Up --}}
                 <button wire:click="switchTab('active')" 
-                        class="px-4 py-2 rounded-lg shadow font-medium text-sm flex items-center gap-2 transition-all {{ $currentTab === 'active' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
-                    <span class="text-lg">⚠️</span> Butuh Follow Up ({{ $activeCount }})
+                        class="px-4 py-2.5 rounded-xl shadow-sm font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all duration-200 active:scale-95 {{ $currentTab === 'active' ? 'bg-[#22AF85] text-white shadow-md shadow-teal-600/30' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-100' }}">
+                    <span class="text-base">⚠️</span> Butuh Follow Up ({{ $activeCount }})
                 </button>
+
+                @if(!$isWorkshopContext)
+                {{-- 2. Tab Kolam Cancel (CX Only) --}}
                 <button wire:click="switchTab('cancelled')" 
-                        class="px-4 py-2 rounded-lg shadow font-medium text-sm flex items-center gap-2 transition-all {{ $currentTab === 'cancelled' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
-                    <span class="text-lg">🚫</span> Kolam Cancel
+                        class="px-4 py-2.5 rounded-xl shadow-sm font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all duration-200 active:scale-95 {{ $currentTab === 'cancelled' ? 'bg-red-600 text-white shadow-md shadow-red-600/30' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-100' }}">
+                    <span class="text-base">🚫</span> Kolam Cancel
                 </button>
+                @endif
+
+                {{-- 3. Tab Riwayat Resolusi --}}
                 <button wire:click="switchTab('history')" 
-                        class="px-4 py-2 rounded-lg shadow font-medium text-sm flex items-center gap-2 transition-all {{ $currentTab === 'history' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
-                    <span class="text-lg">📜</span> Riwayat Resolusi
+                        class="px-4 py-2.5 rounded-xl shadow-sm font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all duration-200 active:scale-95 {{ $currentTab === 'history' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-100' }}">
+                    <span class="text-base">📜</span> Riwayat Resolusi
                 </button>
+
+                @if(!$isWorkshopContext)
+                {{-- 4. Tab Klaim Garansi (CX Only) --}}
                 <button wire:click="switchTab('warranty')" 
-                        class="px-4 py-2 rounded-lg shadow font-medium text-sm flex items-center gap-2 transition-all {{ $currentTab === 'warranty' ? 'bg-amber-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' }}">
-                    <span class="text-lg">🛡️</span> Klaim Garansi Terproses ({{ $warrantyCount }})
+                        class="px-4 py-2.5 rounded-xl shadow-sm font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all duration-200 active:scale-95 {{ $currentTab === 'warranty' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-100' }}">
+                    <span class="text-base">🛡️</span> Klaim Garansi Terproses ({{ $warrantyCount }})
                 </button>
-                <a href="{{ route('complaints.index') }}" class="px-4 py-2 bg-white text-gray-700 hover:bg-gray-50 rounded-lg shadow font-medium text-sm flex items-center gap-2">
-                    <span class="text-lg">📢</span> Data Komplain
+
+                {{-- 5. Data Komplain (CX Only) --}}
+                <a href="{{ route('complaints.index') }}" class="px-4 py-2.5 bg-white text-gray-700 hover:bg-gray-50 rounded-xl shadow-sm border border-gray-100 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95">
+                    <span class="text-base">📢</span> Data Komplain
                 </a>
+                @endif
             </div>
 
             @if($currentTab === 'active')

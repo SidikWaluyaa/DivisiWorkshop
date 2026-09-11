@@ -669,6 +669,11 @@ class Index extends Component
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CxFollowupExport($data), $filename);
     }
 
+    public function getIsWorkshopContextProperty(): bool
+    {
+        return request()->routeIs('workshop.followup.*') || request()->is('workshop/followup*');
+    }
+
     public function render()
     {
         $user = Auth::user();
@@ -681,6 +686,8 @@ class Index extends Component
         $masterServices = Service::all();
         $masterCategories = Service::select('category')->distinct()->pluck('category');
         $warrantyCount = WorkOrderWarranty::where('status', 'OPEN')->count();
+        $isWorkshop = $this->isWorkshopContext;
+        $layout = $isWorkshop ? 'layouts.workshop-pwa' : 'layouts.app';
 
         return view('livewire.cx.index', [
             'data' => $data,
@@ -688,7 +695,10 @@ class Index extends Component
             'warrantyCount' => $warrantyCount,
             'categories' => $categories,
             'masterServices' => $masterServices,
-            'masterCategories' => $masterCategories
+            'masterCategories' => $masterCategories,
+            'isWorkshopContext' => $isWorkshop,
+        ])->layout($layout, [
+            'title' => $isWorkshop ? 'Follow-up Kendala (Workshop)' : 'Customer Experience (CX) Follow Up'
         ]);
     }
 }

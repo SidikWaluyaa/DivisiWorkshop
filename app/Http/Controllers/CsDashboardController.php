@@ -897,4 +897,21 @@ class CsDashboardController extends Controller
             'data' => $performance
         ]);
     }
+
+    /**
+     * Get real-time badge counts for CS Mobile PWA Navigation
+     */
+    public function getBadgeCounts()
+    {
+        $pendingSpk = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value ?? 'SPK_PENDING')->count();
+        $greetingLeads = \App\Models\CsLead::where('status', \App\Models\CsLead::STATUS_GREETING)->count();
+        $followUpLeads = \App\Models\CsLead::where('status', \App\Models\CsLead::STATUS_FOLLOW_UP)->count();
+
+        return response()->json([
+            'status' => 'success',
+            'pending_spk' => $pendingSpk,
+            'greeting_leads' => $greetingLeads,
+            'follow_up_leads' => $followUpLeads,
+        ]);
+    }
 }

@@ -339,6 +339,9 @@ Route::middleware('auth')->group(function () {
         // Fast Track Dedicated Page
         Route::get('/fast-track', App\Livewire\Workshop\FastTrackPage::class)->name('fast-track.index');
         Route::get('/fast-track/export-pdf', [App\Http\Controllers\WorkshopDashboardController::class, 'exportFastTrackPdf'])->name('fast-track.export-pdf');
+
+        // Workshop Follow-up (Kendala SPK)
+        Route::get('/followup', App\Livewire\Cx\Index::class)->name('followup.index');
     });
 
     // Finance Routes (Consolidated below)
@@ -554,6 +557,9 @@ Route::middleware('auth')->group(function () {
                  return view('cs.kpi-leaderboard');
              })->name('kpi-leaderboard');
              Route::get('/kpi-leaderboard/api-data', [App\Http\Controllers\CsDashboardController::class, 'getKpiLeaderboardData'])->name('kpi-leaderboard.api-data');
+
+             // PWA Mobile Badge Counts API
+             Route::get('/api/badge-counts', [App\Http\Controllers\CsDashboardController::class, 'getBadgeCounts'])->name('api.badge-counts');
          });
         
         // SPK & Conversion
