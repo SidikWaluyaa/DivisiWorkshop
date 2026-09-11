@@ -127,7 +127,7 @@
         .highlight-bar {
             display: flex;
             gap: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
         .highlight-box {
             flex: 1;
@@ -151,6 +151,79 @@
             font-weight: 900;
             margin-top: 1px;
             display: block;
+        }
+
+        /* Breakdown Summary Badges */
+        .breakdown-container {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 5px 8px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .breakdown-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .breakdown-title {
+            font-size: 7.5px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            min-width: 90px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .breakdown-title.jasa { color: #4338ca; }
+        .breakdown-title.mat { color: #047857; }
+        .breakdown-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            flex: 1;
+        }
+        .breakdown-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            font-size: 8px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+        .breakdown-chip.jasa {
+            background: #eef2ff;
+            color: #312e81;
+            border: 1px solid #c7d2fe;
+        }
+        .breakdown-chip.jasa .chip-qty {
+            background: #4f46e5;
+            color: #ffffff;
+            padding: 0.5px 4px;
+            border-radius: 3px;
+            font-weight: 900;
+            font-size: 7.5px;
+        }
+        .breakdown-chip.mat {
+            background: #ecfdf5;
+            color: #064e3b;
+            border: 1px solid #a7f3d0;
+        }
+        .breakdown-chip.mat .chip-qty {
+            background: #059669;
+            color: #ffffff;
+            padding: 0.5px 4px;
+            border-radius: 3px;
+            font-weight: 900;
+            font-size: 7.5px;
         }
 
         /* Meta Information Table */
@@ -266,6 +339,11 @@
             .highlight-box.spk { background: #0f172a !important; color: #ffffff !important; -webkit-print-color-adjust: exact; }
             .highlight-box.jasa { background: #4f46e5 !important; color: #ffffff !important; -webkit-print-color-adjust: exact; }
             .highlight-box.mat { background: #059669 !important; color: #ffffff !important; -webkit-print-color-adjust: exact; }
+            .breakdown-container { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; -webkit-print-color-adjust: exact; }
+            .breakdown-chip.jasa { background: #eef2ff !important; color: #312e81 !important; border: 1px solid #c7d2fe !important; -webkit-print-color-adjust: exact; }
+            .breakdown-chip.jasa .chip-qty { background: #4f46e5 !important; color: #ffffff !important; -webkit-print-color-adjust: exact; }
+            .breakdown-chip.mat { background: #ecfdf5 !important; color: #064e3b !important; border: 1px solid #a7f3d0 !important; -webkit-print-color-adjust: exact; }
+            .breakdown-chip.mat .chip-qty { background: #059669 !important; color: #ffffff !important; -webkit-print-color-adjust: exact; }
             tr { page-break-inside: avoid; }
         }
     </style>
@@ -299,6 +377,35 @@
                 $totalMaterial = $suratJalan->items->sum(function($item) {
                     return $item->workOrder?->materials?->count() ?? 0;
                 });
+
+                // Breakdown Layanan Jasa
+                $serviceBreakdown = [];
+                foreach ($suratJalan->items as $item) {
+                    if ($item->workOrder && $item->workOrder->services) {
+                        foreach ($item->workOrder->services as $srv) {
+                            $serviceName = $srv->pivot->custom_service_name ?? $srv->name ?? $srv->service_name ?? 'Layanan Servis';
+                            $serviceBreakdown[$serviceName] = ($serviceBreakdown[$serviceName] ?? 0) + 1;
+                        }
+                    }
+                }
+                arsort($serviceBreakdown);
+
+                // Breakdown Bahan Baku / Material
+                $materialBreakdown = [];
+                foreach ($suratJalan->items as $item) {
+                    if ($item->workOrder && $item->workOrder->materials) {
+                        foreach ($item->workOrder->materials as $mat) {
+                            $matName = $mat->name;
+                            $qty = (float)($mat->pivot->quantity ?? 1);
+                            $unit = $mat->unit ?? 'pcs';
+                            if (!isset($materialBreakdown[$matName])) {
+                                $materialBreakdown[$matName] = ['qty' => 0, 'unit' => $unit];
+                            }
+                            $materialBreakdown[$matName]['qty'] += $qty;
+                        }
+                    }
+                }
+                uasort($materialBreakdown, fn($a, $b) => $b['qty'] <=> $a['qty']);
             @endphp
 
             <!-- Summary Highlight Bar -->
@@ -316,6 +423,43 @@
                     <span class="highlight-val">🧵 {{ $totalMaterial }} Material Terkait</span>
                 </div>
             </div>
+
+            <!-- Compact Sub-Summary Breakdown Chips -->
+            @if(!empty($serviceBreakdown) || !empty($materialBreakdown))
+                <div class="breakdown-container">
+                    @if(!empty($serviceBreakdown))
+                        <div class="breakdown-row">
+                            <span class="breakdown-title jasa">
+                                <span>🔨</span> Rincian Jasa ({{ count($serviceBreakdown) }}):
+                            </span>
+                            <div class="breakdown-chips">
+                                @foreach($serviceBreakdown as $name => $count)
+                                    <span class="breakdown-chip jasa">
+                                        <span>{{ $name }}</span>
+                                        <span class="chip-qty">{{ $count }}x</span>
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    @if(!empty($materialBreakdown))
+                        <div class="breakdown-row">
+                            <span class="breakdown-title mat">
+                                <span>🧵</span> Bahan Baku ({{ count($materialBreakdown) }}):
+                            </span>
+                            <div class="breakdown-chips">
+                                @foreach($materialBreakdown as $name => $data)
+                                    <span class="breakdown-chip mat">
+                                        <span>{{ $name }}</span>
+                                        <span class="chip-qty">{{ $data['qty'] }} {{ $data['unit'] }}</span>
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @endif
 
             <!-- Meta Table Information -->
             <table class="meta-table">

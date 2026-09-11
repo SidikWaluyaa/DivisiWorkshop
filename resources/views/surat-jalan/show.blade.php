@@ -68,6 +68,35 @@
                     return $item->workOrder?->materials?->count() ?? 0;
                 });
 
+                // Breakdown Layanan Jasa
+                $serviceBreakdown = [];
+                foreach ($suratJalan->items as $item) {
+                    if ($item->workOrder && $item->workOrder->services) {
+                        foreach ($item->workOrder->services as $srv) {
+                            $serviceName = $srv->pivot->custom_service_name ?? $srv->name ?? $srv->service_name ?? 'Layanan Servis';
+                            $serviceBreakdown[$serviceName] = ($serviceBreakdown[$serviceName] ?? 0) + 1;
+                        }
+                    }
+                }
+                arsort($serviceBreakdown);
+
+                // Breakdown Bahan Baku / Material
+                $materialBreakdown = [];
+                foreach ($suratJalan->items as $item) {
+                    if ($item->workOrder && $item->workOrder->materials) {
+                        foreach ($item->workOrder->materials as $mat) {
+                            $matName = $mat->name;
+                            $qty = (float)($mat->pivot->quantity ?? 1);
+                            $unit = $mat->unit ?? 'pcs';
+                            if (!isset($materialBreakdown[$matName])) {
+                                $materialBreakdown[$matName] = ['qty' => 0, 'unit' => $unit];
+                            }
+                            $materialBreakdown[$matName]['qty'] += $qty;
+                        }
+                    }
+                }
+                uasort($materialBreakdown, fn($a, $b) => $b['qty'] <=> $a['qty']);
+
                 // Count incomplete production tasks in this Surat Jalan
                 $incompleteSpkCount = 0;
                 if ($suratJalan->jenis_serah_terima === 'produksi_to_post_qc') {
@@ -222,6 +251,49 @@
                     </div>
 
                 </div>
+
+                {{-- BREAKDOWN SUMMARY CHIPS CARD (UI/UX PRO MAX) --}}
+                @if(!empty($serviceBreakdown) || !empty($materialBreakdown))
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700 space-y-3">
+                        @if(!empty($serviceBreakdown))
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                <div class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 shrink-0 min-w-[130px]">
+                                    <span>🔨</span>
+                                    <span>Rekap Jasa ({{ count($serviceBreakdown) }}):</span>
+                                </div>
+                                <div class="flex flex-wrap gap-2 flex-1">
+                                    @foreach($serviceBreakdown as $name => $count)
+                                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs text-xs font-bold text-slate-800 dark:text-slate-100 hover:border-indigo-400 transition-all">
+                                            <span>{{ $name }}</span>
+                                            <span class="px-2 py-0.5 rounded-lg bg-indigo-600 text-white font-black text-[10px]">
+                                                {{ $count }}x
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        @if(!empty($materialBreakdown))
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 {{ !empty($serviceBreakdown) ? 'pt-2.5 border-t border-slate-200/60 dark:border-slate-600/60' : '' }}">
+                                <div class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 shrink-0 min-w-[130px]">
+                                    <span>🧵</span>
+                                    <span>Rekap Bahan ({{ count($materialBreakdown) }}):</span>
+                                </div>
+                                <div class="flex flex-wrap gap-2 flex-1">
+                                    @foreach($materialBreakdown as $name => $data)
+                                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800/80 shadow-2xs text-xs font-bold text-slate-800 dark:text-slate-100 hover:border-emerald-400 transition-all">
+                                            <span>{{ $name }}</span>
+                                            <span class="px-2 py-0.5 rounded-lg bg-emerald-600 text-white font-black text-[10px]">
+                                                {{ $data['qty'] }} {{ $data['unit'] }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
 
                 @if($suratJalan->catatan)
                     <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200/80 dark:border-slate-700 text-xs">
