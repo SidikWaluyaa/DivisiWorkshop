@@ -62,20 +62,32 @@
             @php
                 $totalSpk = $suratJalan->items->count();
                 $totalJasa = $suratJalan->items->sum(function($item) {
-                    return $item->workOrder?->services?->count() ?? 0;
+                    $wo = $item->workOrder;
+                    if (!$wo) return 0;
+                    return ($wo->workOrderServices && $wo->workOrderServices->isNotEmpty()) 
+                        ? $wo->workOrderServices->count() 
+                        : ($wo->services?->count() ?? 0);
                 });
                 $totalMaterial = $suratJalan->items->sum(function($item) {
                     return $item->workOrder?->materials?->count() ?? 0;
                 });
 
-                // Breakdown Layanan Jasa
+                // Breakdown Layanan Jasa (Mendukung workOrderServices & services)
                 $serviceBreakdown = [];
                 foreach ($suratJalan->items as $item) {
-                    if ($item->workOrder && $item->workOrder->services) {
-                        foreach ($item->workOrder->services as $srv) {
-                            $serviceName = $srv->pivot->custom_service_name ?? $srv->name ?? $srv->service_name ?? 'Layanan Servis';
-                            $serviceBreakdown[$serviceName] = ($serviceBreakdown[$serviceName] ?? 0) + 1;
-                        }
+                    $wo = $item->workOrder;
+                    if (!$wo) continue;
+
+                    $services = ($wo->workOrderServices && $wo->workOrderServices->isNotEmpty())
+                        ? $wo->workOrderServices
+                        : ($wo->services ?? collect());
+
+                    foreach ($services as $srv) {
+                        $serviceName = is_a($srv, \App\Models\WorkOrderService::class)
+                            ? ($srv->custom_service_name ?: ($srv->service?->name ?: ($srv->category_name ?: 'Layanan Servis')))
+                            : ($srv->pivot->custom_service_name ?? $srv->name ?? $srv->service_name ?? 'Layanan Servis');
+
+                        $serviceBreakdown[$serviceName] = ($serviceBreakdown[$serviceName] ?? 0) + 1;
                     }
                 }
                 arsort($serviceBreakdown);
@@ -352,7 +364,9 @@
                             @foreach ($suratJalan->items as $index => $item)
                                 @php
                                     $wo = $item->workOrder;
-                                    $services = $wo?->services ?? collect();
+                                    $services = ($wo?->workOrderServices && $wo->workOrderServices->isNotEmpty())
+                                        ? $wo->workOrderServices
+                                        : ($wo?->services ?? collect());
                                     $materials = $wo?->materials ?? collect();
                                     $estDate = $wo?->new_estimation_date ?? $wo?->estimation_date;
 
@@ -424,7 +438,9 @@
                                             <ul class="space-y-1">
                                                 @foreach($services as $srv)
                                                     @php
-                                                        $serviceName = $srv->pivot->custom_service_name ?? $srv->name ?? $srv->service_name ?? 'Layanan Servis';
+                                                        $serviceName = is_a($srv, \App\Models\WorkOrderService::class)
+                                                            ? ($srv->custom_service_name ?: ($srv->service?->name ?: ($srv->category_name ?: 'Layanan Servis')))
+                                                            : ($srv->pivot->custom_service_name ?? $srv->name ?? $srv->service_name ?? 'Layanan Servis');
                                                     @endphp
                                                     <li class="flex items-start gap-1.5 font-bold text-slate-700 dark:text-slate-200">
                                                         <span class="text-indigo-500 font-black">•</span>
