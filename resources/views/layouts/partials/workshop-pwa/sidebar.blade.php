@@ -62,6 +62,7 @@
                     $q->where('jenis_serah_terima', 'produksi_to_post_qc');
                 })->count(),
             'revisi' => WorkOrderRevision::where('status', 'OPEN')->count(),
+            'followUp' => WorkOrder::getCxActiveCount(),
             'garansiActive' => WorkOrderWarranty::count(),
             'listGaransi' => WorkOrder::whereNotNull('warranty_expires_at')->count(),
             'otoActive' => \App\Models\OTO::whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->count(),
@@ -85,6 +86,7 @@
     $countSuratJalanSortir = $wsCounts['suratJalanSortir'];
     $countSuratJalanProd = $wsCounts['suratJalanProd'];
     $countRevisi = $wsCounts['revisi'];
+    $countFollowUp = $wsCounts['followUp'];
     $countGaransiActive = $wsCounts['garansiActive'];
     $countListGaransi = $wsCounts['listGaransi'];
     $countOtoActive = $wsCounts['otoActive'];
@@ -129,7 +131,7 @@
              openDashboard: {{ request()->routeIs('dashboard', 'workshop.dashboard-v2', 'workshop.fast-track.*', 'internal-tracking.*') ? 'true' : 'false' }},
              openLayanan: {{ request()->routeIs('production.technician-assistant', 'admin.technicians.index', 'admin.technician-skills', 'admin.services.*', 'admin.performance.*') ? 'true' : 'false' }},
              openUtilitas: {{ request()->routeIs('production.late-info', 'surat-jalan.*') ? 'true' : 'false' }},
-             openGaransi: {{ request()->routeIs('revision.*', 'garansi.*', 'finish.list-garansi', 'oto.*') ? 'true' : 'false' }},
+             openGaransi: {{ request()->routeIs('revision.*', 'garansi.*', 'finish.list-garansi', 'oto.*', 'workshop.followup.*') ? 'true' : 'false' }},
              openMaterial: {{ request()->routeIs('admin.materials.*', 'material-requests.*', 'storage.disbursement.*', 'storage.history') ? 'true' : 'false' }}
          }"
          x-init="
@@ -850,9 +852,9 @@
                     <span class="whitespace-nowrap font-black truncate">Revisi &amp; Garansi</span>
                 </div>
                 <div class="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                    @if($countRevisi + $countGaransiActive > 0)
+                    @if($countRevisi + $countFollowUp + $countGaransiActive > 0)
                         <span x-show="!openGaransi" x-cloak class="px-2 py-0.5 min-w-[20px] h-[18px] rounded-full bg-[#FFC232] text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm">
-                            {{ $formatNum($countRevisi + $countGaransiActive) }}
+                            {{ $formatNum($countRevisi + $countFollowUp + $countGaransiActive) }}
                         </span>
                     @endif
                     <svg class="w-3.5 h-3.5 text-emerald-100 transition-transform duration-300 ease-out" 
@@ -894,6 +896,40 @@
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
                         <span>Revisi Teknik</span>
                         <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countRevisi }}</span>
+                    </div>
+                </a>
+
+                {{-- Follow-up Kendala SPK --}}
+                <a href="{{ route('workshop.followup.index') }}" 
+                   title="Follow-up Kendala ({{ $countFollowUp }})"
+                   class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
+                   {{ request()->routeIs('workshop.followup.*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
+                   :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
+                    
+                    @if(request()->routeIs('workshop.followup.*'))
+                        <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-slate-950 rounded-r-full shadow-sm" x-show="!sidebarCollapsed"></span>
+                    @endif
+
+                    <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('workshop.followup.*') ? 'text-slate-950' : 'text-amber-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1 flex items-center justify-between">
+                        <span>Follow-up Kendala</span>
+                    </span>
+                    @if($countFollowUp > 0)
+                        <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black {{ request()->routeIs('workshop.followup.*') ? 'bg-slate-950 text-[#FFC232]' : 'bg-rose-500 text-white animate-pulse' }}">
+                            {{ $countFollowUp }}
+                        </span>
+                        <span x-show="sidebarCollapsed" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white font-black text-[9px] flex items-center justify-center shadow-sm border-2 border-white animate-pulse">
+                            {{ $countFollowUp }}
+                        </span>
+                    @endif
+
+                    {{-- Compact Hover Tooltip --}}
+                    <div x-show="sidebarCollapsed" x-cloak 
+                         class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
+                        <span>Follow-up Kendala</span>
+                        <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countFollowUp }}</span>
                     </div>
                 </a>
 

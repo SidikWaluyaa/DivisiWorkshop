@@ -203,6 +203,22 @@
                     @endif
                 </a>
 
+                {{-- Follow-up Kendala Workshop --}}
+                <a href="{{ route('workshop.followup.index') }}" class="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-200 flex items-center justify-between active:scale-95 transition-all">
+                    <div>
+                        <div class="font-black text-xs text-rose-700 flex items-center gap-1.5">
+                            <span>⚠️</span> Follow-up Kendala SPK
+                        </div>
+                        <p class="text-[10px] font-bold text-rose-900/70 mt-0.5">Penanganan kendala, tambah jasa &amp; resolusi SPK</p>
+                    </div>
+                    @php $cxActiveCount = \App\Models\WorkOrder::getCxActiveCount(); @endphp
+                    @if($cxActiveCount > 0)
+                        <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-rose-600 text-white shadow-xs animate-pulse">
+                            {{ $cxActiveCount }}
+                        </span>
+                    @endif
+                </a>
+
                 <a href="{{ route('garansi.index') }}" class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between active:scale-95 transition-all">
                     <div>
                         <div class="font-black text-xs text-[#22AF85]">Sistem Garansi</div>
