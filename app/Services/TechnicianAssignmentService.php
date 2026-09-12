@@ -88,7 +88,7 @@ class TechnicianAssignmentService
         $isDrShoeJahit = str_contains($workOrder->qcJahitBy?->name ?? '', 'Dr. Shoe');
 
         // a. Reparasi Upper (Station: UPPER, Spec: Reparasi Upper)
-        if ($hasUpper && (!$workOrder->prod_upper_by || $isDrShoeUpper || (!$workOrder->prod_upper_started_at && $forceReassign))) {
+        if ($hasUpper && !$workOrder->isStationUnneeded('prod_upper') && (!$workOrder->prod_upper_by || $isDrShoeUpper || (!$workOrder->prod_upper_started_at && $forceReassign))) {
             $upperServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'UPPER');
             $serviceIds = $upperServices->pluck('service_id')->filter()->toArray();
 
@@ -105,7 +105,7 @@ class TechnicianAssignmentService
         }
 
         // b. Reparasi Sol (Station: SOLING, Spec: Reparasi Sol)
-        if ($hasSol && (!$workOrder->prod_sol_by || $isDrShoeSol || (!$workOrder->prod_sol_started_at && $forceReassign))) {
+        if ($hasSol && !$workOrder->isStationUnneeded('prod_sol') && (!$workOrder->prod_sol_by || $isDrShoeSol || (!$workOrder->prod_sol_started_at && $forceReassign))) {
             $solServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'SOLING');
             $serviceIds = $solServices->pluck('service_id')->filter()->toArray();
 
@@ -122,7 +122,7 @@ class TechnicianAssignmentService
         }
 
         // c. QC Jahit (Spec: QC Jahit / Jahit)
-        if ($hasJahit && (!$workOrder->qc_jahit_by || $isDrShoeJahit || (!$workOrder->qc_jahit_started_at && $forceReassign))) {
+        if ($hasJahit && !$workOrder->isStationUnneeded('qc_jahit') && (!$workOrder->qc_jahit_by || $isDrShoeJahit || (!$workOrder->qc_jahit_started_at && $forceReassign))) {
             $tech = $this->findBestTechnicianForStationAndServices('QC', [], ['QC Jahit', 'Jahit']);
             if ($tech) {
                 $updates['qc_jahit_by'] = $tech->id;
@@ -159,7 +159,7 @@ class TechnicianAssignmentService
         $isDrShoeFinal = str_contains($workOrder->qcFinalBy?->name ?? '', 'Dr. Shoe');
 
         // a. Reparasi Treatment (Station: TREATMENT, Spec: Treatment / Repaint / Cleaning)
-        if ($hasTreatment && (!$workOrder->prod_cleaning_by || $isDrShoeClean || (!$workOrder->prod_cleaning_started_at && $forceReassign))) {
+        if ($hasTreatment && !$workOrder->isStationUnneeded('prod_cleaning') && (!$workOrder->prod_cleaning_by || $isDrShoeClean || (!$workOrder->prod_cleaning_started_at && $forceReassign))) {
             $treatmentServices = $workOrder->workOrderServices->filter(fn($s) => ProductionStationHelper::getStationCode($s->category_name ?? $s->service?->name ?? '') === 'TREATMENT');
             $serviceIds = $treatmentServices->pluck('service_id')->filter()->toArray();
 
@@ -176,7 +176,7 @@ class TechnicianAssignmentService
         }
 
         // b. QC Cleanup (Spec: QC Cleanup)
-        if (!$workOrder->qc_cleanup_by || $isDrShoeCleanup || (!$workOrder->qc_cleanup_started_at && $forceReassign)) {
+        if (!$workOrder->isStationUnneeded('qc_cleanup') && (!$workOrder->qc_cleanup_by || $isDrShoeCleanup || (!$workOrder->qc_cleanup_started_at && $forceReassign))) {
             $tech = $this->findBestTechnicianForStationAndServices('QC', [], ['QC Cleanup', 'Clean Up']);
             if ($tech) {
                 $updates['qc_cleanup_by'] = $tech->id;

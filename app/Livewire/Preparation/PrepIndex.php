@@ -177,20 +177,20 @@ class PrepIndex extends Component
         foreach ($orders as $order) {
             $updated = false;
 
-            // 1. Auto Assign Washing if unassigned
-            if (!$order->prep_washing_by && $washingTechs->isNotEmpty()) {
+            // 1. Auto Assign Washing if unassigned & not unneeded
+            if (!$order->prep_washing_by && !$order->isStationUnneeded('prep_washing') && $washingTechs->isNotEmpty()) {
                 $order->prep_washing_by = $washingTechs->random()->id;
                 $updated = true;
             }
 
-            // 2. Auto Assign Sol Prep if required & unassigned
-            if ($order->needs_prep_sol && !$order->prep_sol_by && $solTechs->isNotEmpty()) {
+            // 2. Auto Assign Sol Prep if required & unassigned & not unneeded
+            if ($order->needs_prep_sol && !$order->isStationUnneeded('prep_sol') && !$order->prep_sol_by && $solTechs->isNotEmpty()) {
                 $order->prep_sol_by = $solTechs->random()->id;
                 $updated = true;
             }
 
-            // 3. Auto Assign Upper Prep if required & unassigned
-            if ($order->needs_prep_upper && !$order->prep_upper_by && $upperTechs->isNotEmpty()) {
+            // 3. Auto Assign Upper Prep if required & unassigned & not unneeded
+            if ($order->needs_prep_upper && !$order->isStationUnneeded('prep_upper') && !$order->prep_upper_by && $upperTechs->isNotEmpty()) {
                 $order->prep_upper_by = $upperTechs->random()->id;
                 $updated = true;
             }
@@ -259,7 +259,9 @@ class PrepIndex extends Component
 
             $allOrders = $ordersQuery->get();
             $ordersToAssign = $allOrders->filter(function($o) {
-                return !$o->prep_washing_by || ($o->needs_prep_sol && !$o->prep_sol_by) || ($o->needs_prep_upper && !$o->prep_upper_by);
+                return (!$o->prep_washing_by && !$o->isStationUnneeded('prep_washing')) 
+                    || ($o->needs_prep_sol && !$o->isStationUnneeded('prep_sol') && !$o->prep_sol_by) 
+                    || ($o->needs_prep_upper && !$o->isStationUnneeded('prep_upper') && !$o->prep_upper_by);
             });
 
             if ($ordersToAssign->isEmpty()) {
@@ -319,7 +321,9 @@ class PrepIndex extends Component
 
             // Auto-assign any unassigned SPKs using Balanced Round-Robin algorithm
             $unassignedOrders = $orders->filter(function($o) {
-                return !$o->prep_washing_by || ($o->needs_prep_sol && !$o->prep_sol_by) || ($o->needs_prep_upper && !$o->prep_upper_by);
+                return (!$o->prep_washing_by && !$o->isStationUnneeded('prep_washing')) 
+                    || ($o->needs_prep_sol && !$o->isStationUnneeded('prep_sol') && !$o->prep_sol_by) 
+                    || ($o->needs_prep_upper && !$o->isStationUnneeded('prep_upper') && !$o->prep_upper_by);
             });
             if ($unassignedOrders->isNotEmpty()) {
                 $this->distributeTechnicians($unassignedOrders);
@@ -327,18 +331,20 @@ class PrepIndex extends Component
 
             $count = 0;
             foreach ($orders->fresh() as $order) {
-                $order->prep_washing_started_at = $now;
-                $order->prep_washing_by = $order->prep_washing_by ?? $authId;
-                $order->save();
+                if (!$order->isStationUnneeded('prep_washing')) {
+                    $order->prep_washing_started_at = $now;
+                    $order->prep_washing_by = $order->prep_washing_by ?? $authId;
+                    $order->save();
 
-                \App\Models\WorkOrderLog::create([
-                    'work_order_id' => $order->id,
-                    'user_id' => $order->prep_washing_by,
-                    'action' => 'prep_washing_start',
-                    'description' => 'Mulai pengerjaan Prep Washing (Batch Manifest)',
-                    'step' => WorkOrderStatus::PREPARATION->value
-                ]);
-                $count++;
+                    \App\Models\WorkOrderLog::create([
+                        'work_order_id' => $order->id,
+                        'user_id' => $order->prep_washing_by,
+                        'action' => 'prep_washing_start',
+                        'description' => 'Mulai pengerjaan Prep Washing (Batch Manifest)',
+                        'step' => WorkOrderStatus::PREPARATION->value
+                    ]);
+                    $count++;
+                }
             }
 
             unset($this->orders);
@@ -386,6 +392,115 @@ class PrepIndex extends Component
             $this->dispatch('swal:toast', icon: 'success', title: "$count SPK di Manifest diselesaikan ke Review Admin!");
         } catch (\Throwable $e) {
             Log::error('Complete Manifest Prep Error: ' . $e->getMessage());
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
+        }
+    }
+
+    public function updateTechnician($id, $type, $techId)
+    {
+        $order = WorkOrder::find($id);
+        if (!$order) return;
+
+        try {
+            $stationLabels = [
+                'prep_washing' => 'Persiapan Cuci',
+                'prep_sol' => 'Persiapan Sol',
+                'prep_upper' => 'Persiapan Upper',
+            ];
+            $stationLabel = $stationLabels[$type] ?? $this->formatStationName($type);
+
+            if ($techId === 'none') {
+                $order->markStationUnneeded($type, Auth::id());
+                unset($this->orders);
+                $this->dispatch('swal:toast', icon: 'info', title: "Sub-stasiun {$stationLabel} ditandai Tidak Diperlukan");
+                return;
+            }
+
+            if ($order->isStationUnneeded($type)) {
+                $order->restoreStationNeeded($type, $techId ? (int)$techId : null, Auth::id());
+                unset($this->orders);
+                $techName = $techId ? User::find($techId)?->name : 'Dikosongkan';
+                $this->dispatch('swal:toast', icon: 'success', title: "Teknisi {$stationLabel} diaktifkan kembali ke {$techName}");
+                return;
+            }
+
+            $columnPrefix = $type;
+            $oldTechId = $order->{"{$columnPrefix}_by"};
+            $oldTechName = $oldTechId ? User::find($oldTechId)?->name : 'Kosong';
+
+            $order->{"{$columnPrefix}_by"} = $techId ? (int)$techId : null;
+            $order->save();
+
+            $techName = $techId ? User::find($techId)?->name : 'Dihapus';
+
+            // Audit trail log
+            $order->logs()->create([
+                'user_id'     => Auth::id(),
+                'step'        => 'PREPARATION',
+                'action'      => 'TECHNICIAN_UPDATED',
+                'description' => "Teknisi {$stationLabel} diubah dari [{$oldTechName}] ke [{$techName}].",
+            ]);
+
+            unset($this->orders);
+            $this->dispatch('swal:toast', icon: 'success', title: "Teknisi {$stationLabel} diubah ke {$techName}");
+        } catch (\Exception $e) {
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
+        }
+    }
+
+    public function updateTechnicianWithReason($id, $type, $techId, $reason)
+    {
+        $order = WorkOrder::find($id);
+        if (!$order) return;
+
+        if (empty(trim($reason)) || mb_strlen(trim($reason)) < 5) {
+            $this->dispatch('swal:toast', icon: 'warning', title: 'Alasan override wajib diisi minimal 5 karakter.');
+            return;
+        }
+
+        try {
+            $stationLabels = [
+                'prep_washing' => 'Persiapan Cuci',
+                'prep_sol' => 'Persiapan Sol',
+                'prep_upper' => 'Persiapan Upper',
+            ];
+            $stationLabel = $stationLabels[$type] ?? $this->formatStationName($type);
+
+            if ($techId === 'none') {
+                $order->markStationUnneeded($type, Auth::id());
+                unset($this->orders);
+                $this->dispatch('swal:toast', icon: 'info', title: "Sub-stasiun {$stationLabel} ditandai Tidak Diperlukan");
+                return;
+            }
+
+            if ($order->isStationUnneeded($type)) {
+                $order->restoreStationNeeded($type, $techId ? (int)$techId : null, Auth::id());
+                unset($this->orders);
+                $techName = $techId ? User::find($techId)?->name : 'Dikosongkan';
+                $this->dispatch('swal:toast', icon: 'success', title: "Teknisi {$stationLabel} diaktifkan kembali ke {$techName}");
+                return;
+            }
+
+            $columnPrefix = $type;
+            $oldTechId = $order->{"{$columnPrefix}_by"};
+            $oldTechName = $oldTechId ? User::find($oldTechId)?->name : 'Kosong';
+
+            $order->{"{$columnPrefix}_by"} = $techId ? (int)$techId : null;
+            $order->save();
+
+            $techName = $techId ? User::find($techId)?->name : 'Dihapus';
+
+            // Audit trail log with mandatory reason
+            $order->logs()->create([
+                'user_id'     => Auth::id(),
+                'step'        => 'PREPARATION',
+                'action'      => 'TECHNICIAN_OVERRIDE',
+                'description' => "[OVERRIDE] Teknisi {$stationLabel} diubah dari [{$oldTechName}] ke [{$techName}] saat stasiun sudah berjalan. Alasan: {$reason}",
+            ]);
+
+            unset($this->orders);
+            $this->dispatch('swal:toast', icon: 'success', title: "Override berhasil — Teknisi {$stationLabel} diubah ke {$techName}");
+        } catch (\Exception $e) {
             $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
         }
     }

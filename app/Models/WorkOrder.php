@@ -188,6 +188,7 @@ class WorkOrder extends Model
         'is_manual_estimasi',
         'discount',
         'has_active_oto',
+        'unneeded_stations',
     ];
 
     public function cxHandler()
@@ -214,6 +215,7 @@ class WorkOrder extends Model
 
     protected $casts = [
         'status' => WorkOrderStatus::class, // Enum Casting
+        'unneeded_stations' => 'array',
         'customer_shipped_at' => 'datetime',
         'entry_date' => 'datetime',
         'estimation_date' => 'datetime',
@@ -266,6 +268,100 @@ class WorkOrder extends Model
         'perlu_bongkar' => 'boolean',
         'perlu_belanja' => 'boolean',
     ];
+
+    /**
+     * Check if a specific sub-station is marked as "Tidak Diperlukan"
+     */
+    public function isStationUnneeded(string $station): bool
+    {
+        $unneeded = $this->unneeded_stations;
+        if (!is_array($unneeded)) {
+            return false;
+        }
+        return in_array($station, $unneeded, true);
+    }
+
+    /**
+     * Mark a sub-station as "Tidak Diperlukan" (auto-bypass)
+     */
+    public function markStationUnneeded(string $station, ?int $userId = null): void
+    {
+        $unneeded = is_array($this->unneeded_stations) ? $this->unneeded_stations : [];
+        if (!in_array($station, $unneeded, true)) {
+            $unneeded[] = $station;
+        }
+
+        $now = now();
+        $this->unneeded_stations = array_values(array_unique($unneeded));
+        $this->{"{$station}_by"} = null;
+        $this->{"{$station}_started_at"} = null;
+        $this->{"{$station}_completed_at"} = $now;
+        $this->save();
+
+        $stationLabels = [
+            'prep_washing' => 'Persiapan Cuci',
+            'prep_sol' => 'Persiapan Sol',
+            'prep_upper' => 'Persiapan Upper',
+            'prod_upper' => 'Produksi Upper',
+            'prod_sol' => 'Produksi Soling',
+            'qc_jahit' => 'QC Jahit',
+            'prod_cleaning' => 'QC Treatment',
+            'qc_cleanup' => 'QC Cleanup',
+        ];
+        $label = $stationLabels[$station] ?? ucwords(str_replace('_', ' ', $station));
+        $user = $userId ? User::find($userId) : auth()->user();
+        $userName = $user?->name ?? 'Sistem/Admin';
+
+        $step = str_starts_with($station, 'prep_') ? 'PREPARATION' : (str_starts_with($station, 'prod_') || $station === 'qc_jahit' ? 'PRODUCTION' : 'QC');
+
+        $this->logs()->create([
+            'user_id' => $userId ?? auth()->id() ?? 1,
+            'step' => $step,
+            'action' => 'STATION_BYPASSED',
+            'description' => "[TIDAK DIPERLUKAN] Sub-stasiun {$label} ditandai Tidak Diperlukan oleh {$userName}.",
+        ]);
+    }
+
+    /**
+     * Restore a sub-station to active/needed state when a technician is selected
+     */
+    public function restoreStationNeeded(string $station, ?int $techId = null, ?int $userId = null): void
+    {
+        $unneeded = is_array($this->unneeded_stations) ? $this->unneeded_stations : [];
+        $unneeded = array_values(array_diff($unneeded, [$station]));
+
+        $this->unneeded_stations = $unneeded;
+        if ($techId) {
+            $this->{"{$station}_by"} = (int)$techId;
+        }
+        $this->{"{$station}_completed_at"} = null;
+        $this->save();
+
+        $stationLabels = [
+            'prep_washing' => 'Persiapan Cuci',
+            'prep_sol' => 'Persiapan Sol',
+            'prep_upper' => 'Persiapan Upper',
+            'prod_upper' => 'Produksi Upper',
+            'prod_sol' => 'Produksi Soling',
+            'qc_jahit' => 'QC Jahit',
+            'prod_cleaning' => 'QC Treatment',
+            'qc_cleanup' => 'QC Cleanup',
+        ];
+        $label = $stationLabels[$station] ?? ucwords(str_replace('_', ' ', $station));
+        $tech = $techId ? User::find($techId) : null;
+        $techName = $tech?->name ?? 'Belum Ditugaskan';
+        $user = $userId ? User::find($userId) : auth()->user();
+        $userName = $user?->name ?? 'Sistem/Admin';
+
+        $step = str_starts_with($station, 'prep_') ? 'PREPARATION' : (str_starts_with($station, 'prod_') || $station === 'qc_jahit' ? 'PRODUCTION' : 'QC');
+
+        $this->logs()->create([
+            'user_id' => $userId ?? auth()->id() ?? 1,
+            'step' => $step,
+            'action' => 'STATION_RESTORED',
+            'description' => "[AKTIF KEMBALI] Sub-stasiun {$label} diaktifkan kembali oleh {$userName} dan ditugaskan ke {$techName}.",
+        ]);
+    }
 
     protected $appends = ['spk_cover_photo_url', 'material_photo_url'];
 
@@ -617,15 +713,18 @@ class WorkOrder extends Model
                   ->orWhere(function ($sq) {
                       $sq->where(function ($ssq) {
                             $ssq->withoutServiceCategory(self::CAT_UPPER)
-                                ->orWhereNotNull('prod_upper_completed_at');
+                                ->orWhereNotNull('prod_upper_completed_at')
+                                ->orWhereJsonContains('unneeded_stations', 'prod_upper');
                         })
                         ->where(function ($ssq) {
                             $ssq->withoutServiceCategory(self::CAT_SOL)
-                                ->orWhereNotNull('prod_sol_completed_at');
+                                ->orWhereNotNull('prod_sol_completed_at')
+                                ->orWhereJsonContains('unneeded_stations', 'prod_sol');
                         })
                         ->where(function ($ssq) {
                             $ssq->withoutServiceCategory([self::CAT_SOL, self::CAT_UPPER, 'Jahit'])
-                                ->orWhereNotNull('qc_jahit_completed_at');
+                                ->orWhereNotNull('qc_jahit_completed_at')
+                                ->orWhereJsonContains('unneeded_stations', 'qc_jahit');
                         });
                   });
             });
@@ -669,7 +768,10 @@ class WorkOrder extends Model
 
     public function scopeQcFinal($query)
     {
-        return $query->whereNotNull('qc_cleanup_completed_at');
+        return $query->where(function ($q) {
+            $q->whereNotNull('qc_cleanup_completed_at')
+              ->orWhereJsonContains('unneeded_stations', 'qc_cleanup');
+        });
     }
 
     public function scopeQcReview($query)
@@ -680,12 +782,17 @@ class WorkOrder extends Model
                 // If NO services at all, it's ready for Review
                 $q->whereDoesntHave('workOrderServices')
                   ->orWhere(function ($sq) {
-                      $sq->whereNotNull('qc_cleanup_completed_at')
+                      $sq->where(function ($ssq) {
+                             $ssq->whereNotNull('qc_cleanup_completed_at')
+                                 ->orWhereJsonContains('unneeded_stations', 'qc_cleanup');
+                         })
                          ->whereNotNull('qc_final_completed_at')
                          ->where(function ($ssq) {
                              $ssq->whereDoesntHave('workOrderServices', function($tsq) {
                                  $tsq->whereIn('category_name', [self::CAT_REPAINT, 'Cleaning', 'Treatment', 'Whitening']);
-                             })->orWhereNotNull('prod_cleaning_completed_at');
+                             })
+                             ->orWhereNotNull('prod_cleaning_completed_at')
+                             ->orWhereJsonContains('unneeded_stations', 'prod_cleaning');
                          });
                   });
             });
@@ -852,7 +959,9 @@ class WorkOrder extends Model
     public function getMissingPrepTasksAttribute(): string
     {
         $missing = [];
-        if (is_null($this->prep_washing_completed_at)) $missing[] = 'Cuci (Washing)';
+        if (is_null($this->prep_washing_completed_at) && !$this->isStationUnneeded('prep_washing')) {
+            $missing[] = 'Cuci (Washing)';
+        }
 
         return implode(', ', $missing);
     }
