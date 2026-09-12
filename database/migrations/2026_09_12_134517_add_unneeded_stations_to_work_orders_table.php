@@ -15,7 +15,7 @@ return new class extends Migration
         $hasColumn = !empty(DB::select("SHOW COLUMNS FROM `work_orders` LIKE 'unneeded_stations'"));
         if (!$hasColumn) {
             Schema::table('work_orders', function (Blueprint $table) {
-                $table->json('unneeded_stations')->nullable()->after('accessories_data');
+                $table->longText('unneeded_stations')->nullable()->after('accessories_data');
             });
         }
     }
