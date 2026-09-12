@@ -329,11 +329,9 @@
 
         window.updateStation = (id, type, action, techId = null, finishedAt = null) => {
             if (action === 'start' && !techId) {
-                const select = document.getElementById(`tech-${type}-${id}`);
-                techId = select ? select.value : null;
-                if (!techId) {
-                    Swal.fire({ icon: 'warning', title: 'Pilih Petugas', text: 'Silakan pilih petugas QC terlebih dahulu.' });
-                    return;
+                const el = document.getElementById(`tech-${type}-${id}`);
+                if (el && el.value) {
+                    techId = el.value;
                 }
             }
             Swal.fire({
