@@ -714,17 +714,17 @@ class WorkOrder extends Model
                       $sq->where(function ($ssq) {
                             $ssq->withoutServiceCategory(self::CAT_UPPER)
                                 ->orWhereNotNull('prod_upper_completed_at')
-                                ->orWhereJsonContains('unneeded_stations', 'prod_upper');
+                                ->orWhere('unneeded_stations', 'like', '%"prod_upper"%');
                         })
                         ->where(function ($ssq) {
                             $ssq->withoutServiceCategory(self::CAT_SOL)
                                 ->orWhereNotNull('prod_sol_completed_at')
-                                ->orWhereJsonContains('unneeded_stations', 'prod_sol');
+                                ->orWhere('unneeded_stations', 'like', '%"prod_sol"%');
                         })
                         ->where(function ($ssq) {
                             $ssq->withoutServiceCategory([self::CAT_SOL, self::CAT_UPPER, 'Jahit'])
                                 ->orWhereNotNull('qc_jahit_completed_at')
-                                ->orWhereJsonContains('unneeded_stations', 'qc_jahit');
+                                ->orWhere('unneeded_stations', 'like', '%"qc_jahit"%');
                         });
                   });
             });
@@ -770,7 +770,7 @@ class WorkOrder extends Model
     {
         return $query->where(function ($q) {
             $q->whereNotNull('qc_cleanup_completed_at')
-              ->orWhereJsonContains('unneeded_stations', 'qc_cleanup');
+              ->orWhere('unneeded_stations', 'like', '%"qc_cleanup"%');
         });
     }
 
@@ -784,7 +784,7 @@ class WorkOrder extends Model
                   ->orWhere(function ($sq) {
                       $sq->where(function ($ssq) {
                              $ssq->whereNotNull('qc_cleanup_completed_at')
-                                 ->orWhereJsonContains('unneeded_stations', 'qc_cleanup');
+                                 ->orWhere('unneeded_stations', 'like', '%"qc_cleanup"%');
                          })
                          ->whereNotNull('qc_final_completed_at')
                          ->where(function ($ssq) {
@@ -792,7 +792,7 @@ class WorkOrder extends Model
                                  $tsq->whereIn('category_name', [self::CAT_REPAINT, 'Cleaning', 'Treatment', 'Whitening']);
                              })
                              ->orWhereNotNull('prod_cleaning_completed_at')
-                             ->orWhereJsonContains('unneeded_stations', 'prod_cleaning');
+                             ->orWhere('unneeded_stations', 'like', '%"prod_cleaning"%');
                          });
                   });
             });
