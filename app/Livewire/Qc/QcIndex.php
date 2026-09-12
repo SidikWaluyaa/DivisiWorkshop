@@ -123,7 +123,7 @@ class QcIndex extends Component
             'qc' => (clone $baseQuery)->where(function($q) {
                 $q->where(function($cq) {
                       $cq->whereNull('qc_cleanup_completed_at')
-                         ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'qc_cleanup'));
+                         ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"qc_cleanup"%'));
                   })
                   ->orWhereNull('qc_final_completed_at')
                   ->orWhere(function($sq) {
@@ -131,7 +131,7 @@ class QcIndex extends Component
                           $tsq->whereIn('category_name', ['Repaint', 'Cleaning', 'Treatment', 'Whitening']);
                       })
                       ->whereNull('prod_cleaning_completed_at')
-                      ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_cleaning'));
+                      ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"prod_cleaning"%'));
                   });
             })->count(),
             'review' => (clone $baseQuery)->qcReview()->count(),
@@ -270,11 +270,11 @@ class QcIndex extends Component
             ->where(function($q) use ($drShoeIds) {
                 $q->where(function($sq) {
                     $sq->whereNull('prod_cleaning_by')
-                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_cleaning'));
+                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"prod_cleaning"%'));
                 })
                 ->orWhere(function($sq) {
                     $sq->whereNull('qc_cleanup_by')
-                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'qc_cleanup'));
+                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"qc_cleanup"%'));
                 })
                 ->orWhereNull('qc_final_by');
                 if (!empty($drShoeIds)) {

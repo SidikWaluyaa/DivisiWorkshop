@@ -123,17 +123,17 @@ class StationIndex extends Component
                   $sq->where(function ($ssq) {
                       $ssq->where('category_name', 'like', '%Upper%')
                           ->whereNull('work_orders.prod_upper_completed_at')
-                          ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_upper'));
+                          ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"prod_upper"%'));
                   })
                   ->orWhere(function ($ssq) {
                       $ssq->where('category_name', 'like', '%Sol%')
                           ->whereNull('work_orders.prod_sol_completed_at')
-                          ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_sol'));
+                          ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"prod_sol"%'));
                   })
                   ->orWhere(function ($ssq) {
                       $ssq->where(function ($x) { $x->where('category_name', 'like', '%Sol%')->orWhere('category_name', 'like', '%Upper%')->orWhere('category_name', 'like', '%Jahit%'); })
                           ->whereNull('work_orders.qc_jahit_completed_at')
-                          ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'qc_jahit'));
+                          ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"qc_jahit"%'));
                   });
               });
         })->whereDoesntHave('logs', fn($lq) => $lq->where('step', 'PRODUCTION')->where('action', 'PRODUCTION_APPROVED'))
@@ -395,15 +395,15 @@ class StationIndex extends Component
             ->where(function($q) {
                 $q->where(function($sq) {
                     $sq->whereNull('prod_sol_by')
-                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_sol'));
+                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"prod_sol"%'));
                 })
                 ->orWhere(function($sq) {
                     $sq->whereNull('prod_upper_by')
-                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_upper'));
+                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"prod_upper"%'));
                 })
                 ->orWhere(function($sq) {
                     $sq->whereNull('qc_jahit_by')
-                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'qc_jahit'));
+                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"qc_jahit"%'));
                 });
             })
             ->get();
