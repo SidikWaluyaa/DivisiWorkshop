@@ -286,122 +286,1457 @@
                   {{-- Column 5: Progress Tugas Prep --}}
                   <td class="px-6 py-4" @click.stop>
                       <div class="flex flex-col gap-1.5 min-w-[200px]">
-                          {{-- Washing --}}
+                          {{-- Washing (Cuci) --}}
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
-                              <span class="font-bold text-gray-500 uppercase">Cuci:</span>
-                              @if($order->prep_washing_completed_at)
+                              <span class="font-bold text-teal-600 dark:text-teal-400 uppercase">Cuci:</span>
+                              @if($order->isStationUnneeded('prep_washing'))
+                                  <div class="flex items-center gap-1.5">
+                                      <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-[9px] font-black rounded uppercase">TIDAK PERLU</span>
+                                      <div class="relative" 
+                                           x-data="{ 
+                                               open: false, 
+                                               dropup: false, 
+                                               topPos: 'auto', 
+                                               bottomPos: 'auto', 
+                                               leftPos: 0,
+                                               toggle(event) {
+                                                   const rect = event.currentTarget.getBoundingClientRect();
+                                                   const popoverWidth = 185;
+                                                   const popoverHeight = 250;
+                                                   let left = rect.left;
+                                                   if (left + popoverWidth > window.innerWidth - 10) {
+                                                       left = window.innerWidth - popoverWidth - 10;
+                                                   }
+                                                   if (left < 10) left = 10;
+                                                   this.leftPos = left;
+
+                                                   const spaceBelow = window.innerHeight - rect.bottom;
+                                                   if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                       this.dropup = true;
+                                                       this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                       this.topPos = 'auto';
+                                                   } else {
+                                                       this.dropup = false;
+                                                       this.topPos = (rect.bottom + 4) + 'px';
+                                                       this.bottomPos = 'auto';
+                                                   }
+                                                   this.open = !this.open;
+                                               },
+                                               selectTech(techId, techName) {
+                                                   this.open = false;
+                                                   $wire.updateTechnician({{ $order->id }}, 'prep_washing', techId);
+                                               }
+                                           }" 
+                                           @scroll.window="open = false"
+                                           @click.stop>
+                                          
+                                          <button type="button" 
+                                                  @click="toggle($event)"
+                                                  class="text-[9px] font-bold text-teal-600 dark:text-teal-400 hover:underline px-1 py-0.5 rounded cursor-pointer"
+                                                  title="Aktifkan kembali atau pilih teknisi">
+                                              Ubah
+                                          </button>
+
+                                          <template x-teleport="body">
+                                              <div x-show="open" 
+                                                   @click.away="open = false" 
+                                                   x-transition:enter="transition ease-out duration-150"
+                                                   x-transition:enter-start="opacity-0 scale-95"
+                                                   x-transition:enter-end="opacity-100 scale-100"
+                                                   x-transition:leave="transition ease-in duration-100"
+                                                   x-transition:leave-start="opacity-100 scale-100"
+                                                   x-transition:leave-end="opacity-0 scale-95"
+                                                   :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                                   class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                                   style="display: none;">
+                                                  
+                                                  <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                      <span>Pilih Teknisi Cuci:</span>
+                                                      <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                                  </div>
+
+                                                  <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @forelse($this->techs['washing'] ?? [] as $t)
+                                                          <button type="button" 
+                                                                  @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
+                                              </div>
+                                          </template>
+                                      </div>
+                                  </div>
+                              @elseif($order->prep_washing_completed_at)
                                   <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prep_washing_completed_at->format('d M H:i') }}">✓ {{ $order->prepWashingBy->name ?? 'Selesai' }}</span>
                               @else
                                   <div class="flex items-center gap-1">
                                       @php
                                           $washingStarted = (bool)$order->prep_washing_started_at;
                                           $washingCurrentTech = $order->prepWashingBy->name ?? 'Kosong';
+                                          $washingTechList = collect($this->techs['washing'] ?? []);
+                                          if ($order->prep_washing_by && $order->prepWashingBy && !$washingTechList->contains('id', $order->prep_washing_by) && !str_contains($order->prepWashingBy->name, 'Dr. Shoe')) {
+                                              $washingTechList->push($order->prepWashingBy);
+                                          }
                                       @endphp
-                                      <select
-                                          id="tech-prep_washing-{{ $order->id }}"
-                                          @if($washingStarted)
-                                              @change="
-                                                  const newTechId = $event.target.value;
-                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
-                                                  $event.target.value = '{{ $order->prep_washing_by }}';
-                                                  openOverrideModal({{ $order->id }}, 'prep_washing', newTechId, '{{ addslashes($washingCurrentTech) }}', newTechName, 'Cuci');
-                                              "
-                                          @else
-                                              wire:change="updateTechnician({{ $order->id }}, 'prep_washing', $event.target.value)"
-                                          @endif
-                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-teal-500 cursor-pointer max-w-[110px]">
-                                          <option value="">-- Pilih --</option>
-                                          @php
-                                              $washingTechList = collect($this->techs['washing'] ?? []);
-                                              if ($order->prep_washing_by && $order->prepWashingBy && !$washingTechList->contains('id', $order->prep_washing_by) && !str_contains($order->prepWashingBy->name, 'Dr. Shoe')) {
-                                                  $washingTechList->push($order->prepWashingBy);
-                                              }
-                                          @endphp
-                                          @foreach($washingTechList as $t)
-                                              <option value="{{ $t->id }}" {{ $order->prep_washing_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                          @endforeach
-                                      </select>
+
+                                      {{-- Custom Picker Trigger Button & Teleported Popover --}}
+                                      <div class="relative" 
+                                           x-data="{ 
+                                               open: false, 
+                                               dropup: false, 
+                                               topPos: 'auto', 
+                                               bottomPos: 'auto', 
+                                               leftPos: 0,
+                                               toggle(event) {
+                                                   const rect = event.currentTarget.getBoundingClientRect();
+                                                   const popoverWidth = 185;
+                                                   const popoverHeight = 250;
+                                                   let left = rect.left;
+                                                   if (left + popoverWidth > window.innerWidth - 10) {
+                                                       left = window.innerWidth - popoverWidth - 10;
+                                                   }
+                                                   if (left < 10) left = 10;
+                                                   this.leftPos = left;
+
+                                                   const spaceBelow = window.innerHeight - rect.bottom;
+                                                   if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                       this.dropup = true;
+                                                       this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                       this.topPos = 'auto';
+                                                   } else {
+                                                       this.dropup = false;
+                                                       this.topPos = (rect.bottom + 4) + 'px';
+                                                       this.bottomPos = 'auto';
+                                                   }
+                                                   this.open = !this.open;
+                                               },
+                                               selectTech(techId, techName) {
+                                                   this.open = false;
+                                                   @if($washingStarted)
+                                                       openOverrideModal({{ $order->id }}, 'prep_washing', techId, '{{ addslashes($washingCurrentTech) }}', techName, 'Cuci');
+                                                   @else
+                                                       $wire.updateTechnician({{ $order->id }}, 'prep_washing', techId);
+                                                   @endif
+                                               }
+                                           }" 
+                                           @scroll.window="open = false"
+                                           @click.stop>
+                                          
+                                          <button type="button" 
+                                                  @click="toggle($event)"
+                                                  class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->prep_washing_by ? 'bg-teal-50/70 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800 hover:bg-teal-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
+                                                  title="Pilih teknisi Cuci">
+                                              <div class="flex items-center gap-1 truncate">
+                                                  @if($order->prepWashingBy)
+                                                      <span class="w-3.5 h-3.5 rounded-full bg-teal-200 dark:bg-teal-900 text-teal-800 dark:text-teal-200 flex items-center justify-center text-[8px] font-black shrink-0">
+                                                          {{ substr($order->prepWashingBy->name, 0, 1) }}
+                                                      </span>
+                                                      <span class="truncate">{{ $order->prepWashingBy->name }}</span>
+                                                  @else
+                                                      <span class="text-slate-400 italic text-[9px]">Pilih Teknisi</span>
+                                                  @endif
+                                              </div>
+                                              <svg class="w-2 h-2 text-slate-400 transition-transform duration-200 shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                              </svg>
+                                          </button>
+
+                                          <template x-teleport="body">
+                                              <div x-show="open" 
+                                                   @click.away="open = false" 
+                                                   x-transition:enter="transition ease-out duration-150"
+                                                   x-transition:enter-start="opacity-0 scale-95"
+                                                   x-transition:enter-end="opacity-100 scale-100"
+                                                   x-transition:leave="transition ease-in duration-100"
+                                                   x-transition:leave-start="opacity-100 scale-100"
+                                                   x-transition:leave-end="opacity-0 scale-95"
+                                                   :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                                   class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                                   style="display: none;">
+                                                  
+                                                  <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                      <span>Pilih Teknisi Cuci:</span>
+                                                      <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                                  </div>
+
+                                                  <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                      <button type="button" 
+                                                              @click="selectTech('none', 'Tidak Diperlukan')" 
+                                                              class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                          <span class="text-xs">🚫</span>
+                                                          <span>Tidak Diperlukan</span>
+                                                      </button>
+                                                  </div>
+
+                                                  <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @if($order->prep_washing_by)
+                                                          <button type="button" 
+                                                                  @click="selectTech('', 'Kosongkan')" 
+                                                                  class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                              -- Kosongkan Pilihan --
+                                                          </button>
+                                                      @endif
+
+                                                      @forelse($washingTechList as $t)
+                                                          <button type="button" 
+                                                                  @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->prep_washing_by == $t->id ? 'text-teal-600 bg-teal-50 dark:bg-teal-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              @if($order->prep_washing_by == $t->id)
+                                                                  <svg class="w-3 h-3 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                                  </svg>
+                                                              @endif
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
+                                              </div>
+                                          </template>
+                                      </div>
                                   </div>
                               @endif
                           </div>
+
                           {{-- Sol Prep --}}
-                          @if($order->needs_prep_sol)
+                          @if($order->needs_prep_sol || $order->isStationUnneeded('prep_sol'))
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
                               <span class="font-bold text-orange-500 uppercase">Sol:</span>
-                              @if($order->prep_sol_completed_at)
+                              @if($order->isStationUnneeded('prep_sol'))
+                                  <div class="flex items-center gap-1.5">
+                                      <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-[9px] font-black rounded uppercase">TIDAK PERLU</span>
+                                      <div class="relative" 
+                                           x-data="{ 
+                                               open: false, 
+                                               dropup: false, 
+                                               topPos: 'auto', 
+                                               bottomPos: 'auto', 
+                                               leftPos: 0,
+                                               toggle(event) {
+                                                   const rect = event.currentTarget.getBoundingClientRect();
+                                                   const popoverWidth = 185;
+                                                   const popoverHeight = 250;
+                                                   let left = rect.left;
+                                                   if (left + popoverWidth > window.innerWidth - 10) {
+                                                       left = window.innerWidth - popoverWidth - 10;
+                                                   }
+                                                   if (left < 10) left = 10;
+                                                   this.leftPos = left;
+
+                                                   const spaceBelow = window.innerHeight - rect.bottom;
+                                                   if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                       this.dropup = true;
+                                                       this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                       this.topPos = 'auto';
+                                                   } else {
+                                                       this.dropup = false;
+                                                       this.topPos = (rect.bottom + 4) + 'px';
+                                                       this.bottomPos = 'auto';
+                                                   }
+                                                   this.open = !this.open;
+                                               },
+                                               selectTech(techId, techName) {
+                                                   this.open = false;
+                                                   $wire.updateTechnician({{ $order->id }}, 'prep_sol', techId);
+                                               }
+                                           }" 
+                                           @scroll.window="open = false"
+                                           @click.stop>
+                                          
+                                          <button type="button" 
+                                                  @click="toggle($event)"
+                                                  class="text-[9px] font-bold text-orange-600 dark:text-orange-400 hover:underline px-1 py-0.5 rounded cursor-pointer"
+                                                  title="Aktifkan kembali atau pilih teknisi">
+                                              Ubah
+                                          </button>
+
+                                          <template x-teleport="body">
+                                              <div x-show="open" 
+                                                   @click.away="open = false" 
+                                                   x-transition:enter="transition ease-out duration-150"
+                                                   x-transition:enter-start="opacity-0 scale-95"
+                                                   x-transition:enter-end="opacity-100 scale-100"
+                                                   x-transition:leave="transition ease-in duration-100"
+                                                   x-transition:leave-start="opacity-100 scale-100"
+                                                   x-transition:leave-end="opacity-0 scale-95"
+                                                   :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                                   class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                                   style="display: none;">
+                                                  
+                                                  <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                      <span>Pilih Teknisi Sol Prep:</span>
+                                                      <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                                  </div>
+
+                                                  <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @forelse($this->techs['sol'] ?? [] as $t)
+                                                          <button type="button" 
+                                                                  @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-orange-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
+                                              </div>
+                                          </template>
+                                      </div>
+                                  </div>
+                              @elseif($order->prep_sol_completed_at)
                                   <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prep_sol_completed_at->format('d M H:i') }}">✓ {{ $order->prepSolBy->name ?? '-' }}</span>
                               @else
                                   <div class="flex items-center gap-1">
                                       @php
                                           $solStarted = (bool)$order->prep_sol_started_at;
                                           $solCurrentTech = $order->prepSolBy->name ?? 'Kosong';
+                                          $solTechList = collect($this->techs['sol'] ?? []);
+                                          if ($order->prep_sol_by && $order->prepSolBy && !$solTechList->contains('id', $order->prep_sol_by) && !str_contains($order->prepSolBy->name, 'Dr. Shoe')) {
+                                              $solTechList->push($order->prepSolBy);
+                                          }
                                       @endphp
-                                      <select
-                                          id="tech-prep_sol-{{ $order->id }}"
-                                          @if($solStarted)
-                                              @change="
-                                                  const newTechId = $event.target.value;
-                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
-                                                  $event.target.value = '{{ $order->prep_sol_by }}';
-                                                  openOverrideModal({{ $order->id }}, 'prep_sol', newTechId, '{{ addslashes($solCurrentTech) }}', newTechName, 'Sol');
-                                              "
-                                          @else
-                                              wire:change="updateTechnician({{ $order->id }}, 'prep_sol', $event.target.value)"
-                                          @endif
-                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-orange-500 cursor-pointer max-w-[110px]">
-                                          <option value="">-- Pilih --</option>
-                                          @php
-                                              $solTechList = collect($this->techs['sol'] ?? []);
-                                              if ($order->prep_sol_by && $order->prepSolBy && !$solTechList->contains('id', $order->prep_sol_by) && !str_contains($order->prepSolBy->name, 'Dr. Shoe')) {
-                                                  $solTechList->push($order->prepSolBy);
-                                              }
-                                          @endphp
-                                          @foreach($solTechList as $t)
-                                              <option value="{{ $t->id }}" {{ $order->prep_sol_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                          @endforeach
-                                      </select>
+
+                                      {{-- Custom Picker Trigger Button & Teleported Popover --}}
+                                      <div class="relative" 
+                                           x-data="{ 
+                                               open: false, 
+                                               dropup: false, 
+                                               topPos: 'auto', 
+                                               bottomPos: 'auto', 
+                                               leftPos: 0,
+                                               toggle(event) {
+                                                   const rect = event.currentTarget.getBoundingClientRect();
+                                                   const popoverWidth = 185;
+                                                   const popoverHeight = 250;
+                                                   let left = rect.left;
+                                                   if (left + popoverWidth > window.innerWidth - 10) {
+                                                       left = window.innerWidth - popoverWidth - 10;
+                                                   }
+                                                   if (left < 10) left = 10;
+                                                   this.leftPos = left;
+
+                                                   const spaceBelow = window.innerHeight - rect.bottom;
+                                                   if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                       this.dropup = true;
+                                                       this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                       this.topPos = 'auto';
+                                                   } else {
+                                                       this.dropup = false;
+                                                       this.topPos = (rect.bottom + 4) + 'px';
+                                                       this.bottomPos = 'auto';
+                                                   }
+                                                   this.open = !this.open;
+                                               },
+                                               selectTech(techId, techName) {
+                                                   this.open = false;
+                                                   @if($solStarted)
+                                                       openOverrideModal({{ $order->id }}, 'prep_sol', techId, '{{ addslashes($solCurrentTech) }}', techName, 'Sol');
+                                                   @else
+                                                       $wire.updateTechnician({{ $order->id }}, 'prep_sol', techId);
+                                                   @endif
+                                               }
+                                           }" 
+                                           @scroll.window="open = false"
+                                           @click.stop>
+                                          
+                                          <button type="button" 
+                                                  @click="toggle($event)"
+                                                  class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->prep_sol_by ? 'bg-orange-50/70 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800 hover:bg-orange-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
+                                                  title="Pilih teknisi Sol Prep">
+                                              <div class="flex items-center gap-1 truncate">
+                                                  @if($order->prepSolBy)
+                                                      <span class="w-3.5 h-3.5 rounded-full bg-orange-200 dark:bg-orange-900 text-orange-800 dark:text-orange-200 flex items-center justify-center text-[8px] font-black shrink-0">
+                                                          {{ substr($order->prepSolBy->name, 0, 1) }}
+                                                      </span>
+                                                      <span class="truncate">{{ $order->prepSolBy->name }}</span>
+                                                  @else
+                                                      <span class="text-slate-400 italic text-[9px]">Pilih Teknisi</span>
+                                                  @endif
+                                              </div>
+                                              <svg class="w-2 h-2 text-slate-400 transition-transform duration-200 shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                              </svg>
+                                          </button>
+
+                                          <template x-teleport="body">
+                                              <div x-show="open" 
+                                                   @click.away="open = false" 
+                                                   x-transition:enter="transition ease-out duration-150"
+                                                   x-transition:enter-start="opacity-0 scale-95"
+                                                   x-transition:enter-end="opacity-100 scale-100"
+                                                   x-transition:leave="transition ease-in duration-100"
+                                                   x-transition:leave-start="opacity-100 scale-100"
+                                                   x-transition:leave-end="opacity-0 scale-95"
+                                                   :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                                   class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                                   style="display: none;">
+                                                  
+                                                  <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                      <span>Pilih Teknisi Sol:</span>
+                                                      <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                                  </div>
+
+                                                  <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                      <button type="button" 
+                                                              @click="selectTech('none', 'Tidak Diperlukan')" 
+                                                              class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                          <span class="text-xs">🚫</span>
+                                                          <span>Tidak Diperlukan</span>
+                                                      </button>
+                                                  </div>
+
+                                                  <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @if($order->prep_sol_by)
+                                                          <button type="button" 
+                                                                  @click="selectTech('', 'Kosongkan')" 
+                                                                  class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                              -- Kosongkan Pilihan --
+                                                          </button>
+                                                      @endif
+
+                                                      @forelse($solTechList as $t)
+                                                          <button type="button" 
+                                                                  @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->prep_sol_by == $t->id ? 'text-orange-600 bg-orange-50 dark:bg-orange-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              @if($order->prep_sol_by == $t->id)
+                                                                  <svg class="w-3 h-3 text-orange-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                                  </svg>
+                                                              @endif
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
+                                              </div>
+                                          </template>
+                                      </div>
                                   </div>
                               @endif
                           </div>
                           @endif
+
                           {{-- Upper Prep --}}
-                          @if($order->needs_prep_upper)
+                          @if($order->needs_prep_upper || $order->isStationUnneeded('prep_upper'))
                           <div class="flex items-center justify-between text-[11px]">
                               <span class="font-bold text-purple-500 uppercase">Upper:</span>
-                              @if($order->prep_upper_completed_at)
+                              @if($order->isStationUnneeded('prep_upper'))
+                                  <div class="flex items-center gap-1.5">
+                                      <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-[9px] font-black rounded uppercase">TIDAK PERLU</span>
+                                      <div class="relative" 
+                                           x-data="{ 
+                                               open: false, 
+                                               dropup: false, 
+                                               topPos: 'auto', 
+                                               bottomPos: 'auto', 
+                                               leftPos: 0,
+                                               toggle(event) {
+                                                   const rect = event.currentTarget.getBoundingClientRect();
+                                                   const popoverWidth = 185;
+                                                   const popoverHeight = 250;
+                                                   let left = rect.left;
+                                                   if (left + popoverWidth > window.innerWidth - 10) {
+                                                       left = window.innerWidth - popoverWidth - 10;
+                                                   }
+                                                   if (left < 10) left = 10;
+                                                   this.leftPos = left;
+
+                                                   const spaceBelow = window.innerHeight - rect.bottom;
+                                                   if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                       this.dropup = true;
+                                                       this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                       this.topPos = 'auto';
+                                                   } else {
+                                                       this.dropup = false;
+                                                       this.topPos = (rect.bottom + 4) + 'px';
+                                                       this.bottomPos = 'auto';
+                                                   }
+                                                   this.open = !this.open;
+                                               },
+                                               selectTech(techId, techName) {
+                                                   this.open = false;
+                                                   $wire.updateTechnician({{ $order->id }}, 'prep_upper', techId);
+                                               }
+                                           }" 
+                                           @scroll.window="open = false"
+                                           @click.stop>
+                                          
+                                          <button type="button" 
+                                                  @click="toggle($event)"
+                                                  class="text-[9px] font-bold text-purple-600 dark:text-purple-400 hover:underline px-1 py-0.5 rounded cursor-pointer"
+                                                  title="Aktifkan kembali atau pilih teknisi">
+                                              Ubah
+                                          </button>
+
+                                          <template x-teleport="body">
+                                              <div x-show="open" 
+                                                   @click.away="open = false" 
+                                                   x-transition:enter="transition ease-out duration-150"
+                                                   x-transition:enter-start="opacity-0 scale-95"
+                                                   x-transition:enter-end="opacity-100 scale-100"
+                                                   x-transition:leave="transition ease-in duration-100"
+                                                   x-transition:leave-start="opacity-100 scale-100"
+                                                   x-transition:leave-end="opacity-0 scale-95"
+                                                   :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                                   class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                                   style="display: none;">
+                                                  
+                                                  <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                      <span>Pilih Teknisi Upper Prep:</span>
+                                                      <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                                  </div>
+
+                                                  <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @forelse($this->techs['upper'] ?? [] as $t)
+                                                          <button type="button" 
+                                                                  @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-purple-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
+                                              </div>
+                                          </template>
+                                      </div>
+                                  </div>
+                              @elseif($order->prep_upper_completed_at)
                                   <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prep_upper_completed_at->format('d M H:i') }}">✓ {{ $order->prepUpperBy->name ?? '-' }}</span>
                               @else
                                   <div class="flex items-center gap-1">
                                       @php
                                           $upperStarted = (bool)$order->prep_upper_started_at;
                                           $upperCurrentTech = $order->prepUpperBy->name ?? 'Kosong';
+                                          $upperTechList = collect($this->techs['upper'] ?? []);
+                                          if ($order->prep_upper_by && $order->prepUpperBy && !$upperTechList->contains('id', $order->prep_upper_by) && !str_contains($order->prepUpperBy->name, 'Dr. Shoe')) {
+                                              $upperTechList->push($order->prepUpperBy);
+                                          }
                                       @endphp
-                                      <select
-                                          id="tech-prep_upper-{{ $order->id }}"
-                                          @if($upperStarted)
-                                              @change="
-                                                  const newTechId = $event.target.value;
-                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
-                                                  $event.target.value = '{{ $order->prep_upper_by }}';
-                                                  openOverrideModal({{ $order->id }}, 'prep_upper', newTechId, '{{ addslashes($upperCurrentTech) }}', newTechName, 'Upper');
-                                              "
-                                          @else
-                                              wire:change="updateTechnician({{ $order->id }}, 'prep_upper', $event.target.value)"
-                                          @endif
-                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-purple-500 cursor-pointer max-w-[110px]">
-                                          <option value="">-- Pilih --</option>
-                                          @php
-                                              $upperTechList = collect($this->techs['upper'] ?? []);
-                                              if ($order->prep_upper_by && $order->prepUpperBy && !$upperTechList->contains('id', $order->prep_upper_by) && !str_contains($order->prepUpperBy->name, 'Dr. Shoe')) {
-                                                  $upperTechList->push($order->prepUpperBy);
-                                              }
-                                          @endphp
-                                          @foreach($upperTechList as $t)
-                                              <option value="{{ $t->id }}" {{ $order->prep_upper_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                          @endforeach
-                                      </select>
+
+                                      {{-- Custom Picker Trigger Button & Teleported Popover --}}
+                                      <div class="relative" 
+                                           x-data="{ 
+                                               open: false, 
+                                               dropup: false, 
+                                               topPos: 'auto', 
+                                               bottomPos: 'auto', 
+                                               leftPos: 0,
+                                               toggle(event) {
+                                                   const rect = event.currentTarget.getBoundingClientRect();
+                                                   const popoverWidth = 185;
+                                                   const popoverHeight = 250;
+                                                   let left = rect.left;
+                                                   if (left + popoverWidth > window.innerWidth - 10) {
+                                                       left = window.innerWidth - popoverWidth - 10;
+                                                   }
+                                                   if (left < 10) left = 10;
+                                                   this.leftPos = left;
+
+                                                   const spaceBelow = window.innerHeight - rect.bottom;
+                                                   if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                       this.dropup = true;
+                                                       this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                       this.topPos = 'auto';
+                                                   } else {
+                                                       this.dropup = false;
+                                                       this.topPos = (rect.bottom + 4) + 'px';
+                                                       this.bottomPos = 'auto';
+                                                   }
+                                                   this.open = !this.open;
+                                               },
+                                               selectTech(techId, techName) {
+                                                   this.open = false;
+                                                   @if($upperStarted)
+                                                       openOverrideModal({{ $order->id }}, 'prep_upper', techId, '{{ addslashes($upperCurrentTech) }}', techName, 'Upper');
+                                                   @else
+                                                       $wire.updateTechnician({{ $order->id }}, 'prep_upper', techId);
+                                                   @endif
+                                               }
+                                           }" 
+                                           @scroll.window="open = false"
+                                           @click.stop>
+                                          
+                                          <button type="button" 
+                                                  @click="toggle($event)"
+                                                  class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->prep_upper_by ? 'bg-purple-50/70 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
+                                                  title="Pilih teknisi Upper Prep">
+                                              <div class="flex items-center gap-1 truncate">
+                                                  @if($order->prepUpperBy)
+                                                      <span class="w-3.5 h-3.5 rounded-full bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200 flex items-center justify-center text-[8px] font-black shrink-0">
+                                                          {{ substr($order->prepUpperBy->name, 0, 1) }}
+                                                      </span>
+                                                      <span class="truncate">{{ $order->prepUpperBy->name }}</span>
+                                                  @else
+                                                      <span class="text-slate-400 italic text-[9px]">Pilih Teknisi</span>
+                                                  @endif
+                                              </div>
+                                              <svg class="w-2 h-2 text-slate-400 transition-transform duration-200 shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                              </svg>
+                                          </button>
+
+                                          <template x-teleport="body">
+                                              <div x-show="open" 
+                                                   @click.away="open = false" 
+                                                   x-transition:enter="transition ease-out duration-150"
+                                                   x-transition:enter-start="opacity-0 scale-95"
+                                                   x-transition:enter-end="opacity-100 scale-100"
+                                                   x-transition:leave="transition ease-in duration-100"
+                                                   x-transition:leave-start="opacity-100 scale-100"
+                                                   x-transition:leave-end="opacity-0 scale-95"
+                                                   :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                                   class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                                   style="display: none;">
+                                                  
+                                                  <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                      <span>Pilih Teknisi Upper:</span>
+                                                      <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                                  </div>
+
+                                                  <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                      <button type="button" 
+                                                              @click="selectTech('none', 'Tidak Diperlukan')" 
+                                                              class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                          <span class="text-xs">🚫</span>
+                                                          <span>Tidak Diperlukan</span>
+                                                      </button>
+                                                  </div>
+
+                                                  <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @if($order->prep_upper_by)
+                                                          <button type="button" 
+                                                                  @click="selectTech('', 'Kosongkan')" 
+                                                                  class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                              -- Kosongkan Pilihan --
+                                                          </button>
+                                                      @endif
+
+                                                      @forelse($upperTechList as $t)
+                                                          <button type="button" 
+                                                                  @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->prep_upper_by == $t->id ? 'text-purple-600 bg-purple-50 dark:bg-purple-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              @if($order->prep_upper_by == $t->id)
+                                                                  <svg class="w-3 h-3 text-purple-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                                  </svg>
+                                                              @endif
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
+                                              </div>
+                                          </template>
+                                      </div>
                                   </div>
                               @endif
+                          </div>
+                          @endif
+                      </div>
+                  </td>
+                  {{-- Column 6: Duration / SLA --}}
+                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                      <div class="text-[11px] font-semibold text-gray-750 dark:text-gray-300">
+                          @if($order->estimation_date)
+                              <span class="text-orange-600 font-bold" title="Estimasi Selesai">{{ $order->estimation_date->format('d M Y') }}</span>
+                          @else
+                              <span class="text-gray-400">-</span>
+                          @endif
+                      </div>
+                  </td>
+              @elseif($type === 'prod_reparasi')
+                  {{-- Column 5: Progress Tugas Produksi Terpadu (Upper -> Soling -> QC Jahit) --}}
+                  @php
+                      $hasUpper = $order->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'upper') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'upper'));
+                      $hasSol = $order->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'sol') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'sol'));
+                      $hasJahit = $hasSol || $hasUpper || $order->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'jahit') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'jahit'));
+                      
+                      if (!$hasUpper && !$hasSol && !$hasJahit) {
+                          $hasUpper = true;
+                      }
+
+                      $isSolLocked = $hasUpper && !$order->prod_upper_completed_at && !$order->isStationUnneeded('prod_upper');
+                      $isJahitLocked = ($hasUpper && !$order->prod_upper_completed_at && !$order->isStationUnneeded('prod_upper')) || ($hasSol && !$order->prod_sol_completed_at && !$order->isStationUnneeded('prod_sol'));
+                  @endphp
+                  <td class="px-6 py-4" @click.stop>
+                      <div class="flex flex-col gap-1.5 min-w-[220px]">
+                          {{-- 1. Upper --}}
+                          @if(!$hasUpper || $order->isStationUnneeded('prod_upper'))
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-purple-600 uppercase">Upper:</span>
+                              <div class="flex items-center gap-1.5">
+                                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700 shadow-2xs">
+                                      <span>🚫</span> Tidak Diperlukan
+                                  </span>
+                                  @if($hasUpper)
+                                      <div class="relative" 
+                                           x-data="{ 
+                                               open: false, 
+                                               dropup: false, 
+                                               topPos: 'auto', 
+                                               bottomPos: 'auto', 
+                                               leftPos: 0,
+                                               toggle(event) {
+                                                   const rect = event.currentTarget.getBoundingClientRect();
+                                                   const popoverWidth = 185;
+                                                   const popoverHeight = 220;
+                                                   let left = rect.right - popoverWidth;
+                                                   if (left < 10) left = 10;
+                                                   if (left + popoverWidth > window.innerWidth - 10) {
+                                                       left = window.innerWidth - popoverWidth - 10;
+                                                   }
+                                                   this.leftPos = left;
+
+                                                   const spaceBelow = window.innerHeight - rect.bottom;
+                                                   if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                       this.dropup = true;
+                                                       this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                       this.topPos = 'auto';
+                                                   } else {
+                                                       this.dropup = false;
+                                                       this.topPos = (rect.bottom + 4) + 'px';
+                                                       this.bottomPos = 'auto';
+                                                   }
+                                                   this.open = !this.open;
+                                               }
+                                           }" 
+                                           @scroll.window="open = false"
+                                           @click.stop>
+                                          <button type="button" 
+                                                  @click="toggle($event)" 
+                                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer"
+                                                  title="Ubah penugasan teknisi">
+                                              <svg class="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                              </svg>
+                                              <span>Ubah</span>
+                                              <svg class="w-2 h-2 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                              </svg>
+                                          </button>
+
+                                          <template x-teleport="body">
+                                              <div x-show="open" 
+                                                   @click.away="open = false" 
+                                                   x-transition:enter="transition ease-out duration-150"
+                                                   x-transition:enter-start="opacity-0 scale-95"
+                                                   x-transition:enter-end="opacity-100 scale-100"
+                                                   x-transition:leave="transition ease-in duration-100"
+                                                   x-transition:leave-start="opacity-100 scale-100"
+                                                   x-transition:leave-end="opacity-0 scale-95"
+                                                   :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                                   class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                                   style="display: none;">
+                                                  <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                      <span>Pilih Teknisi Upper:</span>
+                                                      <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                                  </div>
+                                                  <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @forelse($this->techs['upper'] ?? [] as $t)
+                                                          <button type="button" 
+                                                                  wire:click="updateTechnician({{ $order->id }}, 'prod_upper', '{{ $t->id }}')" 
+                                                                  @click="open = false"
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-purple-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
+                                              </div>
+                                          </template>
+                                      </div>
+                                  @endif
+                              </div>
+                          </div>
+                          @elseif($order->prod_upper_completed_at)
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-purple-600 uppercase">Upper:</span>
+                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_upper_completed_at->format('d M H:i') }}">✓ {{ $order->prodUpperBy->name ?? '-' }}</span>
+                          </div>
+                          @else
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-purple-600 uppercase">Upper:</span>
+                              <div class="flex items-center gap-1">
+                                  @php
+                                      $upperStarted = (bool)$order->prod_upper_started_at;
+                                      $upperCurrentTech = $order->prodUpperBy->name ?? 'Kosong';
+                                  @endphp
+                                  {{-- Custom Picker Trigger Button & Teleported Popover --}}
+                                  <div class="relative" 
+                                       x-data="{ 
+                                           open: false, 
+                                           dropup: false, 
+                                           topPos: 'auto', 
+                                           bottomPos: 'auto', 
+                                           leftPos: 0,
+                                           toggle(event) {
+                                               const rect = event.currentTarget.getBoundingClientRect();
+                                               const popoverWidth = 185;
+                                               const popoverHeight = 250;
+                                               let left = rect.left;
+                                               if (left + popoverWidth > window.innerWidth - 10) {
+                                                   left = window.innerWidth - popoverWidth - 10;
+                                               }
+                                               if (left < 10) left = 10;
+                                               this.leftPos = left;
+
+                                               const spaceBelow = window.innerHeight - rect.bottom;
+                                               if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                   this.dropup = true;
+                                                   this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                   this.topPos = 'auto';
+                                               } else {
+                                                   this.dropup = false;
+                                                   this.topPos = (rect.bottom + 4) + 'px';
+                                                   this.bottomPos = 'auto';
+                                               }
+                                               this.open = !this.open;
+                                           },
+                                           selectTech(techId, techName) {
+                                               this.open = false;
+                                               @if($upperStarted)
+                                                   openOverrideModal({{ $order->id }}, 'prod_upper', techId, '{{ addslashes($upperCurrentTech) }}', techName, 'Upper');
+                                               @else
+                                                   $wire.updateTechnician({{ $order->id }}, 'prod_upper', techId);
+                                               @endif
+                                           }
+                                       }" 
+                                       @scroll.window="open = false"
+                                       @click.stop>
+                                      
+                                      <button type="button" 
+                                              @click="toggle($event)"
+                                              class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->prod_upper_by ? 'bg-purple-50/70 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
+                                              title="Pilih teknisi Upper">
+                                          <div class="flex items-center gap-1 truncate">
+                                              @if($order->prodUpperBy)
+                                                  <span class="w-3.5 h-3.5 rounded-full bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200 flex items-center justify-center text-[8px] font-black shrink-0">
+                                                      {{ substr($order->prodUpperBy->name, 0, 1) }}
+                                                  </span>
+                                                  <span class="truncate">{{ $order->prodUpperBy->name }}</span>
+                                              @else
+                                                  <span class="text-slate-400 italic text-[9px]">Pilih Teknisi</span>
+                                              @endif
+                                          </div>
+                                          <svg class="w-2 h-2 text-slate-400 transition-transform duration-200 shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                      </button>
+
+                                      <template x-teleport="body">
+                                          <div x-show="open" 
+                                               @click.away="open = false" 
+                                               x-transition:enter="transition ease-out duration-150"
+                                               x-transition:enter-start="opacity-0 scale-95"
+                                               x-transition:enter-end="opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-100"
+                                               x-transition:leave-start="opacity-100 scale-100"
+                                               x-transition:leave-end="opacity-0 scale-95"
+                                               :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                               class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                               style="display: none;">
+                                              
+                                              <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                  <span>Pilih Teknisi Upper:</span>
+                                                  <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                              </div>
+
+                                              <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                  <button type="button" 
+                                                          @click="selectTech('none', 'Tidak Diperlukan')" 
+                                                          class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                      <span class="text-xs">🚫</span>
+                                                      <span>Tidak Diperlukan</span>
+                                                  </button>
+                                              </div>
+
+                                              <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                  @if($order->prod_upper_by)
+                                                      <button type="button" 
+                                                              @click="selectTech('', 'Kosongkan')" 
+                                                              class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                          -- Kosongkan Pilihan --
+                                                      </button>
+                                                  @endif
+
+                                                  @forelse($this->techs['upper'] ?? [] as $t)
+                                                      <button type="button" 
+                                                              @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                              class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->prod_upper_by == $t->id ? 'text-purple-600 bg-purple-50 dark:bg-purple-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                          <div class="flex items-center gap-1.5 truncate">
+                                                              <span class="w-4 h-4 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                  {{ substr($t->name, 0, 1) }}
+                                                              </span>
+                                                              <span class="truncate">{{ $t->name }}</span>
+                                                          </div>
+                                                          @if($order->prod_upper_by == $t->id)
+                                                              <svg class="w-3 h-3 text-purple-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          @endif
+                                                      </button>
+                                                  @empty
+                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                  @endforelse
+                                              </div>
+                                          </div>
+                                      </template>
+                                  </div>
+
+                                  @if($order->prod_upper_started_at)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_upper', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan Upper">Selesaikan</button>
+                                  @elseif($order->prod_upper_by)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_upper', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Upper">Mulai</button>
+                                  @endif
+                              </div>
+                          </div>
+                          @endif
+
+                          {{-- 2. Soling --}}
+                          @if(!$hasSol || $order->isStationUnneeded('prod_sol'))
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-orange-500 uppercase">Soling:</span>
+                              <div class="flex items-center gap-1.5">
+                                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700 shadow-2xs">
+                                      <span>🚫</span> Tidak Diperlukan
+                                  </span>
+                                  @if($hasSol)
+                                      <div class="relative" 
+                                           x-data="{ 
+                                               open: false, 
+                                               dropup: false, 
+                                               topPos: 'auto', 
+                                               bottomPos: 'auto', 
+                                               leftPos: 0,
+                                               toggle(event) {
+                                                   const rect = event.currentTarget.getBoundingClientRect();
+                                                   const popoverWidth = 185;
+                                                   const popoverHeight = 220;
+                                                   let left = rect.right - popoverWidth;
+                                                   if (left < 10) left = 10;
+                                                   if (left + popoverWidth > window.innerWidth - 10) {
+                                                       left = window.innerWidth - popoverWidth - 10;
+                                                   }
+                                                   this.leftPos = left;
+
+                                                   const spaceBelow = window.innerHeight - rect.bottom;
+                                                   if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                       this.dropup = true;
+                                                       this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                       this.topPos = 'auto';
+                                                   } else {
+                                                       this.dropup = false;
+                                                       this.topPos = (rect.bottom + 4) + 'px';
+                                                       this.bottomPos = 'auto';
+                                                   }
+                                                   this.open = !this.open;
+                                               }
+                                           }" 
+                                           @scroll.window="open = false"
+                                           @click.stop>
+                                          <button type="button" 
+                                                  @click="toggle($event)" 
+                                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer"
+                                                  title="Ubah penugasan teknisi">
+                                              <svg class="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                              </svg>
+                                              <span>Ubah</span>
+                                              <svg class="w-2 h-2 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                              </svg>
+                                          </button>
+
+                                          <template x-teleport="body">
+                                              <div x-show="open" 
+                                                   @click.away="open = false" 
+                                                   x-transition:enter="transition ease-out duration-150"
+                                                   x-transition:enter-start="opacity-0 scale-95"
+                                                   x-transition:enter-end="opacity-100 scale-100"
+                                                   x-transition:leave="transition ease-in duration-100"
+                                                   x-transition:leave-start="opacity-100 scale-100"
+                                                   x-transition:leave-end="opacity-0 scale-95"
+                                                   :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                                   class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                                   style="display: none;">
+                                                  <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                      <span>Pilih Teknisi Soling:</span>
+                                                      <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                                  </div>
+                                                  <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @forelse($this->techs['sol'] ?? [] as $t)
+                                                          <button type="button" 
+                                                                  wire:click="updateTechnician({{ $order->id }}, 'prod_sol', '{{ $t->id }}')" 
+                                                                  @click="open = false"
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-orange-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
+                                              </div>
+                                          </template>
+                                      </div>
+                                  @endif
+                              </div>
+                          </div>
+                          @elseif($order->prod_sol_completed_at)
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-orange-500 uppercase">Soling:</span>
+                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_sol_completed_at->format('d M H:i') }}">✓ {{ $order->prodSolBy->name ?? '-' }}</span>
+                          </div>
+                          @elseif($isSolLocked)
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-orange-500 uppercase">Soling:</span>
+                              <span class="text-yellow-600 italic text-[10px]" title="Menunggu Upper selesai">Menunggu Upper</span>
+                          </div>
+                          @else
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-orange-500 uppercase">Soling:</span>
+                              <div class="flex items-center gap-1">
+                                  @php
+                                      $solStarted = (bool)$order->prod_sol_started_at;
+                                      $solCurrentTech = $order->prodSolBy->name ?? 'Kosong';
+                                  @endphp
+                                  {{-- Custom Picker Trigger Button & Teleported Popover --}}
+                                  <div class="relative" 
+                                       x-data="{ 
+                                           open: false, 
+                                           dropup: false, 
+                                           topPos: 'auto', 
+                                           bottomPos: 'auto', 
+                                           leftPos: 0,
+                                           toggle(event) {
+                                               const rect = event.currentTarget.getBoundingClientRect();
+                                               const popoverWidth = 185;
+                                               const popoverHeight = 250;
+                                               let left = rect.left;
+                                               if (left + popoverWidth > window.innerWidth - 10) {
+                                                   left = window.innerWidth - popoverWidth - 10;
+                                               }
+                                               if (left < 10) left = 10;
+                                               this.leftPos = left;
+
+                                               const spaceBelow = window.innerHeight - rect.bottom;
+                                               if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                   this.dropup = true;
+                                                   this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                   this.topPos = 'auto';
+                                               } else {
+                                                   this.dropup = false;
+                                                   this.topPos = (rect.bottom + 4) + 'px';
+                                                   this.bottomPos = 'auto';
+                                               }
+                                               this.open = !this.open;
+                                           },
+                                           selectTech(techId, techName) {
+                                               this.open = false;
+                                               @if($solStarted)
+                                                   openOverrideModal({{ $order->id }}, 'prod_sol', techId, '{{ addslashes($solCurrentTech) }}', techName, 'Soling');
+                                               @else
+                                                   $wire.updateTechnician({{ $order->id }}, 'prod_sol', techId);
+                                               @endif
+                                           }
+                                       }" 
+                                       @scroll.window="open = false"
+                                       @click.stop>
+                                      
+                                      <button type="button" 
+                                              @click="toggle($event)"
+                                              class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->prod_sol_by ? 'bg-orange-50/70 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800 hover:bg-orange-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
+                                              title="Pilih teknisi Soling">
+                                          <div class="flex items-center gap-1 truncate">
+                                              @if($order->prodSolBy)
+                                                  <span class="w-3.5 h-3.5 rounded-full bg-orange-200 dark:bg-orange-900 text-orange-800 dark:text-orange-200 flex items-center justify-center text-[8px] font-black shrink-0">
+                                                      {{ substr($order->prodSolBy->name, 0, 1) }}
+                                                  </span>
+                                                  <span class="truncate">{{ $order->prodSolBy->name }}</span>
+                                              @else
+                                                  <span class="text-slate-400 italic text-[9px]">Pilih Teknisi</span>
+                                              @endif
+                                          </div>
+                                          <svg class="w-2 h-2 text-slate-400 transition-transform duration-200 shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                      </button>
+
+                                      <template x-teleport="body">
+                                          <div x-show="open" 
+                                               @click.away="open = false" 
+                                               x-transition:enter="transition ease-out duration-150"
+                                               x-transition:enter-start="opacity-0 scale-95"
+                                               x-transition:enter-end="opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-100"
+                                               x-transition:leave-start="opacity-100 scale-100"
+                                               x-transition:leave-end="opacity-0 scale-95"
+                                               :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                               class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                               style="display: none;">
+                                              
+                                              <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                  <span>Pilih Teknisi Soling:</span>
+                                                  <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                              </div>
+
+                                              <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                  <button type="button" 
+                                                          @click="selectTech('none', 'Tidak Diperlukan')" 
+                                                          class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                      <span class="text-xs">🚫</span>
+                                                      <span>Tidak Diperlukan</span>
+                                                  </button>
+                                              </div>
+
+                                              <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                  @if($order->prod_sol_by)
+                                                      <button type="button" 
+                                                              @click="selectTech('', 'Kosongkan')" 
+                                                              class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                          -- Kosongkan Pilihan --
+                                                      </button>
+                                                  @endif
+
+                                                  @forelse($this->techs['sol'] ?? [] as $t)
+                                                      <button type="button" 
+                                                              @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                              class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->prod_sol_by == $t->id ? 'text-orange-600 bg-orange-50 dark:bg-orange-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                          <div class="flex items-center gap-1.5 truncate">
+                                                              <span class="w-4 h-4 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                  {{ substr($t->name, 0, 1) }}
+                                                              </span>
+                                                              <span class="truncate">{{ $t->name }}</span>
+                                                          </div>
+                                                          @if($order->prod_sol_by == $t->id)
+                                                              <svg class="w-3 h-3 text-orange-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          @endif
+                                                      </button>
+                                                  @empty
+                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                  @endforelse
+                                              </div>
+                                          </div>
+                                      </template>
+                                  </div>
+
+                                  @if($order->prod_sol_started_at)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_sol', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan Soling">Selesaikan</button>
+                                  @elseif($order->prod_sol_by)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_sol', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Soling">Mulai</button>
+                                  @endif
+                              </div>
+                          </div>
+                          @endif
+
+                          {{-- 3. QC Jahit --}}
+                          @if(!$hasJahit || $order->isStationUnneeded('qc_jahit'))
+                          <div class="flex items-center justify-between text-[11px]">
+                              <span class="font-bold text-blue-600 uppercase">QC Jahit:</span>
+                              <div class="flex items-center gap-1.5">
+                                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700 shadow-2xs">
+                                      <span>🚫</span> Tidak Diperlukan
+                                  </span>
+                                  @if($hasJahit)
+                                      <div class="relative" 
+                                           x-data="{ 
+                                               open: false, 
+                                               dropup: false, 
+                                               topPos: 'auto', 
+                                               bottomPos: 'auto', 
+                                               leftPos: 0,
+                                               toggle(event) {
+                                                   const rect = event.currentTarget.getBoundingClientRect();
+                                                   const popoverWidth = 185;
+                                                   const popoverHeight = 220;
+                                                   let left = rect.right - popoverWidth;
+                                                   if (left < 10) left = 10;
+                                                   if (left + popoverWidth > window.innerWidth - 10) {
+                                                       left = window.innerWidth - popoverWidth - 10;
+                                                   }
+                                                   this.leftPos = left;
+
+                                                   const spaceBelow = window.innerHeight - rect.bottom;
+                                                   if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                       this.dropup = true;
+                                                       this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                       this.topPos = 'auto';
+                                                   } else {
+                                                       this.dropup = false;
+                                                       this.topPos = (rect.bottom + 4) + 'px';
+                                                       this.bottomPos = 'auto';
+                                                   }
+                                                   this.open = !this.open;
+                                               }
+                                           }" 
+                                           @scroll.window="open = false"
+                                           @click.stop>
+                                          <button type="button" 
+                                                  @click="toggle($event)" 
+                                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer"
+                                                  title="Ubah penugasan teknisi">
+                                              <svg class="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                              </svg>
+                                              <span>Ubah</span>
+                                              <svg class="w-2 h-2 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                              </svg>
+                                          </button>
+
+                                          <template x-teleport="body">
+                                              <div x-show="open" 
+                                                   @click.away="open = false" 
+                                                   x-transition:enter="transition ease-out duration-150"
+                                                   x-transition:enter-start="opacity-0 scale-95"
+                                                   x-transition:enter-end="opacity-100 scale-100"
+                                                   x-transition:leave="transition ease-in duration-100"
+                                                   x-transition:leave-start="opacity-100 scale-100"
+                                                   x-transition:leave-end="opacity-0 scale-95"
+                                                   :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                                   class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                                   style="display: none;">
+                                                  <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                      <span>Pilih Teknisi QC Jahit:</span>
+                                                      <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                                  </div>
+                                                  <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @forelse($this->techs['jahit'] ?? ($this->techs['all'] ?? []) as $t)
+                                                          <button type="button" 
+                                                                  wire:click="updateTechnician({{ $order->id }}, 'qc_jahit', '{{ $t->id }}')" 
+                                                                  @click="open = false"
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
+                                              </div>
+                                          </template>
+                                      </div>
+                                  @endif
+                              </div>
+                          </div>
+                          @elseif($order->qc_jahit_completed_at)
+                          <div class="flex items-center justify-between text-[11px]">
+                              <span class="font-bold text-blue-600 uppercase">QC Jahit:</span>
+                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_jahit_completed_at->format('d M H:i') }}">✓ {{ $order->qcJahitBy->name ?? '-' }}</span>
+                          </div>
+                          @elseif($isJahitLocked)
+                          <div class="flex items-center justify-between text-[11px]">
+                              <span class="font-bold text-blue-600 uppercase">QC Jahit:</span>
+                              <span class="text-yellow-600 italic text-[10px]" title="Menunggu pengerjaan konstruksi selesai">Menunggu Urutan</span>
+                          </div>
+                          @else
+                          <div class="flex items-center justify-between text-[11px]">
+                              <span class="font-bold text-blue-600 uppercase">QC Jahit:</span>
+                              <div class="flex items-center gap-1">
+                                  @php
+                                      $jahitStarted = (bool)$order->qc_jahit_started_at;
+                                      $jahitCurrentTech = $order->qcJahitBy->name ?? 'Kosong';
+                                  @endphp
+                                  {{-- Custom Picker Trigger Button & Teleported Popover --}}
+                                  <div class="relative" 
+                                       x-data="{ 
+                                           open: false, 
+                                           dropup: false, 
+                                           topPos: 'auto', 
+                                           bottomPos: 'auto', 
+                                           leftPos: 0,
+                                           toggle(event) {
+                                               const rect = event.currentTarget.getBoundingClientRect();
+                                               const popoverWidth = 185;
+                                               const popoverHeight = 250;
+                                               let left = rect.left;
+                                               if (left + popoverWidth > window.innerWidth - 10) {
+                                                   left = window.innerWidth - popoverWidth - 10;
+                                               }
+                                               if (left < 10) left = 10;
+                                               this.leftPos = left;
+
+                                               const spaceBelow = window.innerHeight - rect.bottom;
+                                               if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                   this.dropup = true;
+                                                   this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                   this.topPos = 'auto';
+                                               } else {
+                                                   this.dropup = false;
+                                                   this.topPos = (rect.bottom + 4) + 'px';
+                                                   this.bottomPos = 'auto';
+                                               }
+                                               this.open = !this.open;
+                                           },
+                                           selectTech(techId, techName) {
+                                               this.open = false;
+                                               @if($jahitStarted)
+                                                   openOverrideModal({{ $order->id }}, 'qc_jahit', techId, '{{ addslashes($jahitCurrentTech) }}', techName, 'QC Jahit');
+                                               @else
+                                                   $wire.updateTechnician({{ $order->id }}, 'qc_jahit', techId);
+                                               @endif
+                                           }
+                                       }" 
+                                       @scroll.window="open = false"
+                                       @click.stop>
+                                      
+                                      <button type="button" 
+                                              @click="toggle($event)"
+                                              class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->qc_jahit_by ? 'bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
+                                              title="Pilih teknisi QC Jahit">
+                                          <div class="flex items-center gap-1 truncate">
+                                              @if($order->qcJahitBy)
+                                                  <span class="w-3.5 h-3.5 rounded-full bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-200 flex items-center justify-center text-[8px] font-black shrink-0">
+                                                      {{ substr($order->qcJahitBy->name, 0, 1) }}
+                                                  </span>
+                                                  <span class="truncate">{{ $order->qcJahitBy->name }}</span>
+                                              @else
+                                                  <span class="text-slate-400 italic text-[9px]">Pilih Teknisi</span>
+                                              @endif
+                                          </div>
+                                          <svg class="w-2 h-2 text-slate-400 transition-transform duration-200 shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                      </button>
+
+                                      <template x-teleport="body">
+                                          <div x-show="open" 
+                                               @click.away="open = false" 
+                                               x-transition:enter="transition ease-out duration-150"
+                                               x-transition:enter-start="opacity-0 scale-95"
+                                               x-transition:enter-end="opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-100"
+                                               x-transition:leave-start="opacity-100 scale-100"
+                                               x-transition:leave-end="opacity-0 scale-95"
+                                               :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                               class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                               style="display: none;">
+                                              
+                                              <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                  <span>Pilih Teknisi QC Jahit:</span>
+                                                  <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                              </div>
+
+                                              <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                  <button type="button" 
+                                                          @click="selectTech('none', 'Tidak Diperlukan')" 
+                                                          class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                      <span class="text-xs">🚫</span>
+                                                      <span>Tidak Diperlukan</span>
+                                                  </button>
+                                              </div>
+
+                                              <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                  @if($order->qc_jahit_by)
+                                                      <button type="button" 
+                                                              @click="selectTech('', 'Kosongkan')" 
+                                                              class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                          -- Kosongkan Pilihan --
+                                                      </button>
+                                                  @endif
+
+                                                  @forelse($this->techs['jahit'] ?? ($this->techs['all'] ?? []) as $t)
+                                                      <button type="button" 
+                                                              @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                              class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->qc_jahit_by == $t->id ? 'text-blue-600 bg-blue-50 dark:bg-blue-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                          <div class="flex items-center gap-1.5 truncate">
+                                                              <span class="w-4 h-4 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                  {{ substr($t->name, 0, 1) }}
+                                                              </span>
+                                                              <span class="truncate">{{ $t->name }}</span>
+                                                          </div>
+                                                          @if($order->qc_jahit_by == $t->id)
+                                                              <svg class="w-3 h-3 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          @endif
+                                                      </button>
+                                                  @empty
+                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                  @endforelse
+                                              </div>
+                                          </div>
+                                      </template>
+                                  </div>
+
+                                  @if($order->qc_jahit_started_at)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan QC Jahit">Selesaikan</button>
+                                  @elseif($order->qc_jahit_by)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai QC Jahit">Mulai</button>
+                                  @endif
+                              </div>
                           </div>
                           @endif
                       </div>
@@ -603,81 +1938,693 @@
                   <td class="px-6 py-4" @click.stop>
                       <div class="flex flex-col gap-1.5 min-w-[240px]">
                           {{-- 1. Treatment --}}
+                          @if($order->isStationUnneeded('prod_cleaning'))
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
                               <span class="font-bold text-teal-600 uppercase">Treatment:</span>
-                              @if(!$hasTreatment)
-                                  <span class="text-gray-400 text-[10px] italic">Tidak Diperlukan</span>
-                              @elseif($order->prod_cleaning_completed_at)
-                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_cleaning_completed_at->format('d M H:i') }}">✓ {{ $order->prodCleaningBy->name ?? '-' }}</span>
-                              @else
-                                  <div class="flex items-center gap-1">
-                                      <select id="tech-prod_cleaning-{{ $order->id }}"
-                                              wire:change="updateTechnician({{ $order->id }}, 'prod_cleaning', $event.target.value)" 
-                                              class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:ring-2 focus:ring-teal-500/20 cursor-pointer max-w-[125px]">
-                                          <option value="">-- Pilih --</option>
-                                          @foreach($this->techs['treatment'] ?? ($this->techs['all'] ?? []) as $t)
-                                              <option value="{{ $t->id }}" {{ $order->prod_cleaning_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                          @endforeach
-                                      </select>
+                              <div class="flex items-center gap-1.5">
+                                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700 shadow-2xs">
+                                      <span>🚫</span> Tidak Diperlukan
+                                  </span>
+                                  <div class="relative" 
+                                       x-data="{ 
+                                           open: false, 
+                                           dropup: false, 
+                                           topPos: 'auto', 
+                                           bottomPos: 'auto', 
+                                           leftPos: 0,
+                                           toggle(event) {
+                                               const rect = event.currentTarget.getBoundingClientRect();
+                                               const popoverWidth = 185;
+                                               const popoverHeight = 220;
+                                               let left = rect.right - popoverWidth;
+                                               if (left < 10) left = 10;
+                                               if (left + popoverWidth > window.innerWidth - 10) {
+                                                   left = window.innerWidth - popoverWidth - 10;
+                                               }
+                                               this.leftPos = left;
 
-                                      @if($order->prod_cleaning_started_at)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_cleaning', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
-                                      @elseif($order->prod_cleaning_by)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_cleaning', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
-                                      @endif
+                                               const spaceBelow = window.innerHeight - rect.bottom;
+                                               if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                   this.dropup = true;
+                                                   this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                   this.topPos = 'auto';
+                                               } else {
+                                                   this.dropup = false;
+                                                   this.topPos = (rect.bottom + 4) + 'px';
+                                                   this.bottomPos = 'auto';
+                                               }
+                                               this.open = !this.open;
+                                           }
+                                       }" 
+                                       @scroll.window="open = false"
+                                       @click.stop>
+                                      <button type="button" 
+                                              @click="toggle($event)" 
+                                              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer"
+                                              title="Ubah penugasan teknisi">
+                                          <svg class="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                          </svg>
+                                          <span>Ubah</span>
+                                          <svg class="w-2 h-2 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                      </button>
+
+                                      <template x-teleport="body">
+                                          <div x-show="open" 
+                                               @click.away="open = false" 
+                                               x-transition:enter="transition ease-out duration-150"
+                                               x-transition:enter-start="opacity-0 scale-95"
+                                               x-transition:enter-end="opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-100"
+                                               x-transition:leave-start="opacity-100 scale-100"
+                                               x-transition:leave-end="opacity-0 scale-95"
+                                               :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                               class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                               style="display: none;">
+                                              <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                  <span>Pilih Teknisi Treatment:</span>
+                                                  <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                              </div>
+                                              <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                  @forelse($this->techs['treatment'] ?? ($this->techs['all'] ?? []) as $t)
+                                                      <button type="button" 
+                                                              wire:click="updateTechnician({{ $order->id }}, 'prod_cleaning', '{{ $t->id }}')" 
+                                                              @click="open = false"
+                                                              class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                          <div class="flex items-center gap-1.5 truncate">
+                                                              <span class="w-4 h-4 rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                  {{ substr($t->name, 0, 1) }}
+                                                              </span>
+                                                              <span class="truncate">{{ $t->name }}</span>
+                                                          </div>
+                                                          <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                          </svg>
+                                                      </button>
+                                                  @empty
+                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                  @endforelse
+                                              </div>
+                                          </div>
+                                      </template>
                                   </div>
-                              @endif
+                              </div>
                           </div>
+                          @elseif(!$hasTreatment)
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-teal-600 uppercase">Treatment:</span>
+                              <span class="text-gray-400 text-[10px] italic">Tidak Diperlukan</span>
+                          </div>
+                          @elseif($order->prod_cleaning_completed_at)
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-teal-600 uppercase">Treatment:</span>
+                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_cleaning_completed_at->format('d M H:i') }}">✓ {{ $order->prodCleaningBy->name ?? '-' }}</span>
+                          </div>
+                          @else
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-teal-600 uppercase">Treatment:</span>
+                              <div class="flex items-center gap-1">
+                                  {{-- Custom Picker Trigger Button & Teleported Popover --}}
+                                  <div class="relative" 
+                                       x-data="{ 
+                                           open: false, 
+                                           dropup: false, 
+                                           topPos: 'auto', 
+                                           bottomPos: 'auto', 
+                                           leftPos: 0,
+                                           toggle(event) {
+                                               const rect = event.currentTarget.getBoundingClientRect();
+                                               const popoverWidth = 185;
+                                               const popoverHeight = 250;
+                                               let left = rect.left;
+                                               if (left + popoverWidth > window.innerWidth - 10) {
+                                                   left = window.innerWidth - popoverWidth - 10;
+                                               }
+                                               if (left < 10) left = 10;
+                                               this.leftPos = left;
+
+                                               const spaceBelow = window.innerHeight - rect.bottom;
+                                               if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                   this.dropup = true;
+                                                   this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                   this.topPos = 'auto';
+                                               } else {
+                                                   this.dropup = false;
+                                                   this.topPos = (rect.bottom + 4) + 'px';
+                                                   this.bottomPos = 'auto';
+                                               }
+                                               this.open = !this.open;
+                                           },
+                                           selectTech(techId) {
+                                               this.open = false;
+                                               $wire.updateTechnician({{ $order->id }}, 'prod_cleaning', techId);
+                                           }
+                                       }" 
+                                       @scroll.window="open = false"
+                                       @click.stop>
+                                      
+                                      <button type="button" 
+                                              @click="toggle($event)"
+                                              class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->prod_cleaning_by ? 'bg-teal-50/70 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800 hover:bg-teal-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
+                                              title="Pilih teknisi Treatment">
+                                          <div class="flex items-center gap-1 truncate">
+                                              @if($order->prodCleaningBy)
+                                                  <span class="w-3.5 h-3.5 rounded-full bg-teal-200 dark:bg-teal-900 text-teal-800 dark:text-teal-200 flex items-center justify-center text-[8px] font-black shrink-0">
+                                                      {{ substr($order->prodCleaningBy->name, 0, 1) }}
+                                                  </span>
+                                                  <span class="truncate">{{ $order->prodCleaningBy->name }}</span>
+                                              @else
+                                                  <span class="text-slate-400 italic text-[9px]">Pilih Teknisi</span>
+                                              @endif
+                                          </div>
+                                          <svg class="w-2 h-2 text-slate-400 transition-transform duration-200 shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                      </button>
+
+                                      <template x-teleport="body">
+                                          <div x-show="open" 
+                                               @click.away="open = false" 
+                                               x-transition:enter="transition ease-out duration-150"
+                                               x-transition:enter-start="opacity-0 scale-95"
+                                               x-transition:enter-end="opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-100"
+                                               x-transition:leave-start="opacity-100 scale-100"
+                                               x-transition:leave-end="opacity-0 scale-95"
+                                               :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                               class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                               style="display: none;">
+                                              
+                                              <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                  <span>Pilih Teknisi Treatment:</span>
+                                                  <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                              </div>
+
+                                              <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                  <button type="button" 
+                                                          @click="selectTech('none')" 
+                                                          class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                      <span class="text-xs">🚫</span>
+                                                      <span>Tidak Diperlukan</span>
+                                                  </button>
+                                              </div>
+
+                                              <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                  @if($order->prod_cleaning_by)
+                                                      <button type="button" 
+                                                              @click="selectTech('')" 
+                                                              class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                          -- Kosongkan Pilihan --
+                                                      </button>
+                                                  @endif
+
+                                                  @forelse($this->techs['treatment'] ?? ($this->techs['all'] ?? []) as $t)
+                                                      <button type="button" 
+                                                              @click="selectTech('{{ $t->id }}')" 
+                                                              class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->prod_cleaning_by == $t->id ? 'text-teal-600 bg-teal-50 dark:bg-teal-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                          <div class="flex items-center gap-1.5 truncate">
+                                                              <span class="w-4 h-4 rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                  {{ substr($t->name, 0, 1) }}
+                                                              </span>
+                                                              <span class="truncate">{{ $t->name }}</span>
+                                                          </div>
+                                                          @if($order->prod_cleaning_by == $t->id)
+                                                              <svg class="w-3 h-3 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          @endif
+                                                      </button>
+                                                  @empty
+                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                  @endforelse
+                                              </div>
+                                          </div>
+                                      </template>
+                                  </div>
+
+                                  @if($order->prod_cleaning_started_at)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_cleaning', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
+                                  @elseif($order->prod_cleaning_by)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_cleaning', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                  @endif
+                              </div>
+                          </div>
+                          @endif
 
                           {{-- 2. QC Cleanup --}}
+                          @if($order->isStationUnneeded('qc_cleanup'))
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
                               <span class="font-bold text-teal-600 uppercase">Cleanup:</span>
-                              @if($order->qc_cleanup_completed_at)
-                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_cleanup_completed_at->format('d M H:i') }}">✓ {{ $order->qcCleanupBy->name ?? '-' }}</span>
-                              @else
-                                  <div class="flex items-center gap-1">
-                                      <select id="tech-qc_cleanup-{{ $order->id }}"
-                                              wire:change="updateTechnician({{ $order->id }}, 'qc_cleanup', $event.target.value)" 
-                                              class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:ring-2 focus:ring-teal-500/20 cursor-pointer max-w-[125px]">
-                                          <option value="">-- Pilih --</option>
-                                          @foreach($this->techs['cleanup'] ?? [] as $t)
-                                              <option value="{{ $t->id }}" {{ $order->qc_cleanup_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                          @endforeach
-                                      </select>
+                              <div class="flex items-center gap-1.5">
+                                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700 shadow-2xs">
+                                      <span>🚫</span> Tidak Diperlukan
+                                  </span>
+                                  <div class="relative" 
+                                       x-data="{ 
+                                           open: false, 
+                                           dropup: false, 
+                                           topPos: 'auto', 
+                                           bottomPos: 'auto', 
+                                           leftPos: 0,
+                                           toggle(event) {
+                                               const rect = event.currentTarget.getBoundingClientRect();
+                                               const popoverWidth = 185;
+                                               const popoverHeight = 220;
+                                               let left = rect.right - popoverWidth;
+                                               if (left < 10) left = 10;
+                                               if (left + popoverWidth > window.innerWidth - 10) {
+                                                   left = window.innerWidth - popoverWidth - 10;
+                                               }
+                                               this.leftPos = left;
 
-                                      @if($order->qc_cleanup_started_at)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
-                                      @elseif($order->qc_cleanup_by)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
-                                      @endif
+                                               const spaceBelow = window.innerHeight - rect.bottom;
+                                               if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                   this.dropup = true;
+                                                   this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                   this.topPos = 'auto';
+                                               } else {
+                                                   this.dropup = false;
+                                                   this.topPos = (rect.bottom + 4) + 'px';
+                                                   this.bottomPos = 'auto';
+                                               }
+                                               this.open = !this.open;
+                                           }
+                                       }" 
+                                       @scroll.window="open = false"
+                                       @click.stop>
+                                      <button type="button" 
+                                              @click="toggle($event)" 
+                                              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer"
+                                              title="Ubah penugasan teknisi">
+                                          <svg class="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                          </svg>
+                                          <span>Ubah</span>
+                                          <svg class="w-2 h-2 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                      </button>
+
+                                      <template x-teleport="body">
+                                          <div x-show="open" 
+                                               @click.away="open = false" 
+                                               x-transition:enter="transition ease-out duration-150"
+                                               x-transition:enter-start="opacity-0 scale-95"
+                                               x-transition:enter-end="opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-100"
+                                               x-transition:leave-start="opacity-100 scale-100"
+                                               x-transition:leave-end="opacity-0 scale-95"
+                                               :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                               class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                               style="display: none;">
+                                              <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                  <span>Pilih Teknisi Cleanup:</span>
+                                                  <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                              </div>
+                                              <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                  @forelse($this->techs['cleanup'] ?? [] as $t)
+                                                      <button type="button" 
+                                                              wire:click="updateTechnician({{ $order->id }}, 'qc_cleanup', '{{ $t->id }}')" 
+                                                              @click="open = false"
+                                                              class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                          <div class="flex items-center gap-1.5 truncate">
+                                                              <span class="w-4 h-4 rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                  {{ substr($t->name, 0, 1) }}
+                                                              </span>
+                                                              <span class="truncate">{{ $t->name }}</span>
+                                                          </div>
+                                                          <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                          </svg>
+                                                      </button>
+                                                  @empty
+                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                  @endforelse
+                                              </div>
+                                          </div>
+                                      </template>
                                   </div>
-                              @endif
+                              </div>
                           </div>
+                          @elseif($order->qc_cleanup_completed_at)
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-teal-600 uppercase">Cleanup:</span>
+                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_cleanup_completed_at->format('d M H:i') }}">✓ {{ $order->qcCleanupBy->name ?? '-' }}</span>
+                          </div>
+                          @else
+                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
+                              <span class="font-bold text-teal-600 uppercase">Cleanup:</span>
+                              <div class="flex items-center gap-1">
+                                  {{-- Custom Picker Trigger Button & Teleported Popover --}}
+                                  <div class="relative" 
+                                       x-data="{ 
+                                           open: false, 
+                                           dropup: false, 
+                                           topPos: 'auto', 
+                                           bottomPos: 'auto', 
+                                           leftPos: 0,
+                                           toggle(event) {
+                                               const rect = event.currentTarget.getBoundingClientRect();
+                                               const popoverWidth = 185;
+                                               const popoverHeight = 250;
+                                               let left = rect.left;
+                                               if (left + popoverWidth > window.innerWidth - 10) {
+                                                   left = window.innerWidth - popoverWidth - 10;
+                                               }
+                                               if (left < 10) left = 10;
+                                               this.leftPos = left;
+
+                                               const spaceBelow = window.innerHeight - rect.bottom;
+                                               if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                   this.dropup = true;
+                                                   this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                   this.topPos = 'auto';
+                                               } else {
+                                                   this.dropup = false;
+                                                   this.topPos = (rect.bottom + 4) + 'px';
+                                                   this.bottomPos = 'auto';
+                                               }
+                                               this.open = !this.open;
+                                           },
+                                           selectTech(techId) {
+                                               this.open = false;
+                                               $wire.updateTechnician({{ $order->id }}, 'qc_cleanup', techId);
+                                           }
+                                       }" 
+                                       @scroll.window="open = false"
+                                       @click.stop>
+                                      
+                                      <button type="button" 
+                                              @click="toggle($event)"
+                                              class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->qc_cleanup_by ? 'bg-teal-50/70 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800 hover:bg-teal-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
+                                              title="Pilih teknisi Cleanup">
+                                          <div class="flex items-center gap-1 truncate">
+                                              @if($order->qcCleanupBy)
+                                                  <span class="w-3.5 h-3.5 rounded-full bg-teal-200 dark:bg-teal-900 text-teal-800 dark:text-teal-200 flex items-center justify-center text-[8px] font-black shrink-0">
+                                                      {{ substr($order->qcCleanupBy->name, 0, 1) }}
+                                                  </span>
+                                                  <span class="truncate">{{ $order->qcCleanupBy->name }}</span>
+                                              @else
+                                                  <span class="text-slate-400 italic text-[9px]">Pilih Teknisi</span>
+                                              @endif
+                                          </div>
+                                          <svg class="w-2 h-2 text-slate-400 transition-transform duration-200 shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                      </button>
+
+                                      <template x-teleport="body">
+                                          <div x-show="open" 
+                                               @click.away="open = false" 
+                                               x-transition:enter="transition ease-out duration-150"
+                                               x-transition:enter-start="opacity-0 scale-95"
+                                               x-transition:enter-end="opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-100"
+                                               x-transition:leave-start="opacity-100 scale-100"
+                                               x-transition:leave-end="opacity-0 scale-95"
+                                               :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                               class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                               style="display: none;">
+                                              
+                                              <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                  <span>Pilih Teknisi Cleanup:</span>
+                                                  <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                              </div>
+
+                                              <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                  <button type="button" 
+                                                          @click="selectTech('none')" 
+                                                          class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                      <span class="text-xs">🚫</span>
+                                                      <span>Tidak Diperlukan</span>
+                                                  </button>
+                                              </div>
+
+                                              <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                  @if($order->qc_cleanup_by)
+                                                      <button type="button" 
+                                                              @click="selectTech('')" 
+                                                              class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                          -- Kosongkan Pilihan --
+                                                      </button>
+                                                  @endif
+
+                                                  @forelse($this->techs['cleanup'] ?? [] as $t)
+                                                      <button type="button" 
+                                                              @click="selectTech('{{ $t->id }}')" 
+                                                              class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->qc_cleanup_by == $t->id ? 'text-teal-600 bg-teal-50 dark:bg-teal-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                          <div class="flex items-center gap-1.5 truncate">
+                                                              <span class="w-4 h-4 rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                  {{ substr($t->name, 0, 1) }}
+                                                              </span>
+                                                              <span class="truncate">{{ $t->name }}</span>
+                                                          </div>
+                                                          @if($order->qc_cleanup_by == $t->id)
+                                                              <svg class="w-3 h-3 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          @endif
+                                                      </button>
+                                                  @empty
+                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                  @endforelse
+                                              </div>
+                                          </div>
+                                      </template>
+                                  </div>
+
+                                  @if($order->qc_cleanup_started_at)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
+                                  @elseif($order->qc_cleanup_by)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                  @endif
+                              </div>
+                          </div>
+                          @endif
 
                           {{-- 3. QC Final --}}
+                          @if($order->isStationUnneeded('qc_final'))
                           <div class="flex items-center justify-between text-[11px]">
                               <span class="font-bold text-emerald-600 uppercase">QC Final:</span>
-                              @if($order->qc_final_completed_at)
-                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_final_completed_at->format('d M H:i') }}">✓ {{ $order->qcFinalBy->name ?? '-' }}</span>
-                              @else
-                                  <div class="flex items-center gap-1">
-                                      <select id="tech-qc_final-{{ $order->id }}"
-                                              wire:change="updateTechnician({{ $order->id }}, 'qc_final', $event.target.value)" 
-                                              class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer max-w-[125px]">
-                                          <option value="">-- Pilih --</option>
-                                          @foreach($this->techs['final'] ?? [] as $t)
-                                              <option value="{{ $t->id }}" {{ $order->qc_final_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                          @endforeach
-                                      </select>
+                              <div class="flex items-center gap-1.5">
+                                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700 shadow-2xs">
+                                      <span>🚫</span> Tidak Diperlukan
+                                  </span>
+                                  <div class="relative" 
+                                       x-data="{ 
+                                           open: false, 
+                                           dropup: false, 
+                                           topPos: 'auto', 
+                                           bottomPos: 'auto', 
+                                           leftPos: 0,
+                                           toggle(event) {
+                                               const rect = event.currentTarget.getBoundingClientRect();
+                                               const popoverWidth = 185;
+                                               const popoverHeight = 220;
+                                               let left = rect.right - popoverWidth;
+                                               if (left < 10) left = 10;
+                                               if (left + popoverWidth > window.innerWidth - 10) {
+                                                   left = window.innerWidth - popoverWidth - 10;
+                                               }
+                                               this.leftPos = left;
 
-                                      @if($order->qc_final_started_at)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
-                                      @elseif($order->qc_final_by)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
-                                      @endif
+                                               const spaceBelow = window.innerHeight - rect.bottom;
+                                               if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                   this.dropup = true;
+                                                   this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                   this.topPos = 'auto';
+                                               } else {
+                                                   this.dropup = false;
+                                                   this.topPos = (rect.bottom + 4) + 'px';
+                                                   this.bottomPos = 'auto';
+                                               }
+                                               this.open = !this.open;
+                                           }
+                                       }" 
+                                       @scroll.window="open = false"
+                                       @click.stop>
+                                      <button type="button" 
+                                              @click="toggle($event)" 
+                                              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer"
+                                              title="Ubah penugasan teknisi">
+                                          <svg class="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                          </svg>
+                                          <span>Ubah</span>
+                                          <svg class="w-2 h-2 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                      </button>
+
+                                      <template x-teleport="body">
+                                          <div x-show="open" 
+                                               @click.away="open = false" 
+                                               x-transition:enter="transition ease-out duration-150"
+                                               x-transition:enter-start="opacity-0 scale-95"
+                                               x-transition:enter-end="opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-100"
+                                               x-transition:leave-start="opacity-100 scale-100"
+                                               x-transition:leave-end="opacity-0 scale-95"
+                                               :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                               class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                               style="display: none;">
+                                              <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                  <span>Pilih Teknisi QC Final:</span>
+                                                  <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                              </div>
+                                              <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                  @forelse($this->techs['final'] ?? [] as $t)
+                                                      <button type="button" 
+                                                              wire:click="updateTechnician({{ $order->id }}, 'qc_final', '{{ $t->id }}')" 
+                                                              @click="open = false"
+                                                              class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                          <div class="flex items-center gap-1.5 truncate">
+                                                              <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                  {{ substr($t->name, 0, 1) }}
+                                                              </span>
+                                                              <span class="truncate">{{ $t->name }}</span>
+                                                          </div>
+                                                          <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                          </svg>
+                                                      </button>
+                                                  @empty
+                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                  @endforelse
+                                              </div>
+                                          </div>
+                                      </template>
                                   </div>
-                              @endif
+                              </div>
                           </div>
+                          @elseif($order->qc_final_completed_at)
+                          <div class="flex items-center justify-between text-[11px]">
+                              <span class="font-bold text-emerald-600 uppercase">QC Final:</span>
+                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_final_completed_at->format('d M H:i') }}">✓ {{ $order->qcFinalBy->name ?? '-' }}</span>
+                          </div>
+                          @else
+                          <div class="flex items-center justify-between text-[11px]">
+                              <span class="font-bold text-emerald-600 uppercase">QC Final:</span>
+                              <div class="flex items-center gap-1">
+                                  {{-- Custom Picker Trigger Button & Teleported Popover (No Tidak Diperlukan since Final is mandatory) --}}
+                                  <div class="relative" 
+                                       x-data="{ 
+                                           open: false, 
+                                           dropup: false, 
+                                           topPos: 'auto', 
+                                           bottomPos: 'auto', 
+                                           leftPos: 0,
+                                           toggle(event) {
+                                               const rect = event.currentTarget.getBoundingClientRect();
+                                               const popoverWidth = 185;
+                                               const popoverHeight = 250;
+                                               let left = rect.left;
+                                               if (left + popoverWidth > window.innerWidth - 10) {
+                                                   left = window.innerWidth - popoverWidth - 10;
+                                               }
+                                               if (left < 10) left = 10;
+                                               this.leftPos = left;
+
+                                               const spaceBelow = window.innerHeight - rect.bottom;
+                                               if (spaceBelow < popoverHeight && rect.top > spaceBelow) {
+                                                   this.dropup = true;
+                                                   this.bottomPos = (window.innerHeight - rect.top + 4) + 'px';
+                                                   this.topPos = 'auto';
+                                               } else {
+                                                   this.dropup = false;
+                                                   this.topPos = (rect.bottom + 4) + 'px';
+                                                   this.bottomPos = 'auto';
+                                               }
+                                               this.open = !this.open;
+                                           },
+                                           selectTech(techId) {
+                                               this.open = false;
+                                               $wire.updateTechnician({{ $order->id }}, 'qc_final', techId);
+                                           }
+                                       }" 
+                                       @scroll.window="open = false"
+                                       @click.stop>
+                                      
+                                      <button type="button" 
+                                              @click="toggle($event)"
+                                              class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->qc_final_by ? 'bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
+                                              title="Pilih teknisi QC Final">
+                                          <div class="flex items-center gap-1 truncate">
+                                              @if($order->qcFinalBy)
+                                                  <span class="w-3.5 h-3.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 flex items-center justify-center text-[8px] font-black shrink-0">
+                                                      {{ substr($order->qcFinalBy->name, 0, 1) }}
+                                                  </span>
+                                                  <span class="truncate">{{ $order->qcFinalBy->name }}</span>
+                                              @else
+                                                  <span class="text-slate-400 italic text-[9px]">Pilih Teknisi</span>
+                                              @endif
+                                          </div>
+                                          <svg class="w-2 h-2 text-slate-400 transition-transform duration-200 shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                      </button>
+
+                                      <template x-teleport="body">
+                                          <div x-show="open" 
+                                               @click.away="open = false" 
+                                               x-transition:enter="transition ease-out duration-150"
+                                               x-transition:enter-start="opacity-0 scale-95"
+                                               x-transition:enter-end="opacity-100 scale-100"
+                                               x-transition:leave="transition ease-in duration-100"
+                                               x-transition:leave-start="opacity-100 scale-100"
+                                               x-transition:leave-end="opacity-0 scale-95"
+                                               :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
+                                               class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
+                                               style="display: none;">
+                                              
+                                              <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
+                                                  <span>Pilih Teknisi QC Final:</span>
+                                                  <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
+                                              </div>
+
+                                              <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                  @if($order->qc_final_by)
+                                                      <button type="button" 
+                                                              @click="selectTech('')" 
+                                                              class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                          -- Kosongkan Pilihan --
+                                                      </button>
+                                                  @endif
+
+                                                  @forelse($this->techs['final'] ?? [] as $t)
+                                                      <button type="button" 
+                                                              @click="selectTech('{{ $t->id }}')" 
+                                                              class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->qc_final_by == $t->id ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                          <div class="flex items-center gap-1.5 truncate">
+                                                              <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                  {{ substr($t->name, 0, 1) }}
+                                                              </span>
+                                                              <span class="truncate">{{ $t->name }}</span>
+                                                          </div>
+                                                          @if($order->qc_final_by == $t->id)
+                                                              <svg class="w-3 h-3 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                              </svg>
+                                                          @endif
+                                                      </button>
+                                                  @empty
+                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                  @endforelse
+                                              </div>
+                                          </div>
+                                      </template>
+                                  </div>
+
+                                  @if($order->qc_final_started_at)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
+                                  @elseif($order->qc_final_by)
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                  @endif
+                              </div>
+                          </div>
+                          @endif
                       </div>
                   </td>
 
@@ -1244,8 +3191,8 @@
                                         $hasUpperDrawer = true;
                                     }
 
-                                    $isSolLockedDrawer = $hasUpperDrawer && !$order->prod_upper_completed_at;
-                                    $isJahitLockedDrawer = ($hasUpperDrawer && !$order->prod_upper_completed_at) || ($hasSolDrawer && !$order->prod_sol_completed_at);
+                                    $isSolLockedDrawer = $hasUpperDrawer && !$order->prod_upper_completed_at && !$order->isStationUnneeded('prod_upper');
+                                    $isJahitLockedDrawer = ($hasUpperDrawer && !$order->prod_upper_completed_at && !$order->isStationUnneeded('prod_upper')) || ($hasSolDrawer && !$order->prod_sol_completed_at && !$order->isStationUnneeded('prod_sol'));
                                 @endphp
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between shadow-sm h-fit space-y-4">
                                     <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2 mb-2">
@@ -1258,7 +3205,9 @@
                                         <div class="p-3 bg-purple-50/40 dark:bg-purple-955/20 border border-purple-100 dark:border-purple-900/40 rounded-xl space-y-2 relative">
                                             <div class="flex items-center justify-between">
                                                 <span class="text-[10px] font-black text-purple-700 dark:text-purple-400 uppercase tracking-widest">REPARASI UPPER</span>
-                                                @if($order->prod_upper_completed_at)
+                                                @if($order->isStationUnneeded('prod_upper'))
+                                                    <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-[8px] font-black rounded uppercase">TIDAK DIPERLUKAN</span>
+                                                @elseif($order->prod_upper_completed_at)
                                                     <span class="px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black rounded uppercase">SELESAI</span>
                                                 @elseif($order->prod_upper_started_at)
                                                     <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-black rounded uppercase animate-pulse">PROSES</span>
@@ -1267,7 +3216,11 @@
                                                 @endif
                                             </div>
 
-                                            @if($order->prod_upper_completed_at)
+                                            @if($order->isStationUnneeded('prod_upper'))
+                                                <div class="text-[10px] font-bold text-slate-500 italic">
+                                                    Status: <span class="text-slate-600 dark:text-slate-400">Tidak Diperlukan</span>
+                                                </div>
+                                            @elseif($order->prod_upper_completed_at)
                                                 <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300">
                                                     Dikerjakan: <span class="text-purple-750">{{ $order->prodUpperBy->name ?? '-' }}</span>
                                                 </div>
@@ -1317,7 +3270,9 @@
                                         <div class="p-3 bg-orange-50/40 dark:bg-orange-955/20 border border-orange-100 dark:border-orange-900/40 rounded-xl space-y-2">
                                             <div class="flex items-center justify-between">
                                                 <span class="text-[10px] font-black text-orange-700 dark:text-orange-400 uppercase tracking-widest">🥾 SOLING (SOL)</span>
-                                                @if($order->prod_sol_completed_at)
+                                                @if($order->isStationUnneeded('prod_sol'))
+                                                    <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-[8px] font-black rounded uppercase">TIDAK DIPERLUKAN</span>
+                                                @elseif($order->prod_sol_completed_at)
                                                     <span class="px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black rounded uppercase">SELESAI</span>
                                                 @elseif($order->prod_sol_started_at)
                                                     <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-black rounded uppercase animate-pulse">PROSES</span>
@@ -1331,7 +3286,11 @@
                                                     Menunggu stasiun Upper selesai (Sequencing)
                                                 </div>
                                             @else
-                                                @if($order->prod_sol_completed_at)
+                                                @if($order->isStationUnneeded('prod_sol'))
+                                                    <div class="text-[10px] font-bold text-slate-500 italic">
+                                                        Status: <span class="text-slate-600 dark:text-slate-400">Tidak Diperlukan</span>
+                                                    </div>
+                                                @elseif($order->prod_sol_completed_at)
                                                     <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300">
                                                         Dikerjakan: <span class="text-orange-700">{{ $order->prodSolBy->name ?? '-' }}</span>
                                                     </div>
@@ -1382,7 +3341,9 @@
                                         <div class="p-3 bg-blue-50/40 dark:bg-blue-955/20 border border-blue-100 dark:border-blue-900/40 rounded-xl space-y-2 relative">
                                             <div class="flex items-center justify-between">
                                                 <span class="text-[10px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-widest">QC JAHIT</span>
-                                                @if($order->qc_jahit_completed_at)
+                                                @if($order->isStationUnneeded('qc_jahit'))
+                                                    <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-[8px] font-black rounded uppercase">TIDAK DIPERLUKAN</span>
+                                                @elseif($order->qc_jahit_completed_at)
                                                     <span class="px-2 py-0.5 bg-green-100 text-green-800 text-[8px] font-black rounded uppercase">SELESAI</span>
                                                 @elseif($order->qc_jahit_started_at)
                                                     <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-black rounded uppercase animate-pulse">PROSES</span>
@@ -1396,7 +3357,11 @@
                                                     Menunggu konstruksi Upper &amp; Soling selesai (Sequencing)
                                                 </div>
                                             @else
-                                                @if($order->qc_jahit_completed_at)
+                                                @if($order->isStationUnneeded('qc_jahit'))
+                                                    <div class="text-[10px] font-bold text-slate-500 italic">
+                                                        Status: <span class="text-slate-600 dark:text-slate-400">Tidak Diperlukan</span>
+                                                    </div>
+                                                @elseif($order->qc_jahit_completed_at)
                                                     <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300">
                                                         Dikerjakan: <span class="text-blue-700">{{ $order->qcJahitBy->name ?? '-' }}</span>
                                                     </div>

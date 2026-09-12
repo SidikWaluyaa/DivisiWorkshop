@@ -78,39 +78,32 @@ class QcIndex extends Component
             ->orderBy('name')
             ->get();
 
+        // Treatment: Khusus tim Treatment reparasi murni (Jerry, Ayi, Yayan, Rizal, Iyan)
         $treatment = User::where('is_active', true)
             ->where('name', 'not like', '%Dr. Shoe%')
-            ->where(function($q) {
-                $q->whereIn('specialization', ['Repaint', 'Cleaning', 'Treatment', 'Whitening', 'Washing'])
-                  ->orWhere('station', 'TREATMENT')
-                  ->orWhere('station', 'QC');
-            })->select('id', 'name', 'specialization', 'station')->get();
+            ->where('station', 'TREATMENT')
+            ->select('id', 'name', 'specialization', 'station')
+            ->orderBy('name')
+            ->get();
         if ($treatment->isEmpty()) $treatment = $allActiveTechs;
 
+        // Cleanup: Khusus Jujun (specialization: QC Cleanup)
         $cleanup = User::where('is_active', true)
             ->where('name', 'not like', '%Dr. Shoe%')
-            ->where(function($q) {
-                $q->whereIn('specialization', ['QC Cleanup', 'Clean Up'])
-                  ->orWhere(function($sq) {
-                      $sq->where('station', 'QC')
-                        ->whereNotIn('specialization', ['Washing', 'Cuci']);
-                  });
-            })
-            ->whereNotIn('specialization', ['Washing', 'Cuci', 'PIC Material Sol', 'PIC Material Upper', 'PIC Material'])
-            ->where(function($q) {
-                $q->whereNull('station')->orWhere('station', '!=', 'PREPARATION');
-            })
+            ->where('specialization', 'QC Cleanup')
             ->select('id', 'name', 'specialization', 'station')
             ->orderBy('name')
             ->get();
         if ($cleanup->isEmpty()) $cleanup = $allActiveTechs;
 
+        // QC Final: Tim QC Final (Asep, Dadang, Toni, Dito QC)
         $final = User::where('is_active', true)
             ->where('name', 'not like', '%Dr. Shoe%')
-            ->where(function($q) {
-                $q->whereIn('specialization', ['QC Final', 'PIC QC'])
-                  ->orWhere('station', 'QC');
-            })->select('id', 'name', 'specialization', 'station')->get();
+            ->where('station', 'QC')
+            ->where('specialization', 'QC Final')
+            ->select('id', 'name', 'specialization', 'station')
+            ->orderBy('name')
+            ->get();
         if ($final->isEmpty()) $final = $allActiveTechs;
 
         return [
@@ -128,12 +121,17 @@ class QcIndex extends Component
 
         return [
             'qc' => (clone $baseQuery)->where(function($q) {
-                $q->whereNull('qc_cleanup_completed_at')
+                $q->where(function($cq) {
+                      $cq->whereNull('qc_cleanup_completed_at')
+                         ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'qc_cleanup'));
+                  })
                   ->orWhereNull('qc_final_completed_at')
                   ->orWhere(function($sq) {
                       $sq->whereHas('workOrderServices', function($tsq) {
                           $tsq->whereIn('category_name', ['Repaint', 'Cleaning', 'Treatment', 'Whitening']);
-                      })->whereNull('prod_cleaning_completed_at');
+                      })
+                      ->whereNull('prod_cleaning_completed_at')
+                      ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_cleaning'));
                   });
             })->count(),
             'review' => (clone $baseQuery)->qcReview()->count(),
@@ -170,30 +168,49 @@ class QcIndex extends Component
         $order = WorkOrder::find($id);
         if (!$order) return;
 
-        $column = "{$type}_by";
-        $oldTechName = $order->{$type . 'By'}->name ?? 'Belum ditugaskan';
-        $order->{$column} = $techId ?: null;
+        try {
+            if ($techId === 'none') {
+                $order->markStationUnneeded($type, Auth::id());
+                unset($this->orders);
+                $this->dispatch('swal:toast', icon: 'info', title: "Sub-stasiun {$type} ditandai Tidak Diperlukan");
+                return;
+            }
 
-        // Auto-start timestamp if assigned and not yet started
-        $startedColumn = "{$type}_started_at";
-        if ($techId && isset($order->{$startedColumn}) && !$order->{$startedColumn}) {
-            $order->{$startedColumn} = now();
+            if ($order->isStationUnneeded($type)) {
+                $order->restoreStationNeeded($type, $techId ? (int)$techId : null, Auth::id());
+                unset($this->orders);
+                $techName = $techId ? User::find($techId)?->name : 'Dikosongkan';
+                $this->dispatch('swal:toast', icon: 'success', title: "Teknisi {$type} diaktifkan kembali ke {$techName}");
+                return;
+            }
+
+            $column = "{$type}_by";
+            $oldTechName = $order->{$type . 'By'}->name ?? 'Belum ditugaskan';
+            $order->{$column} = $techId ? (int)$techId : null;
+
+            // Auto-start timestamp if assigned and not yet started
+            $startedColumn = "{$type}_started_at";
+            if ($techId && isset($order->{$startedColumn}) && !$order->{$startedColumn}) {
+                $order->{$startedColumn} = now();
+            }
+
+            $order->save();
+
+            $newTechName = $techId ? (User::find($techId)->name ?? '-') : 'Dikosongkan';
+
+            // Audit Log
+            $order->logs()->create([
+                'user_id'     => Auth::id(),
+                'step'        => 'QC',
+                'action'      => 'TECHNICIAN_ASSIGNED',
+                'description' => "Teknisi stasiun {$type} diubah dari '{$oldTechName}' menjadi '{$newTechName}'",
+            ]);
+
+            unset($this->orders);
+            $this->dispatch('swal:toast', icon: 'success', title: "Teknisi {$type} berhasil diperbarui");
+        } catch (\Exception $e) {
+            $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
         }
-
-        $order->save();
-
-        $newTechName = $techId ? (User::find($techId)->name ?? '-') : 'Dikosongkan';
-
-        // Audit Log
-        $order->logs()->create([
-            'user_id'     => Auth::id(),
-            'step'        => 'QC',
-            'action'      => 'TECHNICIAN_ASSIGNED',
-            'description' => "Teknisi stasiun {$type} diubah dari '{$oldTechName}' menjadi '{$newTechName}' (Jam mulai diisi otomatis)",
-        ]);
-
-        unset($this->orders);
-        $this->dispatch('swal:toast', icon: 'success', title: 'Teknisi & waktu mulai otomatis diperbarui');
     }
 
     public function expressPass($id)
@@ -207,14 +224,14 @@ class QcIndex extends Component
 
             // 1. Pass Treatment (if required & incomplete)
             $needsTreatment = $order->hasServiceCategory(['Repaint', 'Cleaning', 'Treatment', 'Whitening']);
-            if ($needsTreatment && !$order->prod_cleaning_completed_at) {
+            if ($needsTreatment && !$order->prod_cleaning_completed_at && !$order->isStationUnneeded('prod_cleaning')) {
                 if (!$order->prod_cleaning_by) $order->prod_cleaning_by = $authId;
                 if (!$order->prod_cleaning_started_at) $order->prod_cleaning_started_at = $now;
                 $order->prod_cleaning_completed_at = $now;
             }
 
             // 2. Pass QC Cleanup (if incomplete)
-            if (!$order->qc_cleanup_completed_at) {
+            if (!$order->qc_cleanup_completed_at && !$order->isStationUnneeded('qc_cleanup')) {
                 if (!$order->qc_cleanup_by) $order->qc_cleanup_by = $authId;
                 if (!$order->qc_cleanup_started_at) $order->qc_cleanup_started_at = $now;
                 $order->qc_cleanup_completed_at = $now;
@@ -251,9 +268,15 @@ class QcIndex extends Component
 
         $unassignedOrders = WorkOrder::where('status', WorkOrderStatus::QC)
             ->where(function($q) use ($drShoeIds) {
-                $q->whereNull('prod_cleaning_by')
-                  ->orWhereNull('qc_cleanup_by')
-                  ->orWhereNull('qc_final_by');
+                $q->where(function($sq) {
+                    $sq->whereNull('prod_cleaning_by')
+                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_cleaning'));
+                })
+                ->orWhere(function($sq) {
+                    $sq->whereNull('qc_cleanup_by')
+                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'qc_cleanup'));
+                })
+                ->orWhereNull('qc_final_by');
                 if (!empty($drShoeIds)) {
                     $q->orWhereIn('prod_cleaning_by', $drShoeIds)
                       ->orWhereIn('qc_cleanup_by', $drShoeIds)
@@ -263,7 +286,7 @@ class QcIndex extends Component
             ->get();
 
         if ($unassignedOrders->isEmpty()) {
-            $this->dispatch('swal:toast', icon: 'info', title: 'Seluruh SPK aktif di QC sudah terisi teknisinya.');
+            $this->dispatch('swal:toast', icon: 'info', title: 'Seluruh SPK aktif di QC sudah terisi teknisinya atau berstatus Tidak Diperlukan.');
             return;
         }
 

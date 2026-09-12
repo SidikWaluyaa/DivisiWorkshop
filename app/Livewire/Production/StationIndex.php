@@ -69,16 +69,24 @@ class StationIndex extends Component
     #[Computed]
     public function techs()
     {
-        $allTechs = User::where('role', 'technician')
+        $excludedSpecs = ['PIC Material Sol', 'PIC Material Upper', 'PIC Material', 'PIC MATERIAL SOL', 'PIC MATERIAL UPPER'];
+
+        $allTechs = User::where('is_active', true)
+            ->where('role', 'technician')
+            ->whereNotIn('specialization', $excludedSpecs)
+            ->where('name', 'not like', '%Dr. Shoe%')
             ->select('id', 'name', 'station', 'specialization')
             ->orderBy('name', 'asc')
             ->get();
 
         return [
-            'upper' => $allTechs->filter(fn($u) => $u->station === 'UPPER' || empty($u->station) || str_contains(strtolower($u->specialization ?? ''), 'upper')),
-            'sol' => $allTechs->filter(fn($u) => $u->station === 'SOLING' || empty($u->station) || str_contains(strtolower($u->specialization ?? ''), 'sol')),
-            'jahit' => $allTechs->filter(fn($u) => $u->station === 'QC' || empty($u->station) || str_contains(strtolower($u->specialization ?? ''), 'jahit')),
-            'treatment' => $allTechs->filter(fn($u) => $u->station === 'TREATMENT' || empty($u->station)),
+            // Upper: Tim Upper murni (Aji, Dadan, Dede, Dede 2, Dedi, Herman, Jajat, Rian)
+            'upper' => $allTechs->filter(fn($u) => ($u->station === 'UPPER' || str_contains(strtolower($u->specialization ?? ''), 'upper')) && !str_contains(strtolower($u->specialization ?? ''), 'material')),
+            // Soling: Tim Sol reparasi murni (Agus, Hadi, Ojek, Padon) - tanpa staf preparation (Edi) & tanpa PIC Material
+            'sol' => $allTechs->filter(fn($u) => $u->station === 'SOLING' && !str_contains(strtolower($u->specialization ?? ''), 'material')),
+            // QC Jahit: Khusus Devi (specialization: QC Jahit)
+            'jahit' => $allTechs->filter(fn($u) => str_contains(strtolower($u->specialization ?? ''), 'jahit')),
+            'treatment' => $allTechs->filter(fn($u) => $u->station === 'TREATMENT'),
             'prep' => $allTechs->filter(fn($u) => $u->station === 'PREPARATION'),
             'qc' => $allTechs->filter(fn($u) => $u->station === 'QC'),
             'all' => $allTechs,
@@ -114,15 +122,18 @@ class StationIndex extends Component
               ->orWhereHas('workOrderServices', function ($sq) {
                   $sq->where(function ($ssq) {
                       $ssq->where('category_name', 'like', '%Upper%')
-                          ->whereNull('work_orders.prod_upper_completed_at');
+                          ->whereNull('work_orders.prod_upper_completed_at')
+                          ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_upper'));
                   })
                   ->orWhere(function ($ssq) {
                       $ssq->where('category_name', 'like', '%Sol%')
-                          ->whereNull('work_orders.prod_sol_completed_at');
+                          ->whereNull('work_orders.prod_sol_completed_at')
+                          ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_sol'));
                   })
                   ->orWhere(function ($ssq) {
                       $ssq->where(function ($x) { $x->where('category_name', 'like', '%Sol%')->orWhere('category_name', 'like', '%Upper%')->orWhere('category_name', 'like', '%Jahit%'); })
-                          ->whereNull('work_orders.qc_jahit_completed_at');
+                          ->whereNull('work_orders.qc_jahit_completed_at')
+                          ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'qc_jahit'));
                   });
               });
         })->whereDoesntHave('logs', fn($lq) => $lq->where('step', 'PRODUCTION')->where('action', 'PRODUCTION_APPROVED'))
@@ -158,6 +169,23 @@ class StationIndex extends Component
         if (!$order) return;
 
         try {
+            $stationLabel = $this->formatStationName($type);
+
+            if ($techId === 'none') {
+                $order->markStationUnneeded($type, Auth::id());
+                unset($this->orders);
+                $this->dispatch('swal:toast', icon: 'info', title: "Sub-stasiun {$stationLabel} ditandai Tidak Diperlukan");
+                return;
+            }
+
+            if ($order->isStationUnneeded($type)) {
+                $order->restoreStationNeeded($type, $techId ? (int)$techId : null, Auth::id());
+                unset($this->orders);
+                $techName = $techId ? User::find($techId)?->name : 'Dikosongkan';
+                $this->dispatch('swal:toast', icon: 'success', title: "Teknisi {$stationLabel} diaktifkan kembali ke {$techName}");
+                return;
+            }
+
             $columnPrefix = $type;
             $oldTechId = $order->{"{$columnPrefix}_by"};
             $oldTechName = $oldTechId ? User::find($oldTechId)?->name : 'Kosong';
@@ -166,7 +194,6 @@ class StationIndex extends Component
             $order->save();
 
             $techName = $techId ? User::find($techId)?->name : 'Dihapus';
-            $stationLabel = $this->formatStationName($type);
 
             // Audit trail log
             $order->logs()->create([
@@ -176,6 +203,7 @@ class StationIndex extends Component
                 'description' => "Teknisi {$stationLabel} diubah dari [{$oldTechName}] ke [{$techName}].",
             ]);
 
+            unset($this->orders);
             $this->dispatch('swal:toast', icon: 'success', title: "Teknisi {$stationLabel} diubah ke {$techName}");
         } catch (\Exception $e) {
             $this->dispatch('swal:toast', icon: 'error', title: $e->getMessage());
@@ -365,17 +393,23 @@ class StationIndex extends Component
     {
         $unassignedOrders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION)
             ->where(function($q) {
-                $q->whereNull('prod_sol_by')
-                  ->orWhereNull('prod_upper_by')
-                  ->orWhereNull('prod_cleaning_by')
-                  ->orWhereNull('prod_sol_started_at')
-                  ->orWhereNull('prod_upper_started_at')
-                  ->orWhereNull('prod_cleaning_started_at');
+                $q->where(function($sq) {
+                    $sq->whereNull('prod_sol_by')
+                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_sol'));
+                })
+                ->orWhere(function($sq) {
+                    $sq->whereNull('prod_upper_by')
+                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'prod_upper'));
+                })
+                ->orWhere(function($sq) {
+                    $sq->whereNull('qc_jahit_by')
+                       ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhereJsonDoesntContain('unneeded_stations', 'qc_jahit'));
+                });
             })
             ->get();
 
         if ($unassignedOrders->isEmpty()) {
-            $this->dispatch('swal:toast', icon: 'info', title: 'Seluruh SPK aktif di Produksi sudah terisi teknisi.');
+            $this->dispatch('swal:toast', icon: 'info', title: 'Seluruh SPK aktif di Produksi sudah terisi teknisi atau berstatus Tidak Diperlukan.');
             return;
         }
 
