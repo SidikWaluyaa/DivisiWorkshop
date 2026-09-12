@@ -1026,12 +1026,12 @@
                                                toggle(event) {
                                                    const rect = event.currentTarget.getBoundingClientRect();
                                                    const popoverWidth = 185;
-                                                   const popoverHeight = 220;
-                                                   let left = rect.right - popoverWidth;
-                                                   if (left < 10) left = 10;
+                                                   const popoverHeight = 250;
+                                                   let left = rect.left;
                                                    if (left + popoverWidth > window.innerWidth - 10) {
                                                        left = window.innerWidth - popoverWidth - 10;
                                                    }
+                                                   if (left < 10) left = 10;
                                                    this.leftPos = left;
 
                                                    const spaceBelow = window.innerHeight - rect.bottom;
@@ -1045,19 +1045,25 @@
                                                        this.bottomPos = 'auto';
                                                    }
                                                    this.open = !this.open;
+                                               },
+                                               selectTech(techId, techName) {
+                                                   this.open = false;
+                                                   const hiddenInput = document.getElementById('tech-prod_upper-{{ $order->id }}');
+                                                   if (hiddenInput) hiddenInput.value = techId === 'none' ? '' : techId;
+                                                   $wire.updateTechnician({{ $order->id }}, 'prod_upper', techId);
                                                }
                                            }" 
                                            @scroll.window="open = false"
                                            @click.stop>
+                                          
+                                          <input type="hidden" id="tech-prod_upper-{{ $order->id }}" value="{{ $order->prod_upper_by }}">
+
                                           <button type="button" 
-                                                  @click="toggle($event)" 
-                                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer"
-                                                  title="Ubah penugasan teknisi">
-                                              <svg class="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                              </svg>
+                                                  @click="toggle($event)"
+                                                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-extrabold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/50 border border-purple-200/60 dark:border-purple-800 hover:bg-purple-100/60 transition-all cursor-pointer shadow-2xs"
+                                                  title="Ubah Teknisi Upper">
                                               <span>Ubah</span>
-                                              <svg class="w-2 h-2 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <svg class="w-2 h-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
                                               </svg>
                                           </button>
@@ -1074,25 +1080,45 @@
                                                    :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
                                                    class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
                                                    style="display: none;">
+                                                  
                                                   <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
                                                       <span>Pilih Teknisi Upper:</span>
                                                       <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
                                                   </div>
+
+                                                  <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                      <button type="button" 
+                                                              @click="selectTech('none', 'Tidak Diperlukan')" 
+                                                              class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                          <span class="text-xs">🚫</span>
+                                                          <span>Tidak Diperlukan</span>
+                                                      </button>
+                                                  </div>
+
                                                   <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @if($order->prod_upper_by)
+                                                          <button type="button" 
+                                                                  @click="selectTech('', 'Kosong')" 
+                                                                  class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                              -- Kosongkan Pilihan --
+                                                          </button>
+                                                      @endif
+
                                                       @forelse($this->techs['upper'] ?? [] as $t)
                                                           <button type="button" 
-                                                                  wire:click="updateTechnician({{ $order->id }}, 'prod_upper', '{{ $t->id }}')" 
-                                                                  @click="open = false"
-                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                                  @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->prod_upper_by == $t->id ? 'text-purple-600 bg-purple-50 dark:bg-purple-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
                                                               <div class="flex items-center gap-1.5 truncate">
                                                                   <span class="w-4 h-4 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 flex items-center justify-center text-[9px] font-black shrink-0">
                                                                       {{ substr($t->name, 0, 1) }}
                                                                   </span>
                                                                   <span class="truncate">{{ $t->name }}</span>
                                                               </div>
-                                                              <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-purple-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                                                              </svg>
+                                                              @if($order->prod_upper_by == $t->id)
+                                                                  <svg class="w-3 h-3 text-purple-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                                  </svg>
+                                                              @endif
                                                           </button>
                                                       @empty
                                                           <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
@@ -1107,17 +1133,16 @@
                           @elseif($order->prod_upper_completed_at)
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
                               <span class="font-bold text-purple-600 uppercase">Upper:</span>
-                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_upper_completed_at->format('d M H:i') }}">✓ {{ $order->prodUpperBy->name ?? '-' }}</span>
+                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_upper_completed_at->format('d M H:i') }}">Selesai: {{ $order->prodUpperBy->name ?? '-' }}</span>
                           </div>
                           @else
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
                               <span class="font-bold text-purple-600 uppercase">Upper:</span>
-                              <div class="flex items-center gap-1">
+                              <div class="flex items-center gap-1.5">
                                   @php
                                       $upperStarted = (bool)$order->prod_upper_started_at;
                                       $upperCurrentTech = $order->prodUpperBy->name ?? 'Kosong';
                                   @endphp
-                                  {{-- Custom Picker Trigger Button & Teleported Popover --}}
                                   <div class="relative" 
                                        x-data="{ 
                                            open: false, 
@@ -1150,6 +1175,8 @@
                                            },
                                            selectTech(techId, techName) {
                                                this.open = false;
+                                               const hiddenInput = document.getElementById('tech-prod_upper-{{ $order->id }}');
+                                               if (hiddenInput) hiddenInput.value = techId === 'none' ? '' : techId;
                                                @if($upperStarted)
                                                    openOverrideModal({{ $order->id }}, 'prod_upper', techId, '{{ addslashes($upperCurrentTech) }}', techName, 'Upper');
                                                @else
@@ -1160,6 +1187,8 @@
                                        @scroll.window="open = false"
                                        @click.stop>
                                       
+                                      <input type="hidden" id="tech-prod_upper-{{ $order->id }}" value="{{ $order->prod_upper_by }}">
+
                                       <button type="button" 
                                               @click="toggle($event)"
                                               class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->prod_upper_by ? 'bg-purple-50/70 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
@@ -1209,7 +1238,7 @@
                                               <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
                                                   @if($order->prod_upper_by)
                                                       <button type="button" 
-                                                              @click="selectTech('', 'Kosongkan')" 
+                                                              @click="selectTech('', 'Kosong')" 
                                                               class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
                                                           -- Kosongkan Pilihan --
                                                       </button>
@@ -1242,7 +1271,7 @@
                                   @if($order->prod_upper_started_at)
                                       <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_upper', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan Upper">Selesaikan</button>
                                   @elseif($order->prod_upper_by)
-                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_upper', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Upper">Mulai</button>
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_upper', 'start', {{ $order->prod_upper_by ?? 'null' }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Upper">Mulai</button>
                                   @endif
                               </div>
                           </div>
@@ -1267,12 +1296,12 @@
                                                toggle(event) {
                                                    const rect = event.currentTarget.getBoundingClientRect();
                                                    const popoverWidth = 185;
-                                                   const popoverHeight = 220;
-                                                   let left = rect.right - popoverWidth;
-                                                   if (left < 10) left = 10;
+                                                   const popoverHeight = 250;
+                                                   let left = rect.left;
                                                    if (left + popoverWidth > window.innerWidth - 10) {
                                                        left = window.innerWidth - popoverWidth - 10;
                                                    }
+                                                   if (left < 10) left = 10;
                                                    this.leftPos = left;
 
                                                    const spaceBelow = window.innerHeight - rect.bottom;
@@ -1286,19 +1315,25 @@
                                                        this.bottomPos = 'auto';
                                                    }
                                                    this.open = !this.open;
+                                               },
+                                               selectTech(techId, techName) {
+                                                   this.open = false;
+                                                   const hiddenInput = document.getElementById('tech-prod_sol-{{ $order->id }}');
+                                                   if (hiddenInput) hiddenInput.value = techId === 'none' ? '' : techId;
+                                                   $wire.updateTechnician({{ $order->id }}, 'prod_sol', techId);
                                                }
                                            }" 
                                            @scroll.window="open = false"
                                            @click.stop>
+                                          
+                                          <input type="hidden" id="tech-prod_sol-{{ $order->id }}" value="{{ $order->prod_sol_by }}">
+
                                           <button type="button" 
-                                                  @click="toggle($event)" 
-                                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer"
-                                                  title="Ubah penugasan teknisi">
-                                              <svg class="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                              </svg>
+                                                  @click="toggle($event)"
+                                                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-extrabold text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/50 border border-orange-200/60 dark:border-orange-800 hover:bg-orange-100/60 transition-all cursor-pointer shadow-2xs"
+                                                  title="Ubah Teknisi Soling">
                                               <span>Ubah</span>
-                                              <svg class="w-2 h-2 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <svg class="w-2 h-2 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
                                               </svg>
                                           </button>
@@ -1315,25 +1350,45 @@
                                                    :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
                                                    class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
                                                    style="display: none;">
+                                                  
                                                   <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
                                                       <span>Pilih Teknisi Soling:</span>
                                                       <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
                                                   </div>
+
+                                                  <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                      <button type="button" 
+                                                              @click="selectTech('none', 'Tidak Diperlukan')" 
+                                                              class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                          <span class="text-xs">🚫</span>
+                                                          <span>Tidak Diperlukan</span>
+                                                      </button>
+                                                  </div>
+
                                                   <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @if($order->prod_sol_by)
+                                                          <button type="button" 
+                                                                  @click="selectTech('', 'Kosong')" 
+                                                                  class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                              -- Kosongkan Pilihan --
+                                                          </button>
+                                                      @endif
+
                                                       @forelse($this->techs['sol'] ?? [] as $t)
                                                           <button type="button" 
-                                                                  wire:click="updateTechnician({{ $order->id }}, 'prod_sol', '{{ $t->id }}')" 
-                                                                  @click="open = false"
-                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                                  @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->prod_sol_by == $t->id ? 'text-orange-600 bg-orange-50 dark:bg-orange-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
                                                               <div class="flex items-center gap-1.5 truncate">
                                                                   <span class="w-4 h-4 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 flex items-center justify-center text-[9px] font-black shrink-0">
                                                                       {{ substr($t->name, 0, 1) }}
                                                                   </span>
                                                                   <span class="truncate">{{ $t->name }}</span>
                                                               </div>
-                                                              <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-orange-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                                                              </svg>
+                                                              @if($order->prod_sol_by == $t->id)
+                                                                  <svg class="w-3 h-3 text-orange-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                                  </svg>
+                                                              @endif
                                                           </button>
                                                       @empty
                                                           <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
@@ -1348,7 +1403,7 @@
                           @elseif($order->prod_sol_completed_at)
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
                               <span class="font-bold text-orange-500 uppercase">Soling:</span>
-                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_sol_completed_at->format('d M H:i') }}">✓ {{ $order->prodSolBy->name ?? '-' }}</span>
+                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_sol_completed_at->format('d M H:i') }}">Selesai: {{ $order->prodSolBy->name ?? '-' }}</span>
                           </div>
                           @elseif($isSolLocked)
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
@@ -1358,12 +1413,11 @@
                           @else
                           <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
                               <span class="font-bold text-orange-500 uppercase">Soling:</span>
-                              <div class="flex items-center gap-1">
+                              <div class="flex items-center gap-1.5">
                                   @php
                                       $solStarted = (bool)$order->prod_sol_started_at;
                                       $solCurrentTech = $order->prodSolBy->name ?? 'Kosong';
                                   @endphp
-                                  {{-- Custom Picker Trigger Button & Teleported Popover --}}
                                   <div class="relative" 
                                        x-data="{ 
                                            open: false, 
@@ -1396,6 +1450,8 @@
                                            },
                                            selectTech(techId, techName) {
                                                this.open = false;
+                                               const hiddenInput = document.getElementById('tech-prod_sol-{{ $order->id }}');
+                                               if (hiddenInput) hiddenInput.value = techId === 'none' ? '' : techId;
                                                @if($solStarted)
                                                    openOverrideModal({{ $order->id }}, 'prod_sol', techId, '{{ addslashes($solCurrentTech) }}', techName, 'Soling');
                                                @else
@@ -1406,6 +1462,8 @@
                                        @scroll.window="open = false"
                                        @click.stop>
                                       
+                                      <input type="hidden" id="tech-prod_sol-{{ $order->id }}" value="{{ $order->prod_sol_by }}">
+
                                       <button type="button" 
                                               @click="toggle($event)"
                                               class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->prod_sol_by ? 'bg-orange-50/70 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800 hover:bg-orange-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
@@ -1455,7 +1513,7 @@
                                               <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
                                                   @if($order->prod_sol_by)
                                                       <button type="button" 
-                                                              @click="selectTech('', 'Kosongkan')" 
+                                                              @click="selectTech('', 'Kosong')" 
                                                               class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
                                                           -- Kosongkan Pilihan --
                                                       </button>
@@ -1465,31 +1523,31 @@
                                                       <button type="button" 
                                                               @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
                                                               class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->prod_sol_by == $t->id ? 'text-orange-600 bg-orange-50 dark:bg-orange-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
-                                                          <div class="flex items-center gap-1.5 truncate">
-                                                              <span class="w-4 h-4 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 flex items-center justify-center text-[9px] font-black shrink-0">
-                                                                  {{ substr($t->name, 0, 1) }}
-                                                              </span>
-                                                              <span class="truncate">{{ $t->name }}</span>
-                                                          </div>
-                                                          @if($order->prod_sol_by == $t->id)
-                                                              <svg class="w-3 h-3 text-orange-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                                                              </svg>
-                                                          @endif
-                                                      </button>
-                                                  @empty
-                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
-                                                  @endforelse
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              @if($order->prod_sol_by == $t->id)
+                                                                  <svg class="w-3 h-3 text-orange-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                                  </svg>
+                                                              @endif
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
                                               </div>
-                                          </div>
-                                      </template>
-                                  </div>
+                                          </template>
+                                      </div>
 
-                                  @if($order->prod_sol_started_at)
-                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_sol', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan Soling">Selesaikan</button>
-                                  @elseif($order->prod_sol_by)
-                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_sol', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Soling">Mulai</button>
-                                  @endif
+                                      @if($order->prod_sol_started_at)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_sol', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan Soling">Selesaikan</button>
+                                      @elseif($order->prod_sol_by)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_sol', 'start', {{ $order->prod_sol_by ?? 'null' }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Soling">Mulai</button>
+                                      @endif
                               </div>
                           </div>
                           @endif
@@ -1513,12 +1571,12 @@
                                                toggle(event) {
                                                    const rect = event.currentTarget.getBoundingClientRect();
                                                    const popoverWidth = 185;
-                                                   const popoverHeight = 220;
-                                                   let left = rect.right - popoverWidth;
-                                                   if (left < 10) left = 10;
+                                                   const popoverHeight = 250;
+                                                   let left = rect.left;
                                                    if (left + popoverWidth > window.innerWidth - 10) {
                                                        left = window.innerWidth - popoverWidth - 10;
                                                    }
+                                                   if (left < 10) left = 10;
                                                    this.leftPos = left;
 
                                                    const spaceBelow = window.innerHeight - rect.bottom;
@@ -1532,19 +1590,25 @@
                                                        this.bottomPos = 'auto';
                                                    }
                                                    this.open = !this.open;
+                                               },
+                                               selectTech(techId, techName) {
+                                                   this.open = false;
+                                                   const hiddenInput = document.getElementById('tech-qc_jahit-{{ $order->id }}');
+                                                   if (hiddenInput) hiddenInput.value = techId === 'none' ? '' : techId;
+                                                   $wire.updateTechnician({{ $order->id }}, 'qc_jahit', techId);
                                                }
                                            }" 
                                            @scroll.window="open = false"
                                            @click.stop>
+                                          
+                                          <input type="hidden" id="tech-qc_jahit-{{ $order->id }}" value="{{ $order->qc_jahit_by }}">
+
                                           <button type="button" 
-                                                  @click="toggle($event)" 
-                                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer"
-                                                  title="Ubah penugasan teknisi">
-                                              <svg class="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                              </svg>
+                                                  @click="toggle($event)"
+                                                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800 hover:bg-blue-100/60 transition-all cursor-pointer shadow-2xs"
+                                                  title="Ubah Teknisi QC Jahit">
                                               <span>Ubah</span>
-                                              <svg class="w-2 h-2 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <svg class="w-2 h-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
                                               </svg>
                                           </button>
@@ -1561,25 +1625,45 @@
                                                    :style="'position: fixed; z-index: 99999; left: ' + leftPos + 'px; top: ' + topPos + '; bottom: ' + bottomPos + ';'"
                                                    class="min-w-[185px] max-w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-1.5 backdrop-blur-md"
                                                    style="display: none;">
+                                                  
                                                   <div class="px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700/60 mb-1 flex items-center justify-between">
                                                       <span>Pilih Teknisi QC Jahit:</span>
                                                       <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs leading-none">✕</button>
                                                   </div>
+
+                                                  <div class="mb-1 pb-1 border-b border-gray-100 dark:border-gray-700/60">
+                                                      <button type="button" 
+                                                              @click="selectTech('none', 'Tidak Diperlukan')" 
+                                                              class="w-full text-left px-2 py-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors flex items-center gap-1.5 group cursor-pointer">
+                                                          <span class="text-xs">🚫</span>
+                                                          <span>Tidak Diperlukan</span>
+                                                      </button>
+                                                  </div>
+
                                                   <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                                      @if($order->qc_jahit_by)
+                                                          <button type="button" 
+                                                                  @click="selectTech('', 'Kosong')" 
+                                                                  class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
+                                                              -- Kosongkan Pilihan --
+                                                          </button>
+                                                      @endif
+
                                                       @forelse($this->techs['jahit'] ?? ($this->techs['all'] ?? []) as $t)
                                                           <button type="button" 
-                                                                  wire:click="updateTechnician({{ $order->id }}, 'qc_jahit', '{{ $t->id }}')" 
-                                                                  @click="open = false"
-                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                                                  @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
+                                                                  class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->qc_jahit_by == $t->id ? 'text-blue-600 bg-blue-50 dark:bg-blue-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
                                                               <div class="flex items-center gap-1.5 truncate">
                                                                   <span class="w-4 h-4 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 flex items-center justify-center text-[9px] font-black shrink-0">
                                                                       {{ substr($t->name, 0, 1) }}
                                                                   </span>
                                                                   <span class="truncate">{{ $t->name }}</span>
                                                               </div>
-                                                              <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                                                              </svg>
+                                                              @if($order->qc_jahit_by == $t->id)
+                                                                  <svg class="w-3 h-3 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                                  </svg>
+                                                              @endif
                                                           </button>
                                                       @empty
                                                           <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
@@ -1594,7 +1678,7 @@
                           @elseif($order->qc_jahit_completed_at)
                           <div class="flex items-center justify-between text-[11px]">
                               <span class="font-bold text-blue-600 uppercase">QC Jahit:</span>
-                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_jahit_completed_at->format('d M H:i') }}">✓ {{ $order->qcJahitBy->name ?? '-' }}</span>
+                              <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_jahit_completed_at->format('d M H:i') }}">Selesai: {{ $order->qcJahitBy->name ?? '-' }}</span>
                           </div>
                           @elseif($isJahitLocked)
                           <div class="flex items-center justify-between text-[11px]">
@@ -1604,12 +1688,11 @@
                           @else
                           <div class="flex items-center justify-between text-[11px]">
                               <span class="font-bold text-blue-600 uppercase">QC Jahit:</span>
-                              <div class="flex items-center gap-1">
+                              <div class="flex items-center gap-1.5">
                                   @php
                                       $jahitStarted = (bool)$order->qc_jahit_started_at;
                                       $jahitCurrentTech = $order->qcJahitBy->name ?? 'Kosong';
                                   @endphp
-                                  {{-- Custom Picker Trigger Button & Teleported Popover --}}
                                   <div class="relative" 
                                        x-data="{ 
                                            open: false, 
@@ -1642,6 +1725,8 @@
                                            },
                                            selectTech(techId, techName) {
                                                this.open = false;
+                                               const hiddenInput = document.getElementById('tech-qc_jahit-{{ $order->id }}');
+                                               if (hiddenInput) hiddenInput.value = techId === 'none' ? '' : techId;
                                                @if($jahitStarted)
                                                    openOverrideModal({{ $order->id }}, 'qc_jahit', techId, '{{ addslashes($jahitCurrentTech) }}', techName, 'QC Jahit');
                                                @else
@@ -1652,6 +1737,8 @@
                                        @scroll.window="open = false"
                                        @click.stop>
                                       
+                                      <input type="hidden" id="tech-qc_jahit-{{ $order->id }}" value="{{ $order->qc_jahit_by }}">
+
                                       <button type="button" 
                                               @click="toggle($event)"
                                               class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->qc_jahit_by ? 'bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
@@ -1701,7 +1788,7 @@
                                               <div class="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
                                                   @if($order->qc_jahit_by)
                                                       <button type="button" 
-                                                              @click="selectTech('', 'Kosongkan')" 
+                                                              @click="selectTech('', 'Kosong')" 
                                                               class="w-full text-left px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-lg transition-colors italic cursor-pointer">
                                                           -- Kosongkan Pilihan --
                                                       </button>
@@ -1711,208 +1798,38 @@
                                                       <button type="button" 
                                                               @click="selectTech('{{ $t->id }}', '{{ addslashes($t->name) }}')" 
                                                               class="w-full text-left px-2.5 py-1.5 text-[11px] font-bold {{ $order->qc_jahit_by == $t->id ? 'text-blue-600 bg-blue-50 dark:bg-blue-950/40 font-black' : 'text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40' }} rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
-                                                          <div class="flex items-center gap-1.5 truncate">
-                                                              <span class="w-4 h-4 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 flex items-center justify-center text-[9px] font-black shrink-0">
-                                                                  {{ substr($t->name, 0, 1) }}
-                                                              </span>
-                                                              <span class="truncate">{{ $t->name }}</span>
-                                                          </div>
-                                                          @if($order->qc_jahit_by == $t->id)
-                                                              <svg class="w-3 h-3 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                                                              </svg>
-                                                          @endif
-                                                      </button>
-                                                  @empty
-                                                      <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
-                                                  @endforelse
+                                                              <div class="flex items-center gap-1.5 truncate">
+                                                                  <span class="w-4 h-4 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 flex items-center justify-center text-[9px] font-black shrink-0">
+                                                                      {{ substr($t->name, 0, 1) }}
+                                                                  </span>
+                                                                  <span class="truncate">{{ $t->name }}</span>
+                                                              </div>
+                                                              @if($order->qc_jahit_by == $t->id)
+                                                                  <svg class="w-3 h-3 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                                  </svg>
+                                                              @endif
+                                                          </button>
+                                                      @empty
+                                                          <div class="px-2 py-1 text-[10px] text-gray-400 italic">Tidak ada teknisi</div>
+                                                      @endforelse
+                                                  </div>
                                               </div>
-                                          </div>
-                                      </template>
-                                  </div>
+                                          </template>
+                                      </div>
 
-                                  @if($order->qc_jahit_started_at)
-                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan QC Jahit">Selesaikan</button>
-                                  @elseif($order->qc_jahit_by)
-                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai QC Jahit">Mulai</button>
-                                  @endif
+                                      @if($order->qc_jahit_started_at)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan QC Jahit">Selesaikan</button>
+                                      @elseif($order->qc_jahit_by)
+                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'start', {{ $order->qc_jahit_by ?? 'null' }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai QC Jahit">Mulai</button>
+                                      @endif
                               </div>
                           </div>
                           @endif
                       </div>
                   </td>
-
-                  {{-- Column 6: Duration / SLA --}}
-                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
-                      <div class="text-[11px] font-semibold text-gray-750 dark:text-gray-300">
-                          @if($order->estimation_date)
-                              <span class="text-orange-600 font-bold" title="Estimasi Selesai">{{ $order->estimation_date->format('d M Y') }}</span>
-                          @else
-                              <span class="text-gray-400">-</span>
-                          @endif
-                      </div>
-                  </td>
-              @elseif($type === 'prod_reparasi')
-                  {{-- Column 5: Progress Tugas Produksi Terpadu (Upper -> Soling -> QC Jahit) --}}
-                  @php
-                      $hasUpper = $order->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'upper') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'upper'));
-                      $hasSol = $order->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'sol') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'sol'));
-                      $hasJahit = $hasSol || $hasUpper || $order->workOrderServices->contains(fn($s) => \Illuminate\Support\Str::contains(strtolower($s->category_name ?? ''), 'jahit') || \Illuminate\Support\Str::contains(strtolower($s->service?->name ?? ''), 'jahit'));
-                      
-                      if (!$hasUpper && !$hasSol && !$hasJahit) {
-                          $hasUpper = true;
-                      }
-
-                      $isSolLocked = $hasUpper && !$order->prod_upper_completed_at;
-                      $isJahitLocked = ($hasUpper && !$order->prod_upper_completed_at) || ($hasSol && !$order->prod_sol_completed_at);
-                  @endphp
-                  <td class="px-6 py-4" @click.stop>
-                      <div class="flex flex-col gap-1.5 min-w-[220px]">
-                          {{-- 1. Upper --}}
-                          @if($hasUpper)
-                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
-                              <span class="font-bold text-purple-600 uppercase">Upper:</span>
-                              @if($order->prod_upper_completed_at)
-                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_upper_completed_at->format('d M H:i') }}">Selesai: {{ $order->prodUpperBy->name ?? '-' }}</span>
-                              @else
-                                  <div class="flex items-center gap-1">
-                                      @php
-                                          $upperStarted = (bool)$order->prod_upper_started_at;
-                                          $upperCurrentTech = $order->prodUpperBy->name ?? 'Kosong';
-                                      @endphp
-                                      <select
-                                          id="tech-prod_upper-{{ $order->id }}"
-                                          @if($upperStarted)
-                                              @change="
-                                                  const newTechId = $event.target.value;
-                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
-                                                  $event.target.value = '{{ $order->prod_upper_by }}';
-                                                  openOverrideModal({{ $order->id }}, 'prod_upper', newTechId, '{{ addslashes($upperCurrentTech) }}', newTechName, 'Upper');
-                                              "
-                                          @else
-                                              wire:change="updateTechnician({{ $order->id }}, 'prod_upper', $event.target.value)"
-                                          @endif
-                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-purple-500 cursor-pointer max-w-[110px]">
-                                          <option value="">-- Pilih --</option>
-                                          @foreach($this->techs['upper'] ?? [] as $t)
-                                              <option value="{{ $t->id }}" {{ $order->prod_upper_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                          @endforeach
-                                      </select>
-
-                                      @if($order->prod_upper_started_at)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_upper', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan Upper">Selesaikan</button>
-                                      @elseif($order->prod_upper_by)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_upper', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Upper">Mulai</button>
-                                      @endif
-                                  </div>
-                              @endif
-                          </div>
-                          @else
-                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1 opacity-50">
-                              <span class="font-bold text-gray-400 uppercase">Upper:</span>
-                              <span class="text-gray-400 text-[10px] italic">Tidak Diperlukan</span>
-                          </div>
-                          @endif
-
-                          {{-- 2. Soling --}}
-                          @if($hasSol)
-                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1">
-                              <span class="font-bold text-orange-500 uppercase">Soling:</span>
-                              @if($order->prod_sol_completed_at)
-                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->prod_sol_completed_at->format('d M H:i') }}">Selesai: {{ $order->prodSolBy->name ?? '-' }}</span>
-                              @elseif($isSolLocked)
-                                  <span class="text-yellow-600 italic text-[10px]" title="Menunggu Upper selesai">Menunggu Upper</span>
-                              @else
-                                  <div class="flex items-center gap-1">
-                                      @php
-                                          $solStarted = (bool)$order->prod_sol_started_at;
-                                          $solCurrentTech = $order->prodSolBy->name ?? 'Kosong';
-                                      @endphp
-                                      <select
-                                          id="tech-prod_sol-{{ $order->id }}"
-                                          @if($solStarted)
-                                              @change="
-                                                  const newTechId = $event.target.value;
-                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
-                                                  $event.target.value = '{{ $order->prod_sol_by }}';
-                                                  openOverrideModal({{ $order->id }}, 'prod_sol', newTechId, '{{ addslashes($solCurrentTech) }}', newTechName, 'Soling');
-                                              "
-                                          @else
-                                              wire:change="updateTechnician({{ $order->id }}, 'prod_sol', $event.target.value)"
-                                          @endif
-                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-orange-500 cursor-pointer max-w-[110px]">
-                                          <option value="">-- Pilih --</option>
-                                          @foreach($this->techs['sol'] ?? [] as $t)
-                                              <option value="{{ $t->id }}" {{ $order->prod_sol_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                          @endforeach
-                                      </select>
-
-                                      @if($order->prod_sol_started_at)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_sol', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan Soling">Selesaikan</button>
-                                      @elseif($order->prod_sol_by)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_sol', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai Soling">Mulai</button>
-                                      @endif
-                                  </div>
-                              @endif
-                          </div>
-                          @else
-                          <div class="flex items-center justify-between text-[11px] border-b border-gray-100 dark:border-gray-800 pb-1 opacity-50">
-                              <span class="font-bold text-gray-400 uppercase">Soling:</span>
-                              <span class="text-gray-400 text-[10px] italic">Tidak Diperlukan</span>
-                          </div>
-                          @endif
-
-                          {{-- 3. QC Jahit --}}
-                          @if($hasJahit)
-                          <div class="flex items-center justify-between text-[11px]">
-                              <span class="font-bold text-blue-600 uppercase">QC Jahit:</span>
-                              @if($order->qc_jahit_completed_at)
-                                  <span class="text-green-600 font-bold bg-green-50/50 px-1.5 py-0.5 rounded text-[10px]" title="Selesai: {{ $order->qc_jahit_completed_at->format('d M H:i') }}">Selesai: {{ $order->qcJahitBy->name ?? '-' }}</span>
-                              @elseif($isJahitLocked)
-                                  <span class="text-yellow-600 italic text-[10px]" title="Menunggu pengerjaan konstruksi selesai">Menunggu Urutan</span>
-                              @else
-                                  <div class="flex items-center gap-1">
-                                      @php
-                                          $jahitStarted = (bool)$order->qc_jahit_started_at;
-                                          $jahitCurrentTech = $order->qcJahitBy->name ?? 'Kosong';
-                                      @endphp
-                                      <select
-                                          id="tech-qc_jahit-{{ $order->id }}"
-                                          @if($jahitStarted)
-                                              @change="
-                                                  const newTechId = $event.target.value;
-                                                  const newTechName = $event.target.options[$event.target.selectedIndex].text;
-                                                  $event.target.value = '{{ $order->qc_jahit_by }}';
-                                                  openOverrideModal({{ $order->id }}, 'qc_jahit', newTechId, '{{ addslashes($jahitCurrentTech) }}', newTechName, 'QC Jahit');
-                                              "
-                                          @else
-                                              wire:change="updateTechnician({{ $order->id }}, 'qc_jahit', $event.target.value)"
-                                          @endif
-                                          class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-0 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[110px]">
-                                          <option value="">-- Pilih --</option>
-                                          @foreach($this->techs['jahit'] ?? ($this->techs['all'] ?? []) as $t)
-                                              <option value="{{ $t->id }}" {{ $order->qc_jahit_by == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                          @endforeach
-                                      </select>
-
-                                      @if($order->qc_jahit_started_at)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Selesaikan QC Jahit">Selesaikan</button>
-                                      @elseif($order->qc_jahit_by)
-                                          <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_jahit', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2.5 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer" title="Mulai QC Jahit">Mulai</button>
-                                      @endif
-                                  </div>
-                              @endif
-                          </div>
-                          @else
-                          <div class="flex items-center justify-between text-[11px] opacity-50">
-                              <span class="font-bold text-gray-400 uppercase">QC Jahit:</span>
-                              <span class="text-gray-400 text-[10px] italic">Tidak Diperlukan</span>
-                          </div>
-                          @endif
-                      </div>
-                  </td>
-
-                  {{-- Column 6: Duration / SLA --}}
+                  
+{{-- Column 6: Duration / SLA --}}
                   <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
                       <div class="text-[11px] font-semibold text-gray-750 dark:text-gray-300">
                           @if($order->estimation_date)
@@ -2078,15 +1995,19 @@
                                                this.open = !this.open;
                                            },
                                            selectTech(techId) {
-                                               this.open = false;
-                                               $wire.updateTechnician({{ $order->id }}, 'prod_cleaning', techId);
-                                           }
-                                       }" 
-                                       @scroll.window="open = false"
-                                       @click.stop>
-                                      
-                                      <button type="button" 
-                                              @click="toggle($event)"
+                                                this.open = false;
+                                                const hiddenInput = document.getElementById('tech-prod_cleaning-{{ $order->id }}');
+                                                if (hiddenInput) hiddenInput.value = techId === 'none' ? '' : techId;
+                                                $wire.updateTechnician({{ $order->id }}, 'prod_cleaning', techId);
+                                            }
+                                        }" 
+                                        @scroll.window="open = false"
+                                        @click.stop>
+                                       
+                                       <input type="hidden" id="tech-prod_cleaning-{{ $order->id }}" value="{{ $order->prod_cleaning_by }}">
+
+                                       <button type="button" 
+                                               @click="toggle($event)""
                                               class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->prod_cleaning_by ? 'bg-teal-50/70 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800 hover:bg-teal-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
                                               title="Pilih teknisi Treatment">
                                           <div class="flex items-center gap-1 truncate">
@@ -2167,7 +2088,7 @@
                                   @if($order->prod_cleaning_started_at)
                                       <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_cleaning', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
                                   @elseif($order->prod_cleaning_by)
-                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_cleaning', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'prod_cleaning', 'start', {{ $order->prod_cleaning_by ?? 'null' }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
                                   @endif
                               </div>
                           </div>
@@ -2309,15 +2230,19 @@
                                                this.open = !this.open;
                                            },
                                            selectTech(techId) {
-                                               this.open = false;
-                                               $wire.updateTechnician({{ $order->id }}, 'qc_cleanup', techId);
-                                           }
-                                       }" 
-                                       @scroll.window="open = false"
-                                       @click.stop>
-                                      
-                                      <button type="button" 
-                                              @click="toggle($event)"
+                                                this.open = false;
+                                                const hiddenInput = document.getElementById('tech-qc_cleanup-{{ $order->id }}');
+                                                if (hiddenInput) hiddenInput.value = techId === 'none' ? '' : techId;
+                                                $wire.updateTechnician({{ $order->id }}, 'qc_cleanup', techId);
+                                            }
+                                        }" 
+                                        @scroll.window="open = false"
+                                        @click.stop>
+                                       
+                                       <input type="hidden" id="tech-qc_cleanup-{{ $order->id }}" value="{{ $order->qc_cleanup_by }}">
+
+                                       <button type="button" 
+                                               @click="toggle($event)""
                                               class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->qc_cleanup_by ? 'bg-teal-50/70 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800 hover:bg-teal-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
                                               title="Pilih teknisi Cleanup">
                                           <div class="flex items-center gap-1 truncate">
@@ -2398,7 +2323,7 @@
                                   @if($order->qc_cleanup_started_at)
                                       <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
                                   @elseif($order->qc_cleanup_by)
-                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_cleanup', 'start', {{ $order->qc_cleanup_by ?? 'null' }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
                                   @endif
                               </div>
                           </div>
@@ -2540,15 +2465,19 @@
                                                this.open = !this.open;
                                            },
                                            selectTech(techId) {
-                                               this.open = false;
-                                               $wire.updateTechnician({{ $order->id }}, 'qc_final', techId);
-                                           }
-                                       }" 
-                                       @scroll.window="open = false"
-                                       @click.stop>
-                                      
-                                      <button type="button" 
-                                              @click="toggle($event)"
+                                                this.open = false;
+                                                const hiddenInput = document.getElementById('tech-qc_final-{{ $order->id }}');
+                                                if (hiddenInput) hiddenInput.value = techId === 'none' ? '' : techId;
+                                                $wire.updateTechnician({{ $order->id }}, 'qc_final', techId);
+                                            }
+                                        }" 
+                                        @scroll.window="open = false"
+                                        @click.stop>
+                                       
+                                       <input type="hidden" id="tech-qc_final-{{ $order->id }}" value="{{ $order->qc_final_by }}">
+
+                                       <button type="button" 
+                                               @click="toggle($event)""
                                               class="inline-flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 border {{ $order->qc_final_by ? 'bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100/60' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50' }} max-w-[125px]"
                                               title="Pilih teknisi QC Final">
                                           <div class="flex items-center gap-1 truncate">
@@ -2620,7 +2549,7 @@
                                   @if($order->qc_final_started_at)
                                       <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'finish');" class="text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Selesai</button>
                                   @elseif($order->qc_final_by)
-                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'start');" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
+                                      <button type="button" @click.stop="window.updateStation({{ $order->id }}, 'qc_final', 'start', {{ $order->qc_final_by ?? 'null' }});" class="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md transition-all shadow-xs active:scale-95 cursor-pointer">Mulai</button>
                                   @endif
                               </div>
                           </div>
@@ -3045,7 +2974,7 @@
                                                                 @endforeach
                                                             @endif
                                                         </select>
-                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prep_washing', 'start');" 
+                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prep_washing', 'start', {{ $order->prep_washing_by ?? 'null' }});" 
                                                                 class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
                                                             Mulai
                                                         </button>
@@ -3094,7 +3023,7 @@
                                                                 <option value="{{ $t->id }}">{{ $t->name }}</option>
                                                             @endforeach
                                                         </select>
-                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prep_sol', 'start');" 
+                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prep_sol', 'start', {{ $order->prep_sol_by ?? 'null' }});" 
                                                                 class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
                                                             Mulai
                                                         </button>
@@ -3144,7 +3073,7 @@
                                                                 <option value="{{ $t->id }}">{{ $t->name }}</option>
                                                             @endforeach
                                                         </select>
-                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prep_upper', 'start');" 
+                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prep_upper', 'start', {{ $order->prep_upper_by ?? 'null' }});" 
                                                                 class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
                                                             Mulai
                                                         </button>
@@ -3233,7 +3162,7 @@
                                                                 <option value="{{ $t->id }}">{{ $t->name }}</option>
                                                             @endforeach
                                                         </select>
-                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_upper', 'start');" 
+                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_upper', 'start', {{ $order->prod_upper_by ?? 'null' }});" 
                                                                 class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
                                                             Mulai Pengerjaan
                                                         </button>
@@ -3244,7 +3173,7 @@
                                                             <span>Pekerja: <span class="text-purple-600 dark:text-purple-400">{{ $order->prodUpperBy->name ?? '-' }}</span></span>
                                                             <span class="text-[9px] text-amber-600 font-normal italic">Belum Dimulai</span>
                                                         </div>
-                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_upper', 'start');" 
+                                                        <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_upper', 'start', {{ $order->prod_upper_by ?? 'null' }});" 
                                                                 class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
                                                             Mulai Pengerjaan
                                                         </button>
@@ -3303,7 +3232,7 @@
                                                                     <option value="{{ $t->id }}">{{ $t->name }}</option>
                                                                 @endforeach
                                                             </select>
-                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_sol', 'start');" 
+                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_sol', 'start', {{ $order->prod_sol_by ?? 'null' }});" 
                                                                     class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
                                                                 Mulai Pengerjaan
                                                             </button>
@@ -3314,7 +3243,7 @@
                                                                 <span>Pekerja: <span class="text-orange-600 dark:text-orange-400">{{ $order->prodSolBy->name ?? '-' }}</span></span>
                                                                 <span class="text-[9px] text-amber-600 font-normal italic">Belum Dimulai</span>
                                                             </div>
-                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_sol', 'start');" 
+                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'prod_sol', 'start', {{ $order->prod_sol_by ?? 'null' }});" 
                                                                     class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
                                                                 Mulai Pengerjaan
                                                             </button>
@@ -3374,7 +3303,7 @@
                                                                     <option value="{{ $t->id }}">{{ $t->name }}</option>
                                                                 @endforeach
                                                             </select>
-                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'qc_jahit', 'start');" 
+                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'qc_jahit', 'start', {{ $order->qc_jahit_by ?? 'null' }});" 
                                                                     class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
                                                                 Mulai Pengerjaan
                                                             </button>
@@ -3385,7 +3314,7 @@
                                                                 <span>Pekerja: <span class="text-blue-600 dark:text-blue-400">{{ $order->qcJahitBy->name ?? '-' }}</span></span>
                                                                 <span class="text-[9px] text-amber-600 font-normal italic">Belum Dimulai</span>
                                                             </div>
-                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'qc_jahit', 'start');" 
+                                                            <button type="button" @click="window.updateStation({{ $order->id }}, 'qc_jahit', 'start', {{ $order->qc_jahit_by ?? 'null' }});" 
                                                                     class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95">
                                                                 Mulai Pengerjaan
                                                             </button>

@@ -337,21 +337,11 @@
      <script>
          document.addEventListener('livewire:init', () => {
              window.updateStation = (id, type, action, techId = null, finishedAt = null) => {
-                 // If action is start and techId isn't provided, try to find it from the select
+                 // If action is start and techId isn't provided, try to find it from the element
                  if (action === 'start' && !techId) {
-                     const select = document.getElementById(`tech-${type}-${id}`);
-                     techId = select ? select.value : null;
-                     if (!techId) {
-                         Swal.fire({
-                             icon: 'error',
-                             title: 'Pilih teknisi terlebih dahulu.',
-                             showConfirmButton: true,
-                             confirmButtonColor: '#EF4444',
-                             confirmButtonText: 'Tutup',
-                             toast: false,
-                             position: 'center'
-                         });
-                         return;
+                     const el = document.getElementById(`tech-${type}-${id}`);
+                     if (el && el.value) {
+                         techId = el.value;
                      }
                  }
                  Swal.fire({

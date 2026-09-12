@@ -547,12 +547,10 @@
         };
 
         window.updateStation = (id, type, action, techId = null, finishedAt = null) => {
-            if (action === 'start') {
-                const select = document.getElementById(`tech-${type}-${id}`);
-                techId = select ? select.value : null;
-                if (!techId) {
-                    Swal.fire({ icon: 'warning', title: 'Pilih Teknisi', text: 'Silakan pilih teknisi persiapan terlebih dahulu.' });
-                    return;
+            if (action === 'start' && !techId) {
+                const el = document.getElementById(`tech-${type}-${id}`);
+                if (el && el.value) {
+                    techId = el.value;
                 }
             }
             Swal.fire({
