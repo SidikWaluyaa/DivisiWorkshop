@@ -456,7 +456,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Shipping Routes
-    Route::controller(App\Http\Controllers\ShippingController::class)->group(function () {
+    Route::controller(App\Http\Controllers\ShippingController::class)->middleware('access:shipping')->group(function () {
         Route::get('/shipping', 'index')->name('shipping.index');
         Route::get('/shipping/manifest/preview', 'previewManifest')->name('shipping.manifest.preview');
         Route::get('/shipping/manifest/download', 'downloadManifest')->name('shipping.manifest.download');

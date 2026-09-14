@@ -71,14 +71,136 @@ class User extends Authenticatable
             return true;
         }
 
-        // Standardized 5 Pillar Architecture
+        // Standardized 7 Pillar Architecture (Implicit default access for primary roles)
         $implicitAccess = [
-            'cs' => ['cs', 'cs.greeting', 'cs.spk', 'cs.analytics'],
-            'gudang' => ['gudang', 'warehouse.storage', 'manifest.index', 'material.requests', 'storage.dashboard'],
-            'workshop' => ['workshop', 'workshop.dashboard', 'assessment', 'preparation', 'sortir', 'production', 'qc', 'finish', 'gallery'],
-            'finance' => ['finance'],
-            'cx' => ['cx', 'cx.dashboard', 'cx.oto', 'complaints'],
-            'hr' => ['hr', 'admin.users'],
+            'cs' => [
+                'dashboard',
+                'internal-tracking',
+                'cs',
+                'cs.dashboard',
+                'cs.analytics',
+                'cs.leads.konsultasi',
+                'cs.leads.follow-up',
+                'cs.leads.closing',
+                'cs.leads.followup-closing',
+                'cs.pending-monitoring',
+                'cs.spk',
+                'cs.greeting',
+                'cs.after-photos',
+                'cs.forecasting',
+            ],
+            'gudang' => [
+                'dashboard',
+                'internal-tracking',
+                'gudang',
+                'gudang.outbound-receipt',
+                'storage.purchase',
+                'storage.disbursement',
+                'storage.history',
+                'storage.dashboard',
+                'warehouse.storage',
+                'storage.pickup-history',
+                'reception',
+                'assessment',
+                'manifest.index',
+                'storage.manual',
+                'storage.manual.racks',
+                'finish',
+                'shipping',
+                'admin.custom-label',
+                'material.requests',
+                'material-requests',
+                'admin.materials.request',
+            ],
+            'workshop' => [
+                'dashboard',
+                'internal-tracking',
+                'internal-tracking.services',
+                'workshop',
+                'workshop.dashboard',
+                'assessment',
+                'preparation',
+                'sortir',
+                'production',
+                'qc',
+                'surat-jalan',
+                'gallery',
+            ],
+            'finance' => [
+                'dashboard',
+                'internal-tracking',
+                'finance',
+                'finance.dashboard',
+                'finance.waiting-payment',
+                'finance.transaction',
+                'finance.index',
+                'finance.invoices',
+                'finance.cancelled',
+                'finance.cs-verification',
+                'finance.payments',
+                'finance.mutations',
+                'finance.verifications',
+                'manifest.index',
+            ],
+            'cx' => [
+                'dashboard',
+                'internal-tracking',
+                'cx',
+                'cx.dashboard',
+                'cx.index',
+                'cx.history',
+                'cx.oto',
+                'cx.after-confirmation',
+                'cx.shipping-monitoring',
+                'cx.overdue',
+                'cx.warranty-claims',
+                'cx.verified-addresses',
+                'admin.complaints',
+                'complaints',
+            ],
+            'spv' => [
+                'dashboard',
+                'internal-tracking',
+                'internal-tracking.services',
+                'admin.performance',
+                'admin.reports',
+                'cs',
+                'cs.dashboard',
+                'gudang',
+                'storage.dashboard',
+                'workshop',
+                'workshop.dashboard',
+                'finance',
+                'finance.dashboard',
+                'cx',
+                'cx.dashboard',
+            ],
+            'hr' => [
+                'dashboard',
+                'admin.users',
+                'admin.reports',
+                'admin.performance',
+            ],
+            'technician' => [
+                'workshop',
+                'workshop.dashboard',
+                'assessment',
+                'preparation',
+                'sortir',
+                'production',
+                'qc',
+                'gallery',
+            ],
+            'pic' => [
+                'workshop',
+                'workshop.dashboard',
+                'sortir',
+                'admin.materials',
+            ],
+            'user' => [
+                'dashboard',
+                'internal-tracking',
+            ],
         ];
 
         if (isset($implicitAccess[$this->role]) && in_array($module, $implicitAccess[$this->role])) {
@@ -86,13 +208,77 @@ class User extends Authenticatable
         }
 
         // Custom access via access_rights JSON field
-        $hasAccess = in_array($module, $this->access_rights ?? []);
+        $userRights = is_array($this->access_rights) ? $this->access_rights : (json_decode($this->access_rights, true) ?? []);
         
-        if (!$hasAccess) {
-             \Illuminate\Support\Facades\Log::debug("User {$this->id} ({$this->name}) role: {$this->role} denied access to module: {$module}.");
+        if (in_array($module, $userRights)) {
+            return true;
         }
 
-        return $hasAccess;
+        // Module Aliases / Parent Group fallbacks (e.g. if user has 'reception', but middleware/gate checks 'gudang')
+        $parentDivisions = [
+            'gudang' => [
+                'gudang.outbound-receipt', 'storage.purchase', 'storage.disbursement', 'storage.history',
+                'storage.dashboard', 'warehouse.storage', 'storage.pickup-history', 'reception',
+                'assessment', 'manifest.index', 'storage.manual', 'storage.manual.racks', 'finish',
+                'shipping', 'admin.custom-label', 'material-requests', 'admin.materials.request'
+            ],
+            'cs' => [
+                'cs.dashboard', 'cs.analytics', 'cs.leads.konsultasi', 'cs.leads.follow-up',
+                'cs.leads.closing', 'cs.leads.followup-closing', 'cs.pending-monitoring', 'cs.spk',
+                'cs.greeting', 'cs.after-photos', 'cs.forecasting'
+            ],
+            'finance' => [
+                'finance.dashboard', 'finance.waiting-payment', 'finance.transaction', 'finance.invoices',
+                'finance.cancelled', 'finance.cs-verification', 'finance.payments', 'finance.mutations',
+                'finance.verifications'
+            ],
+            'cx' => [
+                'cx.dashboard', 'cx.index', 'cx.history', 'cx.oto', 'cx.after-confirmation',
+                'cx.shipping-monitoring', 'cx.overdue', 'cx.warranty-claims', 'cx.verified-addresses',
+                'admin.complaints', 'complaints'
+            ],
+            'master' => [
+                'admin.customers', 'admin.promotions', 'admin.announcements', 'admin.users',
+                'admin.activity-logs', 'admin.reports', 'admin.performance', 'admin.supply-chain',
+                'material-requests', 'admin.purchases', 'admin.data-integrity', 'admin.services', 'admin.materials'
+            ],
+        ];
+
+        // If module requested is a parent division, check if user has at least one submodule in it
+        if (isset($parentDivisions[$module])) {
+            foreach ($parentDivisions[$module] as $subMod) {
+                if (in_array($subMod, $userRights)) {
+                    return true;
+                }
+            }
+        }
+
+        // Submodule alias mapping
+        $aliasMap = [
+            'cs.leads.konsultasi' => ['cs'],
+            'cs.leads.follow-up' => ['cs'],
+            'cs.leads.closing' => ['cs'],
+            'cs.leads.followup-closing' => ['cs'],
+            'cs.pending-monitoring' => ['cs', 'cs.spk'],
+            'cs.after-photos' => ['cs'],
+            'cs.forecasting' => ['cs'],
+            'finance.transaction' => ['finance'],
+            'finance' => ['finance.transaction', 'finance.dashboard'],
+            'cx.followup' => ['cx', 'cx.index'],
+            'cx.overdue' => ['cx.overdue-dashboard'],
+            'material-requests' => ['admin.materials.request', 'material.requests'],
+            'admin.materials.request' => ['material-requests'],
+        ];
+
+        if (isset($aliasMap[$module])) {
+            foreach ($aliasMap[$module] as $alt) {
+                if (in_array($alt, $userRights)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     // Role Helper Methods
