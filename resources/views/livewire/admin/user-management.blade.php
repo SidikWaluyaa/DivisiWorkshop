@@ -125,9 +125,10 @@
                     <option value="owner">Owner / Direktur</option>
                     <option value="spv">Supervisor</option>
                     <option value="technician">Teknisi / Workshop</option>
-                    <option value="gudang">Staf Gudang</option>
-                    <option value="cs">Customer Service</option>
-                    <option value="finance">Finance / Kasir</option>
+                    <option value="gudang">Divisi Gudang</option>
+                    <option value="cs">Divisi CS</option>
+                    <option value="finance">Divisi Finance</option>
+                    <option value="cx">Divisi CC</option>
                     <option value="pic">PIC Material</option>
                     <option value="hr">HR / HRD</option>
                     <option value="user">Staff / User</option>
@@ -230,6 +231,7 @@
                                     'pic' => 'bg-cyan-100 text-cyan-800 border-cyan-200',
                                     'cs' => 'bg-pink-100 text-pink-800 border-pink-200',
                                     'finance' => 'bg-teal-100 text-teal-800 border-teal-200',
+                                    'cx' => 'bg-rose-100 text-rose-800 border-rose-200',
                                     'spv' => 'bg-blue-100 text-blue-800 border-blue-200',
                                     'hr' => 'bg-green-100 text-green-800 border-green-200',
                                     'user' => 'bg-slate-100 text-slate-800 border-slate-200',
@@ -239,10 +241,11 @@
                                     'admin' => 'Administrator',
                                     'owner' => 'Owner / Direktur',
                                     'technician' => 'Teknisi / Workshop',
-                                    'gudang' => 'Staf Gudang',
+                                    'gudang' => 'Divisi Gudang',
                                     'pic' => 'PIC Material',
-                                    'cs' => 'Customer Service',
-                                    'finance' => 'Finance / Kasir',
+                                    'cs' => 'Divisi CS',
+                                    'finance' => 'Divisi Finance',
+                                    'cx' => 'Divisi CC',
                                     'spv' => 'Supervisor',
                                     'hr' => 'HR / HRD',
                                     'user' => 'Staff / User',
@@ -416,9 +419,10 @@
                         <select wire:model.live="role" class="w-full py-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-slate-50 focus:bg-white focus:border-[#22AF85] focus:ring-2 focus:ring-[#22AF85]/20 cursor-pointer">
                             <option value="user">Staff / User</option>
                             <option value="technician">Teknisi / Workshop</option>
-                            <option value="gudang">Staf Gudang</option>
-                            <option value="cs">Customer Service</option>
-                            <option value="finance">Finance / Kasir</option>
+                            <option value="gudang">Divisi Gudang</option>
+                            <option value="cs">Divisi CS</option>
+                            <option value="finance">Divisi Finance</option>
+                            <option value="cx">Divisi CC</option>
                             <option value="pic">PIC Material</option>
                             <option value="spv">Supervisor</option>
                             <option value="hr">HR / HRD</option>
@@ -493,32 +497,101 @@
             </div>
             @endif
 
-            {{-- Tab 2: Access Rights Matrix --}}
+            {{-- Tab 2: Access Rights Matrix (100% Synced with Sidebar) --}}
             @if($modalTab === 'access')
-            <div class="p-6 sm:p-7 space-y-6 max-h-[70vh] overflow-y-auto">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="p-6 sm:p-7 space-y-6 max-h-[72vh] overflow-y-auto bg-slate-50/40">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/80 bg-white p-4 rounded-2xl shadow-xs border">
                     <div>
-                        <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider">Matriks Izin Akses Modul</h4>
-                        <p class="text-[11px] font-medium text-slate-400">Pilih modul apa saja yang boleh diakses oleh pengguna ini.</p>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#22AF85] animate-pulse"></span>
+                            <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider">Matriks Izin Akses Modul (7 Pilar Divisi)</h4>
+                        </div>
+                        <p class="text-[11px] font-bold text-slate-400 mt-0.5">Pilih paket divisi instan atau centang menu satuan secara fleksibel.</p>
                     </div>
-                    <button type="button" wire:click="applyPresetForRole('{{ $role }}')" class="px-3 py-1.5 bg-emerald-50 text-[#22AF85] hover:bg-emerald-100 rounded-xl text-[10px] font-black transition-all cursor-pointer">
-                        ⚡ Terapkan Preset {{ ucfirst($role) }}
+                    @php
+                        $roleLabels = [
+                            'cs' => 'Divisi CS',
+                            'gudang' => 'Divisi Gudang',
+                            'finance' => 'Divisi Finance',
+                            'cx' => 'Divisi CC',
+                            'technician' => 'Teknisi / Workshop',
+                            'admin' => 'Administrator',
+                            'owner' => 'Owner / Direktur',
+                            'pic' => 'PIC Material',
+                            'spv' => 'Supervisor',
+                            'hr' => 'HR / HRD',
+                            'user' => 'Staff / User',
+                        ];
+                    @endphp
+                    <button type="button" 
+                            wire:click="applyPresetForRole('{{ $role }}')" 
+                            class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-[#22AF85] hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl text-xs font-black shadow-sm shadow-emerald-950/10 transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                        <span>⚡ Terapkan Paket Default {{ $roleLabels[$role] ?? ucfirst($role) }}</span>
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     @foreach($allDivisions as $div)
-                    <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 space-y-3">
-                        <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
-                            <span class="text-xs font-black text-slate-800">{{ $div['title'] }}</span>
-                        </div>
-                        <div class="space-y-2">
-                            @foreach($div['modules'] as $moduleKey => $moduleName)
-                            <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 hover:text-[#22AF85]">
-                                <input type="checkbox" value="{{ $moduleKey }}" wire:model="access_rights" class="rounded border-slate-300 text-[#22AF85] focus:ring-[#22AF85]">
-                                <span>{{ $moduleName }}</span>
-                            </label>
-                            @endforeach
+                    @php
+                        $divModuleKeys = array_keys($div['modules']);
+                        $totalInDiv = count($divModuleKeys);
+                        $currentRights = is_array($access_rights) ? $access_rights : [];
+                        $activeInDiv = count(array_intersect($divModuleKeys, $currentRights));
+                        $isAllActive = ($activeInDiv === $totalInDiv && $totalInDiv > 0);
+                    @endphp
+                    <div class="p-5 rounded-3xl border transition-all duration-200 bg-white shadow-xs {{ $activeInDiv > 0 ? 'border-[#22AF85]/50 ring-1 ring-[#22AF85]/20' : 'border-slate-200/80' }} flex flex-col justify-between">
+                        <div>
+                            {{-- Card Header --}}
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div class="space-y-0.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider {{ $activeInDiv > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600' }}">
+                                            {{ $div['badge'] ?? 'DIVISI' }}
+                                        </span>
+                                        <span class="text-[10px] font-black {{ $activeInDiv > 0 ? 'text-[#22AF85]' : 'text-slate-400' }}">
+                                            {{ $activeInDiv }}/{{ $totalInDiv }} Terpilih
+                                        </span>
+                                    </div>
+                                    <h5 class="text-xs font-black text-slate-900 tracking-tight">{{ $div['title'] }}</h5>
+                                </div>
+
+                                {{-- Quick Package Buttons --}}
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button type="button" 
+                                            wire:click="selectDivisionPackage('{{ $div['id'] }}')" 
+                                            title="Centang semua menu di divisi ini"
+                                            class="px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-50 hover:bg-emerald-100 text-[#22AF85] transition-all cursor-pointer border border-emerald-200">
+                                        ⚡ Paket
+                                    </button>
+                                    @if($activeInDiv > 0)
+                                    <button type="button" 
+                                            wire:click="unselectDivisionPackage('{{ $div['id'] }}')" 
+                                            title="Kosongkan pilihan di divisi ini"
+                                            class="px-2 py-1 rounded-lg text-[10px] font-black bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-all cursor-pointer border border-slate-200 hover:border-rose-200">
+                                        ✖
+                                    </button>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Module Checkbox List --}}
+                            <div class="pt-3 space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                                @foreach($div['modules'] as $moduleKey => $moduleName)
+                                @php
+                                    $isChecked = in_array($moduleKey, $currentRights);
+                                @endphp
+                                <label class="flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer select-none text-xs {{ $isChecked ? 'bg-emerald-50/60 text-slate-900 font-black border border-emerald-200/60' : 'bg-slate-50/50 hover:bg-slate-100 text-slate-600 font-bold border border-transparent' }}">
+                                    <div class="flex items-center gap-2.5 min-w-0 pr-2">
+                                        <input type="checkbox" 
+                                               value="{{ $moduleKey }}" 
+                                               wire:model.live="access_rights" 
+                                               class="w-4 h-4 rounded-md border-slate-300 text-[#22AF85] focus:ring-[#22AF85]/30 cursor-pointer">
+                                        <span class="truncate text-[11px]">{{ $moduleName }}</span>
+                                    </div>
+                                    <span class="text-[9px] font-mono text-slate-400 shrink-0 font-normal">{{ $moduleKey }}</span>
+                                </label>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                     @endforeach

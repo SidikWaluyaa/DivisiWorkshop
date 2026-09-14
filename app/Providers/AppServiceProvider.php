@@ -72,33 +72,17 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        // Module Access Gates (Standardized 5 Pillars)
+        // Module Access Gates (Standardized 7 Pillars)
         \Illuminate\Support\Facades\Gate::define('access-cs', function ($user) {
-            return $user->hasAccess('cs') || 
-                   $user->hasAccess('cs.spk') || 
-                   $user->hasAccess('cs.greeting') || 
-                   $user->hasAccess('cs.dashboard') || 
-                   $user->hasAccess('cs.analytics');
+            return $user->hasAccess('cs');
         });
 
         \Illuminate\Support\Facades\Gate::define('access-gudang', function ($user) {
-            return $user->hasAccess('gudang') || 
-                   $user->hasAccess('warehouse.storage') || 
-                   $user->hasAccess('manifest.index') || 
-                   $user->hasAccess('storage.dashboard') ||
-                   $user->hasAccess('material.requests') ||
-                   $user->hasAccess('assessment');
+            return $user->hasAccess('gudang');
         });
 
         \Illuminate\Support\Facades\Gate::define('access-workshop', function ($user) {
-            return $user->hasAccess('workshop') || 
-                   $user->hasAccess('workshop.dashboard') || 
-                   $user->hasAccess('preparation') || 
-                   $user->hasAccess('sortir') || 
-                   $user->hasAccess('production') || 
-                   $user->hasAccess('qc') || 
-                   $user->hasAccess('finish') || 
-                   $user->hasAccess('gallery');
+            return $user->hasAccess('workshop') || $user->isWorkshop();
         });
 
         \Illuminate\Support\Facades\Gate::define('access-finance', function ($user) {
@@ -106,11 +90,11 @@ class AppServiceProvider extends ServiceProvider
         });
 
         \Illuminate\Support\Facades\Gate::define('access-cx', function ($user) {
-            return $user->hasAccess('cx') || 
-                   $user->hasAccess('cx.dashboard') || 
-                   $user->hasAccess('cx.oto') || 
-                   $user->hasAccess('admin.complaints') ||
-                   $user->hasAccess('cx.index');
+            return $user->hasAccess('cx');
+        });
+
+        \Illuminate\Support\Facades\Gate::define('access-master', function ($user) {
+            return $user->hasAccess('master') || $user->isAdmin() || $user->isOwner();
         });
 
         // Specific Governance Gates

@@ -42,6 +42,7 @@
         </a>
 
         {{-- Internal Tracking Search Engine --}}
+        @if(Auth::user()->hasAccess('internal-tracking'))
         <a href="{{ route('internal-tracking.index') }}" 
            class="nav-item {{ request()->routeIs('internal-tracking.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/20 bg-teal-900/10 hover:bg-teal-800/30"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -51,8 +52,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 font-bold text-teal-400">Internal Tracking</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Lacak SPK</span>
         </a>
+        @endif
 
         {{-- Tracking Jasa --}}
+        @if(Auth::user()->hasAccess('internal-tracking.services'))
         <a href="{{ route('internal-tracking.services') }}" 
            class="nav-item {{ request()->routeIs('internal-tracking.services') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-indigo-500/20 bg-indigo-900/10 hover:bg-indigo-800/30 mt-1"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -62,6 +65,7 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 font-bold text-indigo-400">Tracking Jasa</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-indigo-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Lacak Jasa</span>
         </a>
+        @endif
     </div>
     
     {{-- Operational Navigation (Hidden for HR) --}}
@@ -104,7 +108,7 @@
         
         <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
         
-        @if(Auth::user()->hasAccess('cs'))
+        @if(Auth::user()->hasAccess('cs.dashboard'))
         <a href="{{ route('cs.dashboard') }}" 
            class="nav-item {{ request()->routeIs('cs.dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -114,7 +118,9 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1">CS Dashboard</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Dashboard</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('cs.analytics'))
         <a href="{{ route('cs.analytics') }}" 
            class="nav-item {{ request()->routeIs('cs.analytics') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -124,7 +130,9 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-teal-400 font-bold">Laporan Performa</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Laporan</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('cs.leads.konsultasi'))
         <a href="{{ route('cs.leads.konsultasi') }}" 
            class="nav-item {{ request()->routeIs('cs.leads.konsultasi') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -142,7 +150,9 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Konsultasi</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('cs.leads.follow-up'))
         <a href="{{ route('cs.leads.follow-up') }}" 
            class="nav-item {{ request()->routeIs('cs.leads.follow-up') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -160,7 +170,9 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Follow-up</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('cs.leads.closing'))
         <a href="{{ route('cs.leads.closing') }}" 
            class="nav-item {{ request()->routeIs('cs.leads.closing') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -178,7 +190,9 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Closing</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('cs.leads.followup-closing'))
         <a href="{{ route('cs.leads.followup-closing') }}" 
            class="nav-item {{ request()->routeIs('cs.leads.followup-closing') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/10 bg-teal-500/5 hover:bg-teal-500/15"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -202,7 +216,7 @@
         @endif
 
         {{-- Monitoring Kiriman SPK Pending --}}
-        @if(Auth::user()->hasAccess('cs.spk') || Auth::user()->hasAccess('cs'))
+        @if(Auth::user()->hasAccess('cs.pending-monitoring'))
         <a href="{{ route('cs.pending-monitoring') }}" 
            class="nav-item {{ request()->routeIs('cs.pending-monitoring') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -260,7 +274,7 @@
         @endif
 
         {{-- After Photo Gallery --}}
-        @if(Auth::user()->hasAccess('cs'))
+        @if(Auth::user()->hasAccess('cs.after-photos'))
         <a href="{{ route('cs.after-photos') }}" 
            class="nav-item {{ request()->routeIs('cs.after-photos') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -273,7 +287,7 @@
         @endif
 
         {{-- Forecasting --}}
-        @if(Auth::user()->hasAccess('cs'))
+        @if(Auth::user()->hasAccess('cs.forecasting'))
         <a href="{{ route('cs.forecasting.index') }}" 
            class="nav-item {{ request()->routeIs('cs.forecasting.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/10 bg-teal-500/5 hover:bg-teal-500/15"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -323,6 +337,7 @@
         <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
 
         {{-- Penerimaan Outbound (QC to Gudang) --}}
+        @if(Auth::user()->hasAccess('gudang.outbound-receipt'))
         <a href="{{ route('gudang.outbound-receipt') }}" 
            class="nav-item {{ request()->routeIs('gudang.outbound-receipt') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-amber-500/10 bg-amber-500/5 hover:bg-amber-500/20"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -341,14 +356,10 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-amber-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Penerimaan QC</span>
         </a>
-
-
-
-        @if(Auth::user()->hasAccess('admin.purchases'))
-
         @endif
 
-        {{-- WMS: Belanja (Move here) --}}
+        {{-- WMS: Belanja --}}
+        @if(Auth::user()->hasAccess('storage.purchase'))
         <a href="{{ route('storage.purchase.index') }}" 
            class="nav-item {{ request()->routeIs('storage.purchase.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-indigo-500/10 bg-indigo-500/5 hover:bg-indigo-500/20"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -358,8 +369,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-indigo-400">Belanja Gudang</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Belanja</span>
         </a>
+        @endif
 
-        {{-- WMS: Barang Keluar (Move here) --}}
+        {{-- WMS: Barang Keluar --}}
+        @if(Auth::user()->hasAccess('storage.disbursement'))
         <a href="{{ route('storage.disbursement.index') }}" 
            class="nav-item {{ request()->routeIs('storage.disbursement.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-rose-500/10 bg-rose-500/5 hover:bg-rose-500/20"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -369,8 +382,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-rose-400">Barang Keluar</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Barang Keluar</span>
         </a>
+        @endif
 
-        {{-- WMS: Riwayat Mutasi (New) --}}
+        {{-- WMS: Riwayat Mutasi --}}
+        @if(Auth::user()->hasAccess('storage.history'))
         <a href="{{ route('storage.history') }}" 
            class="nav-item {{ request()->routeIs('storage.history') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/20"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -380,6 +395,7 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-emerald-400">Riwayat Mutasi</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Riwayat</span>
         </a>
+        @endif
 
         {{-- Actions Divider --}}
         <div x-show="!sidebarCollapsed" class="section-divider my-4"></div>
@@ -388,6 +404,7 @@
         <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2">Operasional Gudang</h3>
 
         {{-- Warehouse Dashboard --}}
+        @if(Auth::user()->hasAccess('storage.dashboard'))
         <a href="{{ route('storage.dashboard') }}" 
            class="nav-item {{ request()->routeIs('storage.dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -397,8 +414,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold">Dashboard Gudang</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Dashboard</span>
         </a>
+        @endif
 
         {{-- Main Storage Management (Racks) --}}
+        @if(Auth::user()->hasAccess('warehouse.storage'))
         <a href="{{ route('storage.index') }}" 
            class="nav-item {{ request()->routeIs('storage.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -416,8 +435,10 @@
             @endif
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Rak</span>
         </a>
+        @endif
 
-        {{-- Riwayat Pengambilan (New) --}}
+        {{-- Riwayat Pengambilan --}}
+        @if(Auth::user()->hasAccess('storage.pickup-history'))
         <a href="{{ route('storage.pickup-history') }}" 
            class="nav-item {{ request()->routeIs('storage.pickup-history') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -427,7 +448,9 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-emerald-400">Riwayat Pengambilan</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Riwayat Ambil</span>
         </a>
+        @endif
 
+        @if(Auth::user()->hasAccess('reception'))
         <a href="{{ route('reception.index') }}" 
            class="nav-item {{ request()->routeIs('reception.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -446,6 +469,7 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Gudang</span>
         </a>
+        @endif
 
         @if(Auth::user()->hasAccess('assessment'))
         <a href="{{ route('assessment.index') }}" 
@@ -470,6 +494,7 @@
         @endif
 
         {{-- Logistik Manifest --}}
+        @if(Auth::user()->hasAccess('manifest.index'))
         <a href="{{ route('manifest.index') }}" 
            class="nav-item {{ request()->routeIs('manifest.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -489,9 +514,10 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Logistik</span>
         </a>
+        @endif
 
-        @if(Auth::user()->hasAccess('admin'))
         {{-- Gudang Manual --}}
+        @if(Auth::user()->hasAccess('storage.manual'))
         <a href="{{ route('storage.manual.index') }}" 
            class="nav-item {{ request()->routeIs('storage.manual.*') && !request()->routeIs('storage.manual.racks.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -501,8 +527,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-orange-400 font-bold">Gudang Manual</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">G. Manual</span>
         </a>
+        @endif
 
         {{-- Rak Manual --}}
+        @if(Auth::user()->hasAccess('storage.manual.racks'))
         <a href="{{ route('storage.manual.racks.index') }}" 
            class="nav-item {{ request()->routeIs('storage.manual.racks.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -515,7 +543,7 @@
         @endif
 
         {{-- Gudang Finish --}}
-        @if(Auth::user()->hasAccess('finish') || Auth::user()->hasAccess('gudang'))
+        @if(Auth::user()->hasAccess('finish'))
         <a href="{{ route('finish.index') }}" 
            class="nav-item {{ request()->routeIs('finish.index') || request()->routeIs('finish.show') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -536,6 +564,7 @@
         @endif
 
         {{-- Pengiriman --}}
+        @if(Auth::user()->hasAccess('shipping'))
         <a href="{{ route('shipping.index') }}" 
            class="nav-item {{ request()->routeIs('shipping.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -545,8 +574,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-blue-400 font-bold">Pengiriman</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengiriman</span>
         </a>
+        @endif
 
         {{-- Custom Label Generator --}}
+        @if(Auth::user()->hasAccess('admin.custom-label'))
         <a href="{{ route('admin.custom-label.index') }}" 
            class="nav-item {{ request()->routeIs('admin.custom-label.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/10 bg-teal-500/5 hover:bg-teal-500/20"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -556,6 +587,7 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-teal-400">Label Custom</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Label Custom</span>
         </a>
+        @endif
         </div>
     </div>
     @endcan
@@ -621,6 +653,7 @@
         <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
         
         {{-- Dashboard Finance --}}
+        @if(Auth::user()->hasAccess('finance.dashboard'))
         <a href="{{ route('finance.dashboard') }}" 
            class="nav-item {{ request()->routeIs('finance.dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-yellow-500/20 bg-yellow-900/10 hover:bg-yellow-800/30"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -630,8 +663,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 font-bold text-yellow-400">Dashboard Finance</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-yellow-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Dashboard</span>
         </a>
+        @endif
 
         {{-- Waiting Payment --}}
+        @if(Auth::user()->hasAccess('finance.waiting-payment'))
         <a href="{{ route('finance.waiting-payment') }}" 
            class="nav-item {{ request()->routeIs('finance.waiting-payment') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -643,7 +678,10 @@
             <span x-show="!sidebarCollapsed && {{ $financeWaitingCount }} > 0" class="ml-auto bg-emerald-100 text-emerald-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $financeWaitingCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Menunggu</span>
         </a>
+        @endif
 
+        {{-- Finance Transaksi --}}
+        @if(Auth::user()->hasAccess('finance.transaction'))
         <a href="{{ route('finance.index') }}" 
            class="nav-item {{ request()->routeIs('finance.index') || request()->routeIs('finance.show') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -656,7 +694,10 @@
             <span x-show="!sidebarCollapsed && {{ $financeCount }} > 0" class="ml-auto bg-yellow-100 text-yellow-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $financeCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Transaksi</span>
         </a>
+        @endif
 
+        {{-- Data Invoice --}}
+        @if(Auth::user()->hasAccess('finance.invoices'))
         <a href="{{ route('finance.invoices.index') }}" 
            class="nav-item {{ request()->routeIs('finance.invoices.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -666,8 +707,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-blue-400 font-bold">Data Invoice</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Invoice</span>
         </a>
+        @endif
 
         {{-- Transaksi Batal --}}
+        @if(Auth::user()->hasAccess('finance.cancelled'))
         <a href="{{ route('finance.cancelled') }}" 
            class="nav-item {{ request()->routeIs('finance.cancelled') ? 'active' : 'border border-red-500/10 bg-red-500/5 hover:bg-red-500/10' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -679,8 +722,10 @@
             <span x-show="!sidebarCollapsed && {{ $batalCount }} > 0" class="ml-auto bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $batalCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-red-500 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Batal</span>
         </a>
+        @endif
 
         {{-- Audit Pembayaran CS --}}
+        @if(Auth::user()->hasAccess('finance.cs-verification'))
         <a href="{{ route('finance.cs-verification') }}" 
            class="nav-item {{ request()->routeIs('finance.cs-verification') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -692,8 +737,10 @@
             <span x-show="!sidebarCollapsed && {{ $pendingCsCount }} > 0" class="ml-auto bg-orange-500 text-white py-0.5 px-2 rounded-full text-[10px] font-black animate-pulse">{{ $pendingCsCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Audit CS</span>
         </a>
+        @endif
 
         {{-- Input Pembayaran --}}
+        @if(Auth::user()->hasAccess('finance.payments'))
         <a href="{{ route('finance.payments.index') }}" 
            class="nav-item {{ request()->routeIs('finance.payments.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -703,8 +750,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Input Pembayaran</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pembayaran</span>
         </a>
+        @endif
 
         {{-- Import Mutasi --}}
+        @if(Auth::user()->hasAccess('finance.mutations'))
         <a href="{{ route('finance.mutations.index') }}" 
            class="nav-item {{ request()->routeIs('finance.mutations.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -714,8 +763,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Import Mutasi</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Mutasi</span>
         </a>
+        @endif
 
         {{-- Verifikasi Mutasi --}}
+        @if(Auth::user()->hasAccess('finance.verifications'))
         <a href="{{ route('finance.verifications.index') }}" 
            class="nav-item {{ request()->routeIs('finance.verifications.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -727,6 +778,7 @@
             <span x-show="!sidebarCollapsed && {{ $unverifiedCount }} > 0" class="ml-auto bg-purple-100 text-purple-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $unverifiedCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Verifikasi</span>
         </a>
+        @endif
         </div>
     </div>
     @endcan
@@ -766,6 +818,7 @@
         <div x-show="open" x-collapse x-cloak class="space-y-1 mt-1 ml-4 border-l-2 border-white/10 pl-2">
 
         {{-- CX Analytics Dashboard --}}
+        @if(Auth::user()->hasAccess('cx.dashboard'))
         <a href="{{ route('cx.dashboard') }}" 
            class="nav-item {{ request()->routeIs('cx.dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -775,8 +828,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">CC Dashboard</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Dashboard</span>
         </a>
+        @endif
 
         {{-- CX Follow Up (Worklist) --}}
+        @if(Auth::user()->hasAccess('cx.index'))
         <a href="{{ route('cx.index') }}" 
            class="nav-item {{ request()->routeIs('cx.index') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -790,8 +845,10 @@
             <span x-show="!sidebarCollapsed && {{ $cxCount }} > 0" class="ml-auto bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $cxCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">CC</span>
         </a>
+        @endif
 
         {{-- CX History --}}
+        @if(Auth::user()->hasAccess('cx.history'))
         <a href="{{ route('cx.history') }}" 
            class="nav-item {{ request()->routeIs('cx.history') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -801,8 +858,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-orange-400 font-bold tracking-tight">History Resolusi</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">History</span>
         </a>
+        @endif
 
         {{-- CX OTO Pool --}}
+        @if(Auth::user()->hasAccess('cx.oto'))
         <a href="{{ route('cx.oto.index') }}" 
            class="nav-item {{ request()->routeIs('cx.oto.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -816,8 +875,10 @@
             <span x-show="!sidebarCollapsed && {{ $otoPending }} > 0" class="ml-auto bg-orange-100 text-orange-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $otoPending }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">OTO</span>
         </a>
+        @endif
 
         {{-- CX After Confirmation (Satisfaction) --}}
+        @if(Auth::user()->hasAccess('cx.after-confirmation'))
         <a href="{{ route('cx.after-confirmation.index') }}" 
            class="nav-item {{ request()->routeIs('cx.after-confirmation.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -827,8 +888,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-teal-400 font-bold tracking-tight">Konfirmasi After</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">After Service</span>
         </a>
+        @endif
 
         {{-- CX Shipping Monitoring --}}
+        @if(Auth::user()->hasAccess('cx.shipping-monitoring'))
         <a href="{{ route('cx.shipping-monitoring') }}" 
            class="nav-item {{ request()->routeIs('cx.shipping-monitoring') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -839,8 +902,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-blue-400 font-bold tracking-tight">Monitoring Kirim</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Monitoring Kirim</span>
         </a>
+        @endif
 
         {{-- CX Overdue Dashboard --}}
+        @if(Auth::user()->hasAccess('cx.overdue'))
         <a href="{{ route('cx.overdue-dashboard') }}" 
            class="nav-item {{ request()->routeIs('cx.overdue-dashboard') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-rose-500/10 bg-rose-500/5 hover:bg-rose-500/15"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -850,8 +915,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-rose-400 font-black tracking-tight">Overdue SLA</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Overdue SLA</span>
         </a>
+        @endif
 
         {{-- CX Warranty Claims Inbox --}}
+        @if(Auth::user()->hasAccess('cx.warranty-claims'))
         <a href="{{ route('cx.warranty-claims.index') }}" 
            class="nav-item {{ request()->routeIs('cx.warranty-claims.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/10 bg-teal-500/5 hover:bg-teal-500/15"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -870,8 +937,10 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-teal-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Klaim Garansi</span>
         </a>
+        @endif
 
         {{-- CX Verified Addresses --}}
+        @if(Auth::user()->hasAccess('cx.verified-addresses'))
         <a href="{{ route('cx.verified-addresses') }}" 
            class="nav-item {{ request()->routeIs('cx.verified-addresses') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/15"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -891,6 +960,7 @@
 
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-emerald-400 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Alamat Terverifikasi</span>
         </a>
+        @endif
 
         @if(Auth::user()->hasAccess('admin.complaints'))
         <a href="{{ route('admin.complaints.index') }}" 
@@ -908,6 +978,7 @@
     @endcan
 
     {{-- 6. MASTER DATA & SYSTEM --}}
+    @can('access-master')
     <div x-data="{ 
             open: localStorage.getItem('sb_master') === 'true' || {{ request()->routeIs('admin.*') && !request()->routeIs('admin.supply-chain.*') ? 'true' : 'false' }},
             toggle() {
@@ -968,7 +1039,7 @@
         @endif
 
         {{-- Pengumuman & Rilis Fitur Baru --}}
-        @if(Auth::user()->isAdmin() || Auth::user()->isOwner())
+        @if(Auth::user()->hasAccess('admin.announcements'))
         <a href="{{ route('admin.announcements.index') }}" 
            class="nav-item {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-teal-500/10 bg-teal-500/5 hover:bg-teal-500/20"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -980,7 +1051,7 @@
         </a>
         @endif
 
-
+        {{-- Pengguna --}}
         @if(Auth::user()->hasAccess('admin.users'))
         <a href="{{ route('admin.users.index') }}" 
            class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -993,7 +1064,8 @@
         </a>
         @endif
 
-        @if(Auth::user()->isAdmin() || Auth::user()->isOwner())
+        {{-- Log Aktivitas --}}
+        @if(Auth::user()->hasAccess('admin.activity-logs'))
         <a href="{{ route('admin.activity-logs.index') }}" 
            class="nav-item {{ request()->routeIs('admin.activity-logs.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -1005,6 +1077,7 @@
         </a>
         @endif
 
+        {{-- Laporan --}}
         @if(Auth::user()->hasAccess('admin.reports'))
         <a href="{{ route('admin.reports.index') }}" 
            class="nav-item {{ request()->routeIs('admin.reports.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -1018,8 +1091,7 @@
         </a>
         @endif
 
-
-
+        {{-- KPI / Performa --}}
         @if(Auth::user()->hasAccess('admin.performance'))
         <a href="{{ route('admin.kpi.index') }}" 
            class="nav-item {{ request()->routeIs('admin.kpi.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
@@ -1032,12 +1104,15 @@
         </a>
         @endif
 
+        @if(Auth::user()->hasAccess('admin.supply-chain') || Auth::user()->hasAccess('material-requests') || Auth::user()->hasAccess('admin.purchases'))
         <div x-show="!sidebarCollapsed" class="section-divider my-4"></div>
         <div x-show="sidebarCollapsed" class="my-4 border-t border-white/20"></div>
 
         <h3 x-show="!sidebarCollapsed" class="section-title px-3 mb-2">Legacy / Supply Chain</h3>
+        @endif
 
         {{-- Supply Chain Portal --}}
+        @if(Auth::user()->hasAccess('admin.supply-chain'))
         <a href="{{ route('admin.supply-chain.index') }}" 
            class="nav-item {{ request()->routeIs('admin.supply-chain.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative opacity-60 hover:opacity-100"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -1047,8 +1122,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold">Supply Chain Portal</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Supply Chain</span>
         </a>
+        @endif
 
         {{-- Pengajuan Material --}}
+        @if(Auth::user()->hasAccess('material-requests'))
         <a href="{{ route('material-requests.index') }}" 
            class="nav-item {{ request()->routeIs('material-requests.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative opacity-60 hover:opacity-100"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -1058,8 +1135,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Pengajuan Material</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pengajuan</span>
         </a>
+        @endif
 
         {{-- Pembelian / Belanja --}}
+        @if(Auth::user()->hasAccess('admin.purchases'))
         <a href="{{ route('admin.purchases.index') }}" 
            class="nav-item {{ request()->routeIs('admin.purchases.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative opacity-60 hover:opacity-100"
            :class="sidebarCollapsed ? 'justify-center' : ''">
@@ -1069,9 +1148,10 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Pembelian</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Pembelian</span>
         </a>
+        @endif
 
-
-        @if(Auth::user()->hasAccess('admin.system'))
+        {{-- Kesehatan Data --}}
+        @if(Auth::user()->hasAccess('admin.data-integrity'))
         <div x-show="!sidebarCollapsed" class="section-divider my-4"></div>
         <div x-show="sidebarCollapsed" class="my-4 border-t border-white/20"></div>
 
@@ -1087,6 +1167,7 @@
         @endif
         </div>
     </div>
+    @endcan
     @endif
 </div>
 

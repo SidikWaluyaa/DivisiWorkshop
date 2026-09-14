@@ -49,72 +49,122 @@ class UserManagement extends Component
     public $password = '';
     public $password_confirmation = '';
 
-    // Modul Matrix & Divisions
+    // Modul Matrix & Divisions (100% Synced with Sidebar)
     public $allDivisions = [
         [
-            'title' => 'Analitik & Dashboard',
+            'id' => 'general',
+            'title' => 'Dashboard & Tracking',
+            'badge' => 'PORTAL UMUM',
             'color' => 'blue',
             'modules' => [
                 'dashboard' => 'Dashboard Utama',
-                'workshop.dashboard' => 'Workshop Analytics',
-                'cx.dashboard' => 'CX Analytics',
-                'admin.performance' => 'Statistik Performa',
+                'internal-tracking' => 'Lacak SPK Internal',
+                'internal-tracking.services' => 'Lacak Jasa Workshop',
             ]
         ],
         [
-            'title' => 'Operasional Workshop',
+            'id' => 'cs',
+            'title' => 'Divisi Customer Service',
+            'badge' => 'DIVISI CS',
             'color' => 'teal',
             'modules' => [
-                'gudang' => 'Penerimaan (Reception)',
-                'assessment' => 'Assessment / Antrian',
-                'preparation' => 'Preparation Station',
-                'sortir' => 'Sortir & Material',
-                'production' => 'Produksi Station',
-                'qc' => 'Quality Control (QC)',
-                'finish' => 'Finishing & Pickup',
-                'gallery' => 'Gallery Dokumentasi',
+                'cs.dashboard' => 'CS Dashboard',
+                'cs.analytics' => 'Laporan Performa CS',
+                'cs.leads.konsultasi' => 'Konsultasi',
+                'cs.leads.follow-up' => 'Follow-up',
+                'cs.leads.closing' => 'Closing',
+                'cs.leads.followup-closing' => 'Follow Up Closing',
+                'cs.pending-monitoring' => 'Kiriman SPK Pending',
+                'cs.spk' => 'Data SPK',
+                'cs.greeting' => 'Greeting Chat',
+                'cs.after-photos' => 'Galeri After Photo',
+                'cs.forecasting' => 'Forecasting',
             ]
         ],
         [
-            'title' => 'Marketing & Pelayanan',
-            'color' => 'amber',
+            'id' => 'gudang',
+            'title' => 'Divisi Gudang & Logistik',
+            'badge' => 'DIVISI GUDANG',
+            'color' => 'orange',
             'modules' => [
-                'cs' => 'CS (Lead Management)',
-                'cs.greeting' => 'Greeting Chat (Import)',
-                'cs.spk' => 'Data SPK CS',
-                'admin.promotions' => 'Manajemen Promo',
-                'cx' => 'CX (Followup)',
-                'admin.customers' => 'Database Pelanggan',
-                'admin.complaints' => 'Keluhan Pelanggan',
+                'gudang.outbound-receipt' => 'Penerimaan Outbound (QC ke Gudang)',
+                'storage.purchase' => 'Belanja Gudang (WMS)',
+                'storage.disbursement' => 'Barang Keluar',
+                'storage.history' => 'Riwayat Mutasi',
+                'storage.dashboard' => 'Dashboard Gudang',
+                'warehouse.storage' => 'Penyimpanan Rak',
+                'storage.pickup-history' => 'Riwayat Pengambilan',
+                'reception' => 'Penerimaan (Reception)',
+                'assessment' => 'Assessment',
+                'manifest.index' => 'Logistik Manifest',
+                'storage.manual' => 'Gudang Manual',
+                'storage.manual.racks' => 'Rak Manual',
+                'finish' => 'Finish (Gudang Finish & Pickup)',
+                'shipping' => 'Pengiriman & Ekspedisi',
+                'admin.custom-label' => 'Label Custom',
             ]
         ],
         [
-            'title' => 'Finance & Logistik',
+            'id' => 'workshop',
+            'title' => 'Divisi Workshop',
+            'badge' => 'PWA WORKSHOP',
             'color' => 'emerald',
             'modules' => [
-                'finance' => 'Finance / Pembayaran',
-                'manifest.index' => 'Manifest / Logistik',
-                'admin.purchases' => 'Manajemen Pembelian',
-                'warehouse.storage' => 'Manajemen Rak (Storage)',
-                'admin.materials.request' => 'Material Request (PO)',
+                'workshop' => 'Akses PWA Divisi Workshop (Produksi Terpadu)',
             ]
         ],
         [
-            'title' => 'Master Data',
+            'id' => 'finance',
+            'title' => 'Divisi Finance',
+            'badge' => 'DIVISI FINANCE',
+            'color' => 'yellow',
+            'modules' => [
+                'finance.dashboard' => 'Dashboard Finance',
+                'finance.waiting-payment' => 'Waiting Payment',
+                'finance.transaction' => 'Finance Transaksi',
+                'finance.invoices' => 'Data Invoice',
+                'finance.cancelled' => 'Transaksi Batal',
+                'finance.cs-verification' => 'Audit Bayar CS',
+                'finance.payments' => 'Input Pembayaran',
+                'finance.mutations' => 'Import Mutasi',
+                'finance.verifications' => 'Verifikasi Mutasi',
+            ]
+        ],
+        [
+            'id' => 'cx',
+            'title' => 'Divisi Customer Experience (CC)',
+            'badge' => 'DIVISI CC',
+            'color' => 'pink',
+            'modules' => [
+                'cx.dashboard' => 'CC Dashboard',
+                'cx.index' => 'Follow Up (Worklist)',
+                'cx.history' => 'History Resolusi',
+                'cx.oto' => 'Kolam OTO (Upsell)',
+                'cx.after-confirmation' => 'Konfirmasi After',
+                'cx.shipping-monitoring' => 'Monitoring Kirim',
+                'cx.overdue' => 'Overdue SLA',
+                'cx.warranty-claims' => 'Inbox Klaim Garansi',
+                'cx.verified-addresses' => 'Alamat Terverifikasi',
+                'admin.complaints' => 'Komplain Pelanggan',
+            ]
+        ],
+        [
+            'id' => 'master',
+            'title' => 'Master Data & Sistem',
+            'badge' => 'MASTER DATA',
             'color' => 'purple',
             'modules' => [
-                'admin.services' => 'Katalog Layanan',
-                'admin.materials' => 'Katalog Material',
-            ]
-        ],
-        [
-            'title' => 'Administrasi & Sistem',
-            'color' => 'rose',
-            'modules' => [
+                'admin.customers' => 'Master Customer',
+                'admin.promotions' => 'Manajemen Promo',
+                'admin.announcements' => 'Rilis & Pengumuman',
+                'admin.users' => 'Pengguna & Akses',
+                'admin.activity-logs' => 'Log Aktivitas',
                 'admin.reports' => 'Laporan Sistem',
-                'admin.users' => 'Manajemen User',
-                'admin.system' => 'System Tools',
-                'admin.data-integrity' => 'Data Integrity Hub',
+                'admin.performance' => 'KPI (Statistik Performa)',
+                'admin.supply-chain' => 'Supply Chain Portal',
+                'material-requests' => 'Pengajuan Material',
+                'admin.purchases' => 'Pembelian PO',
+                'admin.data-integrity' => 'Kesehatan Data (Integrity Hub)',
             ]
         ],
     ];
@@ -171,18 +221,74 @@ class UserManagement extends Component
         $this->applyPresetForRole($value);
     }
 
+    /**
+     * Select all modules within a specific division card (Sistem Paket Divisi)
+     */
+    public function selectDivisionPackage($divisionId)
+    {
+        $division = collect($this->allDivisions)->firstWhere('id', $divisionId);
+        if ($division && isset($division['modules'])) {
+            $keys = array_keys($division['modules']);
+            $current = is_array($this->access_rights) ? $this->access_rights : [];
+            $this->access_rights = array_values(array_unique(array_merge($current, $keys)));
+        }
+    }
+
+    /**
+     * Unselect all modules within a specific division card
+     */
+    public function unselectDivisionPackage($divisionId)
+    {
+        $division = collect($this->allDivisions)->firstWhere('id', $divisionId);
+        if ($division && isset($division['modules'])) {
+            $keys = array_keys($division['modules']);
+            $current = is_array($this->access_rights) ? $this->access_rights : [];
+            $this->access_rights = array_values(array_diff($current, $keys));
+        }
+    }
+
     public function applyPresetForRole($roleType)
     {
         $allKeys = collect($this->allDivisions)->pluck('modules')->flatMap(fn($m) => array_keys($m))->values()->toArray();
         $presets = [
-            'user' => [],
-            'technician' => [],
-            'pic' => [],
-            'gudang' => ['gudang', 'warehouse.storage', 'manifest.index', 'admin.materials.request'],
-            'cs' => ['cs', 'cs.greeting', 'cs.spk', 'dashboard'],
-            'finance' => ['finance', 'manifest.index'],
-            'spv' => ['dashboard', 'workshop.dashboard', 'admin.performance'],
-            'hr' => ['admin.users', 'admin.reports'],
+            'user' => ['dashboard', 'internal-tracking'],
+            'technician' => [], // Unchanged, technician managed via station/specialization
+            'pic' => [],        // Unchanged
+            'gudang' => [
+                'dashboard', 'internal-tracking',
+                'gudang.outbound-receipt', 'storage.purchase', 'storage.disbursement', 'storage.history',
+                'storage.dashboard', 'warehouse.storage', 'storage.pickup-history', 'reception',
+                'assessment', 'manifest.index', 'storage.manual', 'storage.manual.racks', 'finish',
+                'shipping', 'admin.custom-label'
+            ],
+            'cs' => [
+                'dashboard', 'internal-tracking',
+                'cs.dashboard', 'cs.analytics', 'cs.leads.konsultasi', 'cs.leads.follow-up',
+                'cs.leads.closing', 'cs.leads.followup-closing', 'cs.pending-monitoring', 'cs.spk',
+                'cs.greeting', 'cs.after-photos', 'cs.forecasting'
+            ],
+            'workshop' => [
+                'dashboard', 'internal-tracking', 'internal-tracking.services', 'workshop'
+            ],
+            'finance' => [
+                'dashboard', 'internal-tracking',
+                'finance.dashboard', 'finance.waiting-payment', 'finance.transaction', 'finance.invoices',
+                'finance.cancelled', 'finance.cs-verification', 'finance.payments', 'finance.mutations',
+                'finance.verifications', 'manifest.index'
+            ],
+            'cx' => [
+                'dashboard', 'internal-tracking',
+                'cx.dashboard', 'cx.index', 'cx.history', 'cx.oto', 'cx.after-confirmation',
+                'cx.shipping-monitoring', 'cx.overdue', 'cx.warranty-claims', 'cx.verified-addresses',
+                'admin.complaints'
+            ],
+            'spv' => [
+                'dashboard', 'internal-tracking', 'internal-tracking.services', 'admin.performance', 'admin.reports',
+                'cs.dashboard', 'storage.dashboard', 'workshop', 'finance.dashboard', 'cx.dashboard'
+            ],
+            'hr' => [
+                'dashboard', 'admin.users', 'admin.reports', 'admin.performance'
+            ],
             'admin' => $allKeys,
             'owner' => $allKeys,
         ];
@@ -267,7 +373,7 @@ class UserManagement extends Component
                 Rule::unique('users', 'email')->ignore($this->selectedUserId),
             ],
             'phone' => 'nullable|string|max:30',
-            'role' => 'required|string|in:admin,owner,hr,cs,finance,gudang,technician,pic,user,spv',
+            'role' => 'required|string|in:admin,owner,hr,cs,finance,gudang,technician,pic,user,spv,cx',
             'specialization' => 'nullable|string|max:255',
             'station' => 'nullable|string|max:50',
             'workshop_pool' => 'nullable|string|max:255',
