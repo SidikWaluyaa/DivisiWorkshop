@@ -154,6 +154,21 @@ class StorageService
                     'retrieved_at' => $now,
                     'taken_date' => $isStartOfProcess ? null : ($workOrder->taken_date ?? $now), 
                 ]);
+
+                if (!$isStartOfProcess) {
+                    // Auto-complete any active OTOs since the shoes have been picked up/taken
+                    \App\Models\OTO::where('work_order_id', $workOrderId)
+                        ->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])
+                        ->update([
+                            'status' => 'COMPLETED',
+                            'completed_at' => $workOrder->taken_date ?? $now,
+                            'oto_completed_by' => Auth::id() ?? 1,
+                        ]);
+                    $workOrder->update([
+                        'has_active_oto' => false,
+                        'current_location' => 'Sudah Diambil Pelanggan',
+                    ]);
+                }
             }
 
             // Recalculate rack count

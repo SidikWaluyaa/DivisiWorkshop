@@ -218,7 +218,11 @@ class FinishController extends Controller
                 ->whereIn('status', ['CANCELLED'])
                 ->delete(); // Soft delete all cancelled ones
 
-            $order->update(['has_active_oto' => false]);
+            $order->update([
+                'status' => WorkOrderStatus::SELESAI->value,
+                'has_active_oto' => false,
+                'current_location' => 'Sudah Diambil Pelanggan',
+            ]);
 
             // 4. Log
             $order->logs()->create([

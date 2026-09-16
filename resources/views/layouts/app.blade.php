@@ -106,5 +106,9 @@
             @include('layouts.partials.sandi-bell-listener')
         @endif
         @include('admin.customers.partials.toast-alert')
+
+        @auth
+            <livewire:ai-copilot-drawer />
+        @endauth
     </body>
 </html>
