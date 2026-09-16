@@ -138,11 +138,10 @@
                             // 2. Determine status code and colors
                             $statusVal = $spk->status->value ?? $spk->status;
                             $isTaken = $spk->taken_date !== null;
-                            $isFinishedOrder = $isTaken || in_array($statusVal, ['SELESAI', 'DIANTAR']);
 
-                            $isCompletedOto = $spk->latestOto && ($spk->latestOto->status === 'COMPLETED' || ($isFinishedOrder && in_array($spk->latestOto->status, ['ACCEPTED', 'IN_PROGRESS'])));
-                            $isUndergoingOto = !$isFinishedOrder && $spk->latestOto && in_array($spk->latestOto->status, ['ACCEPTED', 'IN_PROGRESS']);
-                            $isPendingLeadOto = !$isFinishedOrder && $spk->latestOto && in_array($spk->latestOto->status, ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER']);
+                            $isCompletedOto = $spk->latestOto && ($spk->latestOto->status === 'COMPLETED' || ($isTaken && in_array($spk->latestOto->status, ['ACCEPTED', 'IN_PROGRESS'])));
+                            $isUndergoingOto = !$isTaken && $spk->latestOto && in_array($spk->latestOto->status, ['ACCEPTED', 'IN_PROGRESS']);
+                            $isPendingLeadOto = !$isTaken && $spk->latestOto && in_array($spk->latestOto->status, ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER']);
 
                             if ($isTaken) {
                                 $statusLabel = 'SUDAH DIAMBIL';
