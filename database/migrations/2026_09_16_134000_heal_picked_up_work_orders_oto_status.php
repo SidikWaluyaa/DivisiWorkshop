@@ -10,22 +10,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Auto-complete any active OTOs for work orders that are already taken or finished
+        // 1. Auto-complete any active OTOs for work orders that are already physically taken by customer
         DB::statement("
             UPDATE otos
             JOIN work_orders ON otos.work_order_id = work_orders.id
             SET otos.status = 'COMPLETED',
-                otos.completed_at = COALESCE(work_orders.taken_date, work_orders.finished_date, NOW())
-            WHERE (work_orders.taken_date IS NOT NULL OR work_orders.status IN ('SELESAI', 'DIANTAR'))
+                otos.completed_at = COALESCE(work_orders.taken_date, NOW())
+            WHERE work_orders.taken_date IS NOT NULL
               AND otos.status IN ('ACCEPTED', 'IN_PROGRESS')
         ");
 
-        // 2. Clear has_active_oto flag for work orders that are already taken or finished
+        // 2. Clear has_active_oto flag for work orders that are already physically taken by customer
         DB::statement("
             UPDATE work_orders
             SET has_active_oto = 0,
-                current_location = IF(taken_date IS NOT NULL, 'Sudah Diambil Pelanggan', current_location)
-            WHERE (taken_date IS NOT NULL OR status IN ('SELESAI', 'DIANTAR'))
+                current_location = 'Sudah Diambil Pelanggan'
+            WHERE taken_date IS NOT NULL
               AND has_active_oto = 1
         ");
     }
