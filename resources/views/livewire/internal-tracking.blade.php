@@ -137,11 +137,21 @@
 
                             // 2. Determine status code and colors
                             $statusVal = $spk->status->value ?? $spk->status;
+                            $isTaken = $spk->taken_date !== null;
+                            $isFinishedOrder = $isTaken || in_array($statusVal, ['SELESAI', 'DIANTAR']);
 
-                            $isUndergoingOto = $spk->latestOto && in_array($spk->latestOto->status, ['ACCEPTED', 'IN_PROGRESS']);
-                            $isPendingLeadOto = $spk->latestOto && in_array($spk->latestOto->status, ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER']);
+                            $isCompletedOto = $spk->latestOto && ($spk->latestOto->status === 'COMPLETED' || ($isFinishedOrder && in_array($spk->latestOto->status, ['ACCEPTED', 'IN_PROGRESS'])));
+                            $isUndergoingOto = !$isFinishedOrder && $spk->latestOto && in_array($spk->latestOto->status, ['ACCEPTED', 'IN_PROGRESS']);
+                            $isPendingLeadOto = !$isFinishedOrder && $spk->latestOto && in_array($spk->latestOto->status, ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER']);
 
-                            if ($isUndergoingOto) {
+                            if ($isTaken) {
+                                $statusLabel = 'SUDAH DIAMBIL';
+                                $statusTheme = [
+                                    'badge' => 'bg-emerald-50 text-emerald-800 border-emerald-200/60',
+                                    'dot' => 'bg-emerald-500',
+                                    'text' => 'text-emerald-800',
+                                ];
+                            } elseif ($isUndergoingOto) {
                                 $statusLabel = 'PENGERJAAN OTO';
                                 $statusTheme = [
                                     'badge' => 'bg-amber-50 text-amber-800 border-amber-200/60',
@@ -265,6 +275,10 @@
                                         @if($isUndergoingOto)
                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-[10px] rounded-lg shadow-sm">
                                                 <span>✨ OTO WORKSHOP</span>
+                                            </span>
+                                        @elseif($isCompletedOto)
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 font-black text-[10px] rounded-lg shadow-sm">
+                                                <span>✨ OTO SELESAI</span>
                                             </span>
                                         @elseif($isPendingLeadOto)
                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-300 font-black text-[10px] rounded-lg shadow-sm">
@@ -515,7 +529,7 @@
                                 @endif
 
                                   {{-- Status Info & Transition Timestamp --}}
-                                  <div class="px-3.5 py-3 {{ $isUndergoingOto ? 'bg-amber-50/40 border-amber-200/60' : ($spk->is_revising ? 'bg-rose-50/40 border-rose-200/60' : 'bg-slate-50/80 border-slate-150') }} border rounded-2xl flex flex-col gap-2.5 mb-4 mt-2 select-none w-full shadow-2xs transition-colors">
+                                  <div class="px-3.5 py-3 {{ $isUndergoingOto ? 'bg-amber-50/40 border-amber-200/60' : ($isCompletedOto ? 'bg-emerald-50/30 border-emerald-200/50' : ($spk->is_revising ? 'bg-rose-50/40 border-rose-200/60' : 'bg-slate-50/80 border-slate-150')) }} border rounded-2xl flex flex-col gap-2.5 mb-4 mt-2 select-none w-full shadow-2xs transition-colors">
                                       {{-- Top Row: Status Sekarang & Waktu Status --}}
                                       <div class="flex items-center justify-between w-full">
                                           <div class="flex flex-col">
@@ -537,7 +551,7 @@
                                           </div>
                                       </div>
 
-                                      {{-- 1. OTO Active Undergoing Sub-Status --}}
+                                      {{-- 1a. OTO Active Undergoing Sub-Status (Sedang Dikerjakan di Workshop) --}}
                                       @if($isUndergoingOto)
                                           @php
                                               $otoActiveTechs = [];
@@ -579,6 +593,30 @@
                                                       <span class="font-bold text-amber-800">Stasiun OTO (Workshop)</span>
                                                   </div>
                                               @endif
+                                          </div>
+
+                                      {{-- 1b. OTO Completed Sub-Status (Pesanan Selesai / Sudah Diambil) --}}
+                                      @elseif($isCompletedOto)
+                                          <div class="pt-2.5 border-t border-emerald-200/50 flex flex-col gap-2 text-xs w-full">
+                                              <div class="flex items-center justify-between gap-2">
+                                                  <div class="flex items-center gap-1.5 flex-wrap">
+                                                      <span class="text-[9px] font-black text-emerald-800 uppercase tracking-wider">Layanan OTO:</span>
+                                                      <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-900 border border-emerald-500/20 font-black text-[10px] rounded-md">
+                                                          {{ $spk->latestOto?->proposed_services ?? 'Layanan OTO Tambahan' }}
+                                                      </span>
+                                                  </div>
+                                                  @if($spk->latestOto?->total_oto_price)
+                                                      <span class="font-black text-emerald-600 font-mono text-[11px] whitespace-nowrap">
+                                                          + {{ $spk->latestOto->total_oto_price }}
+                                                      </span>
+                                                  @endif
+                                              </div>
+                                              <div class="flex items-center justify-between text-[10px] bg-emerald-100/60 px-2.5 py-1.5 rounded-lg border border-emerald-200 shadow-xs">
+                                                  <span class="font-bold text-emerald-900">Status OTO:</span>
+                                                  <span class="font-black text-emerald-700 flex items-center gap-1">
+                                                      <span>✅ Selesai Dikerjakan</span>
+                                                  </span>
+                                              </div>
                                           </div>
 
                                       {{-- 2. OTO Pending Lead Sub-Status (Baru Penawaran) --}}

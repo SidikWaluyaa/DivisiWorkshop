@@ -539,6 +539,10 @@ class WorkOrder extends Model
 
     public function getStationUrl()
     {
+        if ($this->taken_date !== null) {
+            return route('finish.index', ['search' => $this->spk_number, 'highlight' => $this->spk_number]);
+        }
+
         $status = $this->status->value ?? $this->status;
 
         switch ($status) {
