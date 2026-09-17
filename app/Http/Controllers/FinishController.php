@@ -465,7 +465,7 @@ class FinishController extends Controller
             'services.*.hk_days' => 'required|integer|min:0',
             'services.*.discount' => 'nullable|numeric', 
             'services.*.custom_name' => 'nullable|string|max:255',
-            'valid_days' => 'required|in:3,7,14',
+            'valid_days' => 'nullable|in:3,5,7,14',
             'description' => 'required|string|max:1000',
             'send_automation' => 'nullable|boolean',
         ]);
@@ -504,6 +504,8 @@ class FinishController extends Controller
                 
                 $formatPrice = fn($val) => 'Rp. ' . number_format((float)$val, 0, ',', '.');
 
+                $validDays = max((int) ($request->input('valid_days') ?: 5), 1);
+
                 // Create OTO
                 $oto = \App\Models\OTO::create([
                     'work_order_id' => $order->id,
@@ -519,7 +521,7 @@ class FinishController extends Controller
                     'total_discount' => $formatPrice($totalDiscount),
                     'discount_percent' => round($discountPercent, 2),
                     'estimated_days' => $totalOtoHk, // Store the custom total OTO HK days
-                    'valid_until' => now()->addDays((int) $request->valid_days),
+                    'valid_until' => now()->addDays($validDays),
                     'status' => 'PENDING_CX', // Directly to CX Pool
                     'dp_required' => $formatPrice($totalOTO * 0.5), // 50% DP
                     'send_automation' => $request->boolean('send_automation'),
