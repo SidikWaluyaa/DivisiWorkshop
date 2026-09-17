@@ -20,7 +20,7 @@ class CXOTOController extends Controller
         $activeStatuses = ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'];
         
         // Pool Query
-        $query = \App\Models\OTO::with(['workOrder', 'creator', 'contactLogs.contactedBy']);
+        $query = \App\Models\OTO::with(['workOrder.customer', 'creator', 'contactLogs.contactedBy']);
         
         if ($filter === 'pending') {
             // New Leads = belum pernah dicontact sama sekali
@@ -31,7 +31,7 @@ class CXOTOController extends Controller
         } elseif ($filter === 'accepted') {
             $query->where('status', 'ACCEPTED');
         } elseif ($filter === 'cancelled') {
-            $query->whereIn('status', ['CANCELLED', 'REJECTED']);
+            $query->withTrashed()->whereIn('status', ['CANCELLED', 'REJECTED']);
         } elseif ($filter === 'urgent') {
             // Urgent = active lead yang expired dalam 3 hari
             $query->whereIn('status', $activeStatuses)
@@ -176,6 +176,10 @@ class CXOTOController extends Controller
     public function customerAccept($id)
     {
         $oto = \App\Models\OTO::findOrFail($id);
+
+        if ($oto->status === 'ACCEPTED') {
+            return back()->with('info', 'Penawaran OTO ini sudah pernah diterima sebelumnya.');
+        }
         
         DB::transaction(function() use ($oto) {
             // Helper to parse "Rp. 115.000" back to numeric
@@ -208,6 +212,9 @@ class CXOTOController extends Controller
             $needsCleaning = false;
 
             foreach ($serviceNames as $name) {
+                $name = trim($name);
+                if (empty($name)) continue;
+
                 // 1. Find OTO service to get the promotional OTO price
                 $otoService = \App\Models\Service::where('name', $name)->where('category', 'OTO')->first();
 
@@ -240,9 +247,11 @@ class CXOTOController extends Controller
                         default => 'Treatment',
                     };
 
+                    $customName = 'OTO: ' . $serviceToAttach->name;
+
                     $oto->workOrder->services()->attach($serviceToAttach->id, [
                         'cost' => $cost,
-                        'custom_service_name' => 'OTO: ' . $serviceToAttach->name,
+                        'custom_service_name' => $customName,
                         'category_name' => $categoryName,
                         'created_by' => Auth::id() ?? $oto->cx_assigned_to ?? $oto->created_by,
                     ]);
@@ -287,10 +296,14 @@ class CXOTOController extends Controller
     {
         $oto = \App\Models\OTO::findOrFail($id);
         
+        $reason = $request->rejection_reason;
+        $notes = $request->rejection_notes ?: $request->note;
+        $fullNote = $reason ? "[{$reason}] " . ($notes ?: '') : $notes;
+
         $oto->update([
             'status' => 'REJECTED',
             'customer_responded_at' => now(),
-            'customer_note' => $request->note,
+            'customer_note' => $fullNote,
         ]);
         
         // Release material reservations
@@ -307,7 +320,7 @@ class CXOTOController extends Controller
             'user_id' => Auth::id(),
             'step' => 'SELESAI',
             'action' => 'OTO_REJECTED',
-            'description' => "Customer MENOLAK OTO: {$oto->proposed_services}" . ($request->note ? ". Alasan: {$request->note}" : '')
+            'description' => "Customer MENOLAK OTO: {$oto->proposed_services}" . ($fullNote ? ". Alasan: {$fullNote}" : '')
         ]);
         
         $oto->delete(); // Soft delete
