@@ -31,7 +31,7 @@
                 openOtoModal: false,
                 showRevisionModal: false,
                 selectedOto: [],
-                validDays: 3,
+                validDays: 5,
                 validUntil: '',
                 sendAutomation: '1',
                 services: initialServices || [],
@@ -873,11 +873,12 @@
                         <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
                             <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Masa Berlaku Penawaran</p>
                             <div class="flex justify-center gap-3">
-                                @foreach([3, 7, 14] as $d)
+                                @foreach([3, 5, 7, 14] as $d)
                                 <label class="cursor-pointer">
                                     <input type="radio" name="valid_days" value="{{ $d }}" 
                                            @click="setOtoDays({{ $d }})"
                                            :checked="validDays == {{ $d }}"
+                                           {{ $d === 5 ? 'checked' : '' }}
                                            class="sr-only">
                                     <div class="w-14 h-12 rounded-xl border-2 flex flex-col items-center justify-center transition-all"
                                          :class="validDays == {{ $d }} ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 font-bold' : 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-400'">
