@@ -40,7 +40,14 @@ class SuratJalanController extends Controller
             $query->where('status', $request->status);
         }
 
-        $suratJalanList = $query->latest()->paginate(15);
+        // Isolate OTW (Active Transit) documents - Retrieve all active dispatches so none are clipped by pagination
+        $suratJalanOtw = (clone $query)->where('status', 'DIKIRIM')->latest()->get();
+
+        // Isolate History (Archived / Received) documents - Paginated independently for fast rendering
+        $suratJalanHistory = (clone $query)->where('status', 'DITERIMA')->latest()->paginate(15, ['*'], 'history_page');
+
+        // Backward compatibility
+        $suratJalanList = $suratJalanHistory;
 
         // Fetch candidate SPKs for this specific transfer type
         $availableOrders = collect();
@@ -79,14 +86,25 @@ class SuratJalanController extends Controller
         $diterimaCount = (clone $baseMetricQuery)->where('status', 'DITERIMA')->count();
         $candidateCount = $availableOrders->count();
 
+        // Smart Tab Selection: prioritize where action or pending work is needed
+        $defaultTab = 'history';
+        if ($candidateCount > 0) {
+            $defaultTab = 'candidates';
+        } elseif ($dikirimCount > 0) {
+            $defaultTab = 'otw';
+        }
+
         return view('surat-jalan.index', compact(
             'suratJalanList', 
+            'suratJalanOtw',
+            'suratJalanHistory',
             'jenis', 
             'availableOrders', 
             'totalCount', 
             'dikirimCount', 
             'diterimaCount', 
-            'candidateCount'
+            'candidateCount',
+            'defaultTab'
         ));
     }
 

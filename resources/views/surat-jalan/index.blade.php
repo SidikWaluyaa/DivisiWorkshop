@@ -13,7 +13,7 @@
     </x-slot>
 
     <div class="py-8 bg-[#F2F1EC] dark:bg-slate-950 min-h-screen" x-data="{ 
-        activeTab: '{{ $candidateCount > 0 ? 'candidates' : 'otw' }}',
+        activeTab: '{{ $defaultTab ?? ($candidateCount > 0 ? 'candidates' : ($dikirimCount > 0 ? 'otw' : 'history')) }}',
         searchCandidate: '',
         selectAllCandidates: false,
         toggleAllCandidates() {
@@ -285,7 +285,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                                @forelse ($suratJalanList->where('status', 'DIKIRIM') as $sj)
+                                @forelse ($suratJalanOtw as $sj)
                                     <tr class="hover:bg-amber-50/20 dark:hover:bg-slate-700/40 transition">
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-3">
@@ -355,7 +355,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                                @forelse ($suratJalanList->where('status', 'DITERIMA') as $sj)
+                                @forelse ($suratJalanHistory as $sj)
                                     <tr class="hover:bg-emerald-50/20 dark:hover:bg-slate-700/40 transition">
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-3">
@@ -403,6 +403,12 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @if(isset($suratJalanHistory) && $suratJalanHistory->hasPages())
+                        <div class="px-6 py-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+                            {{ $suratJalanHistory->appends(request()->query())->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
 
