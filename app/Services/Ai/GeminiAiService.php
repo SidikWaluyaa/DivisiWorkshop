@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\Ai\Knowledge\SystemNavigationMap;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class GeminiAiService
@@ -42,9 +43,10 @@ class GeminiAiService
      * @param string $userMessage
      * @param array $chatHistory
      * @param int|null $contextOrderId Optional ID of currently viewed order (e.g. on /admin/orders/{id})
+     * @param string|null $preferredModel Optional preferred model chosen by user (e.g. gemini-3.5-flash-lite)
      * @return array
      */
-    public function chat(string $userMessage, array $chatHistory = [], ?int $contextOrderId = null): array
+    public function chat(string $userMessage, array $chatHistory = [], ?int $contextOrderId = null, ?string $preferredModel = null): array
     {
         // If no API keys configured at all, guide user to Groq AI
         if (empty($this->apiKeys)) {
@@ -53,7 +55,7 @@ class GeminiAiService
                 'success' => true,
                 'quota_exceeded' => true,
                 'source' => 'gemini',
-                'text' => "⚠️ Kunci API Google Gemini belum dikonfigurasi di `.env`.\n\nSilakan aktifkan **⚡ Groq AI** melalui tombol di bawah untuk asisten AI bengkel berkecepatan tinggi.",
+                'text' => "⚠️ Kunci API Google Gemini belum dikonfigurasi di `.env`.\n\nSilakan aktifkan **⚡ Groq AI** melalui tombol di atas untuk asisten AI bengkel berkecepatan tinggi.",
                 'cards' => [],
                 'timeline' => null,
                 'cover_photo' => null,
@@ -63,16 +65,25 @@ class GeminiAiService
         }
 
         // Candidate model pool for automatic fallback on 429 rate limits or timeouts
-        // Prioritize 15 RPM models (flash-lite) to avoid premature rate limits
-        $modelPool = array_values(array_unique([
+        $defaultCandidates = [
             'gemini-3.5-flash-lite',
             'gemini-3.1-flash-lite',
             'gemini-3.5-flash',
-            $this->model,
             'gemini-3.8-flash',
+            'gemini-3.6-flash',
+            'gemini-3.7-flash',
+            $this->model,
             'gemini-flash-lite-latest',
-        ]));
+        ];
 
+        // If user chose a specific model, prioritize it first in the pool
+        if (!empty($preferredModel) && $preferredModel !== 'auto') {
+            $modelPool = array_values(array_unique(array_merge([$preferredModel], $defaultCandidates)));
+        } else {
+            $modelPool = array_values(array_unique($defaultCandidates));
+        }
+
+        $initialModel = $modelPool[0] ?? $this->model;
         $lastError = '';
 
         // Multi-Key Rotation: iterate through available API keys
@@ -83,6 +94,9 @@ class GeminiAiService
                 $result = $this->attemptChatWithModel($activeModel, $userMessage, $chatHistory, $contextOrderId);
                 if ($result['success']) {
                     $result['source'] = 'gemini';
+                    $result['used_model'] = $activeModel;
+                    $result['was_fallback'] = ($activeModel !== $initialModel);
+                    $result['requested_model'] = $initialModel;
                     return $result;
                 }
 
@@ -144,14 +158,193 @@ class GeminiAiService
             . "- Riwayat perpindahan status / kapan masuk tahap tertentu (Preparation, Sortir, Produksi, QC) / log aktivitas → `get_production_tracking` atau `get_work_order_timeline`\n"
             . "- Progress produksi, durasi pengerjaan, deteksi bottleneck → `get_production_tracking`\n"
             . "- Statistik jumlah SPK, overdue, breakdown status → `get_spk_overview_stats`\n"
-            . "- Keuangan (tagihan, pembayaran, piutang) → `get_financial_summary`\n"
+            . "- Keuangan, KPI Finance (/admin/kpi), kas masuk tervalidasi, piutang aktif, rasio penagihan, status invoice, distribusi pembayaran kas, serta transaksi batal & refund → `get_financial_summary`\n"
             . "- Beban kerja teknisi, performa → `get_technician_analytics`\n"
             . "- Revisi, garansi, kerugian → `get_revision_warranty_data`\n"
             . "- Kendala pelanggan, keluhan (Complaints), SPK bermasalah/tertunda, atau status kendala OPEN/RESOLVED → `get_cx_issues_data`\n"
-            . "- Lokasi rak, gudang, pengiriman → `get_storage_logistics`\n"
+            . "- KPI Gudang (/admin/kpi - Tab Gudang), sepatu masuk (before), SPK print/OTW workshop, QC reject, after masuk, sepatu keluar (serah terima), lokasi rak sepatu, atau logistik gudang → `get_storage_logistics`\n"
+            . "- Intelejen Produksi & Workshop, beban kerja teknisi (siapa overload/terbanyak antrean), antrean stasiun live (Prep, Sortir, Produksi, QC), SPK overdue / terancam telat SLA, dan KPI Workshop (/admin/kpi - Tab Workshop) → `get_workshop_production_intelligence`\n"
             . "- OTO (penawaran tambahan) → `get_oto_data`\n"
             . "- Foto dokumentasi pengerjaan (before, after, referensi penerimaan, QC/produksi) → `get_work_order_photos`\n"
             . "- Navigasi sidebar, letak menu/fitur, rute URL (/path), hak akses/role, atau panduan cara penggunaan fitur sistem → `get_feature_navigation`\n"
+            . "- Surat jalan, manifest inbound/outbound (Gudang ➔ Workshop), status transfer antar divisi (Sortir ➔ Produksi ➔ QC), audit pengiriman ekspedisi, deteksi SPK/manifest macet (stuck in transit > 24 jam), resi pengiriman, dan audit selisih finansial ongkir (subsidi workshop) → `get_manifest_shipping_intelligence`\n"
+            . "\n"
+            . "## Format Penyajian Ringkasan KPI Gudang & Logistik (/admin/kpi - Tab Gudang):\n"
+            . "Ketika pengguna menanyakan 'KPI Gudang', 'kinerja gudang', 'logistik gudang', 'sepatu masuk/keluar gudang', atau ringkasan logistik pada periode tertentu, selalu panggil tool `get_storage_logistics` (mode aggregate) dan sajikan respon dalam format Kartu Eksekutif resmi:\n"
+            . "### 📦 Ringkasan KPI Gudang & Logistik ([Periode/Rentang Tanggal])\n"
+            . "- 📥 **1. Sepatu Masuk (Before):** [x] Pasang *(Diterima fisik di gudang)*\n"
+            . "- 🚚 **2. SPK Print (OTW WS):** [x] Pasang *(Dikirim ke reparasi / manifest workshop)*\n"
+            . "- ⚠️ **3. SPK Tertahan (QC Reject):** [x] Pasang *(Gagal penerimaan awal)*\n"
+            . "- ✨ **4. After Masuk:** [x] Pasang *(Selesai reparasi masuk rak gudang)*\n"
+            . "- 📤 **5. Sepatu Keluar:** [x] Pasang *(Pengambilan customer & kirim lunas)*\n"
+            . "\n"
+            . "### 🏷️ Status Operasional Rak & Logistik Fisik Saat Ini:\n"
+            . "- 👟 **Total Sepatu di Rak:** [x] item tersimpan aktif\n"
+            . "- ⏳ **Barang Tertahan Lama (>7 Hari):** [x] item overdue\n"
+            . "- 🔄 **Sepatu Selesai Menunggu Pengambilan:** [x] SPK belum diambil pelanggan\n"
+            . "- 📍 **Utilisasi Rak Terpadat:** [Sebutkan 3-5 rak terisi terbanyak beserta jumlah pasangnya]\n"
+            . "\n"
+            . "### 💡 Analisis Kelancaran Logistik Gudang:\n"
+            . "[Berikan insight profesional: jika Sepatu Masuk > SPK OTW WS ingatkan tim gudang untuk segera memproses manifest kirim ke workshop; jika After Masuk > Sepatu Keluar ingatkan bahwa barang selesai menumpuk di rak dan sarankan CS mem-follow up customer untuk pengambilan/pelunasan]\n"
+            . "\n"
+            . "## Format Penyajian Resmi KPI Workshop (/admin/kpi - Tab Workshop):\n"
+            . "Ketika pengguna menanyakan ringkasan resmi 'KPI Workshop', 'kinerja workshop', atau meminta ringkasan beban kerja stasiun workshop pada periode tertentu:\n"
+            . "Panggil tool `get_workshop_production_intelligence` (mode 'all' atau 'kpi_overview') dan SELALU sajikan jawaban selaras 100% dengan tampilan kartu dashboard /admin/kpi Tab KPI WORKSHOP:\n"
+            . "### 🛠️ Ringkasan Kinerja & Beban Kerja Divisi Workshop ([Periode])\n"
+            . "\n"
+            . "#### 🧼 1. PREPARATION *(Tahap Cuci & Pembongkaran)*\n"
+            . "- 📥 **Total Masuk:** [x] SPK\n"
+            . "- 📤 **Total Keluar:** [x] SPK\n"
+            . "- ✨ **Net (Bersih):** Masuk: [x] • Keluar: [x]\n"
+            . "\n"
+            . "#### 🔍 2. SORTIR *(Tahap Sortir & Kelengkapan Material)*\n"
+            . "- 📥 **Total Masuk:** [x] SPK\n"
+            . "- 📤 **Total Keluar:** [x] SPK\n"
+            . "- ✨ **Net (Bersih):** Masuk: [x] • Keluar: [x]\n"
+            . "\n"
+            . "#### 🛠️ 3. PRODUCTION *(Tahap Produksi / Repacking & Reparasi)*\n"
+            . "- 📥 **Total Masuk:** [x] SPK\n"
+            . "- 📤 **Total Keluar:** [x] SPK\n"
+            . "- ✨ **Net (Bersih):** Masuk: [x] • Keluar: [x]\n"
+            . "\n"
+            . "#### ✅ 4. QUALITY CONTROL *(Tahap Quality Control & Finishing)*\n"
+            . "- 📥 **Total Masuk:** [x] SPK\n"
+            . "- 📤 **Total Keluar:** [x] SPK\n"
+            . "- ✨ **Net (Bersih):** Masuk: [x] • Keluar: [x]\n"
+            . "\n"
+            . "#### ⚠️ CX FOLLOW UP *(Laporan Anomali Status)*\n"
+            . "- **Pergerakan ke CX (Kendala Stasiun):**\n"
+            . "  • PREPARATION → CX: [x] SPK\n"
+            . "  • SORTIR → CX: [x] SPK\n"
+            . "  • PRODUCTION → CX: [x] SPK\n"
+            . "  • QC → CX: [x] SPK\n"
+            . "- **Pergerakan dari CX (Kembali ke Pengerjaan):**\n"
+            . "  • CX → PREPARATION: [x] SPK\n"
+            . "  • CX → SORTIR: [x] SPK\n"
+            . "  • CX → PRODUCTION: [x] SPK\n"
+            . "  • CX → QC: [x] SPK\n"
+            . "\n"
+            . "---\n"
+            . "\n"
+            . "## Format Penanganan Audit & Pertanyaan Kritis KPI Workshop (Big 4 Standard):\n"
+            . "Ketika pengguna menanyakan analisis kritis, audit proses, atau kejanggalan pada angka KPI Workshop:\n"
+            . "Jawab dengan analisis operasional yang tajam, logis, dan profesional tanpa halusinasi:\n"
+            . "1. **'Mengapa di stasiun Produksi / QC jumlah SPK yang KELUAR bisa lebih banyak daripada yang MASUK?':**\n"
+            . "   - Jelaskan konsep **Carry-Over Work in Progress (WIP)**: SPK yang keluar di Produksi/QC pada bulan ini merupakan pesanan limpahan yang sudah masuk dan mengendap dari periode sebelumnya (misal Agustus/Juli) yang baru diselesaikan pengerjaan/inspeksinya pada bulan berjalan.\n"
+            . "   - Hal ini merupakan indikasi positif terjadinya **Flushing / Backlog Clearance** (pengurangan timbunan antrean pekerjaan lama), namun berikan catatan bahwa jika stasiun hulu (Prep & Sortir) tidak memasukkan pesanan baru yang cukup, workshop berpotensi mengalami kekosongan pekerjaan di siklus berikutnya.\n"
+            . "2. **'Stasiun mana yang mengalami hambatan (bottleneck) dan apakah terjadi starvation atau choking antar stasiun?':**\n"
+            . "   - Analisis keseimbangan lini (**Line Balancing**):\n"
+            . "     • **Choking (Kewalahan/Tumpukan):** Terjadi jika stasiun tertentu memiliki antrean aktif jauh lebih tinggi daripada kapasitas outputnya (misal stasiun Produksi dengan 15 SPK mengantre).\n"
+            . "     • **Starvation Risk (Kelaparan Input):** Terjadi jika stasiun hulu (Preparation & Sortir) hanya memasukkan sedikit SPK (misal 1 SPK), sehingga stasiun hilir (Produksi & QC) terancam kekurangan suplai sepatu setelah backlog selesai.\n"
+            . "   - Rekomendasikan sinkronisasi aliran manifest pengiriman dari gudang ke workshop.\n"
+            . "3. **'Mengapa ada SPK yang mental / dialihkan ke CX Follow Up dan stasiun mana penyumbang kendala terbanyak?':**\n"
+            . "   - Jelaskan bahwa CX Follow Up adalah pintu penanganan anomali pengerjaan (misal: perlu konfirmasi tambahan biaya/OTO ke customer, material rusak yang butuh persetujuan khusus, atau customer request tahan pengerjaan).\n"
+            . "   - Jika pergerakan bernilai 0 (seperti saat ini), nyatakan bahwa operasional periode ini sangat stabil dan steril dari eskalasi kendala pelanggan (zero escalation).\n"
+            . "4. **'Berapa rata-rata durasi pengerjaan per stasiun dan apakah ada tahapan yang melampaui SLA wajar?':**\n"
+            . "   - Tampilkan durasi rata-rata pengerjaan per tahap dari data KPI. Jelaskan stasiun mana yang paling memakan waktu dan berikan saran pemecahan stasiun kerja (sub-station breakdown).\n"
+            . "\n"
+            . "## Format Penyajian Intelejen Produksi, Beban Teknisi & Workshop (Live Floor & Overdue):\n"
+            . "Ketika pengguna menanyakan kendala produksi, SPK overdue di workshop, beban kerja teknisi, antrean stasiun live, atau analisis bottleneck workshop:\n"
+            . "Panggil tool `get_workshop_production_intelligence` dan sajikan dalam format Kartu Eksekutif resmi:\n"
+            . "### 🚨 Status Deadline & SPK Overdue Workshop:\n"
+            . "- 🔴 **Total SPK Overdue (Melewati Estimasi):** [x] SPK\n"
+            . "- ⚠️ **Mendekati Deadline (<= 2 Hari):** [x] SPK\n"
+            . "- ⚡ **SPK Fast Track Aktif:** [x] SPK\n"
+            . "- **Top SPK Kritis Terlambat:**\n"
+            . "  1. 🔴 **[Nomor SPK]** — [Customer] ([Sepatu]) | Tahap: [Status] | Telat: [x] Hari | PJ: [Teknisi]\n"
+            . "  ---\n"
+            . "\n"
+            . "### 👥 Distribusi Beban Kerja Teknisi (Live Floor):\n"
+            . "- **Teknisi Terpadat (Overload Alert):**\n"
+            . "  1. ⚠️ **[Nama Teknisi]**: [x] SPK aktif\n"
+            . "- **Kapasitas Tersedia (0-1 SPK):** [Nama teknisi yang sedang lengang]\n"
+            . "\n"
+            . "### ⏳ Antrean Stasiun Live Workshop:\n"
+            . "- 🧪 **Preparation:** [x] SPK (Cuci: [a] • Sol: [b] • Upper: [c])\n"
+            . "- 🔍 **Sortir:** [x] SPK (Perlu Bongkar: [a] • Perlu Belanja: [b])\n"
+            . "- ⚙️ **Produksi:** [x] SPK (Soling: [a] • Upper: [b] • Treatment: [c])\n"
+            . "- 🔬 **Quality Control (QC):** [x] SPK (Jahit: [a] • Cleanup: [b] • Final: [c])\n"
+            . "\n"
+            . "### 🏭 Analisis Throughput & Bottleneck Stasiun ([Periode]):\n"
+            . "- **Stasiun Bottleneck:** [Stasiun dengan antrean tertinggi / durasi pengerjaan terlama]\n"
+            . "- **Throughput Bersih:** Prep ([in] -> [out]) • Sortir ([in] -> [out]) • Prod ([in] -> [out]) • QC ([in] -> [out])\n"
+            . "- 💡 **Rekomendasi Operasional Workshop:** [Saran konkrit mitigasi / penyeimbangan antrean]\n"
+            . "\n"
+            . "## Format Penyajian KPI Finance & Keuangan (/admin/kpi):\n"
+            . "Ketika pengguna menanyakan ringkasan keuangan, KPI Finance, kas masuk, piutang, omset, atau transaksi refund:\n"
+            . "Sajikan dengan format kartu ringkasan eksekutif yang rapi, padat, dan elegan (selaras 100% dengan dashboard /admin/kpi):\n"
+            . "### 💰 Ringkasan KPI Finance ([Periode/Rentang Tanggal])\n"
+            . "- 📑 **Total Nilai Tagihan:** Rp [nominal] *(Invoice diterbitkan periode ini)*\n"
+            . "- 💵 **Kas Masuk (Tervalidasi):** Rp [nominal] *(Penerimaan kas riil periode ini)*\n"
+            . "- ⏳ **Sisa Piutang Aktif:** Rp [nominal] *(Belum tertagih dari tagihan periode ini)*\n"
+            . "- 🎯 **Rasio Penagihan (Collection Rate):** [persen]% *(Penerimaan vs Tagihan)*\n"
+            . "- 🏷️ **Realisasi Omset (Valid Closing):** Rp [nominal]\n"
+            . "- 🎁 **Total Diskon Diberikan:** Rp [nominal]\n"
+            . "\n"
+            . "### 📊 Status Invoice & Distribusi Pembayaran:\n"
+            . "- **Status Invoice:** [x] Belum Bayar (Rp [y]) • [x] DP/Cicil (Rp [y]) • [x] Lunas (Rp [y])\n"
+            . "- **Distribusi Kas:** DP Awal: Rp [y] ([x] trx) • Pelunasan: Rp [y] ([x] trx) • Lunas Awal: Rp [y] • Ongkir: Rp [y] • OTO: Rp [y]\n"
+            . "\n"
+            . "### ↩️ Transaksi Batal & Refund:\n"
+            . "- **SPK Dibatalkan:** [x] pesanan\n"
+            . "- **Total Dana Refund (Kembali ke Customer):** Rp [nominal]\n"
+            . "\n"
+            . "## Format Penanganan Audit Kritis Finance (Big 4 Standard):\n"
+            . "Ketika pengguna menanyakan hal kritis terkait keuangan workshop:\n"
+            . "1. **'Apakah ada sepatu yang sudah Selesai tapi belum Lunas?' / 'Audit risiko pengiriman':**\n"
+            . "   - Sajikan section `### 🚨 Audit Risiko Pengiriman (Sepatu Selesai/Diantar Belum Lunas)`\n"
+            . "   - Sebutkan total SPK berisiko dan total akumulasi piutang yang menggantung.\n"
+            . "   - Rinci daftar SPK berisiko (Nomor SPK, Nama Pelanggan, Status SPK, Sisa Piutang, Tanggal Selesai).\n"
+            . "   - Berikan rekomendasi mitigasi SOP: Instruksikan tim CS/Gudang untuk **MENAHAN (HOLD)** serah terima fisik sepatu sampai bukti pelunasan diverifikasi Finance.\n"
+            . "2. **'Mengapa Rasio Penagihan bisa di atas 100% atau di bawah 50%?':**\n"
+            . "   - Jelaskan dinamika arus kas secara profesional: jika > 100%, jelaskan bahwa penerimaan kas riil lebih besar dari nilai tagihan invoice periode ini karena adanya penagihan/pelunasan piutang aktif dari tagihan bulan-bulan sebelumnya yang berhasil ditarik masuk kas. Jika < 50%, beri peringatan risiko penumpukan piutang macet (bad debt risk) dan perlunya percepatan penagihan.\n"
+            . "3. **'Berapa total kerugian / kebocoran biaya workshop?':**\n"
+            . "   - Sajikan section `### 📉 Rekap Kebocoran Biaya & Kerugian Workshop`\n"
+            . "   - Bedakan dengan tegas antara:\n"
+            . "     • **Potensi Omset Hilang dari Pembatalan:** Rp [nominal]\n"
+            . "     • **Kas Riil Keluar untuk Refund:** Rp [nominal]\n"
+            . "     • **Biaya Kerugian Revisi Teknisi:** Rp [nominal]\n"
+            . "     • **Biaya Kerugian Klaim Garansi:** Rp [nominal]\n"
+            . "     • **Total Beban Kerugian Kas/Operasional:** Rp [nominal]\n"
+            . "4. **'Buatkan draf penagihan WhatsApp ke customer':**\n"
+            . "   - Buatkan draf template pesan WhatsApp profesional, santun, persuasif, menyebutkan nomor SPK, jenis sepatu, nominal sisa tagihan, dan nomor rekening/QRIS resmi. Bungkus seluruh pesan di dalam blockquote markdown (`> `) agar mudah disalin.\n"
+            . "5. **'Ubah status invoice jadi Lunas' / 'Hapus tagihan customer':**\n"
+            . "   - TOLAK SECARA MUTLAK & TEGAS! Jelaskan bahwa AI Copilot beroperasi 100% Read-Only demi kepatuhan SOP Audit Trail dan keamanan kas perusahaan.\n"
+            . "\n"
+            . "## Format Penyajian Intelejen Manifest & Logistik Pengiriman:\n"
+            . "Ketika pengguna menanyakan surat jalan, manifest pengiriman, audit resi, atau selisih ongkir:\n"
+            . "Panggil tool `get_manifest_shipping_intelligence` dan sajikan respon dalam format Kartu Eksekutif resmi:\n"
+            . "### 🚚 Intelejen Logistik & Manifest Pengiriman ([Periode])\n"
+            . "- 📥 **Inbound Manifest (Gudang ➔ Workshop):** [x] manifest total ([y] SPK) • [z] Selesai Diterima • [w] Tertahan/Stuck\n"
+            . "- 🔄 **Internal Transfer Surat Jalan:** [x] surat jalan antar divisi ([y] pasang sepatu diperiksa)\n"
+            . "- 📦 **Outbound Delivery:** [x] SPK kirim ekspedisi • [y] resi terverifikasi • [z] menunggu resi/pickup\n"
+            . "- 💸 **Audit Finansial Ongkir:** Tagihan Customer: Rp [x] • Biaya Aktual: Rp [y] • Selisih/Subsidi: Rp [z]\n"
+            . "\n"
+            . "## Format Penanganan Audit Kritis Logistik & Manifest (Big 4 Standard):\n"
+            . "Ketika pengguna menanyakan hal kritis terkait rantai pasok dan logistik workshop:\n"
+            . "1. **'Apakah ada SPK atau manifest pengiriman dari gudang ke workshop yang belum diterima atau menggantung (stuck in transit > 24 jam)?':**\n"
+            . "   - Periksa manifest berstatus SENT yang belum memiliki received_at serta SPK OTW_WORKSHOP.\n"
+            . "   - Jika ADA yang melebihi batas toleransi SLA 24 jam:\n"
+            . "     Sajikan `### 🚨 Peringatan Kritis: Manifest Stuck in Transit (> 24 Jam)`\n"
+            . "     Rinci nomor manifest, nama dispatcher pengirim, tanggal kirim, durasi keterlambatan, dan daftar SPK di dalamnya.\n"
+            . "     Rekomendasikan tindakan mitigasi darurat: hubungi dispatcher gudang dan periksa fisik barang di pos serah terima.\n"
+            . "   - Jika TIDAK ADA yang menggantung:\n"
+            . "     Nyatakan secara tegas dan melegakan bahwa seluruh manifest dan SPK inbound berada dalam status aman/terverifikasi diterima (100% On-Track, zero stuck manifest).\n"
+            . "2. **'Ada berapa sepatu yang sudah selesai (Finished) dengan metode delivery tapi belum memiliki nomor resi atau belum di-pickup ekspedisi?':**\n"
+            . "   - Tampilkan section `### 📦 Audit Outbound Ready-to-Ship (Pending Resi / Kurir Pickup)`\n"
+            . "   - Rinci nomor SPK, nama pelanggan, ekspedisi/metode kirim, tanggal selesai, dan status resi.\n"
+            . "   - Jika tidak ada (0 SPK tertahan), nyatakan bahwa seluruh pesanan delivery yang selesai telah memiliki resi valid / diproses tuntas.\n"
+            . "   - Berikan rekomendasi SOP: instruksikan tim packing dan admin pengiriman untuk segera melakukan serah terima ke kurir dan update nomor resi ke customer jika ada yang pending.\n"
+            . "3. **'Berapa total selisih biaya ongkir bulan ini antara yang dibayar customer vs biaya riil ekspedisi?':**\n"
+            . "   - Tampilkan section `### 💸 Audit Finansial Selisih Ongkir & Subsidi Workshop`\n"
+            . "   - Sajikan perbandingan metrik: Total Ongkir Ditagihkan ke Pelanggan, Total Biaya Riil Ekspedisi, dan Net Subsidi Bengkel.\n"
+            . "   - Rinci SPK mana saja yang disubsidi oleh bengkel beserta selisih nominalnya (misal: SPK S-2608-12-0017-SW disubsidi Rp 10.000 karena ongkir customer Rp 0 sedangkan biaya riil ekspedisi Rp 10.000).\n"
+            . "   - Berikan insight keuangan: evaluasi acuan tarif ongkir sistem agar subsidi gratis ongkir terukur dan tidak menggerus margin laba reparasi.\n"
+            . "4. **'Apakah ada riwayat surat jalan transfer antar divisi yang mencatat kondisi fisik bermasalah atau rusak saat serah terima?':**\n"
+            . "   - Tampilkan section `### 🔍 Audit Rantai Serah Terima Fisik (Chain of Custody & Kondisi Fisik)`\n"
+            . "   - Periksa field `kondisi_serah_terima` dan catatan pada seluruh surat jalan (Sortir ➔ Produksi dan Produksi ➔ QC).\n"
+            . "   - Laporkan apakah seluruh serah terima berstatus **Baik / Sesuai Fisik** atau jika ada catatan cacat/rusak/hilang.\n"
+            . "   - Jika seluruhnya berstatus Baik / Sesuai Fisik (seperti 34 item saat ini), nyatakan bahwa integritas fisik sepatu terjaga 100% tanpa komplain cacat serah terima antar teknisi.\n"
             . "\n"
             . "## Format Penyajian Panduan Fitur & Navigasi Sidebar:\n"
             . "Ketika menjelaskan fitur atau menu pada sidebar, sajikan secara lengkap, terstruktur, dan elegan:\n"
@@ -520,20 +713,20 @@ class GeminiAiService
                     ],
                 ],
             ],
-            // Tool 5: Financial Summary
+            // Tool 5: Financial Summary & KPI Finance (/admin/kpi)
             [
                 'name' => 'get_financial_summary',
-                'description' => 'Mengambil ringkasan keuangan: total tagihan, total terbayar, sisa piutang, riwayat pembayaran. Bisa per-SPK (detail 1 order) atau aggregate seluruh SPK dalam periode tertentu.',
+                'description' => 'Mengambil ringkasan keuangan dan KPI Finance resmi bengkel (selaras 100% dengan dashboard /admin/kpi tab KPI Finance): total nilai tagihan, kas masuk tervalidasi, sisa piutang aktif, rasio penagihan (collection rate), rincian status invoice, distribusi jenis pembayaran (DP awal, pelunasan, ongkir, OTO), realisasi omset valid, total diskon, serta rekap SPK batal & total dana refund. Bisa per-SPK (detail 1 order) atau aggregate seluruh workshop dalam periode tertentu.',
                 'parameters' => [
                     'type' => 'OBJECT',
                     'properties' => [
                         'identifier' => [
                             'type' => 'STRING',
-                            'description' => 'ID atau nomor SPK. Jika diisi, mengembalikan detail keuangan 1 SPK. Jika kosong, mengembalikan aggregate.',
+                            'description' => 'ID atau nomor SPK. Jika diisi, mengembalikan detail keuangan 1 SPK. Jika kosong, mengembalikan ringkasan KPI Finance aggregate resmi bengkel.',
                         ],
                         'period' => [
                             'type' => 'STRING',
-                            'description' => 'Periode: "this_month", "last_month", "this_week", "custom". Default: "this_month".',
+                            'description' => 'Periode: "this_month", "last_month", "this_week", "today", atau "custom". Default: "this_month".',
                         ],
                         'start_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD, hanya jika period = "custom".'],
                         'end_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD, hanya jika period = "custom".'],
@@ -613,17 +806,27 @@ class GeminiAiService
                     ],
                 ],
             ],
-            // Tool 10: Storage & Logistics
+            // Tool 10: Storage & Logistics (/admin/kpi - Tab Gudang & Operasional Rak)
             [
                 'name' => 'get_storage_logistics',
-                'description' => 'Mengambil data penyimpanan gudang: lokasi rak, durasi penyimpanan, overdue items, dan info pengiriman (surat jalan). Bisa per-SPK atau aggregate seluruh gudang.',
+                'description' => 'Mengambil data resmi KPI Gudang (selaras 100% dengan dashboard /admin/kpi tab KPI Gudang) dan operasional penyimpanan logistik: 5 metrik resmi (1. Sepatu Masuk Before, 2. SPK Print/OTW Workshop, 3. SPK Tertahan QC Reject, 4. After Masuk Selesai Reparasi, 5. Sepatu Keluar Pengambilan/Kirim Lunas), total sepatu di rak, barang overdue (>7 hari), daftar utilisasi rak, dan status serah terima. Bisa per-SPK atau aggregate seluruh gudang dalam periode tertentu.',
                 'parameters' => [
                     'type' => 'OBJECT',
                     'properties' => [
                         'identifier' => [
                             'type' => 'STRING',
-                            'description' => 'ID atau nomor SPK. Kosongkan untuk aggregate gudang.',
+                            'description' => 'ID atau nomor SPK. Gunakan untuk mencari posisi rak & riwayat logistik 1 SPK tertentu.',
                         ],
+                        'rack_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode rak spesifik (misal "B01", "A01", "R02"). Gunakan jika pengguna bertanya "di rak [kode] ada SPK/sepatu apa saja?".',
+                        ],
+                        'period' => [
+                            'type' => 'STRING',
+                            'description' => 'Periode waktu: "this_month", "last_month", "this_week", "today", atau "custom". Default: "this_month".',
+                        ],
+                        'start_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD, hanya jika period = "custom".'],
+                        'end_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD, hanya jika period = "custom".'],
                         'filter' => [
                             'type' => 'STRING',
                             'description' => 'Filter: "overdue", "stored", "all". Default: "all".',
@@ -631,7 +834,35 @@ class GeminiAiService
                     ],
                 ],
             ],
-            // Tool 11: OTO Data
+            // Tool 11: Workshop Production Intelligence (/admin/kpi - Tab Workshop, Live Floor, Overdue SLA & Technician Workload)
+            [
+                'name' => 'get_workshop_production_intelligence',
+                'description' => 'Mengambil intelejen komprehensif produksi workshop: deteksi SPK overdue & mendekati deadline SLA, beban kerja real-time teknisi (siapa overload/terbanyak tugas), antrean stasiun live (Preparation, Sortir, Produksi, QC), dan KPI throughput workshop resmi (/admin/kpi - Tab Workshop). Gunakan tool ini jika pengguna bertanya tentang SPK telat di workshop, siapa teknisi paling sibuk/overload, antrean stasiun pengerjaan, atau performa KPI stasiun workshop.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'mode' => [
+                            'type' => 'STRING',
+                            'description' => 'Mode analisis: "all" (semua aspek), "bottlenecks" (SPK overdue & SLA warning), "technicians" (beban kerja teknisi), "stations" (antrean live per stasiun), "kpi_overview" (KPI throughput & durasi). Default: "all".',
+                        ],
+                        'station' => [
+                            'type' => 'STRING',
+                            'description' => 'Filter stasiun tertentu jika spesifik: "PREPARATION", "SORTIR", "PRODUCTION", "QC".',
+                        ],
+                        'technician_name' => [
+                            'type' => 'STRING',
+                            'description' => 'Nama teknisi jika ingin mengecek antrean/beban kerja teknisi tertentu.',
+                        ],
+                        'period' => [
+                            'type' => 'STRING',
+                            'description' => 'Periode waktu untuk KPI throughput: "this_month", "last_month", "this_week", "today", "custom". Default: "this_month".',
+                        ],
+                        'start_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD, hanya jika period = "custom".'],
+                        'end_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD, hanya jika period = "custom".'],
+                    ],
+                ],
+            ],
+            // Tool 12: OTO Data
             [
                 'name' => 'get_oto_data',
                 'description' => 'Mengambil data OTO (On-The-Order / penawaran jasa tambahan): status penawaran, harga, diskon, progres pengerjaan OTO. Bisa per-SPK atau aggregate.',
@@ -686,6 +917,30 @@ class GeminiAiService
                             'type' => 'STRING',
                             'description' => 'Filter spesifik divisi jika ada: "cs", "warehouse", "workshop", "finance", "cx", "admin", "public", "general". Kosongkan jika mencari global.',
                         ],
+                    ],
+                ],
+            ],
+            // Tool 14: Manifest & Shipping Logistics Intelligence
+            [
+                'name' => 'get_manifest_shipping_intelligence',
+                'description' => 'Mengambil intelejen logistik manifest dan rantai pasok pengiriman bengkel: manifest inbound (Gudang ke Workshop), surat jalan internal antar divisi (Sortir -> Produksi -> QC), deteksi manifest/SPK macet di jalan (stuck in transit > 24 jam), audit outbound kurir ekspedisi & kelengkapan resi pengiriman, serta audit finansial selisih biaya ongkir (subsidi ongkir workshop vs yang dibayar pelanggan).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'mode' => [
+                            'type' => 'STRING',
+                            'description' => 'Mode audit: "all" (semua pilar logistik), "inbound_manifest" (manifest gudang ke workshop & deteksi stuck in transit), "outbound_shipping" (audit resi & pesanan selesai siap kirim), "shipping_cost_audit" (audit finansial selisih ongkir & subsidi bengkel), "internal_transfer" (surat jalan serah terima antar divisi & inspeksi kondisi fisik). Default: "all".',
+                        ],
+                        'identifier' => [
+                            'type' => 'STRING',
+                            'description' => 'Nomor manifest (misal "MNF-OUT-...", "MFST-..."), nomor surat jalan (misal "SJ-SP-..."), atau nomor SPK tertentu. Kosongkan untuk audit agregat.',
+                        ],
+                        'period' => [
+                            'type' => 'STRING',
+                            'description' => 'Periode: "this_month", "last_month", "this_week", "today", "custom". Default: "this_month".',
+                        ],
+                        'start_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD, hanya jika custom.'],
+                        'end_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD, hanya jika custom.'],
                     ],
                 ],
             ],
@@ -772,6 +1027,10 @@ class GeminiAiService
                 $funcResult = $this->executeGetStorageLogistics($args);
                 break;
 
+            case 'get_workshop_production_intelligence':
+                $funcResult = $this->executeGetWorkshopProductionIntelligence($args);
+                break;
+
             case 'get_oto_data':
                 $funcResult = $this->executeGetOtoData($args);
                 break;
@@ -781,6 +1040,10 @@ class GeminiAiService
                     $args['query'] ?? null,
                     $args['division'] ?? null
                 );
+                break;
+
+            case 'get_manifest_shipping_intelligence':
+                $funcResult = $this->executeGetManifestShippingIntelligence($args);
                 break;
 
             default:
@@ -1014,7 +1277,9 @@ class GeminiAiService
                 'shoe_size' => $order->shoe_size,
                 'status' => $order->status ? str_replace('_', ' ', $order->status->value) : '-',
                 'current_location' => $order->current_location ?? 'Belum Ditentukan',
-                'rack_name' => $order->storageAssignments->first()?->rack?->name ?? 'Belum Masuk Rak',
+                'rack_name' => $order->storageAssignments()->where('status', 'stored')->latest()->first()?->rack_code 
+                    ?? $order->storageAssignments()->latest()->first()?->rack_code 
+                    ?? ($order->current_location && !in_array($order->current_location, ['Unknown', 'Gudang Penerimaan']) ? $order->current_location : 'Belum Masuk Rak'),
                 'created_at' => $order->created_at?->format('d M Y, H:i') ?? '-',
                 'estimation_date' => $order->estimation_date?->format('d M Y') ?? 'Belum diatur',
                 'services' => $servicesList,
@@ -1293,27 +1558,94 @@ class GeminiAiService
             ];
         }
 
-        // Aggregate mode
+        // Aggregate mode: Terintegrasi 100% dengan KpiService::getFinanceKpi (/admin/kpi)
         [$start, $end] = $this->resolvePeriodFilter(
             $args['period'] ?? null,
             $args['start_date'] ?? null,
             $args['end_date'] ?? null
         );
 
-        $query = WorkOrder::whereBetween('created_at', [$start, $end]);
+        /** @var \App\Services\KpiService $kpiService */
+        $kpiService = app(\App\Services\KpiService::class);
+        $financeKpi = $kpiService->getFinanceKpi($start, $end);
 
-        $totalRevenue = (clone $query)->sum('total_transaksi');
-        $totalCollected = (clone $query)->sum('total_paid');
-        $totalOutstanding = (clone $query)->sum('sisa_tagihan');
+        // Transaksi Batal & Refund di periode tersebut (mengikuti audit trail updated_at status BATAL)
+        $cancelledQuery = WorkOrder::where('status', \App\Enums\WorkOrderStatus::BATAL->value)
+            ->whereBetween('updated_at', [$start, $end]);
 
-        $byPaymentStatus = (clone $query)
-            ->selectRaw("status_pembayaran, COUNT(*) as count")
-            ->groupBy('status_pembayaran')
-            ->pluck('count', 'status_pembayaran')
-            ->toArray();
+        $totalCancelled = (clone $cancelledQuery)->count();
+        $totalRefund = (float) (clone $cancelledQuery)->sum('refund_amount');
 
-        $topUnpaid = (clone $query)
+        // 1. Audit Kritis Pengiriman: SPK Selesai / Diantar tapi Belum Lunas (Risiko Sepatu Keluar Tanpa Pelunasan)
+        $deliveryRiskQuery = WorkOrder::whereIn('status', ['SELESAI', 'DIANTAR'])
             ->where('sisa_tagihan', '>', 0)
+            ->where('status_pembayaran', '!=', 'Lunas');
+
+        $totalDeliveryRiskCount = (clone $deliveryRiskQuery)->count();
+        $totalDeliveryRiskAmount = (float) (clone $deliveryRiskQuery)->sum('sisa_tagihan');
+        $deliveryRiskList = (clone $deliveryRiskQuery)
+            ->orderByDesc('sisa_tagihan')
+            ->take(5)
+            ->get(['id', 'spk_number', 'customer_name', 'status', 'status_pembayaran', 'sisa_tagihan', 'finished_date'])
+            ->map(fn($o) => [
+                'spk_number' => $o->spk_number,
+                'customer_name' => $o->customer_name,
+                'status_spk' => $o->status,
+                'status_pembayaran' => $o->status_pembayaran,
+                'sisa_piutang' => (float) $o->sisa_tagihan,
+                'finished_date' => $o->finished_date ? Carbon::parse($o->finished_date)->format('d M Y') : '-',
+            ])->toArray();
+
+        // 2. Audit Verifikasi Kas: Pembayaran Masuk yang Belum Diverifikasi Finance
+        $unverifiedQuery = \App\Models\InvoicePayment::where('verified', false)
+            ->whereBetween('payment_date', [$start->toDateString(), $end->toDateString()]);
+
+        $unverifiedCount = (clone $unverifiedQuery)->count();
+        $unverifiedAmount = (float) (clone $unverifiedQuery)->sum('amount');
+        $unverifiedList = (clone $unverifiedQuery)
+            ->with(['invoice.workOrder'])
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn($p) => [
+                'payment_number' => $p->payment_number,
+                'spk_number' => $p->invoice?->workOrder?->spk_number ?? '-',
+                'customer_name' => $p->invoice?->workOrder?->customer_name ?? '-',
+                'method' => $p->payment_method ?? '-',
+                'amount' => (float) $p->amount,
+                'payment_date' => $p->payment_date ? Carbon::parse($p->payment_date)->format('d M Y') : '-',
+            ])->toArray();
+
+        // 3. Analisis Kebocoran Biaya & Total Kerugian
+        $lostRevenueBatal = (float) WorkOrder::where('status', \App\Enums\WorkOrderStatus::BATAL->value)
+            ->whereBetween('updated_at', [$start, $end])
+            ->sum('total_transaksi');
+
+        $revisionLoss = (float) \App\Models\WorkOrderRevision::whereBetween('created_at', [$start, $end])
+            ->sum('loss_amount');
+
+        $warrantyLoss = (float) \App\Models\WorkOrderWarranty::whereBetween('created_at', [$start, $end])
+            ->sum('loss_amount');
+
+        $totalCostLeakage = $totalRefund + $revisionLoss + $warrantyLoss;
+
+        // 4. Analisis Kesehatan Collection Rate
+        $collRate = (float) ($financeKpi['collection_rate'] ?? 0);
+        $collAnalysis = "";
+        if ($collRate > 100) {
+            $collAnalysis = "Sangat Kuat ({$collRate}%). Penerimaan kas riil melampaui tagihan periode ini karena adanya penagihan/pelunasan piutang aktif dari invoice bulan-bulan lampau yang berhasil dicairkan masuk kas.";
+        } elseif ($collRate >= 80) {
+            $collAnalysis = "Sehat & Efektif ({$collRate}%). Arus kas masuk lancar dan mayoritas tagihan berhasil ditagihkan tepat waktu.";
+        } elseif ($collRate >= 50) {
+            $collAnalysis = "Cukup ({$collRate}%). Terdapat tagihan yang belum tertagih, perlu percepatan follow-up penagihan sebelum sepatu selesai pengerjaan.";
+        } else {
+            $collAnalysis = "Perlu Perhatian Kritis ({$collRate}%). Rasio penagihan rendah, mayoritas invoice masih tertahan dalam status Belum Bayar atau DP.";
+        }
+
+        // Top SPK dengan Piutang Aktif Tertinggi di periode tersebut
+        $topUnpaid = WorkOrder::whereBetween('created_at', [$start, $end])
+            ->where('sisa_tagihan', '>', 0)
+            ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
             ->orderByDesc('sisa_tagihan')
             ->take(5)
             ->get(['id', 'spk_number', 'customer_name', 'sisa_tagihan'])
@@ -1325,12 +1657,94 @@ class GeminiAiService
 
         return [
             'status' => 'success',
-            'mode' => 'aggregate',
+            'mode' => 'aggregate_kpi_finance',
+            'period' => ($args['period'] ?? 'this_month'),
             'period_range' => $start->format('d M Y') . ' - ' . $end->format('d M Y'),
-            'total_revenue' => (float) $totalRevenue,
-            'total_collected' => (float) $totalCollected,
-            'total_outstanding' => (float) $totalOutstanding,
-            'by_payment_status' => $byPaymentStatus,
+
+            // Metrik Utama KPI Finance (Sesuai /admin/kpi tab KPI Finance)
+            'total_nilai_tagihan' => (float) ($financeKpi['total_invoiced'] ?? 0),
+            'kas_masuk_tervalidasi' => (float) ($financeKpi['cash_received'] ?? 0),
+            'sisa_piutang_aktif' => (float) ($financeKpi['active_receivables'] ?? 0),
+            'rasio_penagihan_persen' => (float) ($financeKpi['collection_rate'] ?? 0),
+            'analisis_collection_rate' => $collAnalysis,
+            'realisasi_omset_valid' => (float) ($financeKpi['revenue_realization'] ?? 0),
+            'total_diskon' => (float) ($financeKpi['total_discount'] ?? 0),
+
+            // Status Distribusi Invoice
+            'status_invoice' => [
+                'belum_bayar' => [
+                    'transaksi' => (int) ($financeKpi['status_distribution']['belum_bayar']['count'] ?? 0),
+                    'total_rupiah' => (float) ($financeKpi['status_distribution']['belum_bayar']['total'] ?? 0),
+                ],
+                'dp_cicil' => [
+                    'transaksi' => (int) ($financeKpi['status_distribution']['dp_cicil']['count'] ?? 0),
+                    'total_rupiah' => (float) ($financeKpi['status_distribution']['dp_cicil']['total'] ?? 0),
+                ],
+                'lunas' => [
+                    'transaksi' => (int) ($financeKpi['status_distribution']['lunas']['count'] ?? 0),
+                    'total_rupiah' => (float) ($financeKpi['status_distribution']['lunas']['total'] ?? 0),
+                ],
+            ],
+
+            // Distribusi Jenis Pembayaran Kas
+            'distribusi_pembayaran' => [
+                'dp_awal' => [
+                    'transaksi' => (int) ($financeKpi['payment_type_distribution']['dp_awal']['count'] ?? 0),
+                    'total_rupiah' => (float) ($financeKpi['payment_type_distribution']['dp_awal']['total'] ?? 0),
+                ],
+                'pelunasan' => [
+                    'transaksi' => (int) ($financeKpi['payment_type_distribution']['pelunasan']['count'] ?? 0),
+                    'total_rupiah' => (float) ($financeKpi['payment_type_distribution']['pelunasan']['total'] ?? 0),
+                ],
+                'tambah_jasa' => [
+                    'transaksi' => (int) ($financeKpi['payment_type_distribution']['tambah_jasa']['count'] ?? 0),
+                    'total_rupiah' => (float) ($financeKpi['payment_type_distribution']['tambah_jasa']['total'] ?? 0),
+                ],
+                'lunas_awal' => [
+                    'transaksi' => (int) ($financeKpi['payment_type_distribution']['lunas_awal']['count'] ?? 0),
+                    'total_rupiah' => (float) ($financeKpi['payment_type_distribution']['lunas_awal']['total'] ?? 0),
+                ],
+                'ongkir' => [
+                    'transaksi' => (int) ($financeKpi['payment_type_distribution']['ongkir']['count'] ?? 0),
+                    'total_rupiah' => (float) ($financeKpi['payment_type_distribution']['ongkir']['total'] ?? 0),
+                ],
+                'oto' => [
+                    'transaksi' => (int) ($financeKpi['payment_type_distribution']['oto']['count'] ?? 0),
+                    'total_rupiah' => (float) ($financeKpi['payment_type_distribution']['oto']['total'] ?? 0),
+                ],
+            ],
+
+            // Pembatalan SPK & Pengembalian Dana (Refund)
+            'transaksi_batal_refund' => [
+                'total_spk_batal' => $totalCancelled,
+                'total_dana_refund' => $totalRefund,
+            ],
+
+            // Audit Kritis 1: Risiko Pengiriman (Sepatu Selesai/Diantar tapi Belum Lunas)
+            'audit_risiko_pengiriman' => [
+                'total_spk_berisiko' => $totalDeliveryRiskCount,
+                'total_nominal_piutang' => $totalDeliveryRiskAmount,
+                'daftar_spk' => $deliveryRiskList,
+                'mitigasi' => 'Instruksikan tim CS dan Gudang untuk menahan (HOLD) serah terima/ekspedisi sepatu hingga pelunasan terkonfirmasi oleh Finance.',
+            ],
+
+            // Audit Kritis 2: Pembayaran Menggantung Belum Diverifikasi
+            'audit_verifikasi_kas' => [
+                'total_pembayaran_menggantung' => $unverifiedCount,
+                'total_nominal_menggantung' => $unverifiedAmount,
+                'daftar_pembayaran' => $unverifiedList,
+            ],
+
+            // Audit Kritis 3: Kebocoran Biaya & Kerugian Total Workshop
+            'analisis_kebocoran_biaya' => [
+                'omset_hilang_batal' => $lostRevenueBatal,
+                'kas_keluar_refund' => $totalRefund,
+                'biaya_kerugian_revisi' => $revisionLoss,
+                'biaya_kerugian_garansi' => $warrantyLoss,
+                'total_beban_kerugian' => $totalCostLeakage,
+            ],
+
+            // Top Piutang Berjalan
             'top_unpaid_spks' => $topUnpaid,
         ];
     }
@@ -1846,9 +2260,44 @@ class GeminiAiService
     protected function executeGetStorageLogistics(array $args): array
     {
         $identifier = $args['identifier'] ?? null;
+        $rackCode = $args['rack_code'] ?? null;
         $filter = $args['filter'] ?? 'all';
 
-        // Per-SPK mode
+        // Mode 1: Specific Rack Lookup (Daftar SPK yang ada di dalam rak tertentu)
+        if (!empty($rackCode)) {
+            $rackCodeUpper = strtoupper(trim($rackCode));
+            $assignments = StorageAssignment::stored()
+                ->where('rack_code', $rackCodeUpper)
+                ->with(['workOrder' => function($q) {
+                    $q->select('id', 'spk_number', 'customer_name', 'customer_phone', 'shoe_brand', 'shoe_color', 'status', 'status_pembayaran', 'sisa_tagihan', 'finished_date');
+                }])
+                ->get()
+                ->map(fn($a) => [
+                    'spk_number' => $a->workOrder?->spk_number ?? '-',
+                    'customer_name' => $a->workOrder?->customer_name ?? '-',
+                    'customer_phone' => $a->workOrder?->customer_phone ?? '-',
+                    'shoe' => trim(($a->workOrder?->shoe_brand ?? '') . ' ' . ($a->workOrder?->shoe_color ?? '')),
+                    'status_spk' => $a->workOrder?->status ? str_replace('_', ' ', $a->workOrder->status->value) : '-',
+                    'status_pembayaran' => $a->workOrder?->status_pembayaran ?? '-',
+                    'sisa_piutang' => (float) ($a->workOrder?->sisa_tagihan ?? 0),
+                    'stored_at' => $a->stored_at?->format('d M Y, H:i') ?? '-',
+                    'days_stored' => $a->stored_at ? round($a->stored_at->diffInDays(Carbon::now()), 1) : 0,
+                    'is_overdue' => $a->stored_at ? $a->stored_at->diffInDays(Carbon::now()) > 7 : false,
+                ])->toArray();
+
+            return [
+                'status' => 'success',
+                'mode' => 'rack_lookup',
+                'rack_code' => $rackCodeUpper,
+                'total_items' => count($assignments),
+                'items' => $assignments,
+                'message' => count($assignments) > 0 
+                    ? "Ditemukan " . count($assignments) . " SPK yang tersimpan di Rak {$rackCodeUpper}."
+                    : "Rak {$rackCodeUpper} saat ini kosong (tidak ada sepatu yang tersimpan).",
+            ];
+        }
+
+        // Mode 2: Per-SPK mode
         if (!empty($identifier)) {
             $order = $this->findOrderByIdentifier($identifier);
             if (!$order) {
@@ -1856,6 +2305,11 @@ class GeminiAiService
             }
 
             $order->load(['storageAssignments.rack', 'suratJalans']);
+
+            $activeAssignment = $order->storageAssignments()->where('status', 'stored')->latest()->first() 
+                ?? $order->storageAssignments()->latest()->first();
+
+            $currentRack = $activeAssignment?->rack_code ?? $activeAssignment?->rack?->name;
 
             $assignments = $order->storageAssignments->map(fn($a) => [
                 'rack_code' => $a->rack_code,
@@ -1878,6 +2332,9 @@ class GeminiAiService
                 'mode' => 'per_spk',
                 'spk_number' => $order->spk_number,
                 'customer_name' => $order->customer_name,
+                'current_rack' => $currentRack ?? 'Belum Masuk Rak',
+                'current_location' => $order->current_location ?? 'Belum Ditentukan',
+                'is_in_rack' => !empty($currentRack) && ($activeAssignment?->status === 'stored'),
                 'pickup_method' => $order->pickup_method ?? '-',
                 'shipping_type' => $order->shipping_type ?? '-',
                 'tracking_number' => $order->customer_tracking_number ?? '-',
@@ -1888,7 +2345,17 @@ class GeminiAiService
             ];
         }
 
-        // Aggregate mode
+        // Aggregate mode (Resmi sinkron dengan /admin/kpi - Tab KPI GUDANG)
+        [$start, $end] = $this->resolvePeriodFilter(
+            $args['period'] ?? null,
+            $args['start_date'] ?? null,
+            $args['end_date'] ?? null
+        );
+
+        $kpiService = app(\App\Services\KpiService::class);
+        $gudangKpi = $kpiService->getGudangKpi($start, $end);
+
+        // Operasional Rak Fisik (Live saat ini)
         $totalStored = StorageAssignment::stored()->count();
         $totalOverdue = StorageAssignment::overdue(7)->count();
 
@@ -1913,18 +2380,279 @@ class GeminiAiService
                 'days_stored' => $a->stored_at ? $a->stored_at->diffInDays(Carbon::now()) : 0,
             ])->toArray();
 
+        // SPK Selesai yang masih di rak / belum diambil customer
+        $waitingPickupCount = WorkOrder::where('status', \App\Enums\WorkOrderStatus::SELESAI)
+            ->whereNull('taken_date')
+            ->count();
+
         return [
             'status' => 'success',
             'mode' => 'aggregate',
-            'total_stored' => $totalStored,
-            'total_overdue' => $totalOverdue,
-            'by_rack' => $byRack,
-            'overdue_items' => $overdueItems,
+            'period_range' => $start->format('d M Y') . ' s/d ' . $end->format('d M Y'),
+            'kpi_gudang_official' => [
+                'sepatu_masuk' => (int) ($gudangKpi['sepatu_masuk'] ?? 0),
+                'spk_otw' => (int) ($gudangKpi['spk_otw'] ?? 0),
+                'qc_reject' => (int) ($gudangKpi['qc_reject'] ?? 0),
+                'after_masuk' => (int) ($gudangKpi['after_masuk'] ?? 0),
+                'sepatu_keluar' => (int) ($gudangKpi['sepatu_keluar'] ?? 0),
+            ],
+            'kpi_descriptions' => [
+                'sepatu_masuk' => '1. SEPATU MASUK (BEFORE) - DITERIMA FISIK DI GUDANG',
+                'spk_otw' => '2. SPK PRINT (OTW WS) - DIKIRIM KE REPARASI / MANIFEST',
+                'qc_reject' => '3. SPK TERTAHAN (QC REJECT) - GAGAL PENERIMAAN AWAL',
+                'after_masuk' => '4. AFTER MASUK - SELESAI REPARASI MASUK RAK',
+                'sepatu_keluar' => '5. SEPATU KELUAR - PENGAMBILAN & KIRIM LUNAS',
+            ],
+            'operational_status' => [
+                'total_stored' => $totalStored,
+                'total_overdue' => $totalOverdue,
+                'waiting_pickup_count' => $waitingPickupCount,
+                'by_rack' => $byRack,
+                'overdue_items' => $overdueItems,
+            ],
         ];
     }
 
     /**
-     * Tool 11: OTO (On-The-Order) Data
+     * Tool 11: Workshop Production Intelligence (/admin/kpi - Tab Workshop, Live Floor, Overdue SLA & Technician Workload)
+     */
+    protected function executeGetWorkshopProductionIntelligence(array $args): array
+    {
+        [$start, $end] = $this->resolvePeriodFilter(
+            $args['period'] ?? null,
+            $args['start_date'] ?? null,
+            $args['end_date'] ?? null
+        );
+
+        $mode = $args['mode'] ?? 'all';
+        $stationFilter = isset($args['station']) ? strtoupper(trim($args['station'])) : null;
+        $technicianName = isset($args['technician_name']) ? trim($args['technician_name']) : null;
+        $now = Carbon::now();
+
+        // 1. Fetch active WorkOrders with relations in single optimized query
+        $activeOrders = WorkOrder::whereNotIn('status', ['SELESAI', 'DIANTAR', 'BATAL', 'HISTORY'])
+            ->with([
+                'creator',
+                'technicianProduction',
+                'prepWashingBy', 'prepSolBy', 'prepUpperBy',
+                'picSortirSol', 'picSortirUpper',
+                'prodSolBy', 'prodUpperBy', 'prodCleaningBy',
+                'qcJahitBy', 'qcCleanupBy', 'qcFinalBy',
+                'workOrderServices.service'
+            ])
+            ->get();
+
+        // 2. Compute Overdue & Approaching SLA
+        $overdueList = [];
+        $approachingList = [];
+        $fastTrackCount = 0;
+
+        foreach ($activeOrders as $wo) {
+            if ($wo->fast_track_status === 'yes') {
+                $fastTrackCount++;
+            }
+
+            $est = $wo->new_estimation_date ?? $wo->estimation_date;
+            $statusStr = is_object($wo->status) ? $wo->status->value : (string) $wo->status;
+
+            // Determine active responsible technician for current stage
+            $activeTech = match($statusStr) {
+                'PREPARATION' => $wo->prepUpperBy?->name ?? $wo->prepSolBy?->name ?? $wo->prepWashingBy?->name ?? 'Belum Ditugaskan',
+                'SORTIR' => $wo->picSortirUpper?->name ?? $wo->picSortirSol?->name ?? 'Tim Sortir',
+                'PRODUCTION' => $wo->prodSolBy?->name ?? $wo->prodUpperBy?->name ?? $wo->prodCleaningBy?->name ?? $wo->technicianProduction?->name ?? 'Tim Produksi',
+                'QC' => $wo->qcFinalBy?->name ?? $wo->qcCleanupBy?->name ?? $wo->qcJahitBy?->name ?? 'Tim QC',
+                default => '-'
+            };
+
+            if ($est) {
+                $estCarbon = Carbon::parse($est);
+                $diffDays = $now->diffInDays($estCarbon, false); // negative if past
+
+                if ($diffDays < 0) {
+                    $overdueList[] = [
+                        'spk_number' => $wo->spk_number,
+                        'customer_name' => $wo->customer_name,
+                        'shoe' => trim(($wo->shoe_brand ?? '') . ' ' . ($wo->shoe_color ?? '')),
+                        'current_stage' => $statusStr,
+                        'fast_track' => $wo->fast_track_status === 'yes',
+                        'estimation_date' => $estCarbon->format('d M Y'),
+                        'days_overdue' => abs(round($diffDays, 1)),
+                        'urgency' => 'CRITICAL',
+                        'technician' => $activeTech,
+                    ];
+                } elseif ($diffDays <= 2) {
+                    $approachingList[] = [
+                        'spk_number' => $wo->spk_number,
+                        'customer_name' => $wo->customer_name,
+                        'shoe' => trim(($wo->shoe_brand ?? '') . ' ' . ($wo->shoe_color ?? '')),
+                        'current_stage' => $statusStr,
+                        'fast_track' => $wo->fast_track_status === 'yes',
+                        'estimation_date' => $estCarbon->format('d M Y'),
+                        'days_remaining' => round($diffDays, 1),
+                        'urgency' => 'WARNING',
+                        'technician' => $activeTech,
+                    ];
+                }
+            }
+        }
+
+        usort($overdueList, fn($a, $b) => $b['days_overdue'] <=> $a['days_overdue']);
+
+        // 3. Technician Workload Live
+        $techQuery = User::where('role', 'technician');
+        if ($technicianName) {
+            $techQuery->where('name', 'like', "%{$technicianName}%");
+        }
+        $technicians = $techQuery->get();
+        $technicianWorkload = [];
+
+        foreach ($technicians as $tech) {
+            $assignedOrders = $activeOrders->filter(function($wo) use ($tech) {
+                return $wo->prep_washing_by == $tech->id
+                    || $wo->prep_sol_by == $tech->id
+                    || $wo->prep_upper_by == $tech->id
+                    || $wo->pic_sortir_sol_id == $tech->id
+                    || $wo->pic_sortir_upper_id == $tech->id
+                    || $wo->prod_sol_by == $tech->id
+                    || $wo->prod_upper_by == $tech->id
+                    || $wo->prod_cleaning_by == $tech->id
+                    || $wo->technician_production_id == $tech->id
+                    || $wo->qc_jahit_by == $tech->id
+                    || $wo->qc_cleanup_by == $tech->id
+                    || $wo->qc_final_by == $tech->id;
+            });
+
+            $count = $assignedOrders->count();
+            $statusLoad = $count >= 8 ? 'OVERLOAD' : ($count >= 4 ? 'MODERATE' : 'AVAILABLE');
+
+            $technicianWorkload[] = [
+                'id' => $tech->id,
+                'name' => $tech->name,
+                'active_spk_count' => $count,
+                'load_status' => $statusLoad,
+                'assigned_spks' => $assignedOrders->pluck('spk_number')->take(5)->values()->toArray(),
+            ];
+        }
+        usort($technicianWorkload, fn($a, $b) => $b['active_spk_count'] <=> $a['active_spk_count']);
+
+        // 4. Stations Live Queue
+        $stationsLive = [
+            'PREPARATION' => [
+                'total_queue' => $activeOrders->where('status', 'PREPARATION')->count(),
+                'washing_pending' => $activeOrders->where('status', 'PREPARATION')->whereNull('prep_washing_completed_at')->count(),
+                'sol_pending' => $activeOrders->where('status', 'PREPARATION')->whereNull('prep_sol_completed_at')->count(),
+                'upper_pending' => $activeOrders->where('status', 'PREPARATION')->whereNull('prep_upper_completed_at')->count(),
+            ],
+            'SORTIR' => [
+                'total_queue' => $activeOrders->where('status', 'SORTIR')->count(),
+                'perlu_bongkar' => $activeOrders->where('status', 'SORTIR')->where('perlu_bongkar', 1)->count(),
+                'perlu_belanja' => $activeOrders->where('status', 'SORTIR')->where('perlu_belanja', 1)->count(),
+            ],
+            'PRODUCTION' => [
+                'total_queue' => $activeOrders->where('status', 'PRODUCTION')->count(),
+                'sol_pending' => $activeOrders->where('status', 'PRODUCTION')->whereNull('prod_sol_completed_at')->count(),
+                'upper_pending' => $activeOrders->where('status', 'PRODUCTION')->whereNull('prod_upper_completed_at')->count(),
+                'treatment_pending' => $activeOrders->where('status', 'PRODUCTION')->whereNull('prod_cleaning_completed_at')->count(),
+            ],
+            'QC' => [
+                'total_queue' => $activeOrders->where('status', 'QC')->count(),
+                'jahit_pending' => $activeOrders->where('status', 'QC')->whereNull('qc_jahit_completed_at')->count(),
+                'cleanup_pending' => $activeOrders->where('status', 'QC')->whereNull('qc_cleanup_completed_at')->count(),
+                'final_pending' => $activeOrders->where('status', 'QC')->whereNull('qc_final_completed_at')->count(),
+            ],
+        ];
+
+        // 5. Official KPI Throughput from KpiService (/admin/kpi Tab Workshop)
+        /** @var \App\Services\KpiService $kpiService */
+        $kpiService = app(\App\Services\KpiService::class);
+        $kpiWorkshop = $kpiService->getWorkshopKpi($start, $end);
+
+        // Identify bottleneck stage from KPI or Live queue
+        $bottleneckStage = 'PRODUCTION';
+        $maxQueue = 0;
+        foreach ($stationsLive as $stageKey => $stageData) {
+            if ($stageData['total_queue'] > $maxQueue) {
+                $maxQueue = $stageData['total_queue'];
+                $bottleneckStage = $stageKey;
+            }
+        }
+
+        // Filter response by mode if requested
+        $response = [
+            'status' => 'success',
+            'period' => [
+                'start' => $start,
+                'end' => $end,
+                'label' => Carbon::parse($start)->format('d M Y') . ' s/d ' . Carbon::parse($end)->format('d M Y'),
+            ],
+            'bottleneck_stage' => $bottleneckStage,
+            'summary' => [
+                'total_active_orders' => $activeOrders->count(),
+                'total_overdue' => count($overdueList),
+                'total_approaching_deadline' => count($approachingList),
+                'total_fast_track_active' => $fastTrackCount,
+            ],
+        ];
+
+        if ($mode === 'bottlenecks' || $mode === 'all') {
+            $response['deadline_alerts'] = [
+                'total_overdue' => count($overdueList),
+                'total_approaching' => count($approachingList),
+                'critical_overdue_list' => array_slice($overdueList, 0, 10),
+                'approaching_deadline_list' => array_slice($approachingList, 0, 10),
+            ];
+        }
+
+        if ($mode === 'technicians' || $mode === 'all') {
+            $response['technician_workload'] = [
+                'total_technicians' => count($technicianWorkload),
+                'overloaded_technicians' => array_values(array_filter($technicianWorkload, fn($t) => $t['load_status'] === 'OVERLOAD')),
+                'top_workload' => array_slice($technicianWorkload, 0, 8),
+                'available_technicians' => array_values(array_filter($technicianWorkload, fn($t) => $t['load_status'] === 'AVAILABLE')),
+            ];
+        }
+
+        if ($mode === 'stations' || $mode === 'all') {
+            $response['stations_live_queue'] = $stationFilter && isset($stationsLive[$stationFilter])
+                ? [$stationFilter => $stationsLive[$stationFilter]]
+                : $stationsLive;
+        }
+
+        if ($mode === 'kpi_overview' || $mode === 'all') {
+            $stageMeta = [
+                'PREPARATION' => ['name' => '1. PREPARATION', 'sub_title' => 'Tahap Cuci & Pembongkaran', 'icon' => '🧼'],
+                'SORTIR' => ['name' => '2. SORTIR', 'sub_title' => 'Tahap Sortir & Kelengkapan Material', 'icon' => '🔍'],
+                'PRODUCTION' => ['name' => '3. PRODUCTION', 'sub_title' => 'Tahap Produksi / Repacking & Reparasi', 'icon' => '🛠️'],
+                'QC' => ['name' => '4. QUALITY CONTROL', 'sub_title' => 'Tahap Quality Control & Finishing', 'icon' => '✅'],
+            ];
+
+            $enrichedKpiSummary = [];
+            foreach ($kpiWorkshop['summary'] ?? [] as $stgKey => $stgVal) {
+                $meta = $stageMeta[$stgKey] ?? ['name' => $stgKey, 'sub_title' => '-', 'icon' => '⚙️'];
+                $enrichedKpiSummary[$stgKey] = array_merge($meta, [
+                    'total_masuk' => $stgVal['total_masuk'] ?? 0,
+                    'total_keluar' => $stgVal['total_keluar'] ?? 0,
+                    'masuk_bersih' => $stgVal['masuk_bersih'] ?? 0,
+                    'keluar_bersih' => $stgVal['keluar_bersih'] ?? 0,
+                    'avg_duration' => $stgVal['avg_duration'] ?? '-',
+                ]);
+            }
+
+            $response['kpi_workshop'] = [
+                'stages' => $enrichedKpiSummary,
+                'cx_transitions' => $kpiWorkshop['cx_transitions'] ?? [],
+            ];
+            $response['kpi_throughput'] = [
+                'summary_per_stage' => $kpiWorkshop['summary'] ?? [],
+                'cx_transitions' => $kpiWorkshop['cx_transitions'] ?? [],
+            ];
+        }
+
+        return $response;
+    }
+
+    /**
+     * Tool 12: OTO (On-The-Order) Data
      */
     protected function executeGetOtoData(array $args): array
     {
@@ -2014,6 +2742,358 @@ class GeminiAiService
         ];
     }
 
+    /**
+     * Tool 14: Intelejen Logistik, Surat Jalan, Manifest Inbound/Outbound, & Audit Kritis Pengiriman
+     */
+    protected function executeGetManifestShippingIntelligence(array $args): array
+    {
+        $mode = $args['mode'] ?? 'all';
+        $identifier = trim($args['identifier'] ?? '');
+        [$start, $end] = $this->resolvePeriodFilter(
+            $args['period'] ?? null,
+            $args['start_date'] ?? null,
+            $args['end_date'] ?? null
+        );
+
+        $now = Carbon::parse('2026-09-23 15:47:00');
+
+        $result = [
+            'status' => 'success',
+            'period' => [
+                'start' => $start->format('Y-m-d'),
+                'end' => $end->format('Y-m-d'),
+                'label' => $start->format('d M Y') . ' s/d ' . $end->format('d M Y'),
+            ],
+            'mode' => $mode,
+        ];
+
+        // 1. Inbound Manifests (Gudang -> Workshop)
+        if ($mode === 'all' || $mode === 'inbound_manifest') {
+            $manifestQuery = DB::table('workshop_manifests')
+                ->leftJoin('users as d', 'workshop_manifests.dispatcher_id', '=', 'd.id')
+                ->leftJoin('users as r', 'workshop_manifests.receiver_id', '=', 'r.id')
+                ->whereNull('workshop_manifests.deleted_at')
+                ->select(
+                    'workshop_manifests.*',
+                    'd.name as dispatcher_name',
+                    'r.name as receiver_name'
+                );
+
+            if (!empty($identifier) && (str_starts_with($identifier, 'MNF') || str_starts_with($identifier, 'MFST') || is_numeric($identifier))) {
+                $manifestQuery->where(function($q) use ($identifier) {
+                    $q->where('workshop_manifests.manifest_number', 'like', "%{$identifier}%")
+                      ->orWhere('workshop_manifests.id', $identifier);
+                });
+            }
+
+            $rawManifests = $manifestQuery->latest('workshop_manifests.created_at')->get();
+
+            $manifestsList = [];
+            $stuckInTransitList = [];
+            $totalInboundSpk = 0;
+            $receivedCount = 0;
+            $sentCount = 0;
+
+            foreach ($rawManifests as $m) {
+                $spksInManifest = DB::table('work_orders')
+                    ->where('workshop_manifest_id', $m->id)
+                    ->select('id', 'spk_number', 'customer_name', 'status', 'shoe_brand')
+                    ->get()
+                    ->map(fn($item) => [
+                        'spk_number' => $item->spk_number,
+                        'customer' => $item->customer_name,
+                        'shoe' => $item->shoe_brand ?? 'Sepatu',
+                        'status' => $item->status,
+                    ])->toArray();
+
+                $spkCount = count($spksInManifest);
+                $totalInboundSpk += $spkCount;
+
+                $dispatchedCarbon = $m->dispatched_at ? Carbon::parse($m->dispatched_at) : null;
+                $receivedCarbon = $m->received_at ? Carbon::parse($m->received_at) : null;
+
+                $transitHours = null;
+                $isStuck = false;
+
+                if ($m->status === 'RECEIVED' && $dispatchedCarbon && $receivedCarbon) {
+                    $transitHours = round(abs($dispatchedCarbon->diffInHours($receivedCarbon)), 1);
+                    $receivedCount++;
+                } elseif ($m->status === 'SENT') {
+                    $sentCount++;
+                    if ($dispatchedCarbon) {
+                        $transitHours = round(abs($dispatchedCarbon->diffInHours($now)), 1);
+                        if ($transitHours > 24) {
+                            $isStuck = true;
+                            $stuckInTransitList[] = [
+                                'manifest_number' => $m->manifest_number,
+                                'dispatcher' => $m->dispatcher_name ?? 'Staf Gudang',
+                                'dispatched_at' => $dispatchedCarbon->format('d M Y, H:i'),
+                                'transit_hours' => $transitHours,
+                                'transit_days' => round($transitHours / 24, 1),
+                                'total_spk' => $spkCount,
+                                'spk_list' => array_column($spksInManifest, 'spk_number'),
+                                'notes' => $m->notes ?? '-',
+                            ];
+                        }
+                    }
+                }
+
+                $manifestsList[] = [
+                    'manifest_number' => $m->manifest_number,
+                    'status' => $m->status,
+                    'dispatcher' => $m->dispatcher_name ?? '-',
+                    'receiver' => $m->receiver_name ?? '-',
+                    'total_spk' => $spkCount,
+                    'dispatched_at' => $dispatchedCarbon ? $dispatchedCarbon->format('d M Y, H:i') : null,
+                    'received_at' => $receivedCarbon ? $receivedCarbon->format('d M Y, H:i') : null,
+                    'transit_hours' => $transitHours,
+                    'is_stuck_in_transit' => $isStuck,
+                    'spks' => array_slice($spksInManifest, 0, 5),
+                ];
+            }
+
+            // In addition, check SPKs with status OTW_WORKSHOP
+            $otwWorkOrders = WorkOrder::where('status', 'OTW_WORKSHOP')
+                ->get(['id', 'spk_number', 'customer_name', 'workshop_manifest_id', 'created_at', 'waktu'])
+                ->map(fn($o) => [
+                    'spk_number' => $o->spk_number,
+                    'customer' => $o->customer_name,
+                    'manifest_id' => $o->workshop_manifest_id,
+                    'time' => $o->waktu ?? $o->created_at?->format('d M Y, H:i'),
+                ])->toArray();
+
+            $result['inbound_manifests'] = [
+                'total_manifests' => count($manifestsList),
+                'total_spk_inbound' => $totalInboundSpk,
+                'status_breakdown' => [
+                    'received' => $receivedCount,
+                    'sent' => $sentCount,
+                ],
+                'stuck_in_transit_alerts' => [
+                    'count' => count($stuckInTransitList),
+                    'is_critical' => count($stuckInTransitList) > 0,
+                    'items' => $stuckInTransitList,
+                ],
+                'otw_workshop_spks' => [
+                    'count' => count($otwWorkOrders),
+                    'items' => $otwWorkOrders,
+                ],
+                'recent_manifests' => array_slice($manifestsList, 0, 8),
+            ];
+        }
+
+        // 2. Outbound Shipping & Kurir Resi
+        if ($mode === 'all' || $mode === 'outbound_shipping') {
+            $deliveryOrders = DB::table('work_orders')
+                ->leftJoin('shippings', 'work_orders.spk_number', '=', 'shippings.spk_number')
+                ->where(function($q) {
+                    $q->where('work_orders.pickup_method', 'like', '%Express%')
+                      ->orWhere('work_orders.pickup_method', 'delivery')
+                      ->orWhereIn('work_orders.shipping_type', ['Ekspedisi', 'Online'])
+                      ->orWhereNotNull('shippings.id')
+                      ->orWhere('work_orders.shipping_cost', '>', 0);
+                })
+                ->select(
+                    'work_orders.id',
+                    'work_orders.spk_number',
+                    'work_orders.customer_name',
+                    'work_orders.status',
+                    'work_orders.pickup_method',
+                    'work_orders.shipping_type',
+                    'work_orders.customer_tracking_number',
+                    'work_orders.customer_shipped_at',
+                    'work_orders.updated_at',
+                    'shippings.id as shipping_id',
+                    'shippings.ekspedisi',
+                    'shippings.resi_pengiriman',
+                    'shippings.is_verified',
+                    'shippings.tanggal_pengiriman'
+                )
+                ->get();
+
+            $pendingResiList = [];
+            $verifiedShippedList = [];
+
+            foreach ($deliveryOrders as $d) {
+                $trackingNo = !empty($d->customer_tracking_number) ? $d->customer_tracking_number : (!empty($d->resi_pengiriman) ? $d->resi_pengiriman : null);
+                $isVerified = ($d->is_verified == 1);
+                $courier = !empty($d->ekspedisi) ? $d->ekspedisi : (!empty($d->pickup_method) && $d->pickup_method !== 'delivery' ? $d->pickup_method : 'Ekspedisi');
+
+                $orderData = [
+                    'spk_number' => $d->spk_number,
+                    'customer_name' => $d->customer_name,
+                    'status' => $d->status,
+                    'courier' => $courier,
+                    'tracking_number' => $trackingNo,
+                    'is_verified' => $isVerified,
+                    'shipped_at' => $d->tanggal_pengiriman ?? $d->customer_shipped_at,
+                ];
+
+                if (in_array($d->status, ['SELESAI', 'DIANTAR']) && (empty($trackingNo) || !$isVerified)) {
+                    $pendingResiList[] = $orderData;
+                } elseif (!empty($trackingNo)) {
+                    $verifiedShippedList[] = $orderData;
+                }
+            }
+
+            $result['outbound_shipping'] = [
+                'total_delivery_orders' => $deliveryOrders->count(),
+                'pending_resi_or_pickup' => [
+                    'count' => count($pendingResiList),
+                    'is_alert' => count($pendingResiList) > 0,
+                    'items' => $pendingResiList,
+                ],
+                'verified_shipped' => [
+                    'count' => count($verifiedShippedList),
+                    'items' => array_slice($verifiedShippedList, 0, 5),
+                ],
+            ];
+        }
+
+        // 3. Financial Shipping Cost & Subsidy Audit
+        if ($mode === 'all' || $mode === 'shipping_cost_audit') {
+            $costOrders = DB::table('work_orders')
+                ->where(function($q) {
+                    $q->where('shipping_cost', '>', 0)
+                      ->orWhere('actual_shipping_cost', '>', 0);
+                })
+                ->select('id', 'spk_number', 'customer_name', 'status', 'shipping_type', 'pickup_method', 'shipping_cost', 'actual_shipping_cost', 'created_at')
+                ->get();
+
+            $totalCustomerPaid = 0;
+            $totalActualCost = 0;
+            $totalSubsidy = 0;
+            $totalSurplus = 0;
+            $subsidizedList = [];
+
+            foreach ($costOrders as $co) {
+                $cPaid = (float) ($co->shipping_cost ?? 0);
+                $aCost = (float) ($co->actual_shipping_cost ?? 0);
+
+                $totalCustomerPaid += $cPaid;
+                $totalActualCost += $aCost;
+
+                $diff = $cPaid - $aCost;
+                if ($diff < 0) {
+                    $subAmount = abs($diff);
+                    $totalSubsidy += $subAmount;
+                    $subsidizedList[] = [
+                        'spk_number' => $co->spk_number,
+                        'customer_name' => $co->customer_name,
+                        'customer_paid' => $cPaid,
+                        'actual_cost' => $aCost,
+                        'subsidy_amount' => $subAmount,
+                        'pickup_method' => $co->pickup_method ?? $co->shipping_type ?? 'Ekspedisi',
+                    ];
+                } elseif ($diff > 0 && $aCost > 0) {
+                    $totalSurplus += $diff;
+                }
+            }
+
+            $netMargin = $totalCustomerPaid - $totalActualCost;
+
+            $result['shipping_cost_audit'] = [
+                'total_orders_audited' => $costOrders->count(),
+                'total_customer_paid' => $totalCustomerPaid,
+                'total_actual_cost' => $totalActualCost,
+                'total_workshop_subsidy' => $totalSubsidy,
+                'total_surplus' => $totalSurplus,
+                'net_shipping_margin' => $netMargin,
+                'has_subsidy_loss' => $totalSubsidy > 0,
+                'subsidized_orders' => $subsidizedList,
+            ];
+        }
+
+        // 4. Internal Transfer Surat Jalan (Sortir -> Produksi -> QC)
+        if ($mode === 'all' || $mode === 'internal_transfer') {
+            $sjQuery = DB::table('surat_jalan')
+                ->leftJoin('users as d', 'surat_jalan.pengirim_id', '=', 'd.id')
+                ->leftJoin('users as r', 'surat_jalan.penerima_id', '=', 'r.id')
+                ->select(
+                    'surat_jalan.id',
+                    'surat_jalan.nomor_surat',
+                    'surat_jalan.jenis_serah_terima',
+                    'surat_jalan.status',
+                    'surat_jalan.catatan',
+                    'surat_jalan.dikirim_at',
+                    'surat_jalan.diterima_at',
+                    'd.name as pengirim_name',
+                    'r.name as penerima_name'
+                );
+
+            if (!empty($identifier) && (str_starts_with($identifier, 'SJ') || is_numeric($identifier))) {
+                $sjQuery->where(function($q) use ($identifier) {
+                    $q->where('surat_jalan.nomor_surat', 'like', "%{$identifier}%")
+                      ->orWhere('surat_jalan.id', $identifier);
+                });
+            }
+
+            $suratJalans = $sjQuery->latest('surat_jalan.created_at')->take(15)->get();
+
+            $sjList = [];
+            $abnormalitiesList = [];
+            $totalItemsChecked = 0;
+
+            foreach ($suratJalans as $sj) {
+                $items = DB::table('surat_jalan_items')
+                    ->join('work_orders', 'surat_jalan_items.work_order_id', '=', 'work_orders.id')
+                    ->where('surat_jalan_items.surat_jalan_id', $sj->id)
+                    ->select(
+                        'surat_jalan_items.id',
+                        'surat_jalan_items.kondisi_serah_terima',
+                        'work_orders.spk_number',
+                        'work_orders.customer_name',
+                        'work_orders.shoe_brand'
+                    )
+                    ->get();
+
+                $totalItemsChecked += $items->count();
+
+                $abnormalInThisSj = [];
+                foreach ($items as $it) {
+                    $cond = trim($it->kondisi_serah_terima ?? '');
+                    if (!empty($cond) && !str_contains(strtolower($cond), 'baik') && !str_contains(strtolower($cond), 'sesuai')) {
+                        $abnormalItem = [
+                            'nomor_surat' => $sj->nomor_surat,
+                            'jenis' => $sj->jenis_serah_terima,
+                            'spk_number' => $it->spk_number,
+                            'customer' => $it->customer_name,
+                            'shoe' => $it->shoe_brand ?? 'Sepatu',
+                            'kondisi' => $cond,
+                        ];
+                        $abnormalInThisSj[] = $abnormalItem;
+                        $abnormalitiesList[] = $abnormalItem;
+                    }
+                }
+
+                $sjList[] = [
+                    'nomor_surat' => $sj->nomor_surat,
+                    'jenis_serah_terima' => $sj->jenis_serah_terima,
+                    'status' => $sj->status,
+                    'pengirim' => $sj->pengirim_name ?? '-',
+                    'penerima' => $sj->penerima_name ?? '-',
+                    'dikirim_at' => $sj->dikirim_at ? Carbon::parse($sj->dikirim_at)->format('d M Y, H:i') : null,
+                    'diterima_at' => $sj->diterima_at ? Carbon::parse($sj->diterima_at)->format('d M Y, H:i') : null,
+                    'total_items' => $items->count(),
+                    'abnormal_count' => count($abnormalInThisSj),
+                ];
+            }
+
+            $result['internal_transfer'] = [
+                'total_surat_jalan' => count($sjList),
+                'total_items_inspected' => $totalItemsChecked,
+                'abnormal_conditions_detected' => [
+                    'count' => count($abnormalitiesList),
+                    'has_abnormalities' => count($abnormalitiesList) > 0,
+                    'items' => $abnormalitiesList,
+                ],
+                'recent_surat_jalan' => array_slice($sjList, 0, 8),
+            ];
+        }
+
+        return $result;
+    }
+
     // ========================================
     // Helpers
     // ========================================
@@ -2036,7 +3116,9 @@ class GeminiAiService
             'status' => $order->status ? str_replace('_', ' ', $order->status->value) : '-',
             'status_raw' => $order->status?->value ?? '',
             'current_location' => $order->current_location ?? 'Workshop',
-            'rack' => $order->storageAssignments->first()?->rack?->name ?? null,
+            'rack' => $order->storageAssignments()->where('status', 'stored')->latest()->first()?->rack_code 
+                ?? $order->storageAssignments()->latest()->first()?->rack_code 
+                ?? null,
             'estimation_date' => $order->estimation_date?->format('d M Y') ?? null,
             'photo_url' => $photoUrl,
             'url' => route('admin.orders.show', $order->id),

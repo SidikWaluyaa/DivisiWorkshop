@@ -17,10 +17,130 @@ class AiCopilotDrawer extends Component
     public ?string $contextSpkNumber = null;
     public ?string $contextCustomerName = null;
     public bool $useLocalEngine = false;
+    public bool $isKpiPage = false;
+    public bool $isWorkshopPage = false;
+    public string $selectedModel = 'gemini-3.5-flash-lite';
+    public bool $showModelDropdown = false;
 
     protected $listeners = [
         'openAiCopilot' => 'handleOpenAiCopilot',
     ];
+
+    public function getModelOptionsProperty(): array
+    {
+        return [
+            'gemini-3.5-flash-lite' => [
+                'name' => 'Gemini 3.5 Flash Lite',
+                'short_name' => '🌐 3.5 Flash Lite',
+                'category' => '🚀 Kuota Lega (Rekomendasi)',
+                'quota' => '500 RPD • 15 RPM',
+                'badge' => 'Prioritas',
+                'badge_color' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                'desc' => 'Paling stabil, responsif, dan kuota harian besar (500 RPD).',
+            ],
+            'gemini-3.1-flash-lite' => [
+                'name' => 'Gemini 3.1 Flash Lite',
+                'short_name' => '🌐 3.1 Flash Lite',
+                'category' => '🚀 Kuota Lega (Rekomendasi)',
+                'quota' => '500 RPD • 15 RPM',
+                'badge' => 'Cepat',
+                'badge_color' => 'bg-teal-100 text-teal-800 border-teal-200',
+                'desc' => 'Model lite alternatif dengan kecepatan tinggi dan kuota 500 RPD.',
+            ],
+            'gemini-3.5-flash' => [
+                'name' => 'Gemini 3.5 Flash',
+                'short_name' => '🧠 3.5 Flash',
+                'category' => '🧠 Akurasi Tinggi & Analitik',
+                'quota' => '20 RPD • 5 RPM',
+                'badge' => 'Smart',
+                'badge_color' => 'bg-blue-100 text-blue-800 border-blue-200',
+                'desc' => 'Kapasitas penalaran tinggi untuk analitik kompleks.',
+            ],
+            'gemini-3.8-flash' => [
+                'name' => 'Gemini 3.8 Flash',
+                'short_name' => '🧠 3.8 Flash',
+                'category' => '🧠 Akurasi Tinggi & Analitik',
+                'quota' => '20 RPD • 5 RPM',
+                'badge' => 'Terbaru',
+                'badge_color' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                'desc' => 'Versi flash termutakhir dengan analisis penalaran mendalam.',
+            ],
+            'gemini-3.6-flash' => [
+                'name' => 'Gemini 3.6 Flash',
+                'short_name' => '🧠 3.6 Flash',
+                'category' => '🧠 Akurasi Tinggi & Analitik',
+                'quota' => '20 RPD • 5 RPM',
+                'badge' => 'Alternatif',
+                'badge_color' => 'bg-slate-100 text-slate-800 border-slate-200',
+                'desc' => 'Model flash generasi 3.6 untuk cadangan cerdas.',
+            ],
+            'gemini-3.7-flash' => [
+                'name' => 'Gemini 3.7 Flash',
+                'short_name' => '🧠 3.7 Flash',
+                'category' => '🧠 Akurasi Tinggi & Analitik',
+                'quota' => '20 RPD • 5 RPM',
+                'badge' => 'Alternatif',
+                'badge_color' => 'bg-slate-100 text-slate-800 border-slate-200',
+                'desc' => 'Model flash generasi 3.7 untuk cadangan cerdas.',
+            ],
+            'groq-qwen' => [
+                'name' => '⚡ Groq AI (Qwen 27B)',
+                'short_name' => '⚡ Groq Qwen',
+                'category' => '⚡ Cadangan Eksternal',
+                'quota' => 'Ultra Fast • Token Rolling',
+                'badge' => 'Ultra Cepat',
+                'badge_color' => 'bg-amber-100 text-amber-800 border-amber-200',
+                'desc' => 'Inference ultra-cepat (~1s) dari Groq Cloud untuk beban darurat.',
+            ],
+        ];
+    }
+
+    public function getActiveModelLabelProperty(): string
+    {
+        if ($this->useLocalEngine) {
+            return '⚡ Groq Qwen';
+        }
+        $options = $this->modelOptions;
+        return $options[$this->selectedModel]['short_name'] ?? '🌐 Gemini AI';
+    }
+
+    public function toggleModelDropdown()
+    {
+        $this->showModelDropdown = !$this->showModelDropdown;
+    }
+
+    public function closeModelDropdown()
+    {
+        $this->showModelDropdown = false;
+    }
+
+    public function selectModel(string $modelKey)
+    {
+        $this->showModelDropdown = false;
+        $options = $this->modelOptions;
+
+        if ($modelKey === 'groq-qwen') {
+            $this->useLocalEngine = true;
+            $this->selectedModel = 'groq-qwen';
+            $label = '⚡ Groq AI (Qwen 27B)';
+        } else {
+            $this->useLocalEngine = false;
+            $this->selectedModel = $modelKey;
+            $label = $options[$modelKey]['name'] ?? $modelKey;
+        }
+
+        $this->messages[] = [
+            'role' => 'model',
+            'content' => "🤖 Model AI Copilot berhasil dialihkan ke **{$label}**.\n\nSistem siap memproses pertanyaan Anda menggunakan model ini. Jika model ini sewaktu-waktu mencapai kuota limit 429, sistem akan secara otomatis melakukan failover ke model cadangan lainnya.",
+            'cards' => [],
+            'timeline' => null,
+            'cover_photo' => null,
+            'photos' => null,
+            'time' => now()->format('H:i'),
+        ];
+
+        $this->dispatch('scroll-ai-chat-bottom');
+    }
 
     public function toggleEngineMode(?bool $forceMode = null)
     {
@@ -30,13 +150,21 @@ class AiCopilotDrawer extends Component
             $this->useLocalEngine = !$this->useLocalEngine;
         }
 
+        if ($this->useLocalEngine) {
+            $this->selectedModel = 'groq-qwen';
+        } else {
+            if ($this->selectedModel === 'groq-qwen') {
+                $this->selectedModel = 'gemini-3.5-flash-lite';
+            }
+        }
+
         $modeName = $this->useLocalEngine ? 'Mode Cadangan (⚡ Groq AI)' : 'Cloud AI (🌐 Google Gemini)';
         $icon = $this->useLocalEngine ? '⚡' : '🌐';
 
         $this->messages[] = [
             'role' => 'model',
             'content' => "{$icon} Beralih ke **{$modeName}**.\n\n" . ($this->useLocalEngine 
-                ? "Sekarang Anda terhubung ke **Groq Cloud AI** dengan model Qwen 27B & Function Calling terintegrasi. Anda mendapatkan respon super cepat (~1-2 detik) dengan akses database lengkap yang setara dengan Gemini untuk melacak SPK, timeline, foto, rak, dan kendala operasional." 
+                ? "Sekarang Anda terhubung ke **Groq Cloud AI** dengan model Qwen 27B & Function Calling terintegrasi. Anda mendapatkan respon super cepat (~1-2 detik) dengan akses database lengkap yang setara dengan Gemini untuk melacak SPK, timeline, foto, rak, kendala operasional, dan analitik KPI Finance." 
                 : "Sekarang Anda kembali menggunakan komputasi kecerdasan **Google Gemini Cloud AI**."),
             'cards' => [],
             'timeline' => null,
@@ -68,6 +196,15 @@ class AiCopilotDrawer extends Component
 
     public function mount(?int $orderId = null)
     {
+        // Auto-detect KPI page context
+        $this->isKpiPage = request()->is('admin/kpi*') || request()->is('kpi*');
+
+        // Auto-detect Workshop page context
+        $this->isWorkshopPage = request()->is('admin/production*') || request()->is('admin/qc*') 
+            || request()->is('admin/preparation*') || request()->is('admin/sortir*') 
+            || request()->is('workshop*') || request()->is('production*') 
+            || request()->is('preparation*') || request()->is('qc*') || request()->is('sortir*');
+
         // Auto-detect context from route parameter if available
         $routeId = request()->route('id') ?? request()->route('order') ?? $orderId;
         if ($routeId && is_numeric($routeId)) {
@@ -79,10 +216,14 @@ class AiCopilotDrawer extends Component
 
     public function initWelcomeMessage()
     {
-        $welcomeText = "Halo! Saya **Workshop AI Copilot** 🤖🛠️\n\nAda yang bisa saya bantu hari ini? Saya bisa membantu Anda melacak SPK, mencari lokasi rak sepatu, mengecek rincian biaya, atau merangkum timeline riwayat pengerjaan teknisi.";
+        $welcomeText = "Halo! Saya **Workshop AI Copilot** 🤖🛠️\n\nAda yang bisa saya bantu hari ini? Saya bisa membantu Anda melacak SPK, memantau antrean workshop & teknisi, menganalisis data keuangan & KPI Finance, mencari lokasi rak sepatu, atau mendeteksi SPK overdue.";
         
         if ($this->contextSpkNumber) {
             $welcomeText .= "\n\n💡 *Saya mendeteksi Anda sedang membuka SPK **{$this->contextSpkNumber}** ({$this->contextCustomerName}). Anda bisa klik tombol pintas di bawah untuk analisis instan!*";
+        } elseif ($this->isWorkshopPage) {
+            $welcomeText .= "\n\n⚙️ *Saya mendeteksi Anda sedang berada di area **Produksi Workshop**. Anda bisa menanyakan SPK overdue, antrean stasiun live, beban kerja teknisi, maupun deteksi bottleneck pengerjaan secara instan!*";
+        } elseif ($this->isKpiPage) {
+            $welcomeText .= "\n\n📊 *Saya mendeteksi Anda sedang berada di halaman **Dashboard KPI**. Anda bisa menanyakan ringkasan **KPI Workshop & Bottleneck**, **KPI Gudang & Logistik**, maupun **KPI Finance** secara instan!*";
         }
 
         $this->messages = [
@@ -246,7 +387,7 @@ class AiCopilotDrawer extends Component
             } else {
                 /** @var GeminiAiService $aiService */
                 $aiService = app(GeminiAiService::class);
-                $response = $aiService->chat($input, $historyForService, $this->contextOrderId);
+                $response = $aiService->chat($input, $historyForService, $this->contextOrderId, $this->selectedModel);
             }
 
             // Suppress repetitive cards of currently focused SPK to keep room chat clean
@@ -255,9 +396,21 @@ class AiCopilotDrawer extends Component
                 $cards = array_values(array_filter($cards, fn($c) => ($c['id'] ?? null) !== $this->contextOrderId));
             }
 
+            $responseText = $response['text'] ?? 'Maaf, saya tidak dapat merespons permintaan tersebut.';
+            if (!empty($response['was_fallback'])) {
+                $requestedName = $this->modelOptions[$response['requested_model']]['name'] ?? ($response['requested_model'] ?? 'sebelumnya');
+                $usedName = $this->modelOptions[$response['used_model']]['name'] ?? ($response['used_model'] ?? 'cadangan');
+                $responseText .= "\n\n> ⚠️ *Info Failover: Model **{$requestedName}** sedang mencapai batas limit (429). Sistem secara otomatis mengalihkan analisis ke **{$usedName}** agar respon tetap tersaji lancar.*";
+                
+                // Auto-sync selected model to current active fallback
+                if (isset($this->modelOptions[$response['used_model']])) {
+                    $this->selectedModel = $response['used_model'];
+                }
+            }
+
             $this->messages[] = [
                 'role' => 'model',
-                'content' => $response['text'] ?? 'Maaf, saya tidak dapat merespons permintaan tersebut.',
+                'content' => $responseText,
                 'cards' => $cards,
                 'timeline' => $response['timeline'] ?? null,
                 'cover_photo' => $response['cover_photo'] ?? null,

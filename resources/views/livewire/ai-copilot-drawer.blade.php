@@ -79,22 +79,242 @@
 
                 {{-- Right: Mode Switcher & Actions --}}
                 <div class="flex items-center gap-1.5 flex-shrink-0">
-                    {{-- Toggle Switch: Cloud Gemini vs Cadangan Groq AI --}}
-                    <button 
-                        type="button" 
-                        wire:click="toggleEngineMode"
-                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-black border transition-all cursor-pointer shadow-2xs whitespace-nowrap active:scale-95 {{ $useLocalEngine ? 'bg-amber-50 text-amber-950 border-amber-300 hover:bg-amber-100' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/90' }}"
-                        title="{{ $useLocalEngine ? 'Mode Cadangan ⚡ Groq AI Aktif (Klik untuk beralih ke Cloud Gemini)' : 'Cloud AI Gemini Aktif (Klik untuk beralih ke Mode Cadangan ⚡ Groq AI)' }}"
-                    >
-                        @if($useLocalEngine)
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></span>
-                            <span>⚡ Groq AI</span>
-                            <span class="text-[9px] bg-amber-200/90 text-amber-950 px-1.5 py-0.2 rounded-md font-black">ON</span>
-                        @else
-                            <span class="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0"></span>
-                            <span class="text-slate-700">🌐 Gemini AI</span>
-                        @endif
-                    </button>
+                    {{-- Dynamic Model Selector Dropdown (Gemini Flash Lite, Flash, Groq) --}}
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                        {{-- Trigger Badge Button --}}
+                        <button 
+                            type="button" 
+                            @click="open = !open"
+                            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-black border transition-all cursor-pointer shadow-2xs whitespace-nowrap active:scale-95 {{ $useLocalEngine ? 'bg-amber-50 text-amber-950 border-amber-300 hover:bg-amber-100' : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/90' }}"
+                            title="Pilih Model AI (Klik untuk ganti model)"
+                        >
+                            @if($useLocalEngine)
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></span>
+                                <span class="text-amber-950 font-black">⚡ Groq Qwen</span>
+                            @else
+                                <span class="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0"></span>
+                                <span class="text-slate-800 font-bold">{{ $this->activeModelLabel }}</span>
+                            @endif
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        {{-- Dropdown Popover Menu (UI/UX Pro Max: Floating Glass Card with Rich Card Info) --}}
+                        <div 
+                            x-show="open" 
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                            x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                            class="absolute right-[-4.5rem] sm:right-0 top-full mt-2 w-[320px] sm:w-[350px] !max-w-[calc(100vw-1.5rem)] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/90 z-[1001] text-left overflow-hidden animate-in fade-in"
+                            style="display: none; width: 340px; max-width: min(350px, calc(100vw - 1.5rem));"
+                        >
+                            {{-- Dropdown Header with Status & Protection Badge --}}
+                            <div class="px-3.5 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <div class="w-5 h-5 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-[11px] font-black tracking-tight text-slate-800 uppercase font-poppins truncate">Pilih Engine Model</span>
+                                </div>
+                                <div class="flex items-center gap-1 text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60 flex-shrink-0">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>Fallback Aktif</span>
+                                </div>
+                            </div>
+
+                            {{-- Scrollable Models List --}}
+                            <div class="p-2 space-y-2.5 max-h-[60vh] sm:max-h-[440px] overflow-y-auto overscroll-contain">
+                                {{-- Group 1: Kuota Lega (500 RPD / 15 RPM) --}}
+                                <div>
+                                    <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-800 flex items-center justify-between">
+                                        <span>🚀 Rekomendasi Kuota Lega</span>
+                                        <span class="text-[9px] bg-emerald-100 text-emerald-900 px-1.5 py-0.2 rounded-md font-bold">500 RPD</span>
+                                    </div>
+                                    
+                                    <div class="space-y-1.5 mt-1">
+                                        {{-- Gemini 3.5 Flash Lite --}}
+                                        <button 
+                                            type="button" 
+                                            wire:click="selectModel('gemini-3.5-flash-lite')" 
+                                            @click="open = false"
+                                            class="w-full text-left p-2.5 rounded-xl text-xs transition-all flex items-start justify-between gap-2.5 border active:scale-[0.98] {{ (!$useLocalEngine && $selectedModel === 'gemini-3.5-flash-lite') ? 'bg-teal-50/70 border-teal-300 ring-2 ring-teal-500/20 shadow-2xs' : 'bg-white hover:bg-slate-50 border-slate-200/70 hover:border-slate-300' }}"
+                                        >
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="font-bold text-slate-900 leading-tight">Gemini 3.5 Flash Lite</span>
+                                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 font-black">Utama</span>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 font-medium">
+                                                    <span class="bg-slate-100 px-1.5 py-0.2 rounded text-[9px] text-slate-700 font-bold">500 RPD • 15 RPM</span>
+                                                    <span class="text-slate-400 truncate">Paling stabil harian</span>
+                                                </div>
+                                            </div>
+                                            @if(!$useLocalEngine && $selectedModel === 'gemini-3.5-flash-lite')
+                                                <div class="w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                                </div>
+                                            @endif
+                                        </button>
+
+                                        {{-- Gemini 3.1 Flash Lite --}}
+                                        <button 
+                                            type="button" 
+                                            wire:click="selectModel('gemini-3.1-flash-lite')" 
+                                            @click="open = false"
+                                            class="w-full text-left p-2.5 rounded-xl text-xs transition-all flex items-start justify-between gap-2.5 border active:scale-[0.98] {{ (!$useLocalEngine && $selectedModel === 'gemini-3.1-flash-lite') ? 'bg-teal-50/70 border-teal-300 ring-2 ring-teal-500/20 shadow-2xs' : 'bg-white hover:bg-slate-50 border-slate-200/70 hover:border-slate-300' }}"
+                                        >
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="font-bold text-slate-900 leading-tight">Gemini 3.1 Flash Lite</span>
+                                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-teal-100 text-teal-800 font-black">Cepat</span>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 font-medium">
+                                                    <span class="bg-slate-100 px-1.5 py-0.2 rounded text-[9px] text-slate-700 font-bold">500 RPD • 15 RPM</span>
+                                                    <span class="text-slate-400 truncate">Alternatif kuota besar</span>
+                                                </div>
+                                            </div>
+                                            @if(!$useLocalEngine && $selectedModel === 'gemini-3.1-flash-lite')
+                                                <div class="w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                                </div>
+                                            @endif
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Group 2: Model Akurasi Tinggi (20 RPD / 5 RPM) --}}
+                                <div class="pt-1 border-t border-slate-100">
+                                    <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center justify-between">
+                                        <span>🧠 Akurasi Tinggi & Analitik</span>
+                                        <span class="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded-md font-bold">20 RPD</span>
+                                    </div>
+
+                                    <div class="space-y-1.5 mt-1">
+                                        {{-- Gemini 3.5 Flash --}}
+                                        <button 
+                                            type="button" 
+                                            wire:click="selectModel('gemini-3.5-flash')" 
+                                            @click="open = false"
+                                            class="w-full text-left p-2.5 rounded-xl text-xs transition-all flex items-start justify-between gap-2.5 border active:scale-[0.98] {{ (!$useLocalEngine && $selectedModel === 'gemini-3.5-flash') ? 'bg-teal-50/70 border-teal-300 ring-2 ring-teal-500/20 shadow-2xs' : 'bg-white hover:bg-slate-50 border-slate-200/70 hover:border-slate-300' }}"
+                                        >
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="font-bold text-slate-900 leading-tight">Gemini 3.5 Flash</span>
+                                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-800 font-bold">Analitik</span>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 font-medium">
+                                                    <span class="bg-slate-100 px-1.5 py-0.2 rounded text-[9px] text-slate-700 font-bold">20 RPD • 5 RPM</span>
+                                                    <span class="text-slate-400 truncate">Penalaran cerdas & audit</span>
+                                                </div>
+                                            </div>
+                                            @if(!$useLocalEngine && $selectedModel === 'gemini-3.5-flash')
+                                                <div class="w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                                </div>
+                                            @endif
+                                        </button>
+
+                                        {{-- Gemini 3.8 Flash --}}
+                                        <button 
+                                            type="button" 
+                                            wire:click="selectModel('gemini-3.8-flash')" 
+                                            @click="open = false"
+                                            class="w-full text-left p-2.5 rounded-xl text-xs transition-all flex items-start justify-between gap-2.5 border active:scale-[0.98] {{ (!$useLocalEngine && $selectedModel === 'gemini-3.8-flash') ? 'bg-teal-50/70 border-teal-300 ring-2 ring-teal-500/20 shadow-2xs' : 'bg-white hover:bg-slate-50 border-slate-200/70 hover:border-slate-300' }}"
+                                        >
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="font-bold text-slate-900 leading-tight">Gemini 3.8 Flash</span>
+                                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-100 text-indigo-800 font-bold">New</span>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 font-medium">
+                                                    <span class="bg-slate-100 px-1.5 py-0.2 rounded text-[9px] text-slate-700 font-bold">20 RPD • 5 RPM</span>
+                                                    <span class="text-slate-400 truncate">Versi Flash mutakhir</span>
+                                                </div>
+                                            </div>
+                                            @if(!$useLocalEngine && $selectedModel === 'gemini-3.8-flash')
+                                                <div class="w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                                </div>
+                                            @endif
+                                        </button>
+
+                                        {{-- Gemini 3.6 Flash & 3.7 Flash Sub-Grid --}}
+                                        <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+                                            <button 
+                                                type="button" 
+                                                wire:click="selectModel('gemini-3.6-flash')" 
+                                                @click="open = false"
+                                                class="text-left px-2.5 py-2 rounded-xl text-[11px] font-medium transition-all flex items-center justify-between border active:scale-[0.98] {{ (!$useLocalEngine && $selectedModel === 'gemini-3.6-flash') ? 'bg-teal-50/70 border-teal-300 text-teal-900 font-bold' : 'bg-white hover:bg-slate-50 border-slate-200/70 text-slate-700' }}"
+                                            >
+                                                <span>3.6 Flash</span>
+                                                @if(!$useLocalEngine && $selectedModel === 'gemini-3.6-flash')
+                                                    <span class="text-teal-600 font-black text-xs">✓</span>
+                                                @endif
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                wire:click="selectModel('gemini-3.7-flash')" 
+                                                @click="open = false"
+                                                class="text-left px-2.5 py-2 rounded-xl text-[11px] font-medium transition-all flex items-center justify-between border active:scale-[0.98] {{ (!$useLocalEngine && $selectedModel === 'gemini-3.7-flash') ? 'bg-teal-50/70 border-teal-300 text-teal-900 font-bold' : 'bg-white hover:bg-slate-50 border-slate-200/70 text-slate-700' }}"
+                                            >
+                                                <span>3.7 Flash</span>
+                                                @if(!$useLocalEngine && $selectedModel === 'gemini-3.7-flash')
+                                                    <span class="text-teal-600 font-black text-xs">✓</span>
+                                                @endif
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Group 3: Cadangan Groq AI --}}
+                                <div class="pt-1 border-t border-slate-100">
+                                    <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-amber-800 flex items-center justify-between">
+                                        <span>⚡ Cadangan Darurat (Groq)</span>
+                                        <span class="text-[9px] bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-md font-bold">Bypass Limit</span>
+                                    </div>
+
+                                    <div class="mt-1">
+                                        <button 
+                                            type="button" 
+                                            wire:click="selectModel('groq-qwen')" 
+                                            @click="open = false"
+                                            class="w-full text-left p-2.5 rounded-xl text-xs transition-all flex items-start justify-between gap-2.5 border active:scale-[0.98] {{ $useLocalEngine ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-500/20 shadow-2xs' : 'bg-white hover:bg-slate-50 border-slate-200/70 hover:border-slate-300' }}"
+                                        >
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="font-bold text-amber-950 leading-tight">⚡ Groq AI (Qwen 27B)</span>
+                                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-200 text-amber-950 font-black">Ultra Cepat</span>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 font-medium">
+                                                    <span class="bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded text-[9px] font-bold">~1 Detik</span>
+                                                    <span class="text-slate-400 truncate">Solusi saat Gemini 429</span>
+                                                </div>
+                                            </div>
+                                            @if($useLocalEngine)
+                                                <div class="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                                </div>
+                                            @endif
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Dropdown Footer Info --}}
+                            <div class="px-3.5 py-2 bg-slate-50/90 border-t border-slate-100 flex items-center gap-1.5 text-[10px] text-slate-500 leading-tight">
+                                <svg class="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span class="truncate">Otomatis beralih ke cadangan jika kuota limit (429).</span>
+                            </div>
+                        </div>
+                    </div>
 
                     {{-- Reset Chat --}}
                     <button 
@@ -667,7 +887,175 @@
                         <span>👟</span>
                         <span>Layanan Jasa</span>
                     </button>
+                @elseif($isWorkshopPage)
+                    {{-- Workshop & Production Live Floor Pills --}}
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Ada SPK apa saja yang telat atau terancam telat (overdue SLA) di workshop hari ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-900 text-xs font-bold transition-all border border-rose-300 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>🚨</span>
+                        <span>SPK Overdue & Deadline</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Siapa saja teknisi yang bebannya paling tinggi atau sedang overload saat ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 text-xs font-bold transition-all border border-amber-300 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>👥</span>
+                        <span>Beban Kerja Teknisi</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Berapa banyak SPK yang sedang antre di setiap stasiun workshop (Prep, Sortir, Produksi, QC) sekarang?')"
+                        class="px-3.5 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold transition-all border border-teal-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>⏳</span>
+                        <span>Antrean Stasiun Live</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Bagaimana performa throughput stasiun workshop bulan ini dan di mana bottleneck-nya?')"
+                        class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-300 text-slate-700 text-xs font-semibold transition-all border border-slate-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>🏭</span>
+                        <span>Analisis Bottleneck KPI</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Berapa banyak SPK Fast Track yang aktif saat ini dan di tahap mana saja posisinya?')"
+                        class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 hover:border-amber-300 text-xs font-bold transition-all border border-amber-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>⚡</span>
+                        <span>SPK Fast Track Aktif</span>
+                    </button>
+                @elseif($isKpiPage)
+                    {{-- KPI Workshop Quick Pills --}}
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Bagaimana performa throughput stasiun workshop bulan ini dan di mana bottleneck-nya?')"
+                        class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-950 text-xs font-bold transition-all border border-indigo-300 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>🏭</span>
+                        <span>KPI Workshop & Throughput</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Ada SPK apa saja yang telat atau terancam telat (overdue SLA) di workshop hari ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-900 text-xs font-bold transition-all border border-rose-300 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>🚨</span>
+                        <span>SPK Overdue Workshop</span>
+                    </button>
+
+                    {{-- KPI Gudang Quick Pills --}}
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Berapa ringkasan KPI Gudang dan pergerakan logistik sepatu bulan ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 text-xs font-bold transition-all border border-amber-300 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>📦</span>
+                        <span>KPI Gudang Bulan Ini</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Berapa jumlah sepatu masuk fisik di gudang dan sepatu keluar yang sudah diambil pelanggan?')"
+                        class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-amber-50 hover:text-amber-900 hover:border-amber-300 text-slate-700 text-xs font-semibold transition-all border border-slate-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>📥</span>
+                        <span>Sepatu Masuk vs Keluar</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Bagaimana status rak penyimpanan sepatu saat ini? Apakah ada barang yang tertahan lebih dari 7 hari?')"
+                        class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-amber-50 hover:text-amber-900 hover:border-amber-300 text-slate-700 text-xs font-semibold transition-all border border-slate-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>🏷️</span>
+                        <span>Status Rak & Overdue</span>
+                    </button>
+
+                    {{-- KPI Finance Quick Pills --}}
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Berapa ringkasan KPI Finance dan kas masuk bulan ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold transition-all border border-teal-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>📊</span>
+                        <span>KPI Finance Bulan Ini</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Berapa kas masuk tervalidasi dan sisa piutang aktif saat ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-300 text-slate-700 text-xs font-semibold transition-all border border-slate-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>💰</span>
+                        <span>Kas Masuk & Piutang</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Bagaimana rekap transaksi SPK yang dibatalkan dan total dana refund-nya?')"
+                        class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-800 hover:border-rose-300 text-slate-700 text-xs font-semibold transition-all border border-slate-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>↩️</span>
+                        <span>SPK Batal & Refund</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Berapa rasio penagihan (collection rate) dan rincian status invoice saat ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-300 text-slate-700 text-xs font-semibold transition-all border border-slate-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>🎯</span>
+                        <span>Rasio Penagihan</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Audit apakah ada sepatu yang statusnya sudah Selesai atau Diantar tapi pembayarannya belum lunas? Berapa total risikonya dan rekomendasinya?')"
+                        class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 hover:border-amber-300 text-xs font-bold transition-all border border-amber-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>🚨</span>
+                        <span>Audit Selesai Belum Lunas</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Berapa total kebocoran biaya dan kerugian workshop bulan ini dari pembatalan, refund, dan revisi teknisi?')"
+                        class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-900 hover:border-rose-300 text-xs font-bold transition-all border border-rose-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>📉</span>
+                        <span>Cek Kerugian Workshop</span>
+                    </button>
                 @else
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Ada SPK apa saja yang telat atau terancam telat (overdue SLA) di workshop hari ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-900 text-xs font-bold transition-all border border-rose-300 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>🚨</span>
+                        <span>SPK Overdue</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Siapa saja teknisi yang bebannya paling tinggi atau sedang overload saat ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 text-xs font-bold transition-all border border-amber-300 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>👥</span>
+                        <span>Beban Teknisi</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Berapa ringkasan KPI Gudang dan pergerakan logistik sepatu bulan ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 text-xs font-bold transition-all border border-amber-300 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>📦</span>
+                        <span>KPI Gudang</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="sendQuickPrompt('Berapa ringkasan KPI Finance dan kas masuk bulan ini?')"
+                        class="px-3.5 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold transition-all border border-teal-200/90 shadow-2xs active:scale-95 flex items-center gap-1.5"
+                    >
+                        <span>📊</span>
+                        <span>KPI Finance</span>
+                    </button>
                     <button 
                         type="button" 
                         wire:click="sendQuickPrompt('Bagaimana cara melacak pesanan via Internal Tracking?')"

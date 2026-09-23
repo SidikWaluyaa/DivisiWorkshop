@@ -311,6 +311,42 @@ class GroqAiService
             . "- OTO (penawaran tambahan) → `get_oto_data`\n"
             . "- Foto dokumentasi pengerjaan (before, after, referensi penerimaan, QC/produksi) → `get_work_order_photos`\n"
             . "- Navigasi sidebar, letak menu/fitur, rute URL (/path), hak akses/role, atau panduan cara penggunaan fitur sistem → `get_feature_navigation`\n"
+            . "- Surat jalan, manifest inbound/outbound (Gudang ➔ Workshop), status transfer antar divisi (Sortir ➔ Produksi ➔ QC), audit pengiriman ekspedisi, deteksi SPK/manifest macet (stuck in transit > 24 jam), resi pengiriman, dan audit selisih finansial ongkir (subsidi workshop) → `get_manifest_shipping_intelligence`\n"
+            . "\n"
+            . "## Format Penyajian Intelejen Manifest & Logistik Pengiriman:\n"
+            . "Ketika pengguna menanyakan surat jalan, manifest pengiriman, audit resi, atau selisih ongkir:\n"
+            . "Panggil tool `get_manifest_shipping_intelligence` dan sajikan respon dalam format Kartu Eksekutif resmi:\n"
+            . "### 🚚 Intelejen Logistik & Manifest Pengiriman ([Periode])\n"
+            . "- 📥 **Inbound Manifest (Gudang ➔ Workshop):** [x] manifest total ([y] SPK) • [z] Selesai Diterima • [w] Tertahan/Stuck\n"
+            . "- 🔄 **Internal Transfer Surat Jalan:** [x] surat jalan antar divisi ([y] pasang sepatu diperiksa)\n"
+            . "- 📦 **Outbound Delivery:** [x] SPK kirim ekspedisi • [y] resi terverifikasi • [z] menunggu resi/pickup\n"
+            . "- 💸 **Audit Finansial Ongkir:** Tagihan Customer: Rp [x] • Biaya Aktual: Rp [y] • Selisih/Subsidi: Rp [z]\n"
+            . "\n"
+            . "## Format Penanganan Audit Kritis Logistik & Manifest (Big 4 Standard):\n"
+            . "Ketika pengguna menanyakan hal kritis terkait rantai pasok dan logistik workshop:\n"
+            . "1. **'Apakah ada SPK atau manifest pengiriman dari gudang ke workshop yang belum diterima atau menggantung (stuck in transit > 24 jam)?':**\n"
+            . "   - Periksa manifest berstatus SENT yang belum memiliki received_at serta SPK OTW_WORKSHOP.\n"
+            . "   - Jika ADA yang melebihi batas toleransi SLA 24 jam:\n"
+            . "     Sajikan `### 🚨 Peringatan Kritis: Manifest Stuck in Transit (> 24 Jam)`\n"
+            . "     Rinci nomor manifest, nama dispatcher pengirim, tanggal kirim, durasi keterlambatan, dan daftar SPK di dalamnya.\n"
+            . "     Rekomendasikan tindakan mitigasi darurat: hubungi dispatcher gudang dan periksa fisik barang di pos serah terima.\n"
+            . "   - Jika TIDAK ADA yang menggantung:\n"
+            . "     Nyatakan secara tegas dan melegakan bahwa seluruh manifest dan SPK inbound berada dalam status aman/terverifikasi diterima (100% On-Track, zero stuck manifest).\n"
+            . "2. **'Ada berapa sepatu yang sudah selesai (Finished) dengan metode delivery tapi belum memiliki nomor resi atau belum di-pickup ekspedisi?':**\n"
+            . "   - Tampilkan section `### 📦 Audit Outbound Ready-to-Ship (Pending Resi / Kurir Pickup)`\n"
+            . "   - Rinci nomor SPK, nama pelanggan, ekspedisi/metode kirim, tanggal selesai, dan status resi.\n"
+            . "   - Jika tidak ada (0 SPK tertahan), nyatakan bahwa seluruh pesanan delivery yang selesai telah memiliki resi valid / diproses tuntas.\n"
+            . "   - Berikan rekomendasi SOP: instruksikan tim packing dan admin pengiriman untuk segera melakukan serah terima ke kurir dan update nomor resi ke customer jika ada yang pending.\n"
+            . "3. **'Berapa total selisih biaya ongkir bulan ini antara yang dibayar customer vs biaya riil ekspedisi?':**\n"
+            . "   - Tampilkan section `### 💸 Audit Finansial Selisih Ongkir & Subsidi Workshop`\n"
+            . "   - Sajikan perbandingan metrik: Total Ongkir Ditagihkan ke Pelanggan, Total Biaya Riil Ekspedisi, dan Net Subsidi Bengkel.\n"
+            . "   - Rinci SPK mana saja yang disubsidi oleh bengkel beserta selisih nominalnya (misal: SPK S-2608-12-0017-SW disubsidi Rp 10.000 karena ongkir customer Rp 0 sedangkan biaya riil ekspedisi Rp 10.000).\n"
+            . "   - Berikan insight keuangan: evaluasi acuan tarif ongkir sistem agar subsidi gratis ongkir terukur dan tidak menggerus margin laba reparasi.\n"
+            . "4. **'Apakah ada riwayat surat jalan transfer antar divisi yang mencatat kondisi fisik bermasalah atau rusak saat serah terima?':**\n"
+            . "   - Tampilkan section `### 🔍 Audit Rantai Serah Terima Fisik (Chain of Custody & Kondisi Fisik)`\n"
+            . "   - Periksa field `kondisi_serah_terima` dan catatan pada seluruh surat jalan (Sortir ➔ Produksi dan Produksi ➔ QC).\n"
+            . "   - Laporkan apakah seluruh serah terima berstatus **Baik / Sesuai Fisik** atau jika ada catatan cacat/rusak/hilang.\n"
+            . "   - Jika seluruhnya berstatus Baik / Sesuai Fisik (seperti 34 item saat ini), nyatakan bahwa integritas fisik sepatu terjaga 100% tanpa komplain cacat serah terima antar teknisi.\n"
             . "\n"
             . "## Format Penyajian Panduan Fitur & Navigasi Sidebar:\n"
             . "Ketika menjelaskan fitur atau menu pada sidebar, sajikan secara lengkap, terstruktur, dan elegan:\n"
@@ -328,10 +364,116 @@ class GroqAiService
             . "- Jika memberikan contoh atau draft pesan WhatsApp untuk pelanggan: BUNGKUS setiap teks pesan di dalam blockquote markdown (awali paragraf pesan dengan tanda `> `) agar otomatis tampil dalam kotak kartu pesan elegan yang siap disalin oleh staf.\n"
             . "\n"
             . "## Format Penyajian Keuangan & Invoice:\n"
-            . "Ketika pengguna menanyakan rincian biaya, tagihan, atau invoice:\n"
+            . "Ketika pengguna menanyakan rincian biaya, tagihan, atau invoice 1 SPK:\n"
             . "1. Sebutkan nomor SPK dan nama customer di awal.\n"
             . "2. Buat section `### 🧾 Rincian Layanan Jasa` yang merinci setiap jasa yang diambil beserta biaya satu per satu, teknisi penanggung jawab, dan total biaya jasa.\n"
             . "3. Buat section `### 💰 Status Invoice & Pembayaran` yang merinci nomor invoice, total tagihan invoice, jumlah terbayar, sisa piutang/kurang bayar, dan status (Lunas / Belum Lunas / DP).\n"
+            . "\n"
+            . "## Format Penyajian Resmi KPI Workshop (/admin/kpi - Tab Workshop):\n"
+            . "Ketika pengguna menanyakan 'KPI Workshop', 'kinerja workshop', beban kerja workshop, atau antrean stasiun pada periode tertentu, selalu panggil tool `get_workshop_production_intelligence` dan sajikan respon selaras 100% dengan kartu dashboard /admin/kpi Tab KPI WORKSHOP:\n"
+            . "### 🛠️ Ringkasan Kinerja & Beban Kerja Divisi Workshop ([Periode])\n"
+            . "\n"
+            . "#### 🧼 1. PREPARATION *(Tahap Cuci & Pembongkaran)*\n"
+            . "- 📥 **Total Masuk:** [x] SPK\n"
+            . "- 📤 **Total Keluar:** [x] SPK\n"
+            . "- ✨ **Net (Bersih):** Masuk: [x] • Keluar: [x]\n"
+            . "\n"
+            . "#### 🔍 2. SORTIR *(Tahap Sortir & Kelengkapan Material)*\n"
+            . "- 📥 **Total Masuk:** [x] SPK\n"
+            . "- 📤 **Total Keluar:** [x] SPK\n"
+            . "- ✨ **Net (Bersih):** Masuk: [x] • Keluar: [x]\n"
+            . "\n"
+            . "#### 🛠️ 3. PRODUCTION *(Tahap Produksi / Repacking & Reparasi)*\n"
+            . "- 📥 **Total Masuk:** [x] SPK\n"
+            . "- 📤 **Total Keluar:** [x] SPK\n"
+            . "- ✨ **Net (Bersih):** Masuk: [x] • Keluar: [x]\n"
+            . "\n"
+            . "#### ✅ 4. QUALITY CONTROL *(Tahap Quality Control & Finishing)*\n"
+            . "- 📥 **Total Masuk:** [x] SPK\n"
+            . "- 📤 **Total Keluar:** [x] SPK\n"
+            . "- ✨ **Net (Bersih):** Masuk: [x] • Keluar: [x]\n"
+            . "\n"
+            . "#### ⚠️ CX FOLLOW UP *(Laporan Anomali Status)*\n"
+            . "- **Pergerakan ke CX (Kendala Stasiun):**\n"
+            . "  • PREPARATION → CX: [x] SPK\n"
+            . "  • SORTIR → CX: [x] SPK\n"
+            . "  • PRODUCTION → CX: [x] SPK\n"
+            . "  • QC → CX: [x] SPK\n"
+            . "- **Pergerakan dari CX (Kembali ke Pengerjaan):**\n"
+            . "  • CX → PREPARATION: [x] SPK\n"
+            . "  • CX → SORTIR: [x] SPK\n"
+            . "  • CX → PRODUCTION: [x] SPK\n"
+            . "  • CX → QC: [x] SPK\n"
+            . "\n"
+            . "---\n"
+            . "\n"
+            . "## Format Penanganan Audit & Pertanyaan Kritis KPI Workshop (Big 4 Standard):\n"
+            . "Ketika pengguna menanyakan analisis kritis, audit proses, atau kejanggalan pada angka KPI Workshop:\n"
+            . "Jawab dengan analisis operasional yang tajam, logis, dan profesional tanpa halusinasi:\n"
+            . "1. **'Mengapa di stasiun Produksi / QC jumlah SPK yang KELUAR bisa lebih banyak daripada yang MASUK?':**\n"
+            . "   - Jelaskan konsep **Carry-Over Work in Progress (WIP)**: SPK yang keluar di Produksi/QC pada bulan ini merupakan pesanan limpahan yang sudah masuk dan mengendap dari periode sebelumnya (misal Agustus/Juli) yang baru diselesaikan pengerjaan/inspeksinya pada bulan berjalan.\n"
+            . "   - Hal ini merupakan indikasi positif terjadinya **Flushing / Backlog Clearance** (pengurangan timbunan antrean pekerjaan lama), namun berikan catatan bahwa jika stasiun hulu (Prep & Sortir) tidak memasukkan pesanan baru yang cukup, workshop berpotensi mengalami kekosongan pekerjaan di siklus berikutnya.\n"
+            . "2. **'Stasiun mana yang mengalami hambatan (bottleneck) dan apakah terjadi starvation atau choking antar stasiun?':**\n"
+            . "   - Analisis keseimbangan lini (**Line Balancing**):\n"
+            . "     • **Choking (Kewalahan/Tumpukan):** Terjadi jika stasiun tertentu memiliki antrean aktif jauh lebih tinggi daripada kapasitas outputnya (misal stasiun Produksi dengan 15 SPK mengantre).\n"
+            . "     • **Starvation Risk (Kelaparan Input):** Terjadi jika stasiun hulu (Preparation & Sortir) hanya memasukkan sedikit SPK (misal 1 SPK), sehingga stasiun hilir (Produksi & QC) terancam kekurangan suplai sepatu setelah backlog selesai.\n"
+            . "   - Rekomendasikan sinkronisasi aliran manifest pengiriman dari gudang ke workshop.\n"
+            . "3. **'Mengapa ada SPK yang mental / dialihkan ke CX Follow Up dan stasiun mana penyumbang kendala terbanyak?':**\n"
+            . "   - Jelaskan bahwa CX Follow Up adalah pintu penanganan anomali pengerjaan (misal: perlu konfirmasi tambahan biaya/OTO ke customer, material rusak yang butuh persetujuan khusus, atau customer request tahan pengerjaan).\n"
+            . "   - Jika pergerakan bernilai 0 (seperti saat ini), nyatakan bahwa operasional periode ini sangat stabil dan steril dari eskalasi kendala pelanggan (zero escalation).\n"
+            . "4. **'Berapa rata-rata durasi pengerjaan per stasiun dan apakah ada tahapan yang melampaui SLA wajar?':**\n"
+            . "   - Tampilkan durasi rata-rata pengerjaan per tahap dari data KPI. Jelaskan stasiun mana yang paling memakan waktu dan berikan saran pemecahan stasiun kerja (sub-station breakdown).\n"
+            . "\n"
+            . "## Format Penyajian Ringkasan KPI Gudang & Logistik (/admin/kpi - Tab Gudang):\n"
+            . "Ketika pengguna menanyakan 'KPI Gudang', 'kinerja gudang', 'logistik gudang', 'sepatu masuk/keluar gudang', atau ringkasan logistik pada periode tertentu, selalu panggil tool `get_storage_logistics` (mode aggregate) dan sajikan respon dalam format Kartu Eksekutif resmi:\n"
+            . "### 📦 Ringkasan KPI Gudang & Logistik ([Periode/Rentang Tanggal])\n"
+            . "- 📥 **1. Sepatu Masuk (Before):** [x] Pasang *(Diterima fisik di gudang)*\n"
+            . "- 🚚 **2. SPK Print (OTW WS):** [x] Pasang *(Dikirim ke reparasi / manifest workshop)*\n"
+            . "- ⚠️ **3. SPK Tertahan (QC Reject):** [x] Pasang *(Gagal penerimaan awal)*\n"
+            . "- ✨ **4. After Masuk:** [x] Pasang *(Selesai reparasi masuk rak gudang)*\n"
+            . "- 📤 **5. Sepatu Keluar:** [x] Pasang *(Pengambilan customer & kirim lunas)*\n"
+            . "\n"
+            . "### 🏷️ Status Operasional Rak & Logistik Fisik Saat Ini:\n"
+            . "- 👟 **Total Sepatu di Rak:** [x] item tersimpan aktif\n"
+            . "- ⏳ **Barang Tertahan Lama (>7 Hari):** [x] item overdue\n"
+            . "- 🔄 **Sepatu Selesai Menunggu Pengambilan:** [x] SPK belum diambil pelanggan\n"
+            . "- 📍 **Utilisasi Rak Terpadat:** [Sebutkan 3-5 rak terisi terbanyak beserta jumlah pasangnya]\n"
+            . "\n"
+            . "## Format Penyajian KPI Finance & Keuangan Resmi (/admin/kpi):\n"
+            . "Ketika pengguna menanyakan ringkasan keuangan agregat, KPI Finance, kas masuk, piutang, omset, atau refund:\n"
+            . "Sajikan dengan format kartu ringkasan eksekutif yang rapi, padat, dan elegan (selaras 100% dengan dashboard /admin/kpi):\n"
+            . "### 💰 Ringkasan KPI Finance ([Periode/Rentang Tanggal])\n"
+            . "- 📑 **Total Nilai Tagihan:** Rp [nominal] *(Invoice diterbitkan periode ini)*\n"
+            . "- 💵 **Kas Masuk (Tervalidasi):** Rp [nominal] *(Penerimaan kas riil periode ini)*\n"
+            . "- ⏳ **Sisa Piutang Aktif:** Rp [nominal] *(Belum tertagih dari tagihan periode ini)*\n"
+            . "- 🎯 **Rasio Penagihan (Collection Rate):** [persen]% *(Penerimaan vs Tagihan)*\n"
+            . "- 🏷️ **Realisasi Omset (Valid Closing):** Rp [nominal]\n"
+            . "- 🎁 **Total Diskon Diberikan:** Rp [nominal]\n"
+            . "\n"
+            . "### 📊 Status Invoice & Distribusi Pembayaran:\n"
+            . "- **Status Invoice:** [x] Belum Bayar (Rp [y]) • [x] DP/Cicil (Rp [y]) • [x] Lunas (Rp [y])\n"
+            . "- **Distribusi Kas:** DP Awal: Rp [y] ([x] trx) • Pelunasan: Rp [y] ([x] trx) • Lunas Awal: Rp [y] • Ongkir: Rp [y] • OTO: Rp [y]\n"
+            . "\n"
+            . "### ↩️ Transaksi Batal & Refund:\n"
+            . "- **SPK Dibatalkan:** [x] pesanan\n"
+            . "- **Total Dana Refund (Kembali ke Customer):** Rp [nominal]\n"
+            . "\n"
+            . "## Format Penanganan Audit Kritis Finance (Big 4 Standard):\n"
+            . "Ketika pengguna menanyakan hal kritis terkait keuangan workshop:\n"
+            . "1. **'Apakah ada sepatu yang sudah Selesai tapi belum Lunas?' / 'Audit risiko pengiriman':**\n"
+            . "   - Sajikan section `### 🚨 Audit Risiko Pengiriman (Sepatu Selesai/Diantar Belum Lunas)`\n"
+            . "   - Sebutkan total SPK berisiko dan total akumulasi piutang yang menggantung.\n"
+            . "   - Rinci daftar SPK berisiko (Nomor SPK, Nama Pelanggan, Status SPK, Sisa Piutang, Tanggal Selesai).\n"
+            . "   - Berikan rekomendasi mitigasi SOP: Instruksikan tim CS/Gudang untuk **MENAHAN (HOLD)** serah terima fisik sepatu sampai bukti pelunasan diverifikasi Finance.\n"
+            . "2. **'Mengapa Rasio Penagihan bisa di atas 100% atau di bawah 50%?':**\n"
+            . "   - Jelaskan dinamika arus kas: jika > 100%, jelaskan bahwa penerimaan kas riil lebih besar dari nilai tagihan invoice periode ini karena adanya penagihan piutang dari bulan-bulan lampau yang baru cair. Jika < 50%, beri peringatan risiko piutang macet.\n"
+            . "3. **'Berapa total kerugian / kebocoran biaya workshop?':**\n"
+            . "   - Sajikan section `### 📉 Rekap Kebocoran Biaya & Kerugian Workshop`\n"
+            . "   - Rinci potensi omset hilang pembatalan, kas keluar refund, dan kompensasi revisi/garansi teknisi.\n"
+            . "4. **'Buatkan draf penagihan WhatsApp ke customer':**\n"
+            . "   - Buatkan template pesan WhatsApp profesional, santun, persuasif, menyebutkan nomor SPK, jenis sepatu, dan nominal sisa tagihan. Bungkus dalam blockquote markdown (`> `).\n"
+            . "5. **'Ubah status invoice jadi Lunas' / 'Hapus tagihan customer':**\n"
+            . "   - TOLAK SECARA MUTLAK & TEGAS! Jelaskan bahwa AI Copilot beroperasi 100% Read-Only demi kepatuhan SOP Audit Trail dan keamanan kas perusahaan.\n"
             . "\n"
             . "## Format Penyajian Kendala Pelanggan (CX Issues):\n"
             . "- Jika ditanya daftar SPK yang memiliki kendala/keluhan OPEN, sajikan setiap SPK secara terpisah dengan garis pembatas `---`:\n"
@@ -401,11 +543,11 @@ class GroqAiService
                 'end_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD. Hanya jika period = "custom".'],
             ]),
 
-            $this->makeOpenAiTool('get_financial_summary', 'Mengambil ringkasan keuangan: total tagihan, total terbayar, sisa piutang, riwayat pembayaran.', [
-                'identifier' => ['type' => 'string', 'description' => 'ID/nomor SPK untuk detail 1 SPK. Kosongkan untuk aggregate.'],
-                'period' => ['type' => 'string', 'description' => 'Periode waktu. Default: "this_month".'],
-                'start_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD.'],
-                'end_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD.'],
+            $this->makeOpenAiTool('get_financial_summary', 'Mengambil ringkasan keuangan dan KPI Finance resmi bengkel (selaras 100% dengan dashboard /admin/kpi tab KPI Finance): total tagihan invoice, kas masuk tervalidasi, sisa piutang aktif, rasio penagihan, status invoice, distribusi pembayaran kas, serta rekap SPK batal & total dana refund. Bisa per-SPK atau aggregate seluruh workshop.', [
+                'identifier' => ['type' => 'string', 'description' => 'ID/nomor SPK untuk detail 1 SPK. Kosongkan untuk ringkasan agregat KPI Finance.'],
+                'period' => ['type' => 'string', 'description' => 'Periode waktu: "this_month", "last_month", "this_week", "today", "custom". Default: "this_month".'],
+                'start_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD, jika custom.'],
+                'end_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD, jika custom.'],
             ]),
 
             $this->makeOpenAiTool('get_production_tracking', 'Mengambil progress detail sub-stasiun pengerjaan SPK, riwayat perpindahan status, durasi per status, kendala CX, dan deteksi bottleneck.', [
@@ -434,9 +576,22 @@ class GroqAiService
                 'end_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD.'],
             ]),
 
-            $this->makeOpenAiTool('get_storage_logistics', 'Mengambil data penyimpanan gudang: lokasi rak, overdue items, info pengiriman.', [
-                'identifier' => ['type' => 'string', 'description' => 'ID/nomor SPK. Kosongkan untuk aggregate gudang.'],
+            $this->makeOpenAiTool('get_storage_logistics', 'Mengambil data resmi KPI Gudang (selaras 100% dengan dashboard /admin/kpi tab KPI Gudang), pencarian isi rak spesifik (misal di rak B01 ada SPK apa saja), dan posisi rak SPK: 5 metrik resmi (1. Sepatu Masuk Before, 2. SPK Print OTW WS, 3. SPK Tertahan QC Reject, 4. After Masuk Selesai Reparasi, 5. Sepatu Keluar Pengambilan/Kirim Lunas), total sepatu di rak, barang overdue (>7 hari), daftar utilisasi rak, dan status serah terima. Bisa per-SPK, per-rak, atau aggregate seluruh gudang dalam periode tertentu.', [
+                'identifier' => ['type' => 'string', 'description' => 'ID/nomor SPK. Gunakan untuk mencari posisi rak & riwayat 1 SPK tertentu.'],
+                'rack_code' => ['type' => 'string', 'description' => 'Kode rak spesifik (misal "B01", "A01"). Gunakan jika pengguna bertanya "di rak [kode] ada SPK/sepatu apa saja?".'],
+                'period' => ['type' => 'string', 'description' => 'Periode waktu: "this_month", "last_month", "this_week", "today", "custom". Default: "this_month".'],
+                'start_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD, jika custom.'],
+                'end_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD, jika custom.'],
                 'filter' => ['type' => 'string', 'description' => 'Filter: "overdue", "stored", "all". Default: "all".'],
+            ]),
+
+            $this->makeOpenAiTool('get_workshop_production_intelligence', 'Mengambil intelejen komprehensif produksi workshop: deteksi SPK overdue & mendekati deadline SLA, beban kerja real-time teknisi (siapa overload/terbanyak tugas), antrean stasiun live (Preparation, Sortir, Produksi, QC), dan KPI throughput workshop resmi (/admin/kpi - Tab Workshop). Gunakan tool ini jika pengguna bertanya tentang SPK telat di workshop, siapa teknisi paling sibuk/overload, antrean stasiun pengerjaan, atau performa KPI stasiun workshop.', [
+                'mode' => ['type' => 'string', 'description' => 'Mode analisis: "all", "bottlenecks", "technicians", "stations", "kpi_overview". Default: "all".'],
+                'station' => ['type' => 'string', 'description' => 'Filter stasiun: "PREPARATION", "SORTIR", "PRODUCTION", "QC".'],
+                'technician_name' => ['type' => 'string', 'description' => 'Nama teknisi untuk cek beban spesifik.'],
+                'period' => ['type' => 'string', 'description' => 'Periode: "this_month", "last_month", "this_week", "today", "custom". Default: "this_month".'],
+                'start_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD.'],
+                'end_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD.'],
             ]),
 
             $this->makeOpenAiTool('get_oto_data', 'Mengambil data OTO (On-The-Order / penawaran jasa tambahan).', [
@@ -455,6 +610,14 @@ class GroqAiService
             $this->makeOpenAiTool('get_feature_navigation', 'Mencari dan menjelaskan fitur sistem bengkel, letak menu pada navigasi sidebar, rute URL (/path), hak akses/role, dan panduan langkah penggunaan fitur.', [
                 'query' => ['type' => 'string', 'description' => 'Nama fitur, menu sidebar, rute, atau kata kunci (misal: "laporan performa", "penerimaan", "kasir", "overdue sla", "rak", "promo").'],
                 'division' => ['type' => 'string', 'description' => 'Filter spesifik divisi jika ada: "cs", "warehouse", "workshop", "finance", "cx", "admin", "public", "general". Kosongkan jika mencari global.'],
+            ]),
+
+            $this->makeOpenAiTool('get_manifest_shipping_intelligence', 'Mengambil intelejen logistik manifest dan rantai pasok pengiriman bengkel: manifest inbound (Gudang ke Workshop), surat jalan internal antar divisi (Sortir -> Produksi -> QC), deteksi manifest/SPK macet di jalan (stuck in transit > 24 jam), audit outbound kurir ekspedisi & kelengkapan resi pengiriman, serta audit finansial selisih biaya ongkir (subsidi ongkir workshop vs yang dibayar pelanggan).', [
+                'mode' => ['type' => 'string', 'description' => 'Mode audit: "all", "inbound_manifest", "outbound_shipping", "shipping_cost_audit", "internal_transfer". Default: "all".'],
+                'identifier' => ['type' => 'string', 'description' => 'Nomor manifest, nomor surat jalan, atau nomor SPK.'],
+                'period' => ['type' => 'string', 'description' => 'Periode: "this_month", "last_month", "this_week", "today", "custom". Default: "this_month".'],
+                'start_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD.'],
+                'end_date' => ['type' => 'string', 'description' => 'YYYY-MM-DD.'],
             ]),
         ];
     }
