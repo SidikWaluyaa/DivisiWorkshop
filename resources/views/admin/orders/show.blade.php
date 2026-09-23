@@ -541,12 +541,79 @@
                                                 </div>
 
                                                 <!-- Form -->
-                                                <form @submit.prevent="submitCancel()" class="p-8 space-y-6">
+                                                @php
+                                                    $paidSoFar = (float) ($order->invoice?->paid_amount ?? $order->payments->sum('amount_total'));
+                                                @endphp
+                                                <form @submit.prevent="submitCancel()" class="p-8 space-y-5">
+                                                    {{-- Info Status Pembayaran SPK Saat Ini --}}
+                                                    @if($paidSoFar > 0)
+                                                        <div class="p-4 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-800/80 flex items-start gap-3">
+                                                            <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center font-black text-sm shrink-0 mt-0.5">
+                                                                💳
+                                                            </div>
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                                                                    Uang Masuk dari Customer
+                                                                </div>
+                                                                <div class="text-lg font-black text-amber-900 dark:text-amber-200 tracking-tight">
+                                                                    Rp {{ number_format($paidSoFar, 0, ',', '.') }}
+                                                                </div>
+                                                                <p class="text-[11px] text-amber-700/90 dark:text-amber-300/80 font-medium mt-0.5">
+                                                                    Customer telah melakukan pembayaran. Masukkan nominal uang yang akan/sudah dikembalikan ke customer (refund) pada kolom di bawah.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700 flex items-center gap-3">
+                                                            <div class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center font-bold text-xs shrink-0">
+                                                                ℹ️
+                                                            </div>
+                                                            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                                                Belum ada pembayaran masuk (<strong class="text-slate-700 dark:text-slate-300">Rp 0</strong>). Kolom refund dapat dibiarkan <strong>0</strong>.
+                                                            </div>
+                                                        </div>
+                                                    @endif
+
+                                                    {{-- Input Nominal Refund --}}
                                                     <div>
-                                                        <label for="cancel_reason" class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Alasan Pembatalan <span class="text-red-500">*</span></label>
-                                                        <textarea id="cancel_reason" x-model="reason" required rows="4"
-                                                            class="w-full rounded-2xl border-gray-200 focus:border-red-500 focus:ring-red-500 font-medium text-sm bg-gray-50/50 p-4"
+                                                        <label for="refund_amount" class="block text-[10px] font-black text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
+                                                            Nominal Refund ke Customer (Rp)
+                                                        </label>
+                                                        <div class="relative">
+                                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-gray-400">Rp</span>
+                                                            <input type="number" 
+                                                                   id="refund_amount" 
+                                                                   x-model.number="refundAmount" 
+                                                                   min="0" 
+                                                                   step="1000"
+                                                                   class="w-full pl-12 pr-4 py-3 bg-gray-50/50 dark:bg-slate-800 rounded-2xl border-gray-200 dark:border-slate-700 focus:border-red-500 focus:ring-red-500 font-black text-base text-gray-900 dark:text-white"
+                                                                   placeholder="0">
+                                                        </div>
+                                                        <p class="text-[10px] text-gray-400 font-medium mt-1">
+                                                            Ketik angka uang yang dikembalikan. Ketik 0 jika tanpa pengembalian dana.
+                                                        </p>
+                                                    </div>
+
+                                                    {{-- Alasan Pembatalan --}}
+                                                    <div>
+                                                        <label for="cancel_reason" class="block text-[10px] font-black text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
+                                                            Alasan Pembatalan <span class="text-red-500">*</span>
+                                                        </label>
+                                                        <textarea id="cancel_reason" x-model="reason" required rows="3"
+                                                            class="w-full rounded-2xl border-gray-200 dark:border-slate-700 focus:border-red-500 focus:ring-red-500 font-medium text-sm bg-gray-50/50 dark:bg-slate-800 text-gray-900 dark:text-white p-3.5"
                                                             placeholder="Masukkan alasan lengkap pembatalan SPK ini..."></textarea>
+                                                    </div>
+
+                                                    {{-- Catatan Refund (Opsional) --}}
+                                                    <div>
+                                                        <label for="refund_notes" class="block text-[10px] font-black text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
+                                                            Catatan Tambahan Refund (Opsional)
+                                                        </label>
+                                                        <input type="text" 
+                                                               id="refund_notes" 
+                                                               x-model="refundNotes" 
+                                                               class="w-full px-4 py-2.5 bg-gray-50/50 dark:bg-slate-800 rounded-xl border-gray-200 dark:border-slate-700 focus:border-red-500 focus:ring-red-500 text-xs font-medium text-gray-900 dark:text-white"
+                                                               placeholder="Misal: Transfer BCA, dikembalikan tunai, dll.">
                                                     </div>
 
                                                     <div class="flex items-center justify-end gap-3 pt-2">
@@ -1457,63 +1524,67 @@
                 {{-- RIGHT COLUMN: Items & Services (Span 2) --}}
                 <div class="lg:col-span-2 space-y-8">
 
-                    {{-- Invoice & Penagihan Section --}}
+                    {{-- Invoice & Penagihan Section (UI/UX PRO MAX) --}}
                     @if($order->invoice)
-                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all hover:shadow-2xl hover:shadow-emerald-100/50">
-                        <div class="px-8 py-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 shadow-inner">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-950/40 border border-slate-100 dark:border-slate-800 overflow-hidden transition-all" x-data="{ editOngkirModal: false }">
+                        {{-- Header Toolbar --}}
+                        <div class="px-8 py-5 bg-gradient-to-r from-slate-50 via-white to-slate-50/50 dark:from-slate-800/80 dark:via-slate-900 dark:to-slate-800/50 border-b border-slate-100 dark:border-slate-800/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs border border-emerald-500/20 shrink-0">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 </div>
                                 <div>
-                                    <h3 class="font-black text-gray-900 text-xl tracking-tight">Invoice & Penagihan</h3>
+                                    <h3 class="font-black text-slate-900 dark:text-white text-lg tracking-tight">Invoice &amp; Penagihan</h3>
                                     <div class="flex items-center gap-2 mt-1">
-                                        <span class="px-2.5 py-1 bg-gray-100 text-gray-600 text-[10px] font-black uppercase rounded-lg border border-gray-200 tracking-wider">
+                                        <span class="px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-black uppercase rounded-lg border border-slate-200 dark:border-slate-700 tracking-wider">
                                             #{{ $order->invoice->invoice_number }}
                                         </span>
                                         @php
                                             $statusStyles = [
-                                                'Lunas' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                                                'DP/Cicil' => 'bg-amber-100 text-amber-700 border-amber-200',
-                                                'Belum Bayar' => 'bg-red-100 text-red-700 border-red-200',
+                                                'Lunas' => 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800',
+                                                'DP/Cicil' => 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800',
+                                                'Belum Bayar' => 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800',
                                             ];
                                             $statusLabel = $order->invoice->status;
-                                            $statusClass = $statusStyles[$statusLabel] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+                                            $statusClass = $statusStyles[$statusLabel] ?? 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
                                         @endphp
-                                        <span class="px-2.5 py-1 {{ $statusClass }} text-[10px] font-black uppercase rounded-lg border tracking-wider">
+                                        <span class="px-2.5 py-0.5 {{ $statusClass }} text-[10px] font-black uppercase rounded-lg border tracking-wider flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $statusLabel === 'Lunas' ? 'bg-emerald-500' : ($statusLabel === 'DP/Cicil' ? 'bg-amber-500' : 'bg-rose-500') }}"></span>
                                             {{ $statusLabel }}
                                         </span>
                                     </div>
                                 </div>
                             </div>
+
+                            {{-- Action Group --}}
                             <div class="flex flex-wrap items-center gap-2">
                                 @if(auth()->user()->isAdmin() || auth()->user()->isOwner() || auth()->user()->isFinance())
                                 <a href="{{ route('finance.invoices.show', $order->invoice->id) }}" 
-                                   class="flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                    Kelola Tagihan
+                                   class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-700 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 rounded-xl text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-95">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    <span>Kelola Tagihan</span>
                                 </a>
                                 @endif
                                 <a href="{{ $order->invoice->invoice_full_url }}" target="_blank" 
-                                   class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md">
-                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                    View Digital
+                                   class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-95">
+                                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    <span>View Digital</span>
                                 </a>
                                 <div class="relative" x-data="{ open: false }">
                                     <button @click="open = !open" 
-                                            class="flex items-center gap-2 px-4 py-2 bg-[#22B086] hover:bg-[#1C8D6C] text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-200/50">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-                                        Share Invoice
+                                            class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#22B086] hover:bg-[#1C8D6C] text-white rounded-xl text-xs font-black transition-all shadow-md shadow-emerald-500/20 active:scale-95">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                                        <span>Share Invoice</span>
                                     </button>
                                     <div x-show="open" @click.away="open = false" 
-                                         class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden py-1">
-                                        <a href="{{ $order->invoice->invoice_dp_url }}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+                                         class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 z-50 overflow-hidden py-1">
+                                        <a href="{{ $order->invoice->invoice_dp_url }}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                                             <span class="w-2 h-2 rounded-full bg-amber-400"></span> Share Tagihan DP
                                         </a>
-                                        <a href="{{ $order->invoice->invoice_final_url }}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <a href="{{ $order->invoice->invoice_final_url }}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                                             <span class="w-2 h-2 rounded-full bg-blue-400"></span> Share Pelunasan
                                         </a>
-                                        <a href="{{ $order->invoice->invoice_full_url }}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-50">
+                                        <a href="{{ $order->invoice->invoice_full_url }}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-t border-slate-100 dark:border-slate-700">
                                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Share Invoice Full
                                         </a>
                                     </div>
@@ -1521,67 +1592,258 @@
                             </div>
                         </div>
 
-                        <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-                            {{-- Decorative background element --}}
-                            <div class="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-emerald-50 rounded-full blur-3xl opacity-50"></div>
-                            
-                            {{-- Total Bill --}}
-                            <div class="relative">
-                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                    Total Tagihan
-                                </p>
-                                <div class="flex items-baseline gap-1">
-                                    <span class="text-sm font-bold text-gray-400">Rp</span>
-                                    <span class="text-2xl font-black text-gray-900 tracking-tight">
-                                        {{ number_format($order->invoice->total_amount + $order->invoice->shipping_cost - $order->invoice->discount, 0, ',', '.') }}
+                        {{-- STACKED FULL-WIDTH 2-BARIS (UI/UX PRO MAX) --}}
+                        <div class="p-6 md:p-7 bg-slate-50/50 dark:bg-slate-950/40 border-t border-slate-100 dark:border-slate-800/80 space-y-5">
+                            @php
+                                $subtotalLayanan = (float) $order->invoice->total_amount;
+                                $ongkirVal = (float) ($order->invoice->shipping_cost ?? 0);
+                                $discountVal = (float) ($order->invoice->discount ?? 0);
+                                $grandTotal = max(0, $subtotalLayanan + $ongkirVal - $discountVal);
+                                $paidVal = (float) $order->invoice->paid_amount;
+                                $remainingVal = (float) $order->invoice->remaining_balance;
+                                $percent = $grandTotal > 0 ? min(100, ($paidVal / $grandTotal) * 100) : 100;
+                                $isLunas = $order->invoice->status === 'Lunas';
+                            @endphp
+
+                            {{-- BARIS 1: KOMPONEN TAGIHAN (FULL WIDTH FORMULA) --}}
+                            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+                                <div class="flex items-center justify-between pb-3.5 mb-3.5 border-b border-slate-100 dark:border-slate-800">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-black">
+                                            🧾
+                                        </span>
+                                        <span class="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                                            Komponen Tagihan
+                                        </span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                        Formula: Layanan + Ongkir
                                     </span>
                                 </div>
-                                <div class="mt-2 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-gray-300" style="width: 100%"></div>
+
+                                <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-3">
+                                    
+                                    {{-- 1. Total Layanan --}}
+                                    <div class="flex-1 min-w-0">
+                                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
+                                            Total Layanan
+                                        </span>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="text-xs font-bold text-slate-400">Rp</span>
+                                            <span class="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                                                {{ number_format($subtotalLayanan, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                        <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1 block">
+                                            Biaya Jasa &amp; Item Order
+                                        </span>
+                                    </div>
+
+                                    {{-- Operator Plus (+) --}}
+                                    <div class="hidden md:flex items-center justify-center shrink-0 px-2">
+                                        <span class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center text-sm font-black border border-slate-200/80 dark:border-slate-700 shadow-2xs">
+                                            +
+                                        </span>
+                                    </div>
+
+                                    {{-- 2. Biaya Ongkir --}}
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                                                Biaya Ongkir
+                                            </span>
+                                            <button type="button" 
+                                                    @click="editOngkirModal = true" 
+                                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100/80 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-900/70 text-amber-900 dark:text-amber-300 text-[9px] font-black uppercase tracking-wider transition active:scale-95 shrink-0">
+                                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                                <span>Edit</span>
+                                            </button>
+                                        </div>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="text-xs font-bold text-slate-400">Rp</span>
+                                            <span class="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                                                {{ number_format($ongkirVal, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                        <div class="mt-1">
+                                            @if($ongkirVal <= 0)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Bebas Ongkir
+                                                </span>
+                                            @elseif($isLunas)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Lunas
+                                                </span>
+                                            @elseif($order->invoice->status === 'DP/Cicil')
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Belum Lunas
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Belum Bayar
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Operator Equal (=) --}}
+                                    <div class="hidden md:flex items-center justify-center shrink-0 px-2">
+                                        <span class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center text-sm font-black border border-slate-200/80 dark:border-slate-700 shadow-2xs">
+                                            =
+                                        </span>
+                                    </div>
+
+                                    {{-- 3. Total Tagihan --}}
+                                    <div class="flex-1 min-w-0 bg-slate-50 dark:bg-slate-800/80 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700">
+                                        <span class="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider block mb-1">
+                                            Total Tagihan
+                                        </span>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="text-xs font-bold text-slate-400">Rp</span>
+                                            <span class="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                                                {{ number_format($grandTotal, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                        <div class="mt-1">
+                                            @if($discountVal > 0)
+                                                <span class="text-[9px] font-bold text-rose-500 block truncate">
+                                                    Hemat Diskon -Rp {{ number_format($discountVal, 0, ',', '.') }}
+                                                </span>
+                                            @else
+                                                <span class="text-[9px] font-semibold text-slate-400 dark:text-slate-500 block truncate">
+                                                    Grand Total (Layanan + Ongkir)
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
 
-                            {{-- Paid Amount --}}
-                            <div class="relative">
-                                <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    Sudah Dibayar
-                                </p>
-                                <div class="flex items-baseline gap-1 text-emerald-600">
-                                    <span class="text-sm font-bold opacity-70">Rp</span>
-                                    <span class="text-2xl font-black tracking-tight">
-                                        {{ number_format($order->invoice->paid_amount, 0, ',', '.') }}
+                            {{-- BARIS 2: STATUS PELUNASAN (FULL WIDTH HIGHLIGHTED CARD) --}}
+                            <div class="bg-gradient-to-r {{ $isLunas ? 'from-emerald-50/60 via-teal-50/30 to-emerald-50/50 dark:from-emerald-950/30 dark:via-slate-900 dark:to-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/80' : 'from-amber-50/60 via-orange-50/20 to-amber-50/40 dark:from-amber-950/30 dark:via-slate-900 dark:to-amber-950/20 border-amber-200/80 dark:border-amber-800/80' }} rounded-2xl p-5 border shadow-2xs">
+                                <div class="flex items-center justify-between pb-3.5 mb-3.5 border-b {{ $isLunas ? 'border-emerald-100 dark:border-emerald-900/40' : 'border-amber-100 dark:border-amber-900/40' }}">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-6 h-6 rounded-lg {{ $isLunas ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50' }} flex items-center justify-center text-xs font-black">
+                                            {{ $isLunas ? '✨' : '💳' }}
+                                        </span>
+                                        <span class="text-[11px] font-black uppercase tracking-wider {{ $isLunas ? 'text-emerald-900 dark:text-emerald-200' : 'text-amber-900 dark:text-amber-200' }}">
+                                            Status Pelunasan Tagihan
+                                        </span>
+                                    </div>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $isLunas ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' }}">
+                                        {{ number_format($percent, 0) }}% Terbayar
                                     </span>
                                 </div>
-                                <div class="mt-2 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                                    @php
-                                        $totalBill = max(1, $order->invoice->total_amount + $order->invoice->shipping_cost - $order->invoice->discount);
-                                        $percent = min(100, ($order->invoice->paid_amount / $totalBill) * 100);
-                                    @endphp
-                                    <div class="h-full bg-emerald-500 transition-all duration-1000" style="width: {{ $percent }}%"></div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-center">
+                                    {{-- Sudah Dibayar --}}
+                                    <div class="space-y-1.5">
+                                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                                            Sudah Dibayar
+                                        </span>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="text-xs font-bold text-emerald-500">Rp</span>
+                                            <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                                                {{ number_format($paidVal, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                        <div class="pt-1.5">
+                                            <div class="h-2 w-full bg-slate-200/70 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-700" style="width: {{ $percent }}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Sisa Tagihan --}}
+                                    <div class="bg-white/80 dark:bg-slate-900/80 rounded-2xl p-4 border {{ $isLunas ? 'border-emerald-100 dark:border-emerald-900/40' : 'border-amber-100 dark:border-amber-900/40' }} shadow-2xs space-y-1.5">
+                                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                                            Sisa Tagihan
+                                        </span>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="text-xs font-bold {{ $remainingVal > 0 ? 'text-amber-500' : 'text-slate-400' }}">Rp</span>
+                                            <span class="text-2xl font-black {{ $remainingVal > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white' }} tracking-tight">
+                                                {{ number_format($remainingVal, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            @if($remainingVal > 0)
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-amber-100/90 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0"></span>
+                                                    <span>Menunggu Pelunasan Sisa</span>
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-emerald-100/90 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                                    <span>Lunas Sempurna</span>
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {{-- Remaining Balance --}}
-                            <div class="relative">
-                                <p class="text-[10px] font-black {{ $order->invoice->remaining_balance > 0 ? 'text-amber-600' : 'text-gray-400' }} uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    Sisa Tagihan
-                                </p>
-                                <div class="flex items-baseline gap-1 {{ $order->invoice->remaining_balance > 0 ? 'text-amber-600' : 'text-gray-400' }}">
-                                    <span class="text-sm font-bold opacity-70">Rp</span>
-                                    <span class="text-2xl font-black tracking-tight">
-                                        {{ number_format($order->invoice->remaining_balance, 0, ',', '.') }}
-                                    </span>
+                        </div>
+
+                        {{-- MODAL QUICK-EDIT ONGKIR (UI/UX PRO MAX) --}}
+                        <div x-show="editOngkirModal" 
+                             x-cloak 
+                             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md transition-all duration-300"
+                             @keydown.escape.window="editOngkirModal = false">
+                            <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 overflow-hidden transition-all transform"
+                                 @click.away="editOngkirModal = false">
+                                
+                                {{-- Header Modal --}}
+                                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-base shadow-sm">
+                                            🚚
+                                        </div>
+                                        <div>
+                                            <h4 class="text-base font-black text-slate-900 dark:text-white leading-tight">Input / Ubah Ongkir</h4>
+                                            <p class="text-[11px] font-semibold text-slate-400">Invoice #{{ $order->invoice->invoice_number }}</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="editOngkirModal = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 flex items-center justify-center font-black text-xs transition">
+                                        ✕
+                                    </button>
                                 </div>
-                                <div class="mt-2 text-[10px] font-bold text-gray-400">
-                                    @if($order->invoice->remaining_balance > 0)
-                                        Menunggu pelunasan sisa pembayaran
-                                    @else
-                                        Semua tagihan telah lunas dibayar
-                                    @endif
-                                </div>
+
+                                {{-- Form --}}
+                                <form action="{{ route('finance.invoices.update-shipping', $order->invoice->id) }}" method="POST" class="mt-5 space-y-4">
+                                    @csrf
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                                            Biaya Pengiriman (Ongkir)
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">Rp</span>
+                                            <input type="number" 
+                                                   name="shipping_cost" 
+                                                   value="{{ (int) $order->invoice->shipping_cost }}" 
+                                                   min="0"
+                                                   step="1000"
+                                                   required
+                                                   class="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white font-black text-lg focus:ring-2 focus:ring-[#FFC232] focus:border-[#FFC232] transition-all shadow-inner" 
+                                                   placeholder="0">
+                                        </div>
+                                        <p class="text-[10px] text-slate-400 font-medium mt-1.5 flex items-center gap-1">
+                                            <span>💡</span> Perubahan ongkir akan otomatis tersinkron ke SPK ini & dicatat dalam riwayat audit log.
+                                        </p>
+                                    </div>
+
+                                    <div class="flex items-center gap-3 pt-3">
+                                        <button type="button" 
+                                                @click="editOngkirModal = false" 
+                                                class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold uppercase tracking-wider transition">
+                                            Batal
+                                        </button>
+                                        <button type="submit" 
+                                                class="flex-1 py-3 bg-[#FFC232] hover:bg-amber-400 text-slate-950 rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+                                            <span>Simpan Ongkir</span>
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -4445,12 +4707,16 @@ function cancelOrderHandler() {
     return {
         showModal: false,
         reason: '',
+        refundAmount: 0,
+        refundNotes: '',
         isLoading: false,
         orderId: @json($order->id),
 
         openModal() {
             this.showModal = true;
             this.reason = '';
+            this.refundAmount = 0;
+            this.refundNotes = '';
         },
         closeModal() {
             this.showModal = false;
@@ -4467,7 +4733,9 @@ function cancelOrderHandler() {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     },
                     body: JSON.stringify({
-                        reason: this.reason
+                        reason: this.reason,
+                        refund_amount: this.refundAmount,
+                        refund_notes: this.refundNotes
                     })
                 });
 

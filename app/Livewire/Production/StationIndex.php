@@ -446,34 +446,10 @@ class StationIndex extends Component
                 return;
             }
 
-            if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
-                $targetStatus = $order->previous_status;
-                $statusLabel = $targetStatus->value;
-                $note = "Revision completed in Production. Returning to " . $statusLabel;
-                
-                $workflow->updateStatus($order, $targetStatus, $note);
-
-                $order->is_revising = false;
-                $order->previous_status = null;
-                $order->save();
-            } else {
-                if ($order->is_revising) {
-                    $order->is_revising = false;
-                    $order->save();
-                }
-                $order->update([
-                    'current_location' => 'Produksi (Siap Handover)',
-                ]);
-                $order->logs()->create([
-                    'user_id' => Auth::id(),
-                    'step' => 'PRODUCTION',
-                    'action' => 'PRODUCTION_APPROVED',
-                    'description' => 'Produksi selesai & disetujui Admin. Siap serah terima ke QC via Surat Jalan.',
-                ]);
-            }
+            $this->performApproveLogic($order, $workflow);
 
             unset($this->orders);
-            $this->dispatch('swal:toast', icon: 'success', title: 'Berhasil di-approve ke QC');
+            $this->dispatch('swal:toast', icon: 'success', title: 'Berhasil disetujui & siap serah terima ke QC');
         }
     }
 
@@ -489,40 +465,44 @@ class StationIndex extends Component
                     continue;
                 }
 
-                if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
-                    $targetStatus = $order->previous_status;
-                    $statusLabel = $targetStatus->value;
-                    $note = "Revision completed in Production. Returning to " . $statusLabel;
-                    
-                    $workflow->updateStatus($order, $targetStatus, $note);
-
-                    $order->is_revising = false;
-                    $order->previous_status = null;
-                    $order->save();
-                } else {
-                    if ($order->is_revising) {
-                        $order->is_revising = false;
-                        $order->save();
-                    }
-                    $workflow->advanceStatus(
-                        $order,
-                        WorkOrderStatus::QC,
-                        Auth::id(),
-                        'Mass Approved from Production to QC',
-                        [
-                            'step' => 'PRODUCTION',
-                            'action' => 'PRODUCTION_APPROVED'
-                        ]
-                    );
-                }
+                $this->performApproveLogic($order, $workflow);
                 $successCount++;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::error("Mass Approve Error (#{$order->id}): " . $e->getMessage());
             }
         }
         
         unset($this->orders);
-        $this->dispatch('swal:toast', icon: 'success', title: "$successCount antrean berhasil disetujui");
+        $this->dispatch('swal:toast', icon: 'success', title: "$successCount antrean berhasil disetujui & siap serah terima ke QC");
+    }
+
+    private function performApproveLogic(WorkOrder $order, \App\Services\WorkflowService $workflow): void
+    {
+        if ($order->is_revising && $order->previous_status instanceof WorkOrderStatus) {
+            $targetStatus = $order->previous_status;
+            $statusLabel = $targetStatus->value;
+            $note = "Revision completed in Production. Returning to " . $statusLabel;
+            
+            $workflow->updateStatus($order, $targetStatus, $note);
+
+            $order->is_revising = false;
+            $order->previous_status = null;
+            $order->save();
+        } else {
+            if ($order->is_revising) {
+                $order->is_revising = false;
+                $order->save();
+            }
+            $order->update([
+                'current_location' => 'Produksi (Siap Handover)',
+            ]);
+            $order->logs()->create([
+                'user_id' => Auth::id(),
+                'step' => 'PRODUCTION',
+                'action' => 'PRODUCTION_APPROVED',
+                'description' => 'Produksi selesai & disetujui Admin. Siap serah terima ke QC via Surat Jalan.',
+            ]);
+        }
     }
 
     protected function autoAssignUnassignedOrders()

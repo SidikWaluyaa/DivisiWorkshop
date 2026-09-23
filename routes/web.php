@@ -652,8 +652,9 @@ Route::middleware('auth')->group(function () {
         // Donation Route (Must be before {workOrder})
         Route::get('finance/donations', [App\Http\Controllers\FinanceController::class, 'donations'])->name('finance.donations');
         Route::post('finance/donations/{id}/restore', [App\Http\Controllers\FinanceController::class, 'restoreFromDonation'])->name('finance.donations.restore');
-        Route::post('finance/donations/{id}/force', [App\Http\Controllers\FinanceController::class, 'forceDonation'])->name('finance.donations.force');
         Route::get('finance/cancelled-orders', [App\Http\Controllers\FinanceController::class, 'cancelledOrders'])->name('finance.cancelled');
+        Route::get('finance/cancelled-orders/export', [App\Http\Controllers\FinanceController::class, 'exportCancelledOrders'])->name('finance.cancelled.export');
+        Route::post('finance/cancelled-orders/{id}/update-refund', [App\Http\Controllers\FinanceController::class, 'updateRefund'])->name('finance.cancelled.update-refund');
 
         Route::get('finance/{workOrder}', [App\Http\Controllers\FinanceController::class, 'show'])->name('finance.show');
         Route::post('finance/{workOrder}/payment', [App\Http\Controllers\FinanceController::class, 'storePayment'])->name('finance.payment.store');

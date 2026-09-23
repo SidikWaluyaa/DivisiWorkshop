@@ -764,6 +764,8 @@ class OrderController extends Controller
         // 2. Validation
         $request->validate([
             'reason' => 'required|string|max:1000',
+            'refund_amount' => 'nullable|numeric|min:0',
+            'refund_notes' => 'nullable|string|max:500',
         ]);
 
         $order = WorkOrder::with(['invoice.workOrders', 'payments'])->findOrFail($id);
@@ -829,10 +831,20 @@ class OrderController extends Controller
                 }
             }
 
-            // Update WorkOrder status to BATAL
+            $refundAmount = (float) $request->input('refund_amount', 0);
+            $refundNotes = $request->input('refund_notes');
+
+            // Update WorkOrder status to BATAL and store refund details
             $order->status = \App\Enums\WorkOrderStatus::BATAL;
             $order->reception_rejection_reason = $request->reason;
+            $order->refund_amount = $refundAmount;
+            $order->refund_notes = $refundNotes;
+            $order->refund_by = auth()->id();
             $order->save();
+
+            $refundLog = $refundAmount > 0 
+                ? " Refund ke customer: Rp " . number_format($refundAmount, 0, ',', '.') . ($refundNotes ? " (Catatan: {$refundNotes})" : "")
+                : " (Tanpa Refund / Rp 0)";
 
             // Create Audit Log
             \App\Models\WorkOrderLog::create([
@@ -840,14 +852,14 @@ class OrderController extends Controller
                 'user_id' => auth()->id(),
                 'step' => \App\Enums\WorkOrderStatus::BATAL->value,
                 'action' => 'ORDER_CANCELLED',
-                'description' => "SPK dibatalkan oleh " . auth()->user()->name . ". Alasan: " . $request->reason . "." . $invoiceLog
+                'description' => "SPK dibatalkan oleh " . auth()->user()->name . ". Alasan: " . $request->reason . "." . $refundLog . "." . $invoiceLog
             ]);
 
             \Illuminate\Support\Facades\DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'SPK berhasil dibatalkan.' . $invoiceLog
+                'message' => 'SPK berhasil dibatalkan.' . ($refundAmount > 0 ? " Tercatat refund Rp " . number_format($refundAmount, 0, ',', '.') . "." : "") . $invoiceLog
             ]);
 
         } catch (\Exception $e) {

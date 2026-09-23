@@ -189,7 +189,15 @@ class WorkOrder extends Model
         'discount',
         'has_active_oto',
         'unneeded_stations',
+        'refund_amount',
+        'refund_notes',
+        'refund_by',
     ];
+
+    public function refundBy()
+    {
+        return $this->belongsTo(User::class, 'refund_by');
+    }
 
     public function cxHandler()
     {
@@ -267,6 +275,7 @@ class WorkOrder extends Model
         'is_manual_estimasi' => 'boolean',
         'perlu_bongkar' => 'boolean',
         'perlu_belanja' => 'boolean',
+        'refund_amount' => 'decimal:2',
     ];
 
     /**

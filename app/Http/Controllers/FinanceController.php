@@ -582,20 +582,37 @@ class FinanceController extends Controller
             'shipping_cost' => 'required|numeric|min:0'
         ]);
 
-        $invoice->shipping_cost = $request->shipping_cost;
+        $oldShipping = (float) ($invoice->shipping_cost ?? 0);
+        $newShipping = (float) $request->shipping_cost;
+
+        $invoice->shipping_cost = $newShipping;
         $invoice->save();
 
         // Sync shipping cost to associated WorkOrders (first one gets the updated cost, others get 0)
         $workOrders = $invoice->workOrders()->orderBy('id', 'asc')->get();
         if ($workOrders->isNotEmpty()) {
             foreach ($workOrders as $index => $wo) {
-                $wo->shipping_cost = ($index === 0) ? $request->shipping_cost : 0;
+                $wo->shipping_cost = ($index === 0) ? $newShipping : 0;
                 $wo->save();
                 $wo->recalculateTotalPrice(true);
+
+                // Audit log for each SPK
+                \App\Models\WorkOrderLog::create([
+                    'work_order_id' => $wo->id,
+                    'user_id' => Auth::id() ?? 1,
+                    'step' => $wo->status ? $wo->status->value : 'FINANCE',
+                    'action' => 'SHIPPING_COST_UPDATED',
+                    'description' => "Biaya Pengiriman (Ongkir) diubah dari Rp " . number_format($oldShipping, 0, ',', '.') . " menjadi Rp " . number_format($newShipping, 0, ',', '.') . " (Invoice #{$invoice->invoice_number})"
+                ]);
             }
         }
 
         $invoice->syncFinancials();
+
+        \App\Helpers\ActivityLogger::log(
+            'Update Ongkir Invoice',
+            "User (" . (Auth::user()?->name ?? 'Admin') . ") mengubah biaya pengiriman Invoice #{$invoice->invoice_number} dari Rp " . number_format($oldShipping, 0, ',', '.') . " menjadi Rp " . number_format($newShipping, 0, ',', '.') . "."
+        );
 
         return back()->with('success', 'Ongkos Kirim Invoice #'.$invoice->invoice_number.' berhasil diperbarui.');
     }
@@ -1052,7 +1069,8 @@ class FinanceController extends Controller
         $dateTo = $request->input('date_to');
 
         // Main Query for Cancelled Orders
-        $query = WorkOrder::where('status', WorkOrderStatus::BATAL);
+        $query = WorkOrder::where('status', WorkOrderStatus::BATAL)
+            ->with(['payments', 'invoice', 'refundBy']);
 
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -1073,6 +1091,7 @@ class FinanceController extends Controller
         // Stats calculation
         $cancelledCount = WorkOrder::where('status', WorkOrderStatus::BATAL)->count();
         $totalLost = WorkOrder::where('status', WorkOrderStatus::BATAL)->sum('total_transaksi');
+        $totalRefund = WorkOrder::where('status', WorkOrderStatus::BATAL)->sum('refund_amount');
         $averageLost = $cancelledCount > 0 ? $totalLost / $cancelledCount : 0;
 
         // Total orders count (active + cancelled)
@@ -1083,12 +1102,85 @@ class FinanceController extends Controller
 
         $stats = [
             'total_lost' => $totalLost,
+            'total_refund' => $totalRefund,
             'cancelled_count' => $cancelledCount,
             'average_lost' => $averageLost,
             'cancellation_rate' => $cancellationRate
         ];
 
         return view('finance.cancelled', compact('orders', 'stats', 'search', 'dateFrom', 'dateTo'));
+    }
+
+    /**
+     * Export Cancelled Orders Report to Excel
+     */
+    public function exportCancelledOrders(Request $request)
+    {
+        $this->authorize('manageFinance', WorkOrder::class);
+
+        $search = $request->input('search');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+
+        $fileName = 'Laporan_Transaksi_Batal_Shoeworkshop_' . date('Ymd_His') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\FinanceCancelledOrdersExport($search, $dateFrom, $dateTo),
+            $fileName
+        );
+    }
+
+    /**
+     * Update refund amount and notes for a cancelled order (Finance Access)
+     */
+    public function updateRefund(Request $request, $id)
+    {
+        $this->authorize('manageFinance', WorkOrder::class);
+
+        $request->validate([
+            'refund_amount' => 'required|numeric|min:0',
+            'refund_notes' => 'nullable|string|max:500',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+
+        if ($order->status !== WorkOrderStatus::BATAL) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya SPK berstatus BATAL yang dapat diubah data refund-nya.'
+            ], 422);
+        }
+
+        $oldRefund = (float) ($order->refund_amount ?? 0);
+        $newRefund = (float) $request->refund_amount;
+        $notes = $request->refund_notes;
+
+        $order->refund_amount = $newRefund;
+        if ($notes !== null) {
+            $order->refund_notes = $notes;
+        }
+        $order->refund_by = Auth::id();
+        $order->save();
+
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => Auth::id(),
+            'step' => 'FINANCE',
+            'action' => 'REFUND_UPDATED',
+            'description' => "Finance " . Auth::user()->name . " memperbarui nominal refund dari Rp " . number_format($oldRefund, 0, ',', '.') . " menjadi Rp " . number_format($newRefund, 0, ',', '.') . ($notes ? " (Catatan: {$notes})" : "")
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data refund berhasil diperbarui.',
+                'refund_amount' => $newRefund,
+                'refund_amount_formatted' => 'Rp ' . number_format($newRefund, 0, ',', '.'),
+                'refund_notes' => $order->refund_notes
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Data refund berhasil diperbarui.');
     }
 
     public function restoreFromDonation($id)
