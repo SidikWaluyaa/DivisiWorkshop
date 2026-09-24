@@ -208,7 +208,9 @@
                         <th width="17%">Tgl Diterima</th>
                         <th width="13%">Status Stasiun</th>
                         <th width="12%" class="text-right">Nilai</th>
-                        @if($metric === 'failed_fast_track' || $metric === 'operational_failed_fast_track' || $metric === 'pending_fast_track' || $metric === 'downgraded_fast_track')
+                        @if($metric === 'successful_fast_track')
+                            <th width="18%">Durasi Stasiun & SLA</th>
+                        @elseif($metric === 'failed_fast_track' || $metric === 'operational_failed_fast_track' || $metric === 'pending_fast_track' || $metric === 'downgraded_fast_track')
                             <th width="15%">Keterangan</th>
                         @endif
                     </tr>
@@ -238,7 +240,18 @@
                                 <span class="badge {{ $badgeClass }}">{{ $statusVal }}</span>
                             </td>
                             <td class="text-right font-bold">Rp {{ number_format($order->total_transaksi, 0, ',', '.') }}</td>
-                            @if($metric === 'failed_fast_track')
+                            @if($metric === 'successful_fast_track')
+                                <td>
+                                    @php
+                                        $stationDurations = $order->getStationDurations();
+                                    @endphp
+                                    <div style="font-size: 8px; line-height: 1.3;">
+                                        <div>Prep: {{ $stationDurations['PREPARATION']['display'] }} | Sortir: {{ $stationDurations['SORTIR']['display'] }}</div>
+                                        <div>Prod: {{ $stationDurations['PRODUCTION']['display'] }} | QC: {{ $stationDurations['QC']['display'] }}</div>
+                                        <div style="color: #15803d; font-weight: bold; margin-top: 2px;">Total: {{ $stationDurations['total_lead_time']['display'] }} (ON-TIME)</div>
+                                    </div>
+                                </td>
+                            @elseif($metric === 'failed_fast_track')
                                 <td>
                                     <div style="font-size: 9px; color: #b91c1c; font-weight: bold;">
                                         @php
@@ -307,7 +320,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ in_array($metric, ['failed_fast_track', 'operational_failed_fast_track', 'pending_fast_track', 'downgraded_fast_track']) ? '8' : '7' }}" style="text-align: center; color: #64748b; padding: 20px;">
+                            <td colspan="{{ in_array($metric, ['successful_fast_track', 'failed_fast_track', 'operational_failed_fast_track', 'pending_fast_track', 'downgraded_fast_track']) ? '8' : '7' }}" style="text-align: center; color: #64748b; padding: 20px;">
                                 Tidak ada data SPK yang sesuai untuk periode ini.
                             </td>
                         </tr>

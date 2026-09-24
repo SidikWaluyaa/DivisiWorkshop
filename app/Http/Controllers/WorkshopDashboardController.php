@@ -245,6 +245,8 @@ class WorkshopDashboardController extends Controller
             return $o->status->value !== 'SPK_PENDING';
         });
 
+        $ftActiveOrders = $orders->where('fast_track_status', 'yes');
+
         $successfulOrders = $ftActiveOrders->filter(function($order) {
             return $order->isFastTrackSuccessful();
         });
