@@ -1883,4 +1883,132 @@ class WorkOrder extends Model
         return null;
     }
 
+    /**
+     * Memeriksa apakah SPK Fast Track berhasil mulus (Clean Run / On-Time SLA)
+     * Kriteria: fast_track_status = 'yes', status SELESAI/HISTORY, tidak pernah langgar SLA, dan tanpa kegagalan non-SLA.
+     */
+    public function isFastTrackSuccessful(): bool
+    {
+        if ($this->fast_track_status !== 'yes') {
+            return false;
+        }
+
+        $stVal = is_object($this->status) ? $this->status->value : $this->status;
+        if (!in_array($stVal, ['SELESAI', 'HISTORY'])) {
+            return false;
+        }
+
+        if ($this->hasEverViolatedSla()) {
+            return false;
+        }
+
+        if ($this->getNonSlaFailureReason() !== null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Mendapatkan rincian durasi riil pengerjaan per stasiun (Prep, Sortir, Prod, QC) vs batas SLA
+     */
+    public function getStationDurations(): array
+    {
+        $logs = $this->logs
+            ->where('action', 'STATUS_CHANGE')
+            ->sortBy('created_at');
+
+        $transitions = [];
+        foreach ($logs as $log) {
+            $transitions[$log->step] = $log->created_at;
+        }
+
+        $now = now();
+        $stVal = is_object($this->status) ? $this->status->value : $this->status;
+
+        // 1. Preparation (SLA: 1 Hari / 24 Jam)
+        $prepStart = $transitions['PREPARATION'] ?? $this->created_at;
+        $prepEnd = $transitions['SORTIR'] ?? $transitions['PRODUCTION'] ?? $transitions['QC'] ?? $transitions['FINISH'] ?? ($stVal === 'PREPARATION' ? $now : null);
+        $prepDurationHours = $prepEnd && $prepStart ? round(abs($prepStart->diffInHours($prepEnd)), 1) : null;
+        $prepDays = $prepDurationHours !== null ? round($prepDurationHours / 24, 1) : null;
+        $prepOnTime = $prepDays !== null ? ($prepDays <= 1) : null;
+
+        // 2. Sortir (SLA: 3 Hari / 72 Jam)
+        $sortirStart = $transitions['SORTIR'] ?? null;
+        $sortirEnd = $transitions['PRODUCTION'] ?? $transitions['QC'] ?? $transitions['FINISH'] ?? ($stVal === 'SORTIR' ? $now : null);
+        $sortirDurationHours = $sortirEnd && $sortirStart ? round(abs($sortirStart->diffInHours($sortirEnd)), 1) : null;
+        $sortirDays = $sortirDurationHours !== null ? round($sortirDurationHours / 24, 1) : null;
+        $sortirOnTime = $sortirDays !== null ? ($sortirDays <= 3) : null;
+
+        // 3. Production (SLA: 4 Hari / 96 Jam)
+        $prodStart = $transitions['PRODUCTION'] ?? null;
+        $prodEnd = $transitions['QC'] ?? $transitions['FINISH'] ?? ($stVal === 'PRODUCTION' ? $now : null);
+        $prodDurationHours = $prodEnd && $prodStart ? round(abs($prodStart->diffInHours($prodEnd)), 1) : null;
+        $prodDays = $prodDurationHours !== null ? round($prodDurationHours / 24, 1) : null;
+        $prodOnTime = $prodDays !== null ? ($prodDays <= 4) : null;
+
+        // 4. Quality Control (SLA: 1 Hari / 24 Jam)
+        $qcStart = $transitions['QC'] ?? null;
+        $qcEnd = $transitions['FINISH'] ?? ($stVal === 'QC' ? $now : null);
+        $qcDurationHours = $qcEnd && $qcStart ? round(abs($qcStart->diffInHours($qcEnd)), 1) : null;
+        $qcDays = $qcDurationHours !== null ? round($qcDurationHours / 24, 1) : null;
+        $qcOnTime = $qcDays !== null ? ($qcDays <= 1) : null;
+
+        // Total Lead Time (dari masuk sampai selesai)
+        $finishTime = $transitions['FINISH'] ?? (in_array($stVal, ['SELESAI', 'HISTORY']) ? $this->updated_at : null);
+        $totalHours = ($finishTime && $prepStart) ? round(abs($prepStart->diffInHours($finishTime)), 1) : null;
+        $totalDays = $totalHours !== null ? round($totalHours / 24, 1) : null;
+
+        // Helper formatter
+        $fmt = function($hours, $days) {
+            if ($hours === null) return '-';
+            if ($hours < 24) return $hours . ' jam';
+            return $days . ' hari (' . $hours . ' jam)';
+        };
+
+        return [
+            'PREPARATION' => [
+                'name' => 'Preparation',
+                'sla_days' => 1,
+                'hours' => $prepDurationHours,
+                'days' => $prepDays,
+                'display' => $fmt($prepDurationHours, $prepDays),
+                'is_on_time' => $prepOnTime,
+                'has_data' => $prepDurationHours !== null,
+            ],
+            'SORTIR' => [
+                'name' => 'Sortir',
+                'sla_days' => 3,
+                'hours' => $sortirDurationHours,
+                'days' => $sortirDays,
+                'display' => $fmt($sortirDurationHours, $sortirDays),
+                'is_on_time' => $sortirOnTime,
+                'has_data' => $sortirDurationHours !== null,
+            ],
+            'PRODUCTION' => [
+                'name' => 'Production',
+                'sla_days' => 4,
+                'hours' => $prodDurationHours,
+                'days' => $prodDays,
+                'display' => $fmt($prodDurationHours, $prodDays),
+                'is_on_time' => $prodOnTime,
+                'has_data' => $prodDurationHours !== null,
+            ],
+            'QC' => [
+                'name' => 'Quality Control',
+                'sla_days' => 1,
+                'hours' => $qcDurationHours,
+                'days' => $qcDays,
+                'display' => $fmt($qcDurationHours, $qcDays),
+                'is_on_time' => $qcOnTime,
+                'has_data' => $qcDurationHours !== null,
+            ],
+            'total_lead_time' => [
+                'hours' => $totalHours,
+                'days' => $totalDays,
+                'display' => $fmt($totalHours, $totalDays),
+            ],
+            'is_on_time' => ($prepOnTime !== false && $sortirOnTime !== false && $prodOnTime !== false && $qcOnTime !== false),
+        ];
+    }
 }

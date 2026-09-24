@@ -245,7 +245,9 @@ class WorkshopDashboardController extends Controller
             return $o->status->value !== 'SPK_PENDING';
         });
 
-        $ftActiveOrders = $orders->where('fast_track_status', 'yes');
+        $successfulOrders = $ftActiveOrders->filter(function($order) {
+            return $order->isFastTrackSuccessful();
+        });
         $failedOrders = $ftActiveOrders->filter(function($order) {
             return $order->hasEverViolatedSla();
         });
@@ -263,6 +265,9 @@ class WorkshopDashboardController extends Controller
             $reportTitle = $metric === 'total_revenue' 
                 ? 'Laporan Pendapatan SPK Fast Track' 
                 : 'Laporan Semua SPK Fast Track';
+        } elseif ($metric === 'successful_fast_track') {
+            $modalOrders = $successfulOrders;
+            $reportTitle = 'Laporan SPK Fast Track Berhasil (On-Time SLA)';
         } elseif ($metric === 'failed_fast_track') {
             $modalOrders = $failedOrders;
             $reportTitle = 'Laporan SPK Fast Track Gagal SLA';

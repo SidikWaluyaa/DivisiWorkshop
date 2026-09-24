@@ -46,14 +46,24 @@ class FastTrackPage extends Component
 
     public function updatingSearch() { $this->resetPage(); }
     public function updatingSelectedStatus() { $this->resetPage(); }
-    public function updatingSelectedMetric() { $this->resetPage(); }
-    public function updatingStartDate() { $this->resetPage(); }
-    public function updatingEndDate() { $this->resetPage(); }
+    public function updatingSelectedMetric() { unset($this->stats); $this->resetPage(); }
+    public function updatingStartDate() { unset($this->stats); $this->resetPage(); }
+    public function updatingEndDate() { unset($this->stats); $this->resetPage(); }
     public function updatingPerPage() { $this->resetPage(); }
 
     public function setMetric(string $metric)
     {
         $this->selectedMetric = $metric;
+        $this->selectedStatus = '';
+        unset($this->stats);
+        $this->resetPage();
+    }
+
+    public function resetFilters()
+    {
+        $this->selectedStatus = '';
+        $this->search = '';
+        unset($this->stats);
         $this->resetPage();
     }
 
@@ -62,10 +72,10 @@ class FastTrackPage extends Component
     {
         // Query minimal untuk mendapatkan statistik angka aggregat
         $allOrders = WorkOrder::query()
-            ->select('id', 'status', 'fast_track_status', 'created_at', 'entry_date')
+            ->select('id', 'status', 'fast_track_status', 'created_at', 'entry_date', 'total_transaksi', 'customer_name', 'spk_number', 'shoe_brand')
             ->with(['logs' => function($q) {
                 $q->whereIn('action', ['STATUS_CHANGE', 'fast_track_downgrade']);
-            }])
+            }, 'cxIssues'])
             ->where(function($q) {
                 $q->where('fast_track_status', 'yes')
                   ->orWhereHas('logs', function($l) {
@@ -99,19 +109,33 @@ class FastTrackPage extends Component
         });
 
         $ftActiveOrders = $orders->where('fast_track_status', 'yes');
+
+        // 3. Fast Track Berhasil Mulus (On-Time SLA & Clean Run tanpa kendala)
+        $successfulOrders = $ftActiveOrders->filter(function($order) {
+            return $order->isFastTrackSuccessful();
+        });
+        $successfulCount = $successfulOrders->count();
+
+        // 4. Fast Track Gagal SLA
         $failedOrders = $ftActiveOrders->filter(function($order) {
             return $order->hasEverViolatedSla();
         });
+
+        // 5. Gagal Operasional Non-SLA
         $operationalFailedOrders = $orders->filter(function($order) {
             $reason = $order->getNonSlaFailureReason();
             return $reason !== null && $reason !== 'TAMBAH_JASA';
         });
+
+        // 6. Batal / Downgrade Fast Track
         $downgradedOrders = $allOrders->where('fast_track_status', 'no');
 
         // Extract available statuses for the current selected metric
         $metricOrders = collect();
         if ($this->selectedMetric === 'total_fast_track') {
             $metricOrders = $ftActiveOrders;
+        } elseif ($this->selectedMetric === 'successful_fast_track') {
+            $metricOrders = $successfulOrders;
         } elseif ($this->selectedMetric === 'failed_fast_track') {
             $metricOrders = $failedOrders;
         } elseif ($this->selectedMetric === 'operational_failed_fast_track') {
@@ -126,6 +150,7 @@ class FastTrackPage extends Component
 
         return [
             'totalCount' => $ftActiveOrders->count(),
+            'successfulCount' => $successfulCount,
             'failedCount' => $failedOrders->count(),
             'operationalFailedCount' => $operationalFailedOrders->count(),
             'pendingCount' => $pendingCount,
@@ -138,7 +163,7 @@ class FastTrackPage extends Component
     public function render()
     {
         $dateCol = ($this->selectedMetric === 'pending_fast_track') ? 'created_at' : 'entry_date';
-        $stats = $this->stats;
+        $stats = $this->stats();
         $filteredIds = $stats['allOrdersInMetric']->pluck('id')->toArray();
 
         $query = WorkOrder::query()
@@ -175,10 +200,12 @@ class FastTrackPage extends Component
             'orders' => $orders,
             'availableStatuses' => $stats['availableStatuses'],
             'totalFastTrack' => $stats['totalCount'],
+            'successfulFastTrack' => $stats['successfulCount'],
             'failedFastTrack' => $stats['failedCount'],
             'operationalFailed' => $stats['operationalFailedCount'],
             'pendingFastTrack' => $stats['pendingCount'],
             'downgradedFastTrack' => $stats['downgradedCount'],
+            'totalInCurrentMetric' => $stats['allOrdersInMetric']->count(),
             'totalFilteredRevenue' => $totalFilteredRevenue,
         ])->layout('layouts.workshop-pwa');
     }
