@@ -41,7 +41,8 @@ class FinanceController extends Controller
         $gateway = $request->input('gateway'); // Get Gateway filter
         
         $query = Invoice::with(['customer', 'workOrders' => function($q) {
-            $q->select('id', 'invoice_id', 'spk_number', 'cs_code', 'shoe_brand', 'shoe_type', 'status');
+            $q->select('id', 'invoice_id', 'spk_number', 'cs_code', 'shoe_brand', 'shoe_type', 'status', 'total_transaksi')
+              ->with(['workOrderServices.service']);
         }]);
 
         if ($search) {
