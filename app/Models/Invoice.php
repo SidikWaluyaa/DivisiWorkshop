@@ -125,7 +125,28 @@ class Invoice extends Model
     public function syncFinancials()
     {
         $oldEstimasiSelesai = $this->estimasi_selesai ? \Carbon\Carbon::parse($this->estimasi_selesai) : null;
+
+        // Check if all work orders are BATAL or invoice is already explicitly cancelled
+        $workOrders = $this->workOrders;
+        $totalSpk = $workOrders->count();
+        $batalSpkCount = $workOrders->where('status', \App\Enums\WorkOrderStatus::BATAL)->count();
+        $isAllBatal = ($totalSpk > 0 && $batalSpkCount === $totalSpk);
+
+        if ($this->status === 'Batal' || $this->status === 'BATAL' || $isAllBatal) {
+            $this->status = 'Batal';
+            $this->spk_status = 'BATAL';
+            $this->total_amount = 0;
+            $this->shipping_cost = 0;
+            $this->estimasi_selesai = null;
+            $this->save();
+            return;
+        }
+
         $totals = $this->workOrders()
+            ->whereNotIn('status', [
+                \App\Enums\WorkOrderStatus::BATAL,
+                \App\Enums\WorkOrderStatus::DONASI
+            ])
             ->selectRaw('
                 COALESCE(SUM(CASE WHEN total_service_price > 0 THEN total_service_price ELSE total_transaksi END), 0) as total_amount,
                 COALESCE(SUM(discount), 0) as discount
@@ -144,8 +165,8 @@ class Invoice extends Model
 
         $totalPaid = $invoicePaid + $spkPaid;
 
-        $this->total_amount = $totals->total_amount;
-        $this->discount = $totals->discount;
+        $this->total_amount = $totals->total_amount ?? 0;
+        $this->discount = $totals->discount ?? 0;
         $this->paid_amount = $totalPaid;
 
         // DP Target = 70% of Total Amount
@@ -365,8 +386,27 @@ class Invoice extends Model
      */
     public function syncSpkStatus()
     {
-        // Check if there's any work order that is NOT "SELESAI"
-        $hasUnfinished = $this->workOrders()->where('status', '!=', 'SELESAI')->exists();
+        $workOrders = $this->workOrders;
+        $total = $workOrders->count();
+        if ($total === 0) {
+            $this->spk_status = 'BATAL';
+            $this->save();
+            return;
+        }
+
+        $batalCount = $workOrders->where('status', \App\Enums\WorkOrderStatus::BATAL)->count();
+        if ($batalCount === $total) {
+            $this->spk_status = 'BATAL';
+            $this->save();
+            return;
+        }
+
+        // Active SPKs (exclude BATAL)
+        $activeOrders = $workOrders->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL);
+        $hasUnfinished = $activeOrders->filter(function($wo) {
+            $val = $wo->status instanceof \App\Enums\WorkOrderStatus ? $wo->status->value : (string)$wo->status;
+            return $val !== 'SELESAI';
+        })->isNotEmpty();
         
         $this->spk_status = $hasUnfinished ? 'BELUM SELESAI' : 'SELESAI';
         $this->save();

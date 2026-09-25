@@ -21,13 +21,14 @@
                                 $statusBadge = match($invoice->status) {
                                     'Lunas' => 'bg-[#1B8A68]/20 text-[#1B8A68] border-[#1B8A68]/30',
                                     'DP/Cicil' => 'bg-[#FFC232]/20 text-[#FFC232] border-[#FFC232]/30',
+                                    'Batal', 'BATAL' => 'bg-rose-500/20 text-rose-400 border-rose-500/30',
                                     default => 'bg-white/10 text-white/50 border-white/10'
                                 };
                             @endphp
                             <span class="text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border {{ $statusBadge }} italic">
                                 {{ $invoice->status }}
                             </span>
-                            @if($invoice->is_dp_paid && $invoice->status !== 'Lunas')
+                            @if($invoice->is_dp_paid && !in_array($invoice->status, ['Lunas', 'Batal', 'BATAL']))
                                 <span class="text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border bg-emerald-500/20 text-emerald-400 border-emerald-500/30 italic flex items-center gap-2">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                     DP LUNAS

@@ -54,6 +54,7 @@
                                 <option value="Belum Bayar" {{ request('payment_status') === 'Belum Bayar' ? 'selected' : '' }}>⚪ Belum Bayar</option>
                                 <option value="DP/Cicil" {{ request('payment_status') === 'DP/Cicil' ? 'selected' : '' }}>🟡 DP / Cicil</option>
                                 <option value="Lunas" {{ request('payment_status') === 'Lunas' ? 'selected' : '' }}>🟢 Lunas</option>
+                                <option value="Batal" {{ request('payment_status') === 'Batal' ? 'selected' : '' }}>🔴 Batal</option>
                             </select>
                             <svg class="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -233,6 +234,7 @@
                                         @php
                                             $spkStyle = match($invoice->spk_status) {
                                                 'SELESAI' => 'bg-emerald-50 text-[#1B8A68] border-emerald-200',
+                                                'BATAL' => 'bg-rose-50 text-rose-700 border-rose-200',
                                                 'BELUM SELESAI' => 'bg-amber-50 text-amber-700 border-amber-200',
                                                 default => 'bg-gray-100 text-gray-600 border-gray-200'
                                             };
@@ -248,11 +250,13 @@
                                             $statusBadge = match($invoice->status) {
                                                 'Lunas' => 'bg-emerald-50 text-[#1B8A68] border-emerald-200',
                                                 'DP/Cicil' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                                'Batal', 'BATAL' => 'bg-rose-50 text-rose-700 border-rose-200',
                                                 default => 'bg-slate-100 text-slate-600 border-slate-200'
                                             };
                                             $dotColor = match($invoice->status) {
                                                 'Lunas' => 'bg-[#1B8A68]',
                                                 'DP/Cicil' => 'bg-amber-500 animate-pulse',
+                                                'Batal', 'BATAL' => 'bg-rose-500',
                                                 default => 'bg-slate-400'
                                             };
                                         @endphp
@@ -627,7 +631,13 @@
                                 $statusBadge = match($invoice->status) {
                                     'Lunas' => 'bg-emerald-50 text-[#1B8A68] border-emerald-200',
                                     'DP/Cicil' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                    'Batal', 'BATAL' => 'bg-rose-50 text-rose-700 border-rose-200',
                                     default => 'bg-slate-100 text-slate-600 border-slate-200'
+                                };
+                                $spkMobileBadge = match($invoice->spk_status) {
+                                    'SELESAI' => 'bg-emerald-50 text-[#1B8A68]',
+                                    'BATAL' => 'bg-rose-50 text-rose-700',
+                                    default => 'bg-amber-50 text-amber-700'
                                 };
                             @endphp
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-black border {{ $statusBadge }}">
@@ -642,7 +652,7 @@
                                 <div class="text-gray-400 font-mono text-[11px]">{{ $invoice->customer?->phone ?? '-' }}</div>
                             </div>
                             <div class="text-right">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-black {{ $invoice->spk_status === 'SELESAI' ? 'bg-emerald-50 text-[#1B8A68]' : 'bg-amber-50 text-amber-700' }}">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black {{ $spkMobileBadge }}">
                                     {{ $invoice->spk_status }}
                                 </span>
                                 <div class="text-[10px] text-gray-400 font-semibold mt-0.5">{{ $invoice->workOrders->count() }} Pasang Sepatu</div>
