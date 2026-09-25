@@ -63,10 +63,11 @@
 
                         {{-- Search Input --}}
                         <div class="relative group/search flex-1">
+                            <input type="hidden" name="per_page" value="{{ request('per_page', 20) }}">
                             <input type="text" 
                                    name="search" 
                                    value="{{ request('search') }}" 
-                                   placeholder="Cari nomor invoice, nama pelanggan, no telepon, kode unik..." 
+                                   placeholder="Cari nomor invoice, no SPK, nama pelanggan, merek sepatu, kode unik..." 
                                    class="w-full pl-11 pr-10 py-2.5 sm:py-3 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1B8A68] focus:ring-2 focus:ring-[#1B8A68]/20 text-xs sm:text-sm font-semibold text-gray-800 placeholder-gray-400 transition-all outline-none">
                             <svg class="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within/search:text-[#1B8A68] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -110,14 +111,26 @@
 
             {{-- Toolbar: Summary & Expand/Collapse Controls --}}
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 px-1">
-                <div class="flex items-center gap-2">
-                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#1B8A68]"></span>
-                    <p class="text-xs font-bold text-gray-600">
-                        Total <span class="font-extrabold text-gray-900">{{ $invoices->total() }}</span> invoice tercatat
-                        @if($invoices->total() > 0)
-                            <span class="text-gray-400 font-normal">(menampilkan baris {{ $invoices->firstItem() }} - {{ $invoices->lastItem() }})</span>
-                        @endif
-                    </p>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#1B8A68]"></span>
+                        <p class="text-xs font-bold text-gray-600">
+                            Total <span class="font-extrabold text-gray-900">{{ $invoices->total() }}</span> invoice tercatat
+                            @if($invoices->total() > 0)
+                                <span class="text-gray-400 font-normal">(menampilkan baris {{ $invoices->firstItem() }} - {{ $invoices->lastItem() }})</span>
+                            @endif
+                        </p>
+                    </div>
+
+                    {{-- Per Page Selector Toolbar (Compact) --}}
+                    <div class="flex items-center gap-1.5 bg-white border border-gray-200/90 rounded-xl px-2.5 py-1.5 shadow-sm text-xs font-semibold text-gray-600">
+                        <span class="text-[11px] text-gray-400">Tampil:</span>
+                        <select onchange="updatePerPage(this.value)" class="bg-transparent border-0 text-xs font-black text-gray-800 focus:ring-0 cursor-pointer p-0 pr-4">
+                            @foreach([10, 20, 50, 100] as $option)
+                                <option value="{{ $option }}" {{ (int)request('per_page', $perPage ?? 20) === $option ? 'selected' : '' }}>{{ $option }} / hal</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 {{-- Bulk Expand / Collapse Buttons --}}
@@ -608,11 +621,25 @@
                 </div>
 
                 {{-- Pagination Desktop --}}
-                @if(isset($invoices) && $invoices->hasPages())
-                    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-center">
-                        {{ $invoices->links() }}
+                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 text-xs text-gray-500 font-semibold">
+                        <span>Menampilkan <strong class="text-gray-800">{{ $invoices->firstItem() ?? 0 }}</strong> - <strong class="text-gray-800">{{ $invoices->lastItem() ?? 0 }}</strong> dari <strong class="text-gray-800">{{ $invoices->total() }}</strong> invoice</span>
+                        <span class="text-gray-300">•</span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-gray-500">Baris per halaman:</span>
+                            <select onchange="updatePerPage(this.value)" class="text-xs font-bold bg-white border border-gray-200 rounded-lg px-2 py-1 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1B8A68]/20 focus:border-[#1B8A68] cursor-pointer shadow-sm">
+                                @foreach([10, 20, 50, 100] as $option)
+                                    <option value="{{ $option }}" {{ (int)request('per_page', $perPage ?? 20) === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                @endif
+                    @if(isset($invoices) && $invoices->hasPages())
+                        <div class="flex items-center">
+                            {{ $invoices->links() }}
+                        </div>
+                    @endif
+                </div>
             </div>
 
             {{-- MOBILE/TABLET RESPONSIVE CARDS (visible on mobile/tablet, hidden on desktop) --}}
@@ -753,13 +780,35 @@
                 @endforelse
 
                 {{-- Pagination Mobile --}}
-                @if(isset($invoices) && $invoices->hasPages())
-                    <div class="py-4 flex justify-center">
-                        {{ $invoices->links() }}
+                <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm flex flex-col items-center gap-3">
+                    <div class="flex items-center justify-between w-full text-xs text-gray-600 font-semibold">
+                        <span>Total: <strong class="text-gray-900">{{ $invoices->total() }}</strong> invoice</span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-gray-400">Tampil:</span>
+                            <select onchange="updatePerPage(this.value)" class="text-xs font-bold bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-gray-800 focus:outline-none cursor-pointer">
+                                @foreach([10, 20, 50, 100] as $option)
+                                    <option value="{{ $option }}" {{ (int)request('per_page', $perPage ?? 20) === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                @endif
+                    @if(isset($invoices) && $invoices->hasPages())
+                        <div class="w-full flex justify-center pt-2 border-t border-gray-100">
+                            {{ $invoices->links() }}
+                        </div>
+                    @endif
+                </div>
             </div>
 
         </div>
     </div>
+
+    <script>
+        function updatePerPage(val) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('per_page', val);
+            url.searchParams.set('page', 1);
+            window.location.href = url.toString();
+        }
+    </script>
 </x-app-layout>

@@ -53,11 +53,14 @@ class FinanceController extends Controller
                   ->orWhereHas('customer', function($q2) use ($search) {
                       $q2->where('name', 'LIKE', "%{$search}%")
                          ->orWhere('phone', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhereHas('workOrders', function($q3) use ($search) {
+                      $q3->where('spk_number', 'LIKE', "%{$search}%")
+                         ->orWhere('shoe_brand', 'LIKE', "%{$search}%")
+                         ->orWhere('shoe_type', 'LIKE', "%{$search}%");
                   });
             });
         }
-
-
 
         if ($paymentStatus) {
             $query->where('status', $paymentStatus);
@@ -69,7 +72,12 @@ class FinanceController extends Controller
             });
         }
 
-        $invoices = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100])) {
+            $perPage = 20;
+        }
+
+        $invoices = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
 
         // Get unique gateways for filter
         $gateways = WorkOrder::whereNotNull('cs_code')
@@ -78,7 +86,7 @@ class FinanceController extends Controller
             ->orderBy('cs_code')
             ->pluck('cs_code');
 
-        return view('finance.invoices', compact('invoices', 'search', 'paymentStatus', 'gateway', 'gateways'));
+        return view('finance.invoices', compact('invoices', 'search', 'paymentStatus', 'gateway', 'gateways', 'perPage'));
     }
 
     /**
