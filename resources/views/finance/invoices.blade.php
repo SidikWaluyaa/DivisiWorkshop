@@ -382,14 +382,23 @@
                                                             @forelse($invoice->workOrders as $wo)
                                                                 <tr class="hover:bg-slate-50/60 transition-colors">
                                                                     <td class="px-4 py-3 font-mono font-bold text-gray-900">
-                                                                        @if(\Illuminate\Support\Facades\Route::has('reception.print-spk'))
-                                                                            <a href="{{ route('reception.print-spk', $wo->id) }}" target="_blank" class="hover:text-[#1B8A68] hover:underline inline-flex items-center gap-1.5" title="Cetak / Buka Lembar SPK">
+                                                                        <div class="flex items-center gap-2">
+                                                                            <a href="{{ route('admin.orders.show', $wo->id) }}" 
+                                                                               target="_blank" 
+                                                                               class="hover:text-[#1B8A68] hover:underline inline-flex items-center gap-1.5 text-gray-900 group/spk" 
+                                                                               title="Buka Detail Order / SPK di Admin (/admin/orders/show)">
                                                                                 <span>{{ $wo->spk_number }}</span>
-                                                                                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                                                <svg class="w-3.5 h-3.5 text-gray-400 group-hover/spk:text-[#1B8A68] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                                                             </a>
-                                                                        @else
-                                                                            <span>{{ $wo->spk_number }}</span>
-                                                                        @endif
+                                                                            @if(\Illuminate\Support\Facades\Route::has('reception.print-spk'))
+                                                                                <a href="{{ route('reception.print-spk', $wo->id) }}" 
+                                                                                   target="_blank" 
+                                                                                   class="text-gray-400 hover:text-[#1B8A68] p-1 rounded-md hover:bg-emerald-50 transition-colors" 
+                                                                                   title="Cetak Lembar SPK">
+                                                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                                                </a>
+                                                                            @endif
+                                                                        </div>
                                                                     </td>
                                                                     <td class="px-4 py-3">
                                                                         <span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-50 text-[#1B8A68] border border-emerald-100">
@@ -692,7 +701,23 @@
                                 @foreach($invoice->workOrders as $wo)
                                     <div class="bg-gray-50 rounded-xl p-3 border border-gray-200/80 space-y-1">
                                         <div class="flex items-center justify-between">
-                                            <span class="font-mono font-bold text-gray-900">{{ $wo->spk_number }}</span>
+                                            <div class="flex items-center gap-1.5">
+                                                <a href="{{ route('admin.orders.show', $wo->id) }}" 
+                                                   target="_blank" 
+                                                   class="font-mono font-bold text-gray-900 hover:text-[#1B8A68] hover:underline inline-flex items-center gap-1"
+                                                   title="Buka Detail Order di Admin (/admin/orders/show)">
+                                                    <span>{{ $wo->spk_number }}</span>
+                                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                                </a>
+                                                @if(\Illuminate\Support\Facades\Route::has('reception.print-spk'))
+                                                    <a href="{{ route('reception.print-spk', $wo->id) }}" 
+                                                       target="_blank" 
+                                                       class="text-gray-400 hover:text-[#1B8A68]" 
+                                                       title="Cetak SPK">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                    </a>
+                                                @endif
+                                            </div>
                                             <span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-emerald-50 text-[#1B8A68]">{{ $wo->cs_code ?? '-' }}</span>
                                         </div>
                                         <div class="font-semibold text-gray-700">{{ $wo->shoe_brand }} - {{ $wo->shoe_type }}</div>
