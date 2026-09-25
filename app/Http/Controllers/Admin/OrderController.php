@@ -789,6 +789,9 @@ class OrderController extends Controller
         try {
             $invoiceLog = '';
             
+            $refundAmount = (float) $request->input('refund_amount', 0);
+            $refundNotes = $request->input('refund_notes');
+
             // Check if there is an invoice linked
             if ($order->invoice_id && $order->invoice) {
                 $invoice = $order->invoice;
@@ -803,11 +806,51 @@ class OrderController extends Controller
                     $order->invoice_id = null;
                     $order->save();
 
+                    // Jika ada pengembalian dana (refund) untuk SPK yang dibatalkan ini,
+                    // kurangi catatan pembayaran di invoice dan alokasikan ke SPK batal agar tidak terjadi lebih bayar (minus)
+                    if ($refundAmount > 0) {
+                        $remainingRefund = $refundAmount;
+
+                        // 1. Kurangi dari OrderPayment yang terhubung ke invoice
+                        foreach ($invoice->payments()->orderBy('id', 'desc')->get() as $op) {
+                            if ($remainingRefund <= 0) break;
+                            $deduct = min($op->amount_total, $remainingRefund);
+                            $op->amount_total -= $deduct;
+                            $op->save();
+                            $remainingRefund -= $deduct;
+                        }
+
+                        // 2. Alokasikan pembayaran ke SPK yang dibatalkan agar uang masuk tercatat valid di laporan batal
+                        \App\Models\OrderPayment::create([
+                            'work_order_id' => $order->id,
+                            'invoice_id' => null,
+                            'type' => 'before',
+                            'amount_total' => $refundAmount,
+                            'amount_service' => $refundAmount,
+                            'amount_shipping' => 0,
+                            'payment_method' => 'Transfer',
+                            'paid_at' => now(),
+                            'pic_id' => auth()->id() ?? 1,
+                            'is_verified' => true,
+                            'notes' => "Alokasi pembayaran dari Invoice #{$invoice->invoice_number} untuk refund pembatalan SPK {$order->spk_number}"
+                        ]);
+
+                        // 3. Kurangi juga dari InvoicePayment pada invoice
+                        $remInvRefund = $refundAmount;
+                        foreach ($invoice->invoicePayments()->orderBy('id', 'desc')->get() as $ip) {
+                            if ($remInvRefund <= 0) break;
+                            $deduct = min($ip->amount, $remInvRefund);
+                            $ip->amount -= $deduct;
+                            $ip->save();
+                            $remInvRefund -= $deduct;
+                        }
+                    }
+
                     // Recalculate Invoice totals
                     $invoice->syncFinancials();
                     $invoice->syncSpkStatus();
 
-                    $invoiceLog = " Dilepas dari Invoice {$invoice->invoice_number}. Total tagihan invoice disinkronkan kembali.";
+                    $invoiceLog = " Dilepas dari Invoice {$invoice->invoice_number}. Total tagihan invoice dan catatan pembayaran refund disinkronkan kembali.";
                 } else {
                     // Scenario B: Only 1 SPK in the invoice.
                     // Check if there are any recorded payments (verified or unverified)
@@ -825,14 +868,15 @@ class OrderController extends Controller
                         // There are payments, so do NOT delete the Invoice to maintain financial compliance (SOX)
                         // Mark Invoice status as cancelled/batal
                         $invoice->status = 'Batal';
+                        $invoice->spk_status = 'BATAL';
+                        $invoice->total_amount = 0;
+                        $invoice->shipping_cost = 0;
+                        $invoice->estimasi_selesai = null;
                         $invoice->save();
                         $invoiceLog = " Invoice {$invoice->invoice_number} diubah statusnya menjadi Batal (tidak dihapus karena terdapat riwayat pembayaran).";
                     }
                 }
             }
-
-            $refundAmount = (float) $request->input('refund_amount', 0);
-            $refundNotes = $request->input('refund_notes');
 
             // Update WorkOrder status to BATAL and store refund details
             $order->status = \App\Enums\WorkOrderStatus::BATAL;
