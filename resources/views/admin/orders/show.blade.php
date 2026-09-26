@@ -2337,6 +2337,176 @@
                         </div>
                     </div>
 
+                    {{-- Kondisi Fisik Masuk (QC Gudang) --}}
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 p-8 relative overflow-hidden mb-8"
+                         x-data="{
+                            editing: false,
+                            upper: {{ json_encode($order->desc_upper ?? '') }},
+                            sol: {{ json_encode($order->desc_sol ?? '') }},
+                            bawaan: {{ json_encode($order->desc_kondisi_bawaan ?? '') }},
+                            displayUpper: {{ json_encode($order->desc_upper ?? '') }},
+                            displaySol: {{ json_encode($order->desc_sol ?? '') }},
+                            displayBawaan: {{ json_encode($order->desc_kondisi_bawaan ?? '') }},
+                            isLoading: false,
+                            savedNotice: false,
+                            async save() {
+                                if (!this.upper.trim() || !this.sol.trim() || !this.bawaan.trim()) {
+                                    alert('Mohon isi semua kondisi fisik: Upper, Sol, dan Kondisi Bawaan.');
+                                    return;
+                                }
+                                this.isLoading = true;
+                                try {
+                                    const res = await fetch('{{ route('admin.orders.update-qc-conditions', $order->id) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({ 
+                                            desc_upper: this.upper,
+                                            desc_sol: this.sol,
+                                            desc_kondisi_bawaan: this.bawaan
+                                        })
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        this.displayUpper = data.data.desc_upper;
+                                        this.displaySol = data.data.desc_sol;
+                                        this.displayBawaan = data.data.desc_kondisi_bawaan;
+                                        this.editing = false;
+                                        this.savedNotice = true;
+                                        setTimeout(() => { this.savedNotice = false; }, 3000);
+                                    } else {
+                                        alert(data.message || 'Gagal menyimpan kondisi fisik');
+                                    }
+                                } catch (e) {
+                                    alert('Terjadi kesalahan jaringan.');
+                                } finally {
+                                    this.isLoading = false;
+                                }
+                            }
+                         }" x-cloak>
+                        <div class="absolute right-0 top-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                        
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
+                            <div class="flex items-center gap-4">
+                                <span class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                    </svg>
+                                </span>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-xl font-black text-gray-900">Kondisi Fisik Masuk (QC Gudang)</h3>
+                                        <span x-show="savedNotice" x-transition class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black tracking-wide border border-emerald-200">
+                                            ✓ Tersimpan
+                                        </span>
+                                    </div>
+                                    <p class="text-emerald-700 font-medium text-xs">Pemeriksaan fisik awal (Upper, Sol, Kondisi Bawaan) terarsip & tercatat di log</p>
+                                </div>
+                            </div>
+                            
+                            @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isOwner() || auth()->user()->isGudang()))
+                                <template x-if="!editing">
+                                    <button @click="editing = true" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-emerald-600 hover:border-emerald-600 transition-all shadow-sm">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                        Edit Kondisi Fisik
+                                    </button>
+                                </template>
+                            @else
+                                <span class="flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-400 border border-gray-200 rounded-full text-[10px] font-bold select-none">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    Terunci (Read-Only)
+                                </span>
+                            @endif
+                        </div>
+
+                        <div class="relative z-10">
+                            {{-- View State --}}
+                            <template x-if="!editing">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {{-- Upper Card --}}
+                                    <div class="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-emerald-200 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-xs font-black">1</span>
+                                            <span class="text-[11px] font-black text-emerald-800 uppercase tracking-wider">Bagian Upper</span>
+                                        </div>
+                                        <p class="text-gray-700 text-sm font-bold leading-relaxed whitespace-pre-wrap" x-text="displayUpper || 'Belum dicatat'"></p>
+                                    </div>
+
+                                    {{-- Sol Card --}}
+                                    <div class="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-emerald-200 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-xs font-black">2</span>
+                                            <span class="text-[11px] font-black text-emerald-800 uppercase tracking-wider">Bagian Sol</span>
+                                        </div>
+                                        <p class="text-gray-700 text-sm font-bold leading-relaxed whitespace-pre-wrap" x-text="displaySol || 'Belum dicatat'"></p>
+                                    </div>
+
+                                    {{-- Kondisi Bawaan Card --}}
+                                    <div class="p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-emerald-200 transition-all">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-xs font-black">3</span>
+                                            <span class="text-[11px] font-black text-emerald-800 uppercase tracking-wider">Kondisi Bawaan</span>
+                                        </div>
+                                        <p class="text-gray-700 text-sm font-bold leading-relaxed whitespace-pre-wrap" x-text="displayBawaan || 'Belum dicatat'"></p>
+                                    </div>
+                                </div>
+                            </template>
+
+                            {{-- Edit State --}}
+                            @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isOwner() || auth()->user()->isGudang()))
+                                <template x-if="editing">
+                                    <div class="space-y-4">
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="block text-xs font-black text-gray-600 uppercase mb-1">1. Kondisi Upper (Bagian Atas)</label>
+                                                <input type="text" x-model="upper" 
+                                                       class="w-full rounded-xl border-2 border-gray-100 bg-white p-3.5 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 font-bold text-sm text-gray-800 transition-all shadow-inner"
+                                                       placeholder="Detail kondisi bagian atas sepatu...">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-black text-gray-600 uppercase mb-1">2. Kondisi Sol (Bagian Bawah)</label>
+                                                <input type="text" x-model="sol" 
+                                                       class="w-full rounded-xl border-2 border-gray-100 bg-white p-3.5 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 font-bold text-sm text-gray-800 transition-all shadow-inner"
+                                                       placeholder="Detail kondisi bagian sol sepatu...">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-black text-gray-600 uppercase mb-1">3. Kondisi Bawaan & Aksesoris</label>
+                                                <input type="text" x-model="bawaan" 
+                                                       class="w-full rounded-xl border-2 border-gray-100 bg-white p-3.5 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 font-bold text-sm text-gray-800 transition-all shadow-inner"
+                                                       placeholder="Detail kondisi bawaan lainnya...">
+                                            </div>
+                                        </div>
+
+                                        <div class="flex gap-3 pt-2">
+                                            <button @click="save()" :disabled="isLoading" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-xl shadow-emerald-100 transition-all flex items-center justify-center gap-2">
+                                                <template x-if="!isLoading">
+                                                    <span class="flex items-center gap-2">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                        Simpan Perubahan Kondisi
+                                                    </span>
+                                                </template>
+                                                <template x-if="isLoading">
+                                                    <span class="flex items-center gap-2">
+                                                        <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                        Menyimpan...
+                                                    </span>
+                                                </template>
+                                            </button>
+                                            <button @click="editing = false; upper = displayUpper; sol = displaySol; bawaan = displayBawaan" class="px-6 py-3.5 bg-white border border-gray-200 text-gray-500 font-black rounded-xl transition-all hover:bg-gray-50">
+                                                Batal
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            @endif
+                        </div>
+                    </div>
+
                     {{-- Database Rack Information (Assessment Style) --}}
                     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300">
                         <div class="bg-gray-50/50 p-8 border-b border-gray-100">

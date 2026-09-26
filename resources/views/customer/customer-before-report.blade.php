@@ -634,6 +634,46 @@
             </div>
         </div>
 
+        {{-- Physical Condition Card (QC Masuk) --}}
+        @if(!empty($workOrder->desc_upper) || !empty($workOrder->desc_sol) || !empty($workOrder->desc_kondisi_bawaan))
+        <div class="info-card animate-in delay-2" style="margin-top: -8px;">
+            <div class="section-header" style="margin-bottom: 16px;">
+                <span class="bar"></span>
+                <h3>📋 Hasil Pemeriksaan Awal (QC Fisik)</h3>
+            </div>
+
+            @if(!empty($workOrder->desc_upper))
+            <div class="info-row">
+                <div class="info-icon">👟</div>
+                <div style="flex:1;">
+                    <p class="info-label">1. Bagian Atas (Upper)</p>
+                    <p class="info-value" style="font-size: 14px; font-weight: 600; line-height: 1.5; color: #334155;">{{ $workOrder->desc_upper }}</p>
+                </div>
+            </div>
+            @endif
+
+            @if(!empty($workOrder->desc_sol))
+            <div class="info-row">
+                <div class="info-icon">🦶</div>
+                <div style="flex:1;">
+                    <p class="info-label">2. Bagian Sol (Bawah)</p>
+                    <p class="info-value" style="font-size: 14px; font-weight: 600; line-height: 1.5; color: #334155;">{{ $workOrder->desc_sol }}</p>
+                </div>
+            </div>
+            @endif
+
+            @if(!empty($workOrder->desc_kondisi_bawaan))
+            <div class="info-row">
+                <div class="info-icon">📦</div>
+                <div style="flex:1;">
+                    <p class="info-label">3. Kondisi Bawaan & Aksesoris</p>
+                    <p class="info-value" style="font-size: 14px; font-weight: 600; line-height: 1.5; color: #334155;">{{ $workOrder->desc_kondisi_bawaan }}</p>
+                </div>
+            </div>
+            @endif
+        </div>
+        @endif
+
         {{-- Photo Section --}}
         <div class="animate-in delay-3">
             <div class="section-header">

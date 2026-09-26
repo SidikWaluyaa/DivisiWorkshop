@@ -296,6 +296,9 @@ class ReceptionService
                 'reception_qc_passed' => $passed,
                 'warehouse_qc_status' => $passed ? 'lolos' : 'reject',
                 'warehouse_qc_notes' => !empty($data['warehouse_qc_notes']) ? $data['warehouse_qc_notes'] : ($passed ? null : ($data['reception_rejection_reason'] ?? null)),
+                'desc_upper' => $data['desc_upper'] ?? null,
+                'desc_sol' => $data['desc_sol'] ?? null,
+                'desc_kondisi_bawaan' => $data['desc_kondisi_bawaan'] ?? null,
                 'suggested_services' => !empty($data['suggested_services']) || !empty($data['recommended_services']) 
                     ? array_values(array_filter(array_merge((array)($data['recommended_services'] ?? []), (array)($data['suggested_services'] ?? [])))) 
                     : null,

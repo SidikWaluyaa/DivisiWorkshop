@@ -758,6 +758,9 @@ class ReceptionController extends Controller
                 }
             ],
             'reception_qc_passed' => 'required|boolean',
+            'desc_upper' => 'required|string|max:1000',
+            'desc_sol' => 'required|string|max:1000',
+            'desc_kondisi_bawaan' => 'required|string|max:1000',
             'reception_rejection_reason' => 'required_if:reception_qc_passed,0|nullable|string',
             'warehouse_qc_notes' => 'nullable|string|max:1000',
             'suggested_services' => 'nullable|array',

@@ -749,6 +749,83 @@ class OrderController extends Controller
     }
 
     /**
+     * Update QC physical conditions (Upper, Sol, Kondisi Bawaan)
+     */
+    public function updateQcConditions(Request $request, $id)
+    {
+        $user = auth()->user();
+        if (!$user || (!$user->isAdmin() && !$user->isOwner() && !$user->isGudang())) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya Admin, Owner, dan Tim Gudang yang memiliki wewenang untuk mengedit kondisi fisik masuk.'
+            ], 403);
+        }
+
+        $request->validate([
+            'desc_upper' => 'required|string|max:1000',
+            'desc_sol' => 'required|string|max:1000',
+            'desc_kondisi_bawaan' => 'required|string|max:1000',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+
+        $oldUpper = $order->desc_upper ?? '-';
+        $oldSol = $order->desc_sol ?? '-';
+        $oldBawaan = $order->desc_kondisi_bawaan ?? '-';
+
+        $order->desc_upper = $request->desc_upper;
+        $order->desc_sol = $request->desc_sol;
+        $order->desc_kondisi_bawaan = $request->desc_kondisi_bawaan;
+        $order->save();
+
+        // Also sync to active open CxIssue from Gudang if exists
+        $openIssue = \App\Models\CxIssue::where('work_order_id', $order->id)
+            ->where('source', 'GUDANG')
+            ->where('status', 'OPEN')
+            ->first();
+        if ($openIssue) {
+            $openIssue->update([
+                'desc_upper' => $order->desc_upper,
+                'desc_sol' => $order->desc_sol,
+                'desc_kondisi_bawaan' => $order->desc_kondisi_bawaan,
+                'description' => "{$order->desc_upper} | {$order->desc_sol} | {$order->desc_kondisi_bawaan}",
+            ]);
+        }
+
+        // [AUDIT LOG] Record change
+        $changes = [];
+        if ($oldUpper !== $order->desc_upper) {
+            $changes[] = "Upper: '{$oldUpper}' ➔ '{$order->desc_upper}'";
+        }
+        if ($oldSol !== $order->desc_sol) {
+            $changes[] = "Sol: '{$oldSol}' ➔ '{$order->desc_sol}'";
+        }
+        if ($oldBawaan !== $order->desc_kondisi_bawaan) {
+            $changes[] = "Bawaan: '{$oldBawaan}' ➔ '{$order->desc_kondisi_bawaan}'";
+        }
+
+        $changeSummary = !empty($changes) ? implode(', ', $changes) : "Kondisi fisik diperbarui tanpa perubahan teks";
+
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => $user->id,
+            'step' => $order->status->value ?? $order->status,
+            'action' => 'QC_CONDITIONS_UPDATED',
+            'description' => "Kondisi fisik masuk diedit oleh {$user->name}: {$changeSummary}"
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kondisi fisik masuk berhasil diperbarui.',
+            'data' => [
+                'desc_upper' => $order->desc_upper,
+                'desc_sol' => $order->desc_sol,
+                'desc_kondisi_bawaan' => $order->desc_kondisi_bawaan,
+            ]
+        ]);
+    }
+
+    /**
      * Cancel a work order and manage its associated invoice.
      */
     public function cancel(Request $request, $id)

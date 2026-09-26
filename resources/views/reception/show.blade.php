@@ -662,57 +662,79 @@
                             </label>
                         </div>
 
+                        {{-- Deskripsi Kondisi Fisik (Upper, Sol, Kondisi Bawaan) - Wajib untuk Lolos & Reject --}}
+                        <div class="mt-6 p-6 rounded-2xl border transition-all duration-300"
+                             :class="qcPassed == '1' ? 'bg-[#22AF85]/5 border-[#22AF85]/20' : 'bg-red-50 border-red-200'">
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-sm font-black uppercase tracking-widest transition-colors flex items-center gap-2"
+                                           :class="qcPassed == '1' ? 'text-[#22AF85]' : 'text-red-600'">
+                                        <template x-if="qcPassed == '1'">
+                                            <span>📋 Kondisi Fisik Masuk / QC Awal (Wajib)</span>
+                                        </template>
+                                        <template x-if="qcPassed == '0'">
+                                            <span>⚠️ Alasan Penolakan & Kondisi Fisik (Wajib)</span>
+                                        </template>
+                                    </label>
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border"
+                                          :class="qcPassed == '1' ? 'bg-[#22AF85]/10 text-[#22AF85] border-[#22AF85]/30' : 'bg-red-100 text-red-700 border-red-300'">
+                                        <span x-text="qcPassed == '1' ? 'Status: Lolos QC' : 'Status: Reject Gudang'"></span>
+                                    </span>
+                                </div>
+
+                                <div class="space-y-3">
+                                    {{-- 1. Upper --}}
+                                    <div class="flex items-stretch shadow-sm">
+                                        <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4 transition-colors"
+                                             :class="qcPassed == '1' ? 'border-[#22AF85]/30 text-[#22AF85]' : 'border-red-200 text-red-600'">
+                                            <span class="text-[9px] font-black uppercase tracking-wider">1. Upper</span>
+                                        </div>
+                                        <input type="text" name="desc_upper" x-model="descUpper" required
+                                            placeholder="Detail kondisi bagian atas sepatu (misal: kotor sedang, lecet toebox)..."
+                                            class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl font-bold text-sm py-3.5 px-4 transition-all"
+                                            :class="qcPassed == '1' ? 'focus:ring-[#22AF85] focus:border-[#22AF85]' : 'focus:ring-red-500 focus:border-red-500'">
+                                    </div>
+
+                                    {{-- 2. Sol --}}
+                                    <div class="flex items-stretch shadow-sm">
+                                        <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4 transition-colors"
+                                             :class="qcPassed == '1' ? 'border-[#22AF85]/30 text-[#22AF85]' : 'border-red-200 text-red-600'">
+                                            <span class="text-[9px] font-black uppercase tracking-wider">2. Sol</span>
+                                        </div>
+                                        <input type="text" name="desc_sol" x-model="descSol" required
+                                            placeholder="Detail kondisi bagian sol/bawah (misal: midsole yellowing, outsole aus tipis)..."
+                                            class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl font-bold text-sm py-3.5 px-4 transition-all"
+                                            :class="qcPassed == '1' ? 'focus:ring-[#22AF85] focus:border-[#22AF85]' : 'focus:ring-red-500 focus:border-red-500'">
+                                    </div>
+
+                                    {{-- 3. Kondisi Bawaan --}}
+                                    <div class="flex items-stretch shadow-sm">
+                                        <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4 transition-colors"
+                                             :class="qcPassed == '1' ? 'border-[#22AF85]/30 text-[#22AF85]' : 'border-red-200 text-red-600'">
+                                            <span class="text-[9px] font-black uppercase tracking-wider text-center leading-tight">3. Kondisi<br>Bawaan</span>
+                                        </div>
+                                        <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" required
+                                            placeholder="Detail kondisi bawaan lainnya (misal: tali ori bawaan, insole masih tebal)..."
+                                            class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl font-bold text-sm py-3.5 px-4 transition-all"
+                                            :class="qcPassed == '1' ? 'focus:ring-[#22AF85] focus:border-[#22AF85]' : 'focus:ring-red-500 focus:border-red-500'">
+                                    </div>
+
+                                    <input type="hidden" name="reception_rejection_reason" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- QC Passed Notes (Catatan Gudang Opsional) --}}
                         <div x-show="qcPassed == '1'" x-transition class="mt-4 bg-[#22AF85]/10 p-5 rounded-2xl border border-[#22AF85]/20">
                             <label class="flex items-center gap-2 text-xs font-black text-[#22AF85] mb-2 uppercase tracking-widest">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
-                                <span>Catatan QC Gudang (Opsional)</span>
+                                <span>Catatan QC Gudang Tambahan (Opsional)</span>
                             </label>
                             <input type="text" name="warehouse_qc_notes" value="{{ old('warehouse_qc_notes', $order->warehouse_qc_notes) }}"
-                                   placeholder="Masukkan catatan pemeriksaan fisik gudang jika ada (misal: aksesoris lengkap, tali ori bawaan)..."
+                                   placeholder="Masukkan catatan pemeriksaan fisik tambahan jika ada..."
                                    class="w-full bg-white border border-gray-200 text-gray-900 rounded-xl py-3.5 px-4 text-sm font-bold focus:ring-[#22AF85] focus:border-[#22AF85] shadow-sm">
-                        </div>
-
-                        {{-- Rejection Reason --}}
-                        <div x-show="qcPassed == '0'" x-transition
-                            class="mt-6 bg-red-50 p-6 rounded-2xl border border-red-200" style="display: none;">
-                            <div class="space-y-6">
-                                <div>
-                                    <label class="block text-sm font-black text-red-600 mb-4 uppercase tracking-widest">Alasan Penolakan (Wajib)</label>
-                                    <div class="space-y-3">
-                                        <div class="flex items-stretch shadow-sm">
-                                            <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
-                                                <span class="text-[9px] font-black text-red-600 uppercase tracking-wider">1. Upper</span>
-                                            </div>
-                                            <input type="text" name="desc_upper" x-model="descUpper" 
-                                                placeholder="Detail kondisi bagian atas sepatu..."
-                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
-                                        </div>
-
-                                        <div class="flex items-stretch shadow-sm">
-                                            <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
-                                                <span class="text-[9px] font-black text-red-600 uppercase tracking-wider">2. Sol</span>
-                                            </div>
-                                            <input type="text" name="desc_sol" x-model="descSol" 
-                                                placeholder="Detail kondisi bagian sol/bawah..."
-                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
-                                        </div>
-
-                                        <div class="flex items-stretch shadow-sm">
-                                            <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
-                                                <span class="text-[9px] font-black text-red-600 uppercase tracking-wider text-center leading-tight">3. Kondisi<br>Bawaan</span>
-                                            </div>
-                                            <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" 
-                                                placeholder="Detail kondisi bawaan lainnya..."
-                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
-                                        </div>
-                                        
-                                        <input type="hidden" name="reception_rejection_reason" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         {{-- Structured Service Input (Recommended & Optional) --}}
@@ -1389,9 +1411,9 @@
 
                 // QC State
                 qcPassed: '1',
-                descUpper: '',
-                descSol: '',
-                descKondisiBawaan: '',
+                descUpper: {{ json_encode(old('desc_upper', $order->desc_upper ?? '')) }},
+                descSol: {{ json_encode(old('desc_sol', $order->desc_sol ?? '')) }},
+                descKondisiBawaan: {{ json_encode(old('desc_kondisi_bawaan', $order->desc_kondisi_bawaan ?? '')) }},
 
                 // Structured Services
                 services: @json($servicesList),
