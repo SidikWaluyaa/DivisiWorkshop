@@ -1,400 +1,4 @@
 <x-app-layout>
-    @push('head')
-    @php
-        $servicesList = $services->map(function($service) {
-            return [
-                'name' => data_get($service, 'name'),
-                'price' => data_get($service, 'price'),
-                'category' => data_get($service, 'category')
-            ];
-        })->toArray();
-    @endphp
-    <script>
-        window.receptionForm = function() {
-            return {
-                // Accessories State
-                accTali: '{{ $tali ?? "T" }}',
-                accInsole: '{{ $insole ?? "T" }}',
-                accBox: '{{ $box ?? "T" }}',
-
-                // QC State
-                qcPassed: '1',
-                descUpper: {{ json_encode(old('desc_upper', $order->desc_upper ?? '')) }},
-                descSol: {{ json_encode(old('desc_sol', $order->desc_sol ?? '')) }},
-                descKondisiBawaan: {{ json_encode(old('desc_kondisi_bawaan', $order->desc_kondisi_bawaan ?? '')) }},
-
-                // Structured Services
-                services: @json($servicesList),
-                
-                recService1: '',
-                recService1Category: '',
-                recService1Search: '',
-                recService1Price: '',
-                recService1Open: false,
-
-                recService2: '',
-                recService2Category: '',
-                recService2Search: '',
-                recService2Price: '',
-                recService2Open: false,
-
-                sugService1: '',
-                sugService1Category: '',
-                sugService1Search: '',
-                sugService1Price: '',
-                sugService1Open: false,
-
-                sugService2: '',
-                sugService2Category: '',
-                sugService2Search: '',
-                sugService2Price: '',
-                sugService2Open: false,
-
-                get uniqueCategories() {
-                    const cats = new Set();
-                    if (Array.isArray(this.services)) {
-                        this.services.forEach(s => {
-                            if (s && s.category) cats.add(s.category);
-                        });
-                    }
-                    return Array.from(cats).sort();
-                },
-
-                getFilteredServices(category, search) {
-                    if (!category || !Array.isArray(this.services)) return [];
-                    const q = (search || '').toLowerCase();
-                    return this.services.filter(s => 
-                        s && s.category === category && 
-                        (s.name || '').toLowerCase().includes(q)
-                    );
-                },
-
-                onSuggestionCategoryChange(type, index) {
-                    const searchKey = `${type}Service${index}Search`;
-                    const priceKey = `${type}Service${index}Price`;
-                    const openKey = `${type}Service${index}Open`;
-                    const mainKey = `${type}Service${index}`;
-                    
-                    this[searchKey] = '';
-                    this[priceKey] = '';
-                    this[mainKey] = '';
-                    this[openKey] = false;
-                },
-
-                formatRupiah(amount) {
-                    if (!amount && amount !== 0) return '0';
-                    return new Intl.NumberFormat('id-ID').format(amount);
-                },
-
-                updateServiceValue(type, index) {
-                    const searchKey = `${type}Service${index}Search`;
-                    const priceKey = `${type}Service${index}Price`;
-                    const mainKey = `${type}Service${index}`;
-                    
-                    const name = this[searchKey] || '';
-                    const price = this[priceKey] || '0';
-                    
-                    if (name) {
-                        this[mainKey] = `${name} (Rp ${this.formatRupiah(price)})`;
-                    } else {
-                        this[mainKey] = '';
-                    }
-                },
-
-                selectService(type, index, service) {
-                    const searchKey = `${type}Service${index}Search`;
-                    const priceKey = `${type}Service${index}Price`;
-                    const openKey = `${type}Service${index}Open`;
-                    
-                    this[searchKey] = service.name;
-                    this[priceKey] = service.price;
-                    this[openKey] = false;
-                    this.updateServiceValue(type, index);
-                },
-
-                // Editing State
-                isEditing: {{ (
-                    in_array(strtolower($order->shoe_brand ?? ''), ['', 'unknown', '-', 'item']) ||
-                    in_array(strtolower($order->shoe_size ?? ''), ['', 'unknown', '-', 'item']) ||
-                    in_array(strtolower($order->category ?? 'item'), ['', 'unknown', '-', 'item'])
-                ) ? 'true' : 'false' }},
-
-                isEmpty(val, placeholder = 'Unknown') {
-                    if (!val) return true;
-                    const v = val.trim().toLowerCase();
-                    return v === '' || v === '-' || v === 'unknown' || v === placeholder.toLowerCase();
-                },
-
-                get showAccessoryRack() {
-                    return (this.accTali === 'S' || this.accTali === 'Simpan' || this.accTali === 'N' || this.accTali === 'Nempel') ||
-                        (this.accInsole === 'S' || this.accInsole === 'Simpan' || this.accInsole === 'N' || this.accInsole === 'Nempel') ||
-                        (this.accBox === 'S' || this.accBox === 'Simpan' || this.accBox === 'N' || this.accBox === 'Nempel');
-                },
-
-                get isAccessoryRackRequired() {
-                    return (this.accTali === 'S' || this.accTali === 'Simpan') ||
-                        (this.accInsole === 'S' || this.accInsole === 'Simpan') ||
-                        (this.accBox === 'S' || this.accBox === 'Simpan');
-                }
-            };
-        };
-
-        window.photoGallery = function() {
-            return {
-                isLightboxOpen: false, 
-                currentImage: '', 
-                currentPhotoId: null,
-                isSelecting: false,
-                selectedPhotos: [],
-                allPhotoIds: [@foreach($order->photos as $p){{ $p->id }}{{ !$loop->last ? ',' : '' }}@endforeach],
-
-                handlePhotoClick(imageUrl, photoId) {
-                    if (this.isSelecting) {
-                        this.toggleSelection(photoId);
-                    } else {
-                        window.open(imageUrl, '_blank');
-                    }
-                },
-                toggleSelection(id) {
-                    if (this.selectedPhotos.includes(id)) {
-                        this.selectedPhotos = this.selectedPhotos.filter(i => i !== id);
-                    } else {
-                        this.selectedPhotos.push(id);
-                    }
-                },
-                deleteSelected() {
-                    if(!confirm(`Hapus ${this.selectedPhotos.length} foto secara PERMANEN?`)) return;
-                    fetch('{{ route("photos.bulk-destroy") }}', { 
-                        method: 'DELETE', 
-                        headers: { 
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}', 
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ ids: this.selectedPhotos })
-                    })
-                    .then(response => response.json())
-                    .then(data => { 
-                        if (data.success) { 
-                            location.reload(); 
-                        } else {
-                            alert('Gagal menghapus: ' + data.message);
-                        }
-                    });
-                },
-                setAsCover(id) {
-                    if(!confirm('Set foto ini sebagai Cover SPK?')) return;
-                    
-                    fetch(`/photos/${id}/set-cover`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => { 
-                        if (data.success) { 
-                            location.reload(); 
-                        } else {
-                            alert('Gagal mengatur cover: ' + data.message);
-                        }
-                    });
-                }
-            };
-        };
-
-        window.cameraCapture = function() {
-            return {
-                isCameraOpen: false,
-                stream: null,
-                streamActive: false,
-                isDrawing: false,
-                ctx: null,
-                isMouseDown: false,
-                lastX: 0,
-                lastY: 0,
-                photos: [],
-                isLoading: false,
-                facingMode: 'environment',
-
-                async openCamera() {
-                    this.isCameraOpen = true;
-                    await this.$nextTick(); 
-                    this.ctx = this.$refs.canvasElement.getContext('2d');
-                    await this.startCamera();
-                },
-
-                closeCamera() {
-                    this.isCameraOpen = false;
-                    this.isDrawing = false;
-                    if (this.stream) {
-                        this.stream.getTracks().forEach(track => track.stop());
-                    }
-                    this.streamActive = false;
-                },
-
-                async startCamera() {
-                    try {
-                        if (this.stream) {
-                            this.stream.getTracks().forEach(track => track.stop());
-                        }
-                        this.streamActive = false;
-                        
-                        const constraints = {
-                            video: {
-                                facingMode: this.facingMode,
-                                width: { ideal: 1024 },
-                                height: { ideal: 1024 }
-                            }
-                        };
-
-                        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-                        this.$refs.videoElement.srcObject = this.stream;
-                        this.streamActive = true;
-                    } catch (err) {
-                        console.error("Error accessing camera: ", err);
-                        alert("Gagal mengakses kamera. Pastikan browser memiliki izin akses kamera.");
-                    }
-                },
-
-                async switchCamera() {
-                    this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
-                    await this.startCamera();
-                },
-
-                captureImage() {
-                    if (!this.streamActive) return;
-                    
-                    const video = this.$refs.videoElement;
-                    const canvas = this.$refs.canvasElement;
-                    
-                    const maxWidth = 1024;
-                    let width = video.videoWidth;
-                    let height = video.videoHeight;
-                    
-                    if (width > maxWidth) {
-                        const ratio = maxWidth / width;
-                        width = maxWidth;
-                        height = height * ratio;
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-
-                    this.ctx.drawImage(video, 0, 0, width, height);
-                    
-                    this.ctx.strokeStyle = 'red';
-                    this.ctx.lineWidth = 4;
-                    this.ctx.lineCap = 'round';
-                    this.ctx.lineJoin = 'round';
-
-                    this.isDrawing = true;
-                    
-                    if (this.stream) {
-                        this.stream.getTracks().forEach(track => track.enabled = false);
-                    }
-                },
-
-                retakePhoto() {
-                    this.isDrawing = false;
-                    if (this.stream) {
-                        this.stream.getTracks().forEach(track => track.enabled = true);
-                    }
-                },
-
-                async savePhoto() {
-                    this.isLoading = true;
-                    try {
-                        const dataUrl = this.$refs.canvasElement.toDataURL('image/jpeg', 0.6);
-                        const res = await fetch(dataUrl);
-                        const blob = await res.blob();
-                        const fileName = `EVIDENCE_${Date.now()}.jpg`;
-                        const file = new File([blob], fileName, { type: 'image/jpeg' });
-                        
-                        this.photos.push({
-                            dataUrl: dataUrl,
-                            file: file
-                        });
-                        
-                        this.updateHiddenInput();
-                        this.retakePhoto();
-                    } catch (e) {
-                        console.error("Failed to save photo", e);
-                        alert("Gagal menyimpan foto.");
-                    } finally {
-                        this.isLoading = false;
-                    }
-                },
-
-                removePhoto(index) {
-                    this.photos.splice(index, 1);
-                    this.updateHiddenInput();
-                },
-
-                updateHiddenInput() {
-                    const dataTransfer = new DataTransfer();
-                    this.photos.forEach(photo => {
-                        dataTransfer.items.add(photo.file);
-                    });
-                    document.getElementById('camera_hidden_input').files = dataTransfer.files;
-                },
-
-                getCoordinates(e) {
-                    const rect = this.$refs.canvasElement.getBoundingClientRect();
-                    const scaleX = this.$refs.canvasElement.width / rect.width;
-                    const scaleY = this.$refs.canvasElement.height / rect.height;
-
-                    if (e.touches && e.touches.length > 0) {
-                        return {
-                            x: (e.touches[0].clientX - rect.left) * scaleX,
-                            y: (e.touches[0].clientY - rect.top) * scaleY
-                        };
-                    }
-                    return {
-                        x: (e.clientX - rect.left) * scaleX,
-                        y: (e.clientY - rect.top) * scaleY
-                    };
-                },
-
-                startDrawing(e) {
-                    if (!this.isDrawing) return;
-                    this.isMouseDown = true;
-                    const coords = this.getCoordinates(e);
-                    this.lastX = coords.x;
-                    this.lastY = coords.y;
-                },
-
-                draw(e) {
-                    if (!this.isMouseDown || !this.isDrawing) return;
-                    
-                    const coords = this.getCoordinates(e);
-                    
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.lastX, this.lastY);
-                    this.ctx.lineTo(coords.x, coords.y);
-                    this.ctx.stroke();
-                    
-                    this.lastX = coords.x;
-                    this.lastY = coords.y;
-                },
-
-                stopDrawing() {
-                    this.isMouseDown = false;
-                }
-            };
-        };
-
-        // Register components for Alpine
-        document.addEventListener('alpine:init', () => {
-            if (window.Alpine) {
-                Alpine.data('receptionForm', window.receptionForm);
-                Alpine.data('photoGallery', window.photoGallery);
-                Alpine.data('cameraCapture', window.cameraCapture);
-            }
-        });
-    </script>
-    @endpush
     <div class="min-h-screen bg-white py-8">
         <div class="max-w-5xl mx-auto px-6">
             {{-- Header --}}
@@ -1058,79 +662,98 @@
                             </label>
                         </div>
 
-                        {{-- Deskripsi Kondisi Fisik (Upper, Sol, Kondisi Bawaan) - Wajib untuk Lolos & Reject --}}
-                        <div class="mt-6 p-6 rounded-2xl border transition-all duration-300"
-                             :class="qcPassed == '1' ? 'bg-[#22AF85]/5 border-[#22AF85]/20' : 'bg-red-50 border-red-200'">
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <label class="text-sm font-black uppercase tracking-widest transition-colors flex items-center gap-2"
-                                           :class="qcPassed == '1' ? 'text-[#22AF85]' : 'text-red-600'">
-                                        <template x-if="qcPassed == '1'">
-                                            <span>📋 Kondisi Fisik Masuk / QC Awal (Wajib)</span>
-                                        </template>
-                                        <template x-if="qcPassed == '0'">
-                                            <span>⚠️ Alasan Penolakan & Kondisi Fisik (Wajib)</span>
-                                        </template>
+                        {{-- QC Passed Notes (Catatan Gudang & Kondisi Fisik) --}}
+                        <div x-show="qcPassed == '1'" x-transition class="mt-4 bg-[#22AF85]/10 p-6 rounded-2xl border border-[#22AF85]/20">
+                            <div class="space-y-5">
+                                <div>
+                                    <label class="block text-sm font-black text-[#22AF85] mb-4 uppercase tracking-widest flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>Kondisi Fisik Masuk / QC Awal (Wajib)</span>
                                     </label>
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border"
-                                          :class="qcPassed == '1' ? 'bg-[#22AF85]/10 text-[#22AF85] border-[#22AF85]/30' : 'bg-red-100 text-red-700 border-red-300'">
-                                        <span x-text="qcPassed == '1' ? 'Status: Lolos QC' : 'Status: Reject Gudang'"></span>
-                                    </span>
+                                    <div class="space-y-3">
+                                        <div class="flex items-stretch shadow-sm">
+                                            <div class="w-32 flex-shrink-0 bg-white/80 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-[#22AF85] uppercase tracking-wider">1. Upper</span>
+                                            </div>
+                                            <input type="text" name="desc_upper" x-model="descUpper" :disabled="qcPassed != '1'" :required="qcPassed == '1'"
+                                                placeholder="Detail kondisi bagian atas sepatu..."
+                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-sm py-3.5 px-4">
+                                        </div>
+
+                                        <div class="flex items-stretch shadow-sm">
+                                            <div class="w-32 flex-shrink-0 bg-white/80 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-[#22AF85] uppercase tracking-wider">2. Sol</span>
+                                            </div>
+                                            <input type="text" name="desc_sol" x-model="descSol" :disabled="qcPassed != '1'" :required="qcPassed == '1'"
+                                                placeholder="Detail kondisi bagian sol/bawah..."
+                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-sm py-3.5 px-4">
+                                        </div>
+
+                                        <div class="flex items-stretch shadow-sm">
+                                            <div class="w-32 flex-shrink-0 bg-white/80 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-[#22AF85] uppercase tracking-wider text-center leading-tight">3. Kondisi<br>Bawaan</span>
+                                            </div>
+                                            <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" :disabled="qcPassed != '1'" :required="qcPassed == '1'"
+                                                placeholder="Detail kondisi bawaan lainnya..."
+                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-sm py-3.5 px-4">
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div class="space-y-3">
-                                    {{-- 1. Upper --}}
-                                    <div class="flex items-stretch shadow-sm">
-                                        <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4 transition-colors"
-                                             :class="qcPassed == '1' ? 'border-[#22AF85]/30 text-[#22AF85]' : 'border-red-200 text-red-600'">
-                                            <span class="text-[9px] font-black uppercase tracking-wider">1. Upper</span>
-                                        </div>
-                                        <input type="text" name="desc_upper" x-model="descUpper" required
-                                            placeholder="Detail kondisi bagian atas sepatu (misal: kotor sedang, lecet toebox)..."
-                                            class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl font-bold text-sm py-3.5 px-4 transition-all"
-                                            :class="qcPassed == '1' ? 'focus:ring-[#22AF85] focus:border-[#22AF85]' : 'focus:ring-red-500 focus:border-red-500'">
-                                    </div>
-
-                                    {{-- 2. Sol --}}
-                                    <div class="flex items-stretch shadow-sm">
-                                        <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4 transition-colors"
-                                             :class="qcPassed == '1' ? 'border-[#22AF85]/30 text-[#22AF85]' : 'border-red-200 text-red-600'">
-                                            <span class="text-[9px] font-black uppercase tracking-wider">2. Sol</span>
-                                        </div>
-                                        <input type="text" name="desc_sol" x-model="descSol" required
-                                            placeholder="Detail kondisi bagian sol/bawah (misal: midsole yellowing, outsole aus tipis)..."
-                                            class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl font-bold text-sm py-3.5 px-4 transition-all"
-                                            :class="qcPassed == '1' ? 'focus:ring-[#22AF85] focus:border-[#22AF85]' : 'focus:ring-red-500 focus:border-red-500'">
-                                    </div>
-
-                                    {{-- 3. Kondisi Bawaan --}}
-                                    <div class="flex items-stretch shadow-sm">
-                                        <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4 transition-colors"
-                                             :class="qcPassed == '1' ? 'border-[#22AF85]/30 text-[#22AF85]' : 'border-red-200 text-red-600'">
-                                            <span class="text-[9px] font-black uppercase tracking-wider text-center leading-tight">3. Kondisi<br>Bawaan</span>
-                                        </div>
-                                        <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" required
-                                            placeholder="Detail kondisi bawaan lainnya (misal: tali ori bawaan, insole masih tebal)..."
-                                            class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl font-bold text-sm py-3.5 px-4 transition-all"
-                                            :class="qcPassed == '1' ? 'focus:ring-[#22AF85] focus:border-[#22AF85]' : 'focus:ring-red-500 focus:border-red-500'">
-                                    </div>
-
-                                    <input type="hidden" name="reception_rejection_reason" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
+                                <div class="pt-2 border-t border-[#22AF85]/20">
+                                    <label class="flex items-center gap-2 text-xs font-black text-[#22AF85] mb-2 uppercase tracking-widest">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                        <span>Catatan QC Gudang (Opsional)</span>
+                                    </label>
+                                    <input type="text" name="warehouse_qc_notes" value="{{ old('warehouse_qc_notes', $order->warehouse_qc_notes) }}"
+                                           placeholder="Masukkan catatan pemeriksaan fisik gudang jika ada (misal: aksesoris lengkap, tali ori bawaan)..."
+                                           class="w-full bg-white border border-gray-200 text-gray-900 rounded-xl py-3.5 px-4 text-sm font-bold focus:ring-[#22AF85] focus:border-[#22AF85] shadow-sm">
                                 </div>
                             </div>
                         </div>
 
-                        {{-- QC Passed Notes (Catatan Gudang Opsional) --}}
-                        <div x-show="qcPassed == '1'" x-transition class="mt-4 bg-[#22AF85]/10 p-5 rounded-2xl border border-[#22AF85]/20">
-                            <label class="flex items-center gap-2 text-xs font-black text-[#22AF85] mb-2 uppercase tracking-widest">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                                <span>Catatan QC Gudang Tambahan (Opsional)</span>
-                            </label>
-                            <input type="text" name="warehouse_qc_notes" value="{{ old('warehouse_qc_notes', $order->warehouse_qc_notes) }}"
-                                   placeholder="Masukkan catatan pemeriksaan fisik tambahan jika ada..."
-                                   class="w-full bg-white border border-gray-200 text-gray-900 rounded-xl py-3.5 px-4 text-sm font-bold focus:ring-[#22AF85] focus:border-[#22AF85] shadow-sm">
+                        {{-- Rejection Reason --}}
+                        <div x-show="qcPassed == '0'" x-transition
+                            class="mt-6 bg-red-50 p-6 rounded-2xl border border-red-200" style="display: none;">
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-black text-red-600 mb-4 uppercase tracking-widest">Alasan Penolakan (Wajib)</label>
+                                    <div class="space-y-3">
+                                        <div class="flex items-stretch shadow-sm">
+                                            <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-600 uppercase tracking-wider">1. Upper</span>
+                                            </div>
+                                            <input type="text" name="desc_upper" x-model="descUpper" :disabled="qcPassed != '0'" :required="qcPassed == '0'"
+                                                placeholder="Detail kondisi bagian atas sepatu..."
+                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
+                                        </div>
+
+                                        <div class="flex items-stretch shadow-sm">
+                                            <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-600 uppercase tracking-wider">2. Sol</span>
+                                            </div>
+                                            <input type="text" name="desc_sol" x-model="descSol" :disabled="qcPassed != '0'" :required="qcPassed == '0'"
+                                                placeholder="Detail kondisi bagian sol/bawah..."
+                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
+                                        </div>
+
+                                        <div class="flex items-stretch shadow-sm">
+                                            <div class="w-32 flex-shrink-0 bg-gray-100 border-y border-l border-gray-200 rounded-l-xl flex items-center px-4">
+                                                <span class="text-[9px] font-black text-red-600 uppercase tracking-wider text-center leading-tight">3. Kondisi<br>Bawaan</span>
+                                            </div>
+                                            <input type="text" name="desc_kondisi_bawaan" x-model="descKondisiBawaan" :disabled="qcPassed != '0'" :required="qcPassed == '0'"
+                                                placeholder="Detail kondisi bawaan lainnya..."
+                                                class="flex-1 bg-white border-gray-200 text-gray-900 rounded-r-xl focus:ring-red-500 focus:border-red-500 font-bold text-sm py-3.5 px-4">
+                                        </div>
+                                        
+                                        <input type="hidden" name="reception_rejection_reason" :value="(descUpper || '-') + ' | ' + (descSol || '-') + ' | ' + (descKondisiBawaan || '-')">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Structured Service Input (Recommended & Optional) --}}
@@ -1782,11 +1405,217 @@
             // We can keep Alpine for QC or move to Vanilla. 
             // For minimal disruption, we'll leave Alpine for QC but access it if needed.
         });
+
+        // Photo Preview Logic
+
+
+        // Pre-process services for Alpine
+        @php
+            $servicesList = $services->map(function($service) {
+                return [
+                    'name' => data_get($service, 'name'),
+                    'price' => data_get($service, 'price'),
+                    'category' => data_get($service, 'category')
+                ];
+            })->toArray();
+        @endphp
+
+        // Alpine Data
+        function receptionForm() {
+            return {
+                // Accessories State
+                accTali: '{{ $tali ?? "T" }}',
+                accInsole: '{{ $insole ?? "T" }}',
+                accBox: '{{ $box ?? "T" }}',
+
+                // QC State
+                qcPassed: '1',
+                descUpper: {{ json_encode(old('desc_upper', $order->desc_upper ?? '')) }},
+                descSol: {{ json_encode(old('desc_sol', $order->desc_sol ?? '')) }},
+                descKondisiBawaan: {{ json_encode(old('desc_kondisi_bawaan', $order->desc_kondisi_bawaan ?? '')) }},
+
+                // Structured Services
+                services: @json($servicesList),
+                
+                recService1: '',
+                recService1Category: '',
+                recService1Search: '',
+                recService1Price: '',
+                recService1Open: false,
+
+                recService2: '',
+                recService2Category: '',
+                recService2Search: '',
+                recService2Price: '',
+                recService2Open: false,
+
+                sugService1: '',
+                sugService1Category: '',
+                sugService1Search: '',
+                sugService1Price: '',
+                sugService1Open: false,
+
+                sugService2: '',
+                sugService2Category: '',
+                sugService2Search: '',
+                sugService2Price: '',
+                sugService2Open: false,
+
+                get uniqueCategories() {
+                    const cats = new Set();
+                    this.services.forEach(s => {
+                        if(s.category) cats.add(s.category);
+                    });
+                    return Array.from(cats).sort();
+                },
+
+                getFilteredServices(category, search) {
+                    if (!category) return [];
+                    return this.services.filter(s => 
+                        s.category === category && 
+                        s.name.toLowerCase().includes(search.toLowerCase())
+                    );
+                },
+
+                onSuggestionCategoryChange(type, index) {
+                    const searchKey = `${type}Service${index}Search`;
+                    const priceKey = `${type}Service${index}Price`;
+                    const openKey = `${type}Service${index}Open`;
+                    const mainKey = `${type}Service${index}`;
+                    
+                    this[searchKey] = '';
+                    this[priceKey] = '';
+                    this[mainKey] = '';
+                    this[openKey] = false;
+                },
+
+                formatRupiah(amount) {
+                    if (!amount && amount !== 0) return '0';
+                    return new Intl.NumberFormat('id-ID').format(amount);
+                },
+
+                updateServiceValue(type, index) {
+                    const searchKey = `${type}Service${index}Search`;
+                    const priceKey = `${type}Service${index}Price`;
+                    const mainKey = `${type}Service${index}`;
+                    
+                    const name = this[searchKey] || '';
+                    const price = this[priceKey] || '0';
+                    
+                    if (name) {
+                        this[mainKey] = `${name} (Rp ${this.formatRupiah(price)})`;
+                    } else {
+                        this[mainKey] = '';
+                    }
+                },
+
+                selectService(type, index, service) {
+                    const searchKey = `${type}Service${index}Search`;
+                    const priceKey = `${type}Service${index}Price`;
+                    const openKey = `${type}Service${index}Open`;
+                    
+                    this[searchKey] = service.name;
+                    this[priceKey] = service.price;
+                    this[openKey] = false;
+                    this.updateServiceValue(type, index);
+                },
+
+                // Editing State
+                isEditing: {{ (
+    in_array(strtolower($order->shoe_brand ?? ''), ['', 'unknown', '-', 'item']) ||
+    in_array(strtolower($order->shoe_size ?? ''), ['', 'unknown', '-', 'item']) ||
+    in_array(strtolower($order->category ?? 'item'), ['', 'unknown', '-', 'item'])
+) ? 'true' : 'false' }},
+
+                isEmpty(val, placeholder = 'Unknown') {
+                    if (!val) return true;
+                    const v = val.trim().toLowerCase();
+                    return v === '' || v === '-' || v === 'unknown' || v === placeholder.toLowerCase();
+                },
+
+                get showAccessoryRack() {
+                    return (this.accTali === 'S' || this.accTali === 'Simpan' || this.accTali === 'N' || this.accTali === 'Nempel') ||
+                        (this.accInsole === 'S' || this.accInsole === 'Simpan' || this.accInsole === 'N' || this.accInsole === 'Nempel') ||
+                        (this.accBox === 'S' || this.accBox === 'Simpan' || this.accBox === 'N' || this.accBox === 'Nempel');
+                },
+
+                get isAccessoryRackRequired() {
+                    return (this.accTali === 'S' || this.accTali === 'Simpan') ||
+                        (this.accInsole === 'S' || this.accInsole === 'Simpan') ||
+                        (this.accBox === 'S' || this.accBox === 'Simpan');
+                }
+            };
+        }
     </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/resumable.js/1.1.0/resumable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        function photoGallery() {
+            return {
+                isLightboxOpen: false, 
+                currentImage: '', 
+                currentPhotoId: null,
+                isSelecting: false,
+                selectedPhotos: [],
+                allPhotoIds: [@foreach($order->photos as $p){{ $p->id }}{{ !$loop->last ? ',' : '' }}@endforeach],
+
+                handlePhotoClick(imageUrl, photoId) {
+                    if (this.isSelecting) {
+                        this.toggleSelection(photoId);
+                    } else {
+                        window.open(imageUrl, '_blank');
+                    }
+                },
+                toggleSelection(id) {
+                    if (this.selectedPhotos.includes(id)) {
+                        this.selectedPhotos = this.selectedPhotos.filter(i => i !== id);
+                    } else {
+                        this.selectedPhotos.push(id);
+                    }
+                },
+                deleteSelected() {
+                    if(!confirm(`Hapus ${this.selectedPhotos.length} foto secara PERMANEN?`)) return;
+                    fetch('{{ route("photos.bulk-destroy") }}', { 
+                        method: 'DELETE', 
+                        headers: { 
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ids: this.selectedPhotos })
+                    })
+                    .then(response => response.json())
+                    .then(data => { 
+                        if (data.success) { 
+                            location.reload(); 
+                        } else {
+                            alert('Gagal menghapus: ' + data.message);
+                        }
+                    });
+                },
+                setAsCover(id) {
+                    if(!confirm('Set foto ini sebagai Cover SPK?')) return;
+                    
+                    fetch(`/photos/${id}/set-cover`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Gagal mengatur cover: ' + data.message);
+                        }
+                    });
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const uploadBtn = document.getElementById('upload-btn');
             const fileInput = document.getElementById('file_input');
@@ -2249,6 +2078,199 @@
         const villName = selectedOption.dataset.name || '';
         const inputVill = document.getElementById('input_village');
         if (inputVill) inputVill.value = villName;
+    }
+    function cameraCapture() {
+        return {
+            isCameraOpen: false,
+            stream: null,
+            streamActive: false,
+            isDrawing: false,
+            ctx: null,
+            isMouseDown: false,
+            lastX: 0,
+            lastY: 0,
+            photos: [],
+            isLoading: false,
+            facingMode: 'environment', // Default to rear camera
+            
+            async openCamera() {
+                this.isCameraOpen = true;
+                // Wait for the DOM to update to get the canvas ref
+                await this.$nextTick(); 
+                this.ctx = this.$refs.canvasElement.getContext('2d');
+                await this.startCamera();
+            },
+
+            closeCamera() {
+                this.isCameraOpen = false;
+                this.isDrawing = false;
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+                this.streamActive = false;
+            },
+
+            async startCamera() {
+                try {
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.stop());
+                    }
+                    this.streamActive = false;
+                    
+                    const constraints = {
+                        video: {
+                            facingMode: this.facingMode,
+                            width: { ideal: 1024 },
+                            height: { ideal: 1024 }
+                        }
+                    };
+
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.$refs.videoElement.srcObject = this.stream;
+                    this.streamActive = true;
+                } catch (err) {
+                    console.error("Error accessing camera: ", err);
+                    alert("Gagal mengakses kamera. Pastikan browser memiliki izin akses kamera.");
+                }
+            },
+
+            async switchCamera() {
+                this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
+                await this.startCamera();
+            },
+
+            captureImage() {
+                if (!this.streamActive) return;
+                
+                const video = this.$refs.videoElement;
+                const canvas = this.$refs.canvasElement;
+                
+                // Set canvas dimensions to match video aspect ratio but max width 1024
+                const maxWidth = 1024;
+                let width = video.videoWidth;
+                let height = video.videoHeight;
+                
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    width = maxWidth;
+                    height = height * ratio;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // Draw video frame to canvas
+                this.ctx.drawImage(video, 0, 0, width, height);
+                
+                // Setup drawing environment
+                this.ctx.strokeStyle = 'red';
+                this.ctx.lineWidth = 4;
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+
+                this.isDrawing = true;
+                
+                // Temporarily pause camera to save battery
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.enabled = false);
+                }
+            },
+
+            retakePhoto() {
+                this.isDrawing = false;
+                // Resume camera
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.enabled = true);
+                }
+            },
+
+            async savePhoto() {
+                this.isLoading = true;
+                
+                try {
+                    // Compress to JPG 0.6
+                    const dataUrl = this.$refs.canvasElement.toDataURL('image/jpeg', 0.6);
+                    
+                    // Convert DataURL to File object
+                    const res = await fetch(dataUrl);
+                    const blob = await res.blob();
+                    const fileName = `EVIDENCE_${Date.now()}.jpg`;
+                    const file = new File([blob], fileName, { type: 'image/jpeg' });
+                    
+                    this.photos.push({
+                        dataUrl: dataUrl,
+                        file: file
+                    });
+                    
+                    this.updateHiddenInput();
+                    
+                    // Reset to camera view
+                    this.retakePhoto();
+                } catch (e) {
+                    console.error("Failed to save photo", e);
+                    alert("Gagal menyimpan foto.");
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            removePhoto(index) {
+                this.photos.splice(index, 1);
+                this.updateHiddenInput();
+            },
+
+            updateHiddenInput() {
+                const dataTransfer = new DataTransfer();
+                this.photos.forEach(photo => {
+                    dataTransfer.items.add(photo.file);
+                });
+                document.getElementById('camera_hidden_input').files = dataTransfer.files;
+            },
+
+            // Drawing logic
+            getCoordinates(e) {
+                const rect = this.$refs.canvasElement.getBoundingClientRect();
+                const scaleX = this.$refs.canvasElement.width / rect.width;
+                const scaleY = this.$refs.canvasElement.height / rect.height;
+
+                if (e.touches && e.touches.length > 0) {
+                    return {
+                        x: (e.touches[0].clientX - rect.left) * scaleX,
+                        y: (e.touches[0].clientY - rect.top) * scaleY
+                    };
+                }
+                return {
+                    x: (e.clientX - rect.left) * scaleX,
+                    y: (e.clientY - rect.top) * scaleY
+                };
+            },
+
+            startDrawing(e) {
+                if (!this.isDrawing) return;
+                this.isMouseDown = true;
+                const coords = this.getCoordinates(e);
+                this.lastX = coords.x;
+                this.lastY = coords.y;
+            },
+
+            draw(e) {
+                if (!this.isMouseDown || !this.isDrawing) return;
+                
+                const coords = this.getCoordinates(e);
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.lastX, this.lastY);
+                this.ctx.lineTo(coords.x, coords.y);
+                this.ctx.stroke();
+                
+                this.lastX = coords.x;
+                this.lastY = coords.y;
+            },
+
+            stopDrawing() {
+                this.isMouseDown = false;
+            }
+        };
     }
     </script>
 </x-app-layout>
