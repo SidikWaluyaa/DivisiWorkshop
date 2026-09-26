@@ -1430,9 +1430,9 @@
 
                 // QC State
                 qcPassed: '1',
-                descUpper: {{ json_encode(old('desc_upper', $order->desc_upper ?? '')) }},
-                descSol: {{ json_encode(old('desc_sol', $order->desc_sol ?? '')) }},
-                descKondisiBawaan: {{ json_encode(old('desc_kondisi_bawaan', $order->desc_kondisi_bawaan ?? '')) }},
+                descUpper: @json(old('desc_upper', $order->desc_upper ?? '')),
+                descSol: @json(old('desc_sol', $order->desc_sol ?? '')),
+                descKondisiBawaan: @json(old('desc_kondisi_bawaan', $order->desc_kondisi_bawaan ?? '')),
 
                 // Structured Services
                 services: @json($servicesList),
