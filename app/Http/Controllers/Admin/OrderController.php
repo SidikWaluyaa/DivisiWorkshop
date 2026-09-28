@@ -826,6 +826,50 @@ class OrderController extends Controller
     }
 
     /**
+     * Update priority of a work order (Reguler vs Prioritas).
+     * Restricted strictly to admin@workshop.com and novi@workshop.com.
+     */
+    public function updatePriority(Request $request, $id)
+    {
+        $allowedEmails = [
+            'admin@workshop.com',
+            'novi@workshop.com',
+        ];
+
+        if (!in_array(auth()->user()->email, $allowedEmails)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya akun admin@workshop.com dan novi@workshop.com yang memiliki hak akses untuk mengubah prioritas SPK.'
+            ], 403);
+        }
+
+        $request->validate([
+            'priority' => 'required|string|in:Reguler,Prioritas',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        $oldPriority = $order->priority ?? 'Reguler';
+        
+        $order->priority = $request->priority;
+        $order->save();
+
+        // Audit log
+        \App\Models\WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'step' => $order->status->value ?? 'WORKSHOP',
+            'action' => 'PRIORITY_UPDATED',
+            'description' => "Prioritas SPK diubah dari '{$oldPriority}' menjadi '{$order->priority}' oleh " . (auth()->user()->name ?? auth()->user()->email)
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'priority' => $order->priority,
+            'message' => "Prioritas SPK berhasil diubah menjadi {$order->priority}."
+        ]);
+    }
+
+    /**
      * Cancel a work order and manage its associated invoice.
      */
     public function cancel(Request $request, $id)

@@ -48,6 +48,128 @@
                                 <span class="text-gray-700 text-sm font-bold">{{ str_replace('_', ' ', $order->status->value) }}</span>
                             </div>
 
+                            {{-- SPK Priority Badge & Switcher (Restricted to admin@workshop.com & novi@workshop.com) --}}
+                            @php
+                                $canEditPriority = in_array(auth()->user()?->email, ['admin@workshop.com', 'novi@workshop.com']);
+                                $currentPriorityRaw = $order->priority ?? 'Reguler';
+                                $isPrioritas = in_array(strtolower($currentPriorityRaw), ['prioritas', 'urgent', 'express', 'oto']);
+                                $initialPriority = $isPrioritas ? 'Prioritas' : 'Reguler';
+                            @endphp
+                            <div x-data="{
+                                    priority: '{{ $initialPriority }}',
+                                    isLoading: false,
+                                    canEdit: {{ $canEditPriority ? 'true' : 'false' }},
+                                    async changePriority() {
+                                        if (!this.canEdit) {
+                                            Swal.fire({
+                                                icon: 'warning',
+                                                title: 'Akses Ditolak',
+                                                text: 'Hanya akun admin@workshop.com dan novi@workshop.com yang memiliki hak akses untuk mengubah prioritas SPK.',
+                                                confirmButtonColor: '#22B086'
+                                            });
+                                            return;
+                                        }
+
+                                        const targetPriority = this.priority === 'Prioritas' ? 'Reguler' : 'Prioritas';
+                                        const confirmMsg = targetPriority === 'Prioritas'
+                                            ? 'Ubah SPK ini menjadi ⚡ PRIORITAS? SPK ini akan diprioritaskan di antrean stasiun pengerjaan.'
+                                            : 'Kembalikan prioritas SPK ini menjadi ⚪ REGULER?';
+
+                                        const result = await Swal.fire({
+                                            title: 'Ubah Prioritas SPK?',
+                                            text: confirmMsg,
+                                            icon: targetPriority === 'Prioritas' ? 'warning' : 'question',
+                                            showCancelButton: true,
+                                            confirmButtonColor: targetPriority === 'Prioritas' ? '#EF4444' : '#64748B',
+                                            cancelButtonColor: '#CBD5E1',
+                                            confirmButtonText: `Ya, Ubah ke ${targetPriority}`,
+                                            cancelButtonText: 'Batal',
+                                            reverseButtons: true
+                                        });
+
+                                        if (!result.isConfirmed) return;
+
+                                        this.isLoading = true;
+                                        try {
+                                            const res = await fetch('{{ route('admin.orders.update-priority', $order->id) }}', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                                },
+                                                body: JSON.stringify({ priority: targetPriority })
+                                            });
+
+                                            const data = await res.json();
+                                            if (data.success) {
+                                                this.priority = data.priority;
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Berhasil!',
+                                                    text: data.message,
+                                                    timer: 2000,
+                                                    showConfirmButton: false
+                                                });
+                                            } else {
+                                                Swal.fire({
+                                                    icon: 'error',
+                                                    title: 'Gagal',
+                                                    text: data.message || 'Gagal mengubah prioritas.'
+                                                });
+                                            }
+                                        } catch (e) {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Kesalahan Sistem',
+                                                text: 'Gagal menghubungi server.'
+                                            });
+                                        } finally {
+                                            this.isLoading = false;
+                                        }
+                                    }
+                                 }" class="inline-flex items-center">
+                                <button type="button" 
+                                        @click="changePriority()"
+                                        :disabled="isLoading"
+                                        :title="canEdit ? 'Klik untuk mengubah prioritas SPK (Reguler / Prioritas)' : 'Prioritas SPK: ' + priority + ' (Hanya akun khusus yang dapat mengubah)'"
+                                        class="group flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-black transition-all shadow-2xs"
+                                        :class="{
+                                            'bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100 hover:border-rose-400': priority === 'Prioritas',
+                                            'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300': priority !== 'Prioritas',
+                                            'cursor-pointer active:scale-95': canEdit,
+                                            'cursor-default opacity-90': !canEdit
+                                        }">
+                                    
+                                    {{-- Priority Status Indicator --}}
+                                    <template x-if="priority === 'Prioritas'">
+                                        <span class="flex items-center gap-1.5">
+                                            <span class="relative flex h-2 w-2">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+                                            </span>
+                                            <span class="tracking-wide">⚡ PRIORITAS</span>
+                                        </span>
+                                    </template>
+                                    <template x-if="priority !== 'Prioritas'">
+                                        <span class="flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                                            <span class="tracking-wide">⚪ REGULER</span>
+                                        </span>
+                                    </template>
+
+                                    {{-- Edit indicator if authorized --}}
+                                    @if($canEditPriority)
+                                        <svg x-show="!isLoading" class="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                        <svg x-show="isLoading" class="animate-spin w-3 h-3 text-current ml-0.5" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                        </svg>
+                                    @endif
+                                </button>
+                            </div>
+
                             {{-- Inbound Tracking Badge --}}
                             @if($order->customer_tracking_number)
                                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs">

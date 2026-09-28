@@ -103,6 +103,7 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/update-spk-description', [App\Http\Controllers\Admin\OrderController::class, 'updateSpkDescription'])->name('orders.update-spk-description');
         Route::post('orders/{id}/update-technician-notes', [App\Http\Controllers\Admin\OrderController::class, 'updateTechnicianNotes'])->name('orders.update-technician-notes');
         Route::post('orders/{id}/update-qc-conditions', [App\Http\Controllers\Admin\OrderController::class, 'updateQcConditions'])->name('orders.update-qc-conditions');
+        Route::post('orders/{id}/update-priority', [App\Http\Controllers\Admin\OrderController::class, 'updatePriority'])->name('orders.update-priority');
         Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
         Route::get('orders/{id}/address-label', [App\Http\Controllers\Admin\OrderController::class, 'printAddressLabel'])->name('orders.address-label');
         Route::post('orders/{id}/pickup-call', [App\Http\Controllers\Admin\OrderController::class, 'triggerPickupCall'])->name('orders.pickup-call');
