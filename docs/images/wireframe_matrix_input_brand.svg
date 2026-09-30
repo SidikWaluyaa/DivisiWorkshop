@@ -1,0 +1,229 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 760" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap');
+      .modal-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 800; fill: #0f172a; }
+      .lbl { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700; fill: #334155; }
+      .input-text { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 500; fill: #0f172a; }
+      .matrix-size { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; fill: #0f172a; }
+      .matrix-qty { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; fill: #b45309; }
+      .btn-text { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700; fill: #ffffff; }
+    </style>
+    <filter id="modal-shadow" x="-8%" y="-8%" width="116%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#0f172a" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <!-- Darkened Backdrop -->
+  <rect width="960" height="760" rx="16" fill="#0f172a" opacity="0.65"/>
+
+  <!-- Modal Container Centered -->
+  <g transform="translate(100, 35)" filter="url(#modal-shadow)">
+    <rect width="760" height="690" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+
+    <!-- Modal Header -->
+    <path d="M 0 14 Q 0 0 14 0 L 746 0 Q 760 0 760 14 L 760 52 L 0 52 Z" fill="#d97706"/>
+    <text x="24" y="32" font-family="'Plus Jakarta Sans', sans-serif" font-size="15px" font-weight="800" fill="#ffffff">
+      📦 INPUT BATCH ORDER BARU DARI MITRA BRAND (B2B)
+    </text>
+    <!-- Close icon -->
+    <circle cx="732" cy="26" r="12" fill="#b45309"/>
+    <text x="728" y="30" font-family="'Plus Jakarta Sans', sans-serif" font-size="12px" font-weight="800" fill="#ffffff">✕</text>
+
+    <!-- Tab Selection: [Matrix Input] vs [Import Excel] -->
+    <g transform="translate(24, 68)">
+      <rect width="180" height="34" rx="6" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="28" y="22" font-family="'Plus Jakarta Sans', sans-serif" font-size="11.5px" font-weight="700" fill="#b45309">
+        ⚡ Smart Matrix Ukuran
+      </text>
+
+      <g transform="translate(195, 0)">
+        <rect width="180" height="34" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+        <text x="26" y="22" font-family="'Plus Jakarta Sans', sans-serif" font-size="11.5px" font-weight="600" fill="#64748b">
+          📊 Upload Template Excel
+        </text>
+      </g>
+    </g>
+
+    <!-- SECTION 1: INFORMASI BRAND & PROYEK -->
+    <g transform="translate(24, 118)">
+      <!-- Mitra Brand Select -->
+      <g>
+        <text x="0" y="14" class="lbl">PILIH MITRA BRAND <tspan fill="#ef4444">*</tspan></text>
+        <rect x="0" y="22" width="345" height="36" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+        <text x="12" y="45" class="input-text">🏷️ VENTELA INDONESIA (BRD-VNTL)</text>
+        <text x="325" y="44" font-size="10" fill="#64748b">▼</text>
+      </g>
+
+      <!-- Project Name -->
+      <g transform="translate(365, 0)">
+        <text x="0" y="14" class="lbl">NAMA PROYEK / KOLEKSI <tspan fill="#ef4444">*</tspan></text>
+        <rect x="0" y="22" width="345" height="36" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+        <text x="12" y="45" class="input-text">Recrafting &amp; Sole Reglue Batch Oktober</text>
+      </g>
+
+      <!-- Row 2: PO Ref & Dates -->
+      <g transform="translate(0, 68)">
+        <text x="0" y="14" class="lbl">NO. PO / SURAT JALAN BRAND <tspan fill="#ef4444">*</tspan></text>
+        <rect x="0" y="22" width="225" height="36" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+        <text x="12" y="45" class="input-text">VNTL-PO-8821</text>
+      </g>
+
+      <g transform="translate(245, 68)">
+        <text x="0" y="14" class="lbl">TANGGAL MASUK GUDANG <tspan fill="#ef4444">*</tspan></text>
+        <rect x="0" y="22" width="225" height="36" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+        <text x="12" y="45" class="input-text">📅 30/09/2026</text>
+      </g>
+
+      <g transform="translate(485, 68)">
+        <text x="0" y="14" class="lbl">TARGET DEADLINE SELESAI <tspan fill="#ef4444">*</tspan></text>
+        <rect x="0" y="22" width="225" height="36" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+        <text x="12" y="45" class="input-text">📅 05/10/2026</text>
+      </g>
+    </g>
+
+    <!-- SECTION 2: SMART MATRIX INPUT (MODEL & SEBARAN UKURAN) -->
+    <g transform="translate(24, 250)">
+      <rect width="712" height="235" rx="10" fill="#fafafa" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <!-- Header of Item Model 1 -->
+      <g transform="translate(16, 14)">
+        <text x="0" y="12" font-family="'Plus Jakarta Sans', sans-serif" font-size="12px" font-weight="800" fill="#b45309">
+          👟 MODEL SEPATU #1
+        </text>
+
+        <!-- Model Name -->
+        <g transform="translate(0, 24)">
+          <text x="0" y="12" class="lbl">Tipe / Model Sepatu</text>
+          <rect x="0" y="18" width="220" height="32" rx="5" fill="#ffffff" stroke="#cbd5e1"/>
+          <text x="10" y="38" class="input-text">Basic Low Black Natural</text>
+        </g>
+
+        <!-- Color -->
+        <g transform="translate(230, 24)">
+          <text x="0" y="12" class="lbl">Warna</text>
+          <rect x="0" y="18" width="140" height="32" rx="5" fill="#ffffff" stroke="#cbd5e1"/>
+          <text x="10" y="38" class="input-text">Black / White</text>
+        </g>
+
+        <!-- Service -->
+        <g transform="translate(380, 24)">
+          <text x="0" y="12" class="lbl">Layanan Workshop</text>
+          <rect x="0" y="18" width="295" height="32" rx="5" fill="#ffffff" stroke="#cbd5e1"/>
+          <text x="10" y="38" class="input-text">Sole Reglue + Stitching Rework</text>
+        </g>
+      </g>
+
+      <!-- Matrix Size Breakdown Boxes -->
+      <g transform="translate(16, 105)">
+        <text x="0" y="10" class="lbl">SEBARAN KUANTITAS UKURAN (SIZE BREAKDOWN):</text>
+
+        <!-- Grid of sizes: 37, 38, 39, 40, 41, 42, 43, 44, 45 -->
+        <g transform="translate(0, 20)">
+          <!-- Size 37 -->
+          <g transform="translate(0, 0)">
+            <rect width="65" height="52" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+            <text x="24" y="18" class="matrix-size">37</text>
+            <line x1="0" y1="24" x2="65" y2="24" stroke="#f1f5f9"/>
+            <text x="26" y="42" class="matrix-qty">0</text>
+          </g>
+
+          <!-- Size 38 -->
+          <g transform="translate(75, 0)">
+            <rect width="65" height="52" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+            <text x="24" y="18" class="matrix-size">38</text>
+            <line x1="0" y1="24" x2="65" y2="24" stroke="#f1f5f9"/>
+            <text x="26" y="42" class="matrix-qty">5</text>
+          </g>
+
+          <!-- Size 39 -->
+          <g transform="translate(150, 0)">
+            <rect width="65" height="52" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+            <text x="24" y="18" class="matrix-size">39</text>
+            <line x1="0" y1="24" x2="65" y2="24" stroke="#f1f5f9"/>
+            <text x="23" y="42" class="matrix-qty">10</text>
+          </g>
+
+          <!-- Size 40 -->
+          <g transform="translate(225, 0)">
+            <rect width="65" height="52" rx="6" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+            <text x="24" y="18" class="matrix-size">40</text>
+            <line x1="0" y1="24" x2="65" y2="24" stroke="#fde68a"/>
+            <text x="23" y="42" class="matrix-qty">15</text>
+          </g>
+
+          <!-- Size 41 -->
+          <g transform="translate(300, 0)">
+            <rect width="65" height="52" rx="6" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+            <text x="24" y="18" class="matrix-size">41</text>
+            <line x1="0" y1="24" x2="65" y2="24" stroke="#fde68a"/>
+            <text x="23" y="42" class="matrix-qty">12</text>
+          </g>
+
+          <!-- Size 42 -->
+          <g transform="translate(375, 0)">
+            <rect width="65" height="52" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+            <text x="24" y="18" class="matrix-size">42</text>
+            <line x1="0" y1="24" x2="65" y2="24" stroke="#f1f5f9"/>
+            <text x="26" y="42" class="matrix-qty">8</text>
+          </g>
+
+          <!-- Size 43 -->
+          <g transform="translate(450, 0)">
+            <rect width="65" height="52" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+            <text x="24" y="18" class="matrix-size">43</text>
+            <line x1="0" y1="24" x2="65" y2="24" stroke="#f1f5f9"/>
+            <text x="26" y="42" class="matrix-qty">0</text>
+          </g>
+
+          <!-- Subtotal Model 1 -->
+          <g transform="translate(535, 0)">
+            <rect width="140" height="52" rx="6" fill="#fef3c7" stroke="#fde68a"/>
+            <text x="14" y="18" font-family="'Plus Jakarta Sans', sans-serif" font-size="9.5px" font-weight="700" fill="#b45309">SUBTOTAL MODEL #1</text>
+            <text x="14" y="42" font-family="'Plus Jakarta Sans', sans-serif" font-size="16px" font-weight="800" fill="#b45309">50 Pasang</text>
+          </g>
+        </g>
+
+        <!-- Add Another Model Button -->
+        <g transform="translate(0, 85)">
+          <rect width="150" height="26" rx="5" fill="#ffffff" stroke="#b45309" stroke-dasharray="3,3"/>
+          <text x="16" y="17" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5px" font-weight="700" fill="#b45309">+ Tambah Model Sepatu</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- SECTION 3: SUMMARY & FOOTER ACTIONS -->
+    <g transform="translate(24, 505)">
+      <!-- Special Notes -->
+      <text x="0" y="14" class="lbl">CATATAN KHUSUS / SPESIFIKASI BENGKEL</text>
+      <rect x="0" y="22" width="712" height="48" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="12" y="42" font-family="'Plus Jakarta Sans', sans-serif" font-size="11px" fill="#475569">
+        Gunakan lem polimer tahan panas seri V2. Jahitan sol warna benang natural sesuai sampel awal.
+      </text>
+    </g>
+
+    <!-- Modal Footer Actions -->
+    <g transform="translate(24, 595)">
+      <line x1="0" y1="0" x2="712" y2="0" stroke="#e2e8f0"/>
+      
+      <!-- Total Calculation Box -->
+      <g transform="translate(0, 16)">
+        <text x="0" y="14" font-family="'Plus Jakarta Sans', sans-serif" font-size="10px" font-weight="700" fill="#64748b">TOTAL BATCH GENERATE:</text>
+        <text x="0" y="32" font-family="'Plus Jakarta Sans', sans-serif" font-size="17px" font-weight="800" fill="#d97706">
+          50 Pasang Sepatu <tspan font-size="11px" font-weight="600" fill="#64748b">(Akan dibuat 50 Work Orders)</tspan>
+        </text>
+      </g>
+
+      <!-- Action Buttons -->
+      <g transform="translate(480, 14)">
+        <!-- Cancel -->
+        <rect x="0" y="4" width="85" height="36" rx="6" fill="#f1f5f9"/>
+        <text x="24" y="26" font-family="'Plus Jakarta Sans', sans-serif" font-size="11.5px" font-weight="700" fill="#64748b">Batal</text>
+
+        <!-- Submit & Generate -->
+        <rect x="95" y="4" width="135" height="36" rx="6" fill="#d97706"/>
+        <text x="110" y="26" class="btn-text">💾 Simpan &amp; Generate</text>
+      </g>
+    </g>
+  </g>
+</svg>

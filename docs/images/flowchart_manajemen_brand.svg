@@ -1,0 +1,222 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 920" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap');
+      .title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 800; fill: #0f172a; }
+      .subtitle { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 500; fill: #64748b; }
+      .phase-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+      .node-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700; fill: #0f172a; }
+      .node-desc { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10px; font-weight: 500; fill: #64748b; }
+      .badge-text { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700; }
+      .connector { stroke: #94a3b8; stroke-width: 2; fill: none; stroke-dasharray: 4,4; }
+      .solid-conn { stroke: #d97706; stroke-width: 2.5; fill: none; }
+    </style>
+    <filter id="card-shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.06"/>
+    </filter>
+    <marker id="arrow-gold" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#d97706"/>
+    </marker>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="100%" stop-color="#fef3c7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="960" height="920" rx="20" fill="#f8fafc"/>
+  <rect x="1" y="1" width="958" height="918" rx="19" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- Top Title Banner -->
+  <g transform="translate(40, 30)">
+    <rect x="0" y="0" width="46" height="46" rx="12" fill="#fef3c7" stroke="#fde68a" stroke-width="1.5"/>
+    <text x="11" y="32" font-size="24">🏷️</text>
+    <text x="62" y="22" class="title">Diagram Alur End-to-End: Manajemen Brand &amp; Batch Inbound B2B</text>
+    <text x="62" y="42" class="subtitle">Alur Pengerjaan Massal Sepatu Mitra Brand Langsung di Divisi Workshop (Tanpa Melalui CS)</text>
+  </g>
+
+  <!-- ================= PHASE 1: REGISTRASI & KONTRAK MITRA BRAND ================= -->
+  <g transform="translate(40, 100)">
+    <!-- Phase Card Container -->
+    <rect width="880" height="150" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#card-shadow)"/>
+    <path d="M 0 14 Q 0 0 14 0 L 866 0 Q 880 0 880 14 L 880 34 L 0 34 Z" fill="#d97706"/>
+    <text x="20" y="22" class="phase-title" fill="#ffffff">FASE 1: PENDAFTARAN &amp; MASTER DATA MITRA BRAND (B2B PARTNERSHIP)</text>
+
+    <!-- Node 1.1 -->
+    <g transform="translate(25, 52)">
+      <rect width="250" height="78" rx="10" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+      <rect x="12" y="12" width="28" height="28" rx="6" fill="#fef3c7"/>
+      <text x="18" y="31" font-size="14">🤝</text>
+      <text x="48" y="24" class="node-title">Kerjasama Brand Baru</text>
+      <text x="48" y="42" class="node-desc">Kesepakatan project B2B dengan</text>
+      <text x="48" y="56" class="node-desc">pabrik / brand owner / distributor</text>
+      <rect x="48" y="62" width="95" height="14" rx="4" fill="#d97706"/>
+      <text x="54" y="73" class="badge-text" fill="#ffffff">OFFLINE / MOU</text>
+    </g>
+
+    <!-- Arrow 1 -->
+    <path d="M 285 91 L 315 91" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+    <!-- Node 1.2 -->
+    <g transform="translate(325, 52)">
+      <rect width="255" height="78" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="12" y="12" width="28" height="28" rx="6" fill="#f1f5f9"/>
+      <text x="18" y="31" font-size="14">🏢</text>
+      <text x="48" y="24" class="node-title">Input Master Mitra Brand</text>
+      <text x="48" y="42" class="node-desc">Admin Workshop input profil mitra:</text>
+      <text x="48" y="56" class="node-desc">Nama, PIC, WA, Email, Alamat, Logo</text>
+      <rect x="48" y="62" width="115" height="14" rx="4" fill="#f1f5f9"/>
+      <text x="54" y="73" class="badge-text" fill="#475569">TABEL: brand_partners</text>
+    </g>
+
+    <!-- Arrow 2 -->
+    <path d="M 590 91 L 620 91" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+    <!-- Node 1.3 -->
+    <g transform="translate(630, 52)">
+      <rect width="225" height="78" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="12" y="12" width="28" height="28" rx="6" fill="#e2e8f0"/>
+      <text x="18" y="31" font-size="14">🆔</text>
+      <text x="48" y="24" class="node-title">Kode Unik Brand Dibuat</text>
+      <text x="48" y="42" class="node-desc">Sistem mengenerate kode mitra</text>
+      <text x="48" y="56" class="node-desc">Contoh: BRD-VNTL, BRD-BRDO</text>
+      <rect x="48" y="62" width="105" height="14" rx="4" fill="#e0f2fe"/>
+      <text x="54" y="73" class="badge-text" fill="#0369a1">STATUS: ACTIVE</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector Phase 1 to Phase 2 -->
+  <path d="M 480 260 L 480 290" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+  <!-- ================= PHASE 2: PENERIMAAN BATCH & MATRIX INPUT ================= -->
+  <g transform="translate(40, 300)">
+    <rect width="880" height="185" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#card-shadow)"/>
+    <path d="M 0 14 Q 0 0 14 0 L 866 0 Q 880 0 880 14 L 880 34 L 0 34 Z" fill="#b45309"/>
+    <text x="20" y="22" class="phase-title" fill="#ffffff">FASE 2: KEDATANGAN BATCH SEPATU &amp; INPUT CEPAT (MATRIX / EXCEL)</text>
+
+    <!-- Node 2.1 -->
+    <g transform="translate(25, 52)">
+      <rect width="250" height="110" rx="10" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="16" y="25" class="node-title">📦 Kiriman Batch Tiba</text>
+      <text x="16" y="45" class="node-desc">• Sepatu fisik tiba di Workshop</text>
+      <text x="16" y="60" class="node-desc">• Dilengkapi Surat Jalan / PO Brand</text>
+      <text x="16" y="75" class="node-desc">• Verifikasi total box / pasang</text>
+      <rect x="16" y="85" width="135" height="16" rx="4" fill="#fef3c7"/>
+      <text x="22" y="97" class="badge-text" fill="#b45309">DIRECT TO WORKSHOP</text>
+    </g>
+
+    <!-- Arrow 2.1 to 2.2 -->
+    <path d="M 285 107 L 315 107" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+    <!-- Node 2.2 -->
+    <g transform="translate(325, 52)">
+      <rect width="255" height="110" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="16" y="25" class="node-title">⌨️ Input Form Batch Baru</text>
+      <text x="16" y="45" class="node-desc">• Pilih Mitra Brand &amp; No PO</text>
+      <text x="16" y="60" class="node-desc">• Smart Matrix: Model &amp; Ukuran</text>
+      <text x="16" y="75" class="node-desc">• ATAU Impor Template File Excel</text>
+      <rect x="16" y="85" width="130" height="16" rx="4" fill="#f1f5f9"/>
+      <text x="22" y="97" class="badge-text" fill="#475569">TABEL: brand_orders</text>
+    </g>
+
+    <!-- Arrow 2.2 to 2.3 -->
+    <path d="M 590 107 L 620 107" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+    <!-- Node 2.3 -->
+    <g transform="translate(630, 52)">
+      <rect width="225" height="110" rx="10" fill="#fef3c7" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="16" y="25" class="node-title">⚡ Auto-Generate Work Orders</text>
+      <text x="16" y="45" class="node-desc">• Buat N pasang work_orders</text>
+      <text x="16" y="60" class="node-desc">• SPK Satuan: BR-YYMM-DD-0001-01</text>
+      <text x="16" y="75" class="node-desc">• Set priority = 'BRAND'</text>
+      <rect x="16" y="85" width="135" height="16" rx="4" fill="#d97706"/>
+      <text x="22" y="97" class="badge-text" fill="#ffffff">FK: brand_order_id</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector Phase 2 to Phase 3 -->
+  <path d="M 480 495 L 480 525" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+  <!-- ================= PHASE 3: CETAK FISIK & EKSEKUSI STASIUN ================= -->
+  <g transform="translate(40, 535)">
+    <rect width="880" height="185" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#card-shadow)"/>
+    <path d="M 0 14 Q 0 0 14 0 L 866 0 Q 880 0 880 14 L 880 34 L 0 34 Z" fill="#92400e"/>
+    <text x="20" y="22" class="phase-title" fill="#ffffff">FASE 3: CETAK FISIK HYBRID &amp; PENGERJAAN DI STASIUN BENGKEL</text>
+
+    <!-- Node 3.1 -->
+    <g transform="translate(25, 52)">
+      <rect width="250" height="110" rx="10" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="16" y="25" class="node-title">🖨️ Cetak Fisik Hybrid</text>
+      <text x="16" y="45" class="node-desc">• 1 SPK Induk A4 (Kardus Master)</text>
+      <text x="16" y="60" class="node-desc">• Lembar Grid Stiker Barcode Kecil</text>
+      <text x="16" y="75" class="node-desc">• Warna Identitas: Amber Gold</text>
+      <rect x="16" y="85" width="140" height="16" rx="4" fill="#fef3c7"/>
+      <text x="22" y="97" class="badge-text" fill="#b45309">TEMA: #d97706 GOLD</text>
+    </g>
+
+    <!-- Arrow 3.1 to 3.2 -->
+    <path d="M 285 107 L 315 107" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+    <!-- Node 3.2 -->
+    <g transform="translate(325, 52)">
+      <rect width="255" height="110" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="16" y="25" class="node-title">🏭 Alur Stasiun Bengkel</text>
+      <text x="16" y="45" class="node-desc">• 1. Preparation (Washing / Unboxing)</text>
+      <text x="16" y="60" class="node-desc">• 2. Sortir &amp; Antrean Bahan</text>
+      <text x="16" y="75" class="node-desc">• 3. Production (Sol, Jahit, Cat)</text>
+      <rect x="16" y="85" width="140" height="16" rx="4" fill="#f1f5f9"/>
+      <text x="22" y="97" class="badge-text" fill="#475569">SCAN BARCODE STASIUN</text>
+    </g>
+
+    <!-- Arrow 3.2 to 3.3 -->
+    <path d="M 590 107 L 620 107" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+    <!-- Node 3.3 -->
+    <g transform="translate(630, 52)">
+      <rect width="225" height="110" rx="10" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+      <text x="16" y="25" class="node-title">📊 Live Batch Tracking</text>
+      <text x="16" y="45" class="node-desc">• Progress Bar otomatis terisi</text>
+      <text x="16" y="60" class="node-desc">• Misal: 40/50 pasang (80%)</text>
+      <text x="16" y="75" class="node-desc">• Deteksi bottleneck stasiun</text>
+      <rect x="16" y="85" width="135" height="16" rx="4" fill="#dcfce7"/>
+      <text x="22" y="97" class="badge-text" fill="#15803d">DASHBOARD REAL-TIME</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector Phase 3 to Phase 4 -->
+  <path d="M 480 730 L 480 760" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+  <!-- ================= PHASE 4: FINAL QC & DISPATCH KE BRAND ================= -->
+  <g transform="translate(40, 770)">
+    <rect width="880" height="120" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#card-shadow)"/>
+    <path d="M 0 14 Q 0 0 14 0 L 866 0 Q 880 0 880 14 L 880 34 L 0 34 Z" fill="#78350f"/>
+    <text x="20" y="22" class="phase-title" fill="#ffffff">FASE 4: FINAL QC AUDIT &amp; PENGEMBALIAN BATCH (DISPATCH)</text>
+
+    <!-- Node 4.1 -->
+    <g transform="translate(25, 45)">
+      <rect width="250" height="60" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="14" y="24" class="node-title">🔍 Final QC Batch Audit</text>
+      <text x="14" y="42" class="node-desc">Inspeksi 100% sampel / seluruh pasang</text>
+    </g>
+
+    <!-- Arrow 4.1 to 4.2 -->
+    <path d="M 285 75 L 315 75" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+    <!-- Node 4.2 -->
+    <g transform="translate(325, 45)">
+      <rect width="255" height="60" rx="8" fill="#f0fdf4" stroke="#86efac"/>
+      <text x="14" y="24" class="node-title" fill="#15803d">✅ Status Batch: FINISHED</text>
+      <text x="14" y="42" class="node-desc">Seluruh sepatu selesai dikerjakan</text>
+    </g>
+
+    <!-- Arrow 4.2 to 4.3 -->
+    <path d="M 590 75 L 620 75" class="solid-conn" marker-end="url(#arrow-gold)"/>
+
+    <!-- Node 4.3 -->
+    <g transform="translate(630, 45)">
+      <rect width="225" height="60" rx="8" fill="#fffbeb" stroke="#fde68a"/>
+      <text x="14" y="24" class="node-title" fill="#b45309">🚚 Dispatched / Picked Up</text>
+      <text x="14" y="42" class="node-desc">Sepatu dikirim kembali ke pabrik brand</text>
+    </g>
+  </g>
+</svg>

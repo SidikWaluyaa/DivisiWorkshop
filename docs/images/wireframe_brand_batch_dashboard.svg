@@ -1,0 +1,219 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap');
+      .title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 800; fill: #0f172a; }
+      .subtitle { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11.5px; font-weight: 500; fill: #64748b; }
+      .nav-text { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 600; fill: #94a3b8; }
+      .nav-active { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700; fill: #ffffff; }
+      .card-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 22px; font-weight: 800; fill: #0f172a; }
+      .card-lbl { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 600; fill: #64748b; }
+      .th { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10.5px; font-weight: 700; fill: #475569; text-transform: uppercase; letter-spacing: 0.04em; }
+      .td { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 600; fill: #1e293b; }
+      .mono { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; }
+    </style>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Browser Frame Window -->
+  <rect width="960" height="720" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  
+  <!-- Browser Header Bar -->
+  <path d="M 0 16 Q 0 0 16 0 L 944 0 Q 960 0 960 16 L 960 42 L 0 42 Z" fill="#0f172a"/>
+  <circle cx="24" cy="21" r="5.5" fill="#ef4444"/>
+  <circle cx="42" cy="21" r="5.5" fill="#f59e0b"/>
+  <circle cx="60" cy="21" r="5.5" fill="#10b981"/>
+  <!-- URL Bar -->
+  <rect x="180" y="10" width="600" height="22" rx="6" fill="#1e293b"/>
+  <text x="360" y="25" font-family="'JetBrains Mono', monospace" font-size="10.5px" fill="#94a3b8">https://workshop.internal/workshop/brand-orders</text>
+
+  <!-- App Layout: Sidebar Left -->
+  <g transform="translate(0, 42)">
+    <rect width="200" height="678" fill="#1e293b"/>
+    <!-- Brand Logo in Sidebar -->
+    <rect x="18" y="20" width="32" height="32" rx="8" fill="#d97706"/>
+    <text x="26" y="42" font-size="16">🏷️</text>
+    <text x="58" y="34" font-family="'Plus Jakarta Sans', sans-serif" font-size="13px" font-weight="800" fill="#ffffff">WORKSHOP</text>
+    <text x="58" y="47" font-family="'JetBrains Mono', monospace" font-size="8.5px" fill="#94a3b8">B2B BRAND PORTAL</text>
+
+    <!-- Sidebar Navigation -->
+    <g transform="translate(14, 80)">
+      <text x="10" y="0" font-family="'Plus Jakarta Sans', sans-serif" font-size="9px" font-weight="800" fill="#64748b" letter-spacing="0.08em">MAIN MENU</text>
+
+      <rect x="0" y="15" width="172" height="32" rx="6" fill="transparent"/>
+      <text x="14" y="36" class="nav-text">📊 Dashboard Utama</text>
+
+      <rect x="0" y="52" width="172" height="32" rx="6" fill="transparent"/>
+      <text x="14" y="73" class="nav-text">👞 SPK Workshop Reguler</text>
+
+      <rect x="0" y="89" width="172" height="32" rx="6" fill="transparent"/>
+      <text x="14" y="110" class="nav-text">🔬 SPK R&amp;D (Riset)</text>
+
+      <!-- BRAND MANAGEMENT GROUP -->
+      <text x="10" y="145" font-family="'Plus Jakarta Sans', sans-serif" font-size="9px" font-weight="800" fill="#f59e0b" letter-spacing="0.08em">DIVISI BRAND (B2B)</text>
+
+      <!-- Active Menu: Order Masuk Brand -->
+      <rect x="0" y="158" width="172" height="34" rx="6" fill="#d97706"/>
+      <text x="14" y="180" class="nav-active">📦 Order Masuk Brand</text>
+
+      <rect x="0" y="197" width="172" height="32" rx="6" fill="transparent"/>
+      <text x="14" y="218" class="nav-text">🏢 Mitra Brand Partner</text>
+
+      <rect x="0" y="234" width="172" height="32" rx="6" fill="transparent"/>
+      <text x="14" y="255" class="nav-text">📈 Laporan Batch B2B</text>
+    </g>
+  </g>
+
+  <!-- App Main Content Area -->
+  <g transform="translate(225, 62)">
+    <!-- Header Title & Action Button -->
+    <text x="0" y="22" class="title">Batch Order Masuk Brand (B2B)</text>
+    <text x="0" y="40" class="subtitle">Pantau seluruh kloter pengiriman sepatu dari mitra pabrik dan brand langsung di lantai bengkel</text>
+
+    <!-- New Batch Button -->
+    <rect x="560" y="6" width="150" height="36" rx="8" fill="#d97706" filter="url(#shadow)"/>
+    <text x="580" y="29" font-family="'Plus Jakarta Sans', sans-serif" font-size="12px" font-weight="700" fill="#ffffff">+ Batch Order Baru</text>
+
+    <!-- Top Metric Cards -->
+    <g transform="translate(0, 60)">
+      <!-- Card 1 -->
+      <rect width="165" height="74" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+      <text x="16" y="26" class="card-lbl">Total Batch Aktif</text>
+      <text x="16" y="56" class="card-val" fill="#d97706">12 <tspan font-size="12px" font-weight="600" fill="#64748b">Batch</tspan></text>
+
+      <!-- Card 2 -->
+      <g transform="translate(180, 0)">
+        <rect width="165" height="74" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+        <text x="16" y="26" class="card-lbl">Sepatu Dalam Proses</text>
+        <text x="16" y="56" class="card-val">485 <tspan font-size="12px" font-weight="600" fill="#64748b">Pasang</tspan></text>
+      </g>
+
+      <!-- Card 3 -->
+      <g transform="translate(360, 0)">
+        <rect width="165" height="74" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+        <text x="16" y="26" class="card-lbl">Dalam Tahap Final QC</text>
+        <text x="16" y="56" class="card-val" fill="#0284c7">95 <tspan font-size="12px" font-weight="600" fill="#64748b">Pasang</tspan></text>
+      </g>
+
+      <!-- Card 4 -->
+      <g transform="translate(540, 0)">
+        <rect width="170" height="74" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+        <text x="16" y="26" class="card-lbl">Selesai Bulan Ini</text>
+        <text x="16" y="56" class="card-val" fill="#16a34a">1,420 <tspan font-size="12px" font-weight="600" fill="#64748b">Pasang</tspan></text>
+      </g>
+    </g>
+
+    <!-- Batch Table Container -->
+    <g transform="translate(0, 155)">
+      <rect width="710" height="475" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)"/>
+      
+      <!-- Filter Bar -->
+      <g transform="translate(18, 16)">
+        <rect width="250" height="32" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+        <text x="12" y="21" font-family="'Plus Jakarta Sans', sans-serif" font-size="11px" fill="#94a3b8">🔍 Cari Batch / Nama Brand / PO...</text>
+
+        <!-- Status Filter Pills -->
+        <rect x="360" y="0" width="70" height="32" rx="6" fill="#fef3c7" stroke="#fde68a"/>
+        <text x="375" y="20" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5px" font-weight="700" fill="#b45309">Semua</text>
+
+        <rect x="438" y="0" width="85" height="32" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+        <text x="448" y="20" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5px" font-weight="600" fill="#64748b">In Production</text>
+
+        <rect x="531" y="0" width="75" height="32" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+        <text x="546" y="20" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5px" font-weight="600" fill="#64748b">Final QC</text>
+
+        <rect x="614" y="0" width="75" height="32" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+        <text x="632" y="20" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5px" font-weight="600" fill="#64748b">Selesai</text>
+      </g>
+
+      <!-- Table Header -->
+      <g transform="translate(18, 65)">
+        <rect width="674" height="30" rx="4" fill="#f8fafc"/>
+        <text x="14" y="20" class="th">NO BATCH SPK</text>
+        <text x="140" y="20" class="th">MITRA BRAND &amp; PROYEK</text>
+        <text x="310" y="20" class="th">TOTAL</text>
+        <text x="385" y="20" class="th">PROGRESS BENGKEL</text>
+        <text x="535" y="20" class="th">DEADLINE</text>
+        <text x="615" y="20" class="th">AKSI</text>
+      </g>
+
+      <!-- Table Row 1 -->
+      <g transform="translate(18, 105)">
+        <rect width="674" height="60" rx="6" fill="#ffffff" stroke="#f1f5f9"/>
+        <text x="14" y="26" class="mono" fill="#d97706">BR-2609-30-0001</text>
+        <text x="14" y="44" font-family="'JetBrains Mono', monospace" font-size="9px" fill="#64748b">PO: VNTL-PO-8821</text>
+
+        <text x="140" y="26" class="td" style="font-weight: 700;">VENTELA INDONESIA</text>
+        <text x="140" y="44" class="subtitle">Basic Low Black Natural (Recraft Sol)</text>
+
+        <text x="310" y="32" class="td">50 <tspan font-size="9.5px" fill="#64748b">psg</tspan></text>
+
+        <!-- Progress Bar (35/50 = 70%) -->
+        <g transform="translate(385, 18)">
+          <rect width="120" height="12" rx="6" fill="#e2e8f0"/>
+          <rect width="84" height="12" rx="6" fill="#d97706"/>
+          <text x="0" y="26" font-family="'Plus Jakarta Sans', sans-serif" font-size="9.5px" font-weight="700" fill="#0f172a">35/50 (70%)</text>
+          <text x="68" y="26" font-family="'Plus Jakarta Sans', sans-serif" font-size="9px" fill="#64748b">Stasiun: Prod</text>
+        </g>
+
+        <text x="535" y="32" class="td" fill="#ea580c">05 Okt 2026</text>
+
+        <!-- Action Button -->
+        <rect x="615" y="16" width="48" height="26" rx="5" fill="#fef3c7" stroke="#fde68a"/>
+        <text x="625" y="33" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5px" font-weight="700" fill="#b45309">Detail</text>
+      </g>
+
+      <!-- Table Row 2 -->
+      <g transform="translate(18, 175)">
+        <rect width="674" height="60" rx="6" fill="#ffffff" stroke="#f1f5f9"/>
+        <text x="14" y="26" class="mono" fill="#d97706">BR-2609-28-0002</text>
+        <text x="14" y="44" font-family="'JetBrains Mono', monospace" font-size="9px" fill="#64748b">PO: BRD-2026-09</text>
+
+        <text x="140" y="26" class="td" style="font-weight: 700;">BRODO FOOTWEAR</text>
+        <text x="140" y="44" class="subtitle">Signore Leather Boots (Deep Conditioning)</text>
+
+        <text x="310" y="32" class="td">30 <tspan font-size="9.5px" fill="#64748b">psg</tspan></text>
+
+        <!-- Progress Bar (28/30 = 93%) -->
+        <g transform="translate(385, 18)">
+          <rect width="120" height="12" rx="6" fill="#e2e8f0"/>
+          <rect width="112" height="12" rx="6" fill="#0284c7"/>
+          <text x="0" y="26" font-family="'Plus Jakarta Sans', sans-serif" font-size="9.5px" font-weight="700" fill="#0f172a">28/30 (93%)</text>
+          <text x="68" y="26" font-family="'Plus Jakarta Sans', sans-serif" font-size="9px" fill="#0284c7">Stasiun: QC</text>
+        </g>
+
+        <text x="535" y="32" class="td">02 Okt 2026</text>
+
+        <rect x="615" y="16" width="48" height="26" rx="5" fill="#fef3c7" stroke="#fde68a"/>
+        <text x="625" y="33" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5px" font-weight="700" fill="#b45309">Detail</text>
+      </g>
+
+      <!-- Table Row 3 -->
+      <g transform="translate(18, 245)">
+        <rect width="674" height="60" rx="6" fill="#ffffff" stroke="#f1f5f9"/>
+        <text x="14" y="26" class="mono" fill="#d97706">BR-2609-25-0003</text>
+        <text x="14" y="44" font-family="'JetBrains Mono', monospace" font-size="9px" fill="#64748b">PO: CMP-EX-001</text>
+
+        <text x="140" y="26" class="td" style="font-weight: 700;">SEPATU COMPASS</text>
+        <text x="140" y="44" class="subtitle">Gazelle Vintage Low (Sole Stitch Rework)</text>
+
+        <text x="310" y="32" class="td">100 <tspan font-size="9.5px" fill="#64748b">psg</tspan></text>
+
+        <!-- Progress Bar (100/100 = 100%) -->
+        <g transform="translate(385, 18)">
+          <rect width="120" height="12" rx="6" fill="#e2e8f0"/>
+          <rect width="120" height="12" rx="6" fill="#16a34a"/>
+          <text x="0" y="26" font-family="'Plus Jakarta Sans', sans-serif" font-size="9.5px" font-weight="700" fill="#15803d">100/100 (100%)</text>
+          <text x="75" y="26" font-family="'Plus Jakarta Sans', sans-serif" font-size="9px" fill="#15803d">Finished ✅</text>
+        </g>
+
+        <text x="535" y="32" class="td" fill="#16a34a">Selesai</text>
+
+        <rect x="615" y="16" width="48" height="26" rx="5" fill="#f0fdf4" stroke="#bbf7d0"/>
+        <text x="625" y="33" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5px" font-weight="700" fill="#16a34a">Detail</text>
+      </g>
+    </g>
+  </g>
+</svg>

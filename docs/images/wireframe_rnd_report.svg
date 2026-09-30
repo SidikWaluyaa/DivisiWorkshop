@@ -1,0 +1,197 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 980" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap');
+      .title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 800; fill: #0f172a; }
+      .subtitle { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 500; fill: #64748b; }
+      .wf-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 800; fill: #0f172a; }
+      .wf-sub { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 500; fill: #64748b; }
+      .wf-badge { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+      .wf-text { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; fill: #334155; }
+      .wf-bold { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700; fill: #0f172a; }
+    </style>
+    <filter id="wf-shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.10"/>
+    </filter>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#312e81" />
+    </linearGradient>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="940" height="980" rx="20" fill="#f8fafc" />
+  <rect x="1" y="1" width="938" height="978" rx="19" fill="none" stroke="#e2e8f0" stroke-width="2" />
+
+  <!-- Top Title Banner -->
+  <g transform="translate(40, 30)">
+    <rect x="0" y="0" width="44" height="44" rx="12" fill="#ede9fe" />
+    <text x="12" y="30" font-size="22">📱</text>
+    <text x="60" y="22" class="title">Wireframe: Halaman Laporan Interaktif R&amp;D</text>
+    <text x="60" y="40" class="subtitle">URL Publik: /rnd-report/{token} • Single Living Report &amp; Galeri Evolusi Foto Berurutan</text>
+  </g>
+
+  <!-- ================= BROWSER WINDOW MOCKUP ================= -->
+  <g transform="translate(40, 95)" filter="url(#wf-shadow)">
+    <!-- Browser Chrome Frame -->
+    <path d="M 0 16 Q 0 0 16 0 L 844 0 Q 860 0 860 16 L 860 840 Q 860 856 844 856 L 16 856 Q 0 856 0 840 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+    <path d="M 0 16 Q 0 0 16 0 L 844 0 Q 860 0 860 16 L 860 44 L 0 44 Z" fill="#f1f5f9" />
+    
+    <!-- Browser Window Controls -->
+    <circle cx="24" cy="22" r="5" fill="#f87171" />
+    <circle cx="40" cy="22" r="5" fill="#fbbf24" />
+    <circle cx="56" cy="22" r="5" fill="#34d399" />
+
+    <!-- Address Bar -->
+    <rect x="180" y="10" width="500" height="24" rx="6" fill="#ffffff" stroke="#e2e8f0" />
+    <text x="195" y="26" font-family="'JetBrains Mono', monospace" font-size="10.5px" fill="#64748b">🔒 https://sistemworkshop.com/rnd-report/rnd_7a89f2c019d</text>
+
+    <!-- ================= INNER PAGE CONTENT ================= -->
+    <g transform="translate(30, 65)">
+      
+      <!-- 1. Hero Header Card -->
+      <g>
+        <rect width="800" height="140" rx="16" fill="url(#headerGrad)" />
+        
+        <!-- Brand & Badge -->
+        <rect x="25" y="20" width="135" height="22" rx="5" fill="#ffffff" fill-opacity="0.15" />
+        <text x="32" y="35" class="wf-badge" fill="#c7d2fe">🔬 R&amp;D EXPERIMENT</text>
+
+        <rect x="170" y="20" width="95" height="22" rx="5" fill="#10b981" />
+        <text x="178" y="35" class="wf-badge" fill="#ffffff">● IN PROGRESS</text>
+
+        <!-- Main Title & Shoe Info -->
+        <text x="25" y="70" font-family="'Plus Jakarta Sans', sans-serif" font-size="20px" font-weight="800" fill="#ffffff">SPK #RD-2609-29-0001-CS1</text>
+        <text x="25" y="94" font-family="'Plus Jakarta Sans', sans-serif" font-size="13px" font-weight="600" fill="#e0e7ff">Nike Air Jordan 1 High • Proyek Riset Formula Cat FlexiLeather V2</text>
+        <text x="25" y="115" font-family="'Plus Jakarta Sans', sans-serif" font-size="11px" font-weight="500" fill="#a5b4fc">Dimulai: 29 Sep 2026 • Tim Riset: Workshop Lab • PIC: Budi Santoso</text>
+
+        <!-- Share Buttons (Right) -->
+        <g transform="translate(620, 45)">
+          <rect width="155" height="38" rx="10" fill="#22c55e" />
+          <text x="20" y="24" font-family="'Plus Jakarta Sans', sans-serif" font-size="11.5px" font-weight="800" fill="#ffffff">💬 Share WhatsApp</text>
+
+          <rect y="48" width="155" height="32" rx="10" fill="#ffffff" fill-opacity="0.15" stroke="#ffffff" stroke-opacity="0.3" />
+          <text x="28" y="69" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5px" font-weight="700" fill="#ffffff">🔗 Salin Tautan</text>
+        </g>
+      </g>
+
+      <!-- 2. Ringkasan Status Eksperimen -->
+      <g transform="translate(0, 155)">
+        <rect width="800" height="60" rx="12" fill="#f8fafc" stroke="#e2e8f0" />
+        <text x="25" y="28" class="wf-bold" fill="#4338ca">Status Living Report:</text>
+        <text x="160" y="28" class="wf-text">Telah tercatat <tspan font-weight="800" fill="#0f172a">3 Tahap Progres</tspan> eksperimen. Data diperbarui otomatis secara real-time.</text>
+        <text x="25" y="47" class="wf-desc" font-size="10.5px" fill="#64748b">💡 Simpan link ini di browser Anda untuk memantau kemajuan uji coba dari awal sampai selesai.</text>
+      </g>
+
+      <!-- 3. SECTION UTAMA: GALERI EVOLUSI PROGRES FOTO (THE SIGNATURE FEATURE) -->
+      <g transform="translate(0, 230)">
+        <!-- Section Header -->
+        <text x="0" y="20" font-family="'Plus Jakarta Sans', sans-serif" font-size="14px" font-weight="800" fill="#0f172a">📸 Kesimpulan &amp; Perjalanan Evolusi Riset (Photo Sequence)</text>
+        <text x="0" y="38" font-family="'Plus Jakarta Sans', sans-serif" font-size="11px" font-weight="500" fill="#64748b">Perubahan fisik material sepatu dari tahap awal pengerjaan hingga hasil uji coba saat ini:</text>
+
+        <!-- THE SEQUENCE CONTAINER -->
+        <g transform="translate(0, 52)">
+          <rect width="800" height="235" rx="14" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5" />
+
+          <!-- CARD 1: TAHAP 1 -->
+          <g transform="translate(18, 18)">
+            <rect width="210" height="200" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            <!-- Thumbnail Photo Placeholder -->
+            <rect x="10" y="10" width="190" height="105" rx="6" fill="#e2e8f0" />
+            <text x="80" y="65" font-size="28">👟</text>
+            <rect x="18" y="18" width="60" height="18" rx="4" fill="#0f172a" fill-opacity="0.75" />
+            <text x="24" y="31" class="wf-badge" fill="#ffffff">TAHAP 1</text>
+            <circle cx="185" cy="27" r="10" fill="#0f172a" fill-opacity="0.6" />
+            <text x="180" y="31" font-size="11" fill="#ffffff">🔍</text>
+
+            <!-- Card Info -->
+            <text x="12" y="132" class="wf-bold">Pengupasan &amp; Primer</text>
+            <text x="12" y="148" class="wf-text" font-size="9.5px">29 Sep, 09:30 • Oleh: Budi</text>
+            <rect x="12" y="158" width="186" height="22" rx="4" fill="#ecfdf5" stroke="#a7f3d0" />
+            <text x="20" y="173" class="wf-badge" fill="#065f46">STATUS: LOLOS PERSIAPAN</text>
+            <text x="12" y="194" font-size="9px" fill="#6366f1" font-weight="700">🔎 Klik foto untuk perbesar</text>
+          </g>
+
+          <!-- ARROW 1 -> 2 -->
+          <g transform="translate(238, 105)">
+            <circle cx="15" cy="15" r="14" fill="#4f46e5" />
+            <text x="9" y="21" font-size="16" fill="#ffffff" font-weight="900">→</text>
+          </g>
+
+          <!-- CARD 2: TAHAP 2 -->
+          <g transform="translate(278, 18)">
+            <rect width="210" height="200" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            <!-- Thumbnail Photo Placeholder -->
+            <rect x="10" y="10" width="190" height="105" rx="6" fill="#e2e8f0" />
+            <text x="80" y="65" font-size="28">🎨</text>
+            <rect x="18" y="18" width="60" height="18" rx="4" fill="#0f172a" fill-opacity="0.75" />
+            <text x="24" y="31" class="wf-badge" fill="#ffffff">TAHAP 2</text>
+            <circle cx="185" cy="27" r="10" fill="#0f172a" fill-opacity="0.6" />
+            <text x="180" y="31" font-size="11" fill="#ffffff">🔍</text>
+
+            <!-- Card Info -->
+            <text x="12" y="132" class="wf-bold">Aplikasi Cat Flexi V2</text>
+            <text x="12" y="148" class="wf-text" font-size="9.5px">29 Sep, 11:45 • Oleh: Budi</text>
+            <rect x="12" y="158" width="186" height="22" rx="4" fill="#eff6ff" stroke="#bfdbfe" />
+            <text x="20" y="173" class="wf-badge" fill="#1e40af">STATUS: SEDANG PENGERINGAN</text>
+            <text x="12" y="194" font-size="9px" fill="#6366f1" font-weight="700">🔎 Klik foto untuk perbesar</text>
+          </g>
+
+          <!-- ARROW 2 -> 3 -->
+          <g transform="translate(498, 105)">
+            <circle cx="15" cy="15" r="14" fill="#4f46e5" />
+            <text x="9" y="21" font-size="16" fill="#ffffff" font-weight="900">→</text>
+          </g>
+
+          <!-- CARD 3: TAHAP 3 -->
+          <g transform="translate(538, 18)">
+            <rect width="244" height="200" rx="10" fill="#ffffff" stroke="#818cf8" stroke-width="2" />
+            <!-- Thumbnail Photo Placeholder -->
+            <rect x="10" y="10" width="224" height="105" rx="6" fill="#ede9fe" />
+            <text x="100" y="65" font-size="28">✨</text>
+            <rect x="18" y="18" width="60" height="18" rx="4" fill="#4f46e5" />
+            <text x="24" y="31" class="wf-badge" fill="#ffffff">TAHAP 3</text>
+            <circle cx="218" cy="27" r="10" fill="#0f172a" fill-opacity="0.6" />
+            <text x="213" y="31" font-size="11" fill="#ffffff">🔍</text>
+
+            <!-- Card Info -->
+            <text x="12" y="132" class="wf-bold" fill="#4338ca">Uji Flex Test 10.000x</text>
+            <text x="12" y="148" class="wf-text" font-size="9.5px">29 Sep, 14:15 • Oleh: Hadi (QC)</text>
+            <rect x="12" y="158" width="220" height="22" rx="4" fill="#ecfdf5" stroke="#6ee7b7" />
+            <text x="20" y="173" class="wf-badge" fill="#047857">STATUS: HASIL BERHASIL &amp; ELASTIS</text>
+            <text x="12" y="194" font-size="9px" fill="#4f46e5" font-weight="700">🔎 Klik foto untuk perbesar</text>
+          </g>
+        </g>
+      </g>
+
+      <!-- 4. SECTION TIMELINE CATATAN FORMULA LENGKAP -->
+      <g transform="translate(0, 535)">
+        <text x="0" y="20" font-family="'Plus Jakarta Sans', sans-serif" font-size="14px" font-weight="800" fill="#0f172a">📝 Catatan Teknis &amp; Formula Eksperimen (Log Kronologis)</text>
+
+        <!-- Log Item 3 -->
+        <g transform="translate(0, 35)">
+          <rect width="800" height="70" rx="10" fill="#ffffff" stroke="#e2e8f0" />
+          <circle cx="25" cy="35" r="10" fill="#4f46e5" />
+          <text x="21" y="39" class="wf-badge" fill="#ffffff">3</text>
+          <text x="50" y="26" class="wf-bold">Tahap 3: Uji Ketahanan &amp; Kelenturan (Flex Test)</text>
+          <text x="50" y="44" class="wf-text">Formula cat bertahan tanpa retak setelah 10.000 kali tekukan pada mesin flexometer.</text>
+          <text x="50" y="58" class="wf-desc" font-size="9.5px" fill="#64748b">Lampiran: <tspan fill="#2563eb" text-decoration="underline">https://drive.google.com/video-flex-test-nike.mp4</tspan></text>
+          <rect x="660" y="24" width="120" height="22" rx="4" fill="#ecfdf5" />
+          <text x="670" y="39" class="wf-badge" fill="#047857">BERHASIL / LOLOS</text>
+        </g>
+
+        <!-- Log Item 2 -->
+        <g transform="translate(0, 115)">
+          <rect width="800" height="60" rx="10" fill="#ffffff" stroke="#e2e8f0" />
+          <circle cx="25" cy="30" r="10" fill="#94a3b8" />
+          <text x="21" y="34" class="wf-badge" fill="#ffffff">2</text>
+          <text x="50" y="24" class="wf-bold">Tahap 2: Aplikasi Cat Formula FlexiLeather V2</text>
+          <text x="50" y="42" class="wf-text">Komposisi: 70% Polyurethane Binder + 30% Pigment Concentrate. Waktu pengeringan: 4 jam suhu 32°C.</text>
+          <rect x="660" y="20" width="120" height="22" rx="4" fill="#eff6ff" />
+          <text x="675" y="35" class="wf-badge" fill="#1e40af">IN PROGRESS</text>
+        </g>
+      </g>
+
+    </g>
+  </g>
+</svg>

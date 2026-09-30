@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 980" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap');
+      .title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 800; fill: #0f172a; }
+      .subtitle { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 500; fill: #64748b; }
+      .stage-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; }
+      .box-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; }
+      .box-desc { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10.5px; font-weight: 500; fill: #64748b; }
+      .code-badge { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+      .arrow { stroke: #94a3b8; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .arrow-purple { stroke: #6366f1; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8" />
+    </marker>
+    <marker id="arrowhead-purple" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#6366f1" />
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.06"/>
+    </filter>
+    <filter id="purple-glow" x="-8%" y="-8%" width="116%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#4f46e5" flood-opacity="0.25"/>
+    </filter>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#3730a3" />
+    </linearGradient>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="940" height="980" rx="20" fill="#ffffff" />
+  <rect x="1" y="1" width="938" height="978" rx="19" fill="none" stroke="#e2e8f0" stroke-width="2" />
+
+  <!-- Document Header -->
+  <g transform="translate(40, 35)">
+    <rect x="0" y="0" width="44" height="44" rx="12" fill="#ede9fe" />
+    <text x="12" y="30" font-size="22">🔬</text>
+    <text x="60" y="22" class="title">Diagram Alur End-to-End SPK R&amp;D</text>
+    <text x="60" y="40" class="subtitle">Lifecycle Lengkap: Customer Service ➔ Handover ➔ Reception (Print Ungu) ➔ Eksekusi Workshop</text>
+  </g>
+
+  <!-- ================= FASE 1: DIVISI CUSTOMER SERVICE ================= -->
+  <g transform="translate(40, 105)">
+    <rect width="860" height="195" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" />
+    <rect x="20" y="14" width="170" height="24" rx="6" fill="#f1f5f9" />
+    <text x="30" y="30" class="stage-title" fill="#475569">FASE 1: DIVISI CS</text>
+
+    <!-- Step 1.1 -->
+    <g transform="translate(25, 52)">
+      <rect width="240" height="120" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)" />
+      <text x="16" y="30" class="box-title" fill="#0f172a">1. Lead / Konsultasi</text>
+      <text x="16" y="52" class="box-desc">Permintaan riset, eksperimen,</text>
+      <text x="16" y="70" class="box-desc">atau modifikasi bahan masuk</text>
+      <text x="16" y="88" class="box-desc">melalui chat / database CS.</text>
+      <rect x="16" y="96" width="95" height="18" rx="4" fill="#f1f5f9" />
+      <text x="22" y="109" class="code-badge" fill="#64748b">cs_leads</text>
+    </g>
+
+    <!-- Arrow 1.1 -> 1.2 -->
+    <path d="M 265 112 L 305 112" class="arrow" marker-end="url(#arrowhead)" />
+
+    <!-- Step 1.2 -->
+    <g transform="translate(310, 52)">
+      <rect width="255" height="120" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)" />
+      <text x="16" y="30" class="box-title" fill="#0f172a">2. Input SPK &amp; Prioritas</text>
+      <text x="16" y="52" class="box-desc">CS memilih dropdown Prioritas:</text>
+      <rect x="16" y="62" width="220" height="24" rx="6" fill="#ede9fe" stroke="#c7d2fe" />
+      <text x="24" y="78" class="code-badge" fill="#4338ca">Prioritas Kerja: [R&amp;D]</text>
+      <text x="16" y="104" class="box-desc">Menyimpan notes &amp; formula uji.</text>
+    </g>
+
+    <!-- Arrow 1.2 -> 1.3 -->
+    <path d="M 565 112 L 600 112" class="arrow" marker-end="url(#arrowhead)" />
+
+    <!-- Step 1.3 -->
+    <g transform="translate(605, 52)">
+      <rect width="230" height="120" rx="12" fill="#ffffff" stroke="#818cf8" stroke-width="2" filter="url(#shadow)" />
+      <text x="16" y="30" class="box-title" fill="#4338ca">3. Penomoran Khusus</text>
+      <text x="16" y="52" class="box-desc">Auto generate format:</text>
+      <rect x="16" y="60" width="195" height="24" rx="6" fill="#0f172a" />
+      <text x="24" y="76" class="code-badge" fill="#38bdf8">RD-2609-29-xxxx-CS</text>
+      <text x="16" y="104" class="box-desc">Prefix 'RD' terintegrasi.</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector: Fase 1 ke Fase 2 -->
+  <path d="M 720 300 L 720 335 L 470 335 L 470 348" class="arrow-purple" marker-end="url(#arrowhead-purple)" />
+
+  <!-- ================= FASE 2: HANDOVER & SINKRONISASI ================= -->
+  <g transform="translate(40, 350)">
+    <rect width="860" height="140" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" />
+    <rect x="20" y="14" width="240" height="24" rx="6" fill="#f1f5f9" />
+    <text x="30" y="30" class="stage-title" fill="#475569">FASE 2: HANDOVER &amp; WORKFLOW SYNC</text>
+
+    <!-- Step 2.1 -->
+    <g transform="translate(25, 48)">
+      <rect width="380" height="76" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)" />
+      <text x="16" y="28" class="box-title" fill="#0f172a">Action: CS Handover to Workshop</text>
+      <text x="16" y="50" class="box-desc">Tiket dikirim ke bengkel setelah DP / Instruksi sah.</text>
+      <text x="16" y="65" class="code-badge" fill="#64748b">cs_spk.status = 'HANDED_TO_WORKSHOP'</text>
+    </g>
+
+    <!-- Arrow 2.1 -> 2.2 -->
+    <path d="M 405 86 L 450 86" class="arrow" marker-end="url(#arrowhead)" />
+
+    <!-- Step 2.2 -->
+    <g transform="translate(455, 48)">
+      <rect width="380" height="76" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)" />
+      <text x="16" y="28" class="box-title" fill="#0f172a">Duplikasi ke Tabel work_orders</text>
+      <text x="16" y="50" class="box-desc">Status SPK_PENDING, priority 'R&amp;D', no SPK 'RD-...'</text>
+      <text x="16" y="65" class="code-badge" fill="#059669">WorkOrder::create(...) ➔ Auto Audit Log</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector: Fase 2 ke Fase 3 -->
+  <path d="M 645 490 L 645 528" class="arrow-purple" marker-end="url(#arrowhead-purple)" />
+
+  <!-- ================= FASE 3: RECEPTION & CETAK SPK UNGU ================= -->
+  <g transform="translate(40, 530)">
+    <rect width="860" height="175" rx="16" fill="#fdf4ff" stroke="#e879f9" stroke-width="1.5" />
+    <rect x="20" y="14" width="280" height="24" rx="6" fill="#fae8ff" />
+    <text x="30" y="30" class="stage-title" fill="#86198f">FASE 3: GUDANG PENERIMAAN &amp; CETAK</text>
+
+    <!-- Step 3.1 -->
+    <g transform="translate(25, 48)">
+      <rect width="260" height="110" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)" />
+      <text x="16" y="28" class="box-title" fill="#0f172a">1. Sepatu Diterima Gudang</text>
+      <text x="16" y="50" class="box-desc">Pencatatan nomor resi inbound,</text>
+      <text x="16" y="68" class="box-desc">verifikasi fisik, foto kondisi awal.</text>
+      <text x="16" y="90" class="code-badge" fill="#059669">status = 'DITERIMA'</text>
+    </g>
+
+    <!-- Arrow 3.1 -> 3.2 -->
+    <path d="M 285 103 L 320 103" class="arrow" marker-end="url(#arrowhead)" />
+
+    <!-- Step 3.2: CETAK SPK UNGU (HIGHLIGHT UTAMA) -->
+    <g transform="translate(325, 42)">
+      <rect width="510" height="120" rx="14" fill="url(#purpleGrad)" filter="url(#purple-glow)" />
+      
+      <text x="24" y="32" font-family="'Plus Jakarta Sans', sans-serif" font-size="15px" font-weight="800" fill="#ffffff">🖨️ 2. CETAK SPK KHUSUS (SIDEBAR UNGU)</text>
+      
+      <rect x="24" y="44" width="235" height="22" rx="5" fill="#ffffff" fill-opacity="0.2" />
+      <text x="32" y="59" class="code-badge" fill="#ffffff">🔬 SPK RESEARCH &amp; DEVELOPMENT</text>
+      
+      <text x="24" y="86" font-family="'Plus Jakarta Sans', sans-serif" font-size="11.5px" font-weight="600" fill="#ede9fe">Sidebar Cetak: Ungu Deep Indigo (#4f46e5) — Sangat Mencolok!</text>
+      <text x="24" y="104" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5px" font-weight="500" fill="#c7d2fe">Kertas disematkan di baki/box sepatu sebagai tanda perlakuan riset bagi teknisi.</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector: Fase 3 ke Fase 4 -->
+  <path d="M 580 705 L 580 742" class="arrow" marker-end="url(#arrowhead)" />
+
+  <!-- ================= FASE 4: LANTAI BENGKEL / WORKSHOP ================= -->
+  <g transform="translate(40, 745)">
+    <rect width="860" height="190" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" />
+    <rect x="20" y="14" width="260" height="24" rx="6" fill="#f1f5f9" />
+    <text x="30" y="30" class="stage-title" fill="#475569">FASE 4: STASIUN KERJA OPERASIONAL</text>
+
+    <!-- Stasiun 1: Prep -->
+    <g transform="translate(25, 50)">
+      <rect width="185" height="120" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)" />
+      <text x="14" y="26" class="box-title" fill="#0f172a">1. Preparation</text>
+      <text x="14" y="46" class="box-desc">Washing &amp; pembersihan</text>
+      <text x="14" y="64" class="box-desc">material sepatu sebelum</text>
+      <text x="14" y="82" class="box-desc">proses eksperimen.</text>
+      <rect x="14" y="92" width="70" height="16" rx="4" fill="#f1f5f9" />
+      <text x="18" y="103" class="code-badge" fill="#64748b">WASHING</text>
+    </g>
+
+    <!-- Arrow -->
+    <path d="M 210 110 L 235 110" class="arrow" marker-end="url(#arrowhead)" />
+
+    <!-- Stasiun 2: Sortir -->
+    <g transform="translate(240, 50)">
+      <rect width="185" height="120" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)" />
+      <text x="14" y="26" class="box-title" fill="#0f172a">2. Sortir Khusus</text>
+      <text x="14" y="46" class="box-desc">Alokasi ke teknisi</text>
+      <text x="14" y="64" class="box-desc">spesialis R&amp;D / Senior</text>
+      <text x="14" y="82" class="box-desc">sesuai instruksi notes.</text>
+      <rect x="14" y="92" width="85" height="16" rx="4" fill="#ede9fe" />
+      <text x="18" y="103" class="code-badge" fill="#4338ca">PIC ASSIGNED</text>
+    </g>
+
+    <!-- Arrow -->
+    <path d="M 425 110 L 450 110" class="arrow" marker-end="url(#arrowhead)" />
+
+    <!-- Stasiun 3: Produksi -->
+    <g transform="translate(455, 50)">
+      <rect width="185" height="120" rx="12" fill="#ffffff" stroke="#4f46e5" stroke-width="2" filter="url(#shadow)" />
+      <text x="14" y="26" class="box-title" fill="#4338ca">3. Produksi (Trial)</text>
+      <text x="14" y="46" class="box-desc">Aplikasi lem/cat formula</text>
+      <text x="14" y="64" class="box-desc">baru, dokumentasi foto</text>
+      <text x="14" y="82" class="box-desc">tahapan riset detail.</text>
+      <rect x="14" y="92" width="80" height="16" rx="4" fill="#0f172a" />
+      <text x="18" y="103" class="code-badge" fill="#38bdf8">PRODUCTION</text>
+    </g>
+
+    <!-- Arrow -->
+    <path d="M 640 110 L 665 110" class="arrow" marker-end="url(#arrowhead)" />
+
+    <!-- Stasiun 4: QC & Finish -->
+    <g transform="translate(670, 50)">
+      <rect width="165" height="120" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)" />
+      <text x="14" y="26" class="box-title" fill="#0f172a">4. QC &amp; Selesai</text>
+      <text x="14" y="46" class="box-desc">Uji ketahanan hasil riset,</text>
+      <text x="14" y="64" class="box-desc">verifikasi Head Prod,</text>
+      <text x="14" y="82" class="box-desc">dokumentasi final.</text>
+      <rect x="14" y="92" width="70" height="16" rx="4" fill="#ecfdf5" />
+      <text x="18" y="103" class="code-badge" fill="#059669">QC PASSED</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,224 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 700" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap');
+      .title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 800; fill: #0f172a; }
+      .subtitle { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 500; fill: #64748b; }
+      .table-title { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; fill: #ffffff; }
+      .col-pk { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; fill: #b45309; }
+      .col-fk { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; fill: #0284c7; }
+      .col-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; fill: #1e293b; }
+      .col-type { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #64748b; }
+      .relation-label { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10px; font-weight: 700; fill: #475569; }
+    </style>
+    <filter id="table-shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0f172a" flood-opacity="0.08"/>
+    </filter>
+    <marker id="crow-foot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="960" height="700" rx="20" fill="#f8fafc"/>
+  <rect x="1" y="1" width="958" height="698" rx="19" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- Top Title Banner -->
+  <g transform="translate(40, 30)">
+    <rect x="0" y="0" width="46" height="46" rx="12" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+    <text x="12" y="32" font-size="24">🗄️</text>
+    <text x="62" y="22" class="title">Entity Relationship Diagram (ERD): Modul Manajemen Brand</text>
+    <text x="62" y="42" class="subtitle">Skema Relasi Tabel Master Mitra Brand, Batch Order Induk, dan Integrasi Foreign Key pada work_orders</text>
+  </g>
+
+  <!-- ================= TABLE 1: BRAND_PARTNERS ================= -->
+  <g transform="translate(40, 100)" filter="url(#table-shadow)">
+    <rect width="270" height="340" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <!-- Header -->
+    <path d="M 0 12 Q 0 0 12 0 L 258 0 Q 270 0 270 12 L 270 38 L 0 38 Z" fill="#d97706"/>
+    <text x="14" y="24" class="table-title">brand_partners (Master)</text>
+
+    <!-- Columns -->
+    <g transform="translate(14, 56)">
+      <text x="0" y="0" class="col-pk">PK</text>
+      <text x="28" y="0" class="col-name">id</text>
+      <text x="175" y="0" class="col-type">BIGINT (UQ)</text>
+
+      <text x="0" y="24" class="col-name" style="font-weight: 700;">code</text>
+      <text x="175" y="24" class="col-type">VARCHAR(50)</text>
+
+      <text x="0" y="48" class="col-name">name</text>
+      <text x="175" y="48" class="col-type">VARCHAR(255)</text>
+
+      <text x="0" y="72" class="col-name">pic_name</text>
+      <text x="175" y="72" class="col-type">VARCHAR(255)</text>
+
+      <text x="0" y="96" class="col-name">pic_phone</text>
+      <text x="175" y="96" class="col-type">VARCHAR(50)</text>
+
+      <text x="0" y="120" class="col-name">pic_email</text>
+      <text x="175" y="120" class="col-type">VARCHAR(255)</text>
+
+      <text x="0" y="144" class="col-name">address</text>
+      <text x="175" y="144" class="col-type">TEXT (NULL)</text>
+
+      <text x="0" y="168" class="col-name">logo_path</text>
+      <text x="175" y="168" class="col-type">VARCHAR(255)</text>
+
+      <text x="0" y="192" class="col-name">tier_level</text>
+      <text x="175" y="192" class="col-type">VARCHAR(50)</text>
+
+      <text x="0" y="216" class="col-name">status</text>
+      <text x="175" y="216" class="col-type">VARCHAR(20)</text>
+
+      <text x="0" y="240" class="col-name">notes</text>
+      <text x="175" y="240" class="col-type">TEXT (NULL)</text>
+
+      <text x="0" y="264" class="col-name">created_at</text>
+      <text x="175" y="264" class="col-type">TIMESTAMP</text>
+    </g>
+  </g>
+
+  <!-- ================= TABLE 2: BRAND_ORDERS (BATCH INDUK) ================= -->
+  <g transform="translate(345, 100)" filter="url(#table-shadow)">
+    <rect width="280" height="460" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <path d="M 0 12 Q 0 0 12 0 L 268 0 Q 280 0 280 12 L 280 38 L 0 38 Z" fill="#b45309"/>
+    <text x="14" y="24" class="table-title">brand_orders (Batch SPK)</text>
+
+    <!-- Columns -->
+    <g transform="translate(14, 56)">
+      <text x="0" y="0" class="col-pk">PK</text>
+      <text x="28" y="0" class="col-name">id</text>
+      <text x="180" y="0" class="col-type">BIGINT (UQ)</text>
+
+      <text x="0" y="24" class="col-name" style="font-weight: 700; fill: #b45309;">batch_number</text>
+      <text x="180" y="24" class="col-type">VARCHAR(64)</text>
+
+      <text x="0" y="48" class="col-fk">FK</text>
+      <text x="28" y="48" class="col-name">brand_partner_id</text>
+      <text x="180" y="48" class="col-type">BIGINT (NN)</text>
+
+      <text x="0" y="72" class="col-fk">FK</text>
+      <text x="28" y="72" class="col-name">created_by</text>
+      <text x="180" y="72" class="col-type">BIGINT (NN)</text>
+
+      <text x="0" y="96" class="col-name">project_name</text>
+      <text x="180" y="96" class="col-type">VARCHAR(255)</text>
+
+      <text x="0" y="120" class="col-name">po_reference_no</text>
+      <text x="180" y="120" class="col-type">VARCHAR(100)</text>
+
+      <text x="0" y="144" class="col-name">total_pairs</text>
+      <text x="180" y="144" class="col-type">INT UNSIGNED</text>
+
+      <text x="0" y="168" class="col-name">received_date</text>
+      <text x="180" y="168" class="col-type">DATE</text>
+
+      <text x="0" y="192" class="col-name">deadline_date</text>
+      <text x="180" y="192" class="col-type">DATE (NULL)</text>
+
+      <text x="0" y="216" class="col-name">status</text>
+      <text x="180" y="216" class="col-type">VARCHAR(50)</text>
+
+      <text x="0" y="240" class="col-name">priority</text>
+      <text x="180" y="240" class="col-type">VARCHAR(50)</text>
+
+      <text x="0" y="264" class="col-name">special_notes</text>
+      <text x="180" y="264" class="col-type">TEXT (NULL)</text>
+
+      <text x="0" y="288" class="col-name">dispatched_at</text>
+      <text x="180" y="288" class="col-type">TIMESTAMP (N)</text>
+
+      <text x="0" y="312" class="col-name">created_at</text>
+      <text x="180" y="312" class="col-type">TIMESTAMP</text>
+
+      <text x="0" y="336" class="col-name">updated_at</text>
+      <text x="180" y="336" class="col-type">TIMESTAMP</text>
+    </g>
+  </g>
+
+  <!-- ================= TABLE 3: WORK_ORDERS (SUB-ITEMS GENERATED) ================= -->
+  <g transform="translate(660, 100)" filter="url(#table-shadow)">
+    <rect width="260" height="520" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <path d="M 0 12 Q 0 0 12 0 L 248 0 Q 260 0 260 12 L 260 38 L 0 38 Z" fill="#0f172a"/>
+    <text x="14" y="24" class="table-title">work_orders (Eksisting)</text>
+
+    <!-- Columns -->
+    <g transform="translate(14, 56)">
+      <text x="0" y="0" class="col-pk">PK</text>
+      <text x="28" y="0" class="col-name">id</text>
+      <text x="160" y="0" class="col-type">BIGINT (UQ)</text>
+
+      <text x="0" y="24" class="col-name" style="font-weight: 700;">spk_number</text>
+      <text x="160" y="24" class="col-type">VARCHAR(255)</text>
+
+      <!-- HIGHLIGHTED NEW COLUMN -->
+      <rect x="-6" y="36" width="242" height="24" rx="4" fill="#fef3c7" stroke="#fde68a"/>
+      <text x="0" y="48" class="col-fk" style="fill: #b45309;">FK</text>
+      <text x="28" y="48" class="col-name" style="font-weight: 800; fill: #b45309;">brand_order_id</text>
+      <text x="160" y="48" class="col-type" style="font-weight: 700; fill: #b45309;">BIGINT (NULL)</text>
+
+      <text x="0" y="74" class="col-name">customer_name</text>
+      <text x="160" y="74" class="col-type">VARCHAR(255)</text>
+
+      <text x="0" y="98" class="col-name">customer_phone</text>
+      <text x="160" y="98" class="col-type">VARCHAR(255)</text>
+
+      <text x="0" y="122" class="col-name">shoe_brand</text>
+      <text x="160" y="122" class="col-type">VARCHAR(255)</text>
+
+      <text x="0" y="146" class="col-name">shoe_type</text>
+      <text x="160" y="146" class="col-type">VARCHAR(255)</text>
+
+      <text x="0" y="170" class="col-name">shoe_size</text>
+      <text x="160" y="170" class="col-type">VARCHAR(50)</text>
+
+      <text x="0" y="194" class="col-name">shoe_color</text>
+      <text x="160" y="194" class="col-type">VARCHAR(100)</text>
+
+      <text x="0" y="218" class="col-name">priority</text>
+      <text x="160" y="218" class="col-type">'BRAND'</text>
+
+      <text x="0" y="242" class="col-name">status</text>
+      <text x="160" y="242" class="col-type">DITERIMA/PROD</text>
+
+      <text x="0" y="266" class="col-name">prep_washing_*</text>
+      <text x="160" y="266" class="col-type">STASIUN PREP</text>
+
+      <text x="0" y="290" class="col-name">prod_sol_*</text>
+      <text x="160" y="290" class="col-type">STASIUN PROD</text>
+
+      <text x="0" y="314" class="col-name">prod_upper_*</text>
+      <text x="160" y="314" class="col-type">STASIUN PROD</text>
+
+      <text x="0" y="338" class="col-name">qc_jahit_*</text>
+      <text x="160" y="338" class="col-type">STASIUN QC</text>
+
+      <text x="0" y="362" class="col-name">created_at</text>
+      <text x="160" y="362" class="col-type">TIMESTAMP</text>
+    </g>
+  </g>
+
+  <!-- ================= RELATION LINES ================= -->
+  <!-- 1. brand_partners (1) to brand_orders (N) -->
+  <path d="M 310 170 L 345 170" stroke="#d97706" stroke-width="2.5" marker-end="url(#crow-foot)"/>
+  <rect x="312" y="152" width="30" height="15" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="317" y="163" class="relation-label">1 : N</text>
+
+  <!-- 2. brand_orders (1) to work_orders (N) -->
+  <path d="M 625 170 L 660 170" stroke="#d97706" stroke-width="2.5" marker-end="url(#crow-foot)"/>
+  <rect x="628" y="152" width="30" height="15" rx="3" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="633" y="163" class="relation-label">1 : N</text>
+
+  <!-- Explanatory Callout Banner at Bottom -->
+  <g transform="translate(40, 580)">
+    <rect width="585" height="85" rx="10" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+    <text x="16" y="26" font-family="'Plus Jakarta Sans', sans-serif" font-size="12px" font-weight="800" fill="#b45309">💡 Catatan Arsitektur Database:</text>
+    <text x="16" y="46" font-family="'Plus Jakarta Sans', sans-serif" font-size="11px" font-weight="500" fill="#78350f">
+      1. Tabel <tspan font-weight="700">brand_partners</tspan> dan <tspan font-weight="700">brand_orders</tspan> adalah tabel baru mandiri untuk manajemen kemitraan B2B.
+    </text>
+    <text x="16" y="66" font-family="'Plus Jakarta Sans', sans-serif" font-size="11px" font-weight="500" fill="#78350f">
+      2. Hanya menambahkan 1 kolom baru pada <tspan font-weight="700">work_orders</tspan> yaitu <tspan font-weight="700" fill="#b45309">brand_order_id</tspan> (nullable FK) untuk efisiensi pengerjaan.
+    </text>
+  </g>
+</svg>
