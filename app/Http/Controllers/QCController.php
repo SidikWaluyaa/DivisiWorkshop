@@ -31,8 +31,8 @@ class QCController extends Controller
             $activeTab = 'jahit'; // Default fallback
         }
         
-        // Base Query: Fetch QC (Active)
-        $baseQuery = WorkOrder::where('status', WorkOrderStatus::QC);
+        // Base Query: Fetch QC (Active, excluding R&D)
+        $baseQuery = WorkOrder::where('status', WorkOrderStatus::QC)->withoutRnd();
 
         // Calculate Counts (for Stats Cards) - Using Database Counts for Accuracy
         $counts = [

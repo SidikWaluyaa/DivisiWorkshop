@@ -30,7 +30,7 @@
         {{-- Center: Active Station Indicator (Pill Badge) --}}
         <div class="flex items-center gap-2">
             @php
-                $currentRoute = request()->route()?->getName();
+                $currentRoute = request()->route()?->getName() ?? '';
                 $stationLabel = 'Dashboard';
 
                 if (str_contains($currentRoute, 'preparation')) {
@@ -43,6 +43,8 @@
                     $stationLabel = 'Quality Control (QC)';
                 } elseif (str_contains($currentRoute, 'manifest')) {
                     $stationLabel = 'Logistik Inbound';
+                } elseif (str_contains($currentRoute, 'rnd')) {
+                    $stationLabel = 'Divisi R&D';
                 } elseif (str_contains($currentRoute, 'revision')) {
                     $stationLabel = 'Revisi Teknik';
                 } elseif (str_contains($currentRoute, 'garansi')) {

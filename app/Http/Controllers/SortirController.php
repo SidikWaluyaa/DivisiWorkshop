@@ -23,16 +23,19 @@ class SortirController extends Controller
 
     public function index(Request $request)
     {
-        // 1. SIAP PRODUKSI Queue (Ready for Production)
+        // 1. SIAP PRODUKSI Queue (Ready for Production, excluding R&D)
         $readyQuery = WorkOrder::readyForProduction()
+            ->withoutRnd()
             ->with(['customer', 'services', 'materials', 'cxIssues']);
 
-        // 2. WAITING LIST Queue (Waiting for Materials WITH active PO)
+        // 2. WAITING LIST Queue (Waiting for Materials WITH active PO, excluding R&D)
         $waitingQuery = WorkOrder::waitingForMaterials()
+            ->withoutRnd()
             ->with(['customer', 'services', 'materials', 'cxIssues']);
 
-        // 3. NEEDS REQUEST Queue (Missing materials WITHOUT PO)
+        // 3. NEEDS REQUEST Queue (Missing materials WITHOUT PO, excluding R&D)
         $needsRequestQuery = WorkOrder::needsMaterialRequest()
+            ->withoutRnd()
             ->with(['customer', 'services', 'materials', 'cxIssues']);
 
         // Search Filter

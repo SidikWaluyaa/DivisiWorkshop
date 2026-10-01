@@ -86,6 +86,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // R&D Progress Direct Upload Alias
+    Route::post('orders/{id}/rnd-progress', [\App\Http\Controllers\RndProgressController::class, 'storeAdminProgress'])->name('orders.rnd-progress.direct');
+
     // Admin / Master Data Routes
     Route::prefix('admin')->name('admin.')->group(function () {
         // Archive Hub (Livewire)
@@ -104,6 +107,9 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/update-technician-notes', [App\Http\Controllers\Admin\OrderController::class, 'updateTechnicianNotes'])->name('orders.update-technician-notes');
         Route::post('orders/{id}/update-qc-conditions', [App\Http\Controllers\Admin\OrderController::class, 'updateQcConditions'])->name('orders.update-qc-conditions');
         Route::post('orders/{id}/update-priority', [App\Http\Controllers\Admin\OrderController::class, 'updatePriority'])->name('orders.update-priority');
+        Route::post('orders/{id}/rnd-progress', [\App\Http\Controllers\RndProgressController::class, 'storeAdminProgress'])->name('orders.rnd-progress.store');
+        Route::put('orders/{orderId}/rnd-progress/{progressId}', [\App\Http\Controllers\RndProgressController::class, 'updateAdminProgress'])->name('orders.rnd-progress.update');
+        Route::delete('orders/{orderId}/rnd-progress/{progressId}', [\App\Http\Controllers\RndProgressController::class, 'destroyAdminProgress'])->name('orders.rnd-progress.destroy');
         Route::get('orders/{id}/shipping-label', [App\Http\Controllers\Admin\OrderController::class, 'printShippingLabel'])->name('orders.shipping-label');
         Route::get('orders/{id}/address-label', [App\Http\Controllers\Admin\OrderController::class, 'printAddressLabel'])->name('orders.address-label');
         Route::post('orders/{id}/pickup-call', [App\Http\Controllers\Admin\OrderController::class, 'triggerPickupCall'])->name('orders.pickup-call');
@@ -855,4 +861,20 @@ Route::get('/verifikasi-alamat/{token}', function ($token) {
 Route::get('/laporan/{spk}/{token}', [\App\Http\Controllers\CustomerReportController::class, 'show'])->name('customer.report');
 Route::get('/laporan-before/{spk}/{token}', [\App\Http\Controllers\CustomerReportController::class, 'showBefore'])->name('customer.before-report');
 
+// Public R&D Routes (Living Report & Mobile QR Upload)
+Route::get('/rnd-report/{token}', [\App\Http\Controllers\RndProgressController::class, 'showLivingReport'])->name('rnd.report');
+Route::get('/rnd-upload/{token}', [\App\Http\Controllers\RndProgressController::class, 'showUploadForm'])->name('rnd.upload');
+Route::post('/rnd-upload/{token}', [\App\Http\Controllers\RndProgressController::class, 'storeMobileUpload'])->name('rnd.upload.store');
+
+// Workshop Dedicated R&D Station Routes
+Route::prefix('workshop/rnd')->name('workshop.rnd.')->middleware(['auth'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\WorkshopRndController::class, 'index'])->name('index');
+    Route::post('/{id}/start-research', [\App\Http\Controllers\WorkshopRndController::class, 'startResearch'])->name('start-research');
+    Route::post('/{id}/stage', [\App\Http\Controllers\WorkshopRndController::class, 'updateStage'])->name('stage');
+    Route::post('/{id}/technician', [\App\Http\Controllers\WorkshopRndController::class, 'assignTechnician'])->name('technician');
+    Route::post('/{id}/complete', [\App\Http\Controllers\WorkshopRndController::class, 'complete'])->name('complete');
+    Route::post('/{id}/progress', [\App\Http\Controllers\RndProgressController::class, 'storeAdminProgress'])->name('progress.store');
+});
+
 require __DIR__.'/auth.php';
+

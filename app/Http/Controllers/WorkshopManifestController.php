@@ -59,9 +59,10 @@ class WorkshopManifestController extends Controller
             ->whereNotNull('workshop_manifest_id')
             ->update(['workshop_manifest_id' => null]);
 
-        // Items ready for dispatch
+        // Items ready for dispatch (excluding R&D which bypasses manifest)
         $query = WorkOrder::where('status', WorkOrderStatus::READY_TO_DISPATCH)
-            ->whereNull('workshop_manifest_id');
+            ->whereNull('workshop_manifest_id')
+            ->withoutRnd();
 
         // Handle Search from Internal Tracking
         if ($request->filled('search')) {

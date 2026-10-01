@@ -236,10 +236,33 @@
                 <a href="{{ route('oto.index') }}" class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-center justify-between active:scale-95 transition-all">
                     <div>
                         <div class="font-black text-xs text-amber-700 flex items-center gap-1.5">
-                            <span>🔥</span> Stasiun OTO
+                            <span>Stasiun OTO</span>
                         </div>
                         <p class="text-[10px] font-bold text-amber-900/70 mt-0.5">Pengerjaan paket layanan One Time Offer</p>
                     </div>
+                </a>
+
+                {{-- Divisi R&D --}}
+                <a href="{{ route('workshop.rnd.index') }}" class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-center justify-between active:scale-95 transition-all">
+                    <div>
+                        <div class="font-black text-xs text-emerald-800 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                            </svg>
+                            <span>Divisi R&amp;D (Laboratorium)</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-emerald-900/70 mt-0.5">Riset produk, formulasi baru &amp; pengujian reparasi</p>
+                    </div>
+                    @php 
+                        $rndActiveCount = \App\Models\WorkOrder::where(function($q) {
+                            $q->where('priority', 'R&D')->orWhere('spk_number', 'like', 'RD-%');
+                        })->whereNotIn('status', [\App\Enums\WorkOrderStatus::SELESAI, \App\Enums\WorkOrderStatus::BATAL])->count();
+                    @endphp
+                    @if($rndActiveCount > 0)
+                        <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-[#FFC232] text-slate-950 shadow-sm">
+                            {{ $rndActiveCount }}
+                        </span>
+                    @endif
                 </a>
             </div>
         </div>

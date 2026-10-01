@@ -49,10 +49,11 @@ class SuratJalanController extends Controller
         // Backward compatibility
         $suratJalanList = $suratJalanHistory;
 
-        // Fetch candidate SPKs for this specific transfer type
+        // Fetch candidate SPKs for this specific transfer type (excluding R&D)
         $availableOrders = collect();
         if ($jenis === 'sortir_to_produksi') {
             $availableOrders = WorkOrder::whereIn('status', [\App\Enums\WorkOrderStatus::SORTIR, \App\Enums\WorkOrderStatus::PRODUCTION])
+                ->withoutRnd()
                 ->whereHas('logs', function($lq) {
                     $lq->where('step', 'SORTIR')
                        ->where('action', 'CLASSIFICATION_COMPLETED');
@@ -64,6 +65,7 @@ class SuratJalanController extends Controller
                 ->get();
         } elseif ($jenis === 'produksi_to_post_qc') {
             $availableOrders = WorkOrder::whereIn('status', [\App\Enums\WorkOrderStatus::PRODUCTION, \App\Enums\WorkOrderStatus::QC])
+                ->withoutRnd()
                 ->whereHas('logs', function($lq) {
                     $lq->where('step', 'PRODUCTION')
                        ->where('action', 'PRODUCTION_APPROVED');
@@ -115,10 +117,11 @@ class SuratJalanController extends Controller
     {
         $jenis = $request->get('jenis', 'sortir_to_produksi');
 
-        // Fetch candidate SPKs based on transfer type
+        // Fetch candidate SPKs based on transfer type (excluding R&D)
         $availableOrders = collect();
         if ($jenis === 'sortir_to_produksi') {
             $availableOrders = WorkOrder::whereIn('status', [\App\Enums\WorkOrderStatus::SORTIR, \App\Enums\WorkOrderStatus::PRODUCTION])
+                ->withoutRnd()
                 ->whereHas('logs', function($lq) {
                     $lq->where('step', 'SORTIR')
                        ->where('action', 'CLASSIFICATION_COMPLETED');
@@ -130,6 +133,7 @@ class SuratJalanController extends Controller
                 ->get();
         } elseif ($jenis === 'produksi_to_post_qc') {
             $availableOrders = WorkOrder::whereIn('status', [\App\Enums\WorkOrderStatus::PRODUCTION, \App\Enums\WorkOrderStatus::QC])
+                ->withoutRnd()
                 ->whereHas('logs', function($lq) {
                     $lq->where('step', 'PRODUCTION')
                        ->where('action', 'PRODUCTION_APPROVED');

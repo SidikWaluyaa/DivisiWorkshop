@@ -1178,7 +1178,7 @@ class LeadDetailManager extends Component
                 'shoe_color' => $item->shoe_color,
                 'shoe_size' => $item->shoe_size,
                 'category' => $item->category,
-                'item_type' => $item->category === 'Sepatu' ? 'Sepatu' : 'Lainnya',
+                'item_type' => (($this->lead->spk->priority ?? '') === 'R&D') ? 'R&D' : ($item->category === 'Sepatu' ? 'Sepatu' : 'Lainnya'),
                 'hk_days' => $item->hk_days, // HK is now carried over!
                 'ref_photos' => [],
                 'cover_index' => 0,

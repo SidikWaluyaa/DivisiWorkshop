@@ -137,13 +137,22 @@
             $qcBoxStyle = 'width: 12px; height: 12px;';
             $parafLineStyle = 'width: 24px; height: 12px;';
         }
+
+        $isRnd       = ($order->priority === 'R&D' || str_starts_with($order->spk_number, 'RD-'));
+        $isFastTrack = ($order->fast_track_status === 'yes');
+
+        $sidebarBg = match(true) {
+            $isRnd       => '#4f46e5', // Deep Indigo — Khusus R&D
+            $isFastTrack => '#ea580c', // Vibrant Orange — Fast Track
+            default      => '#22B086', // Emerald Green — Reguler & Prioritas
+        };
     @endphp
 
     <!-- MAIN PAGE CONTAINER -->
     <div class="page-container overflow-hidden page-a4">
         
         <!-- SIDEBAR (LEFT) -->
-        <aside class="sidebar h-full shrink-0" style="background-color: {{ $order->fast_track_status === 'yes' ? '#ea580c' : '#22B086' }}; padding: {{ $sidebarPadding }}; gap: {{ $sidebarGap }};">
+        <aside class="sidebar h-full shrink-0" style="background-color: {{ $sidebarBg }}; padding: {{ $sidebarPadding }}; gap: {{ $sidebarGap }};">
             {{-- Header Sidebar --}}
             <div class="flex items-center justify-between gap-3 mb-2">
                 <img src="{{ asset('images/logo.png') }}" class="h-10 w-auto brightness-0 invert" onerror="this.style.display='none'">
@@ -153,7 +162,11 @@
                 </div>
             </div>
 
-            @if($order->fast_track_status === 'yes')
+            @if($isRnd)
+                <div class="w-full bg-white/20 text-white border border-white/30 rounded-lg py-1.5 px-2 text-center text-[10px] font-black uppercase tracking-widest shadow-sm">
+                    🔬 RESEARCH & DEVELOPMENT 🔬
+                </div>
+            @elseif($isFastTrack)
                 <div class="w-full bg-white/20 text-white border border-white/30 rounded-lg py-1.5 px-3 text-center text-[10px] font-black uppercase tracking-widest shadow-sm animate-pulse">
                     🚀 FAST TRACK SERVICE 🚀
                 </div>
@@ -215,6 +228,24 @@
                 </div>
             @endif
 
+            {{-- QR Code Mobile Upload Khusus R&D --}}
+            @if($isRnd)
+                @php
+                    $rndQr = $rndUploadQrs[$order->id] ?? null;
+                    if (!$rndQr) {
+                        $uploadToken = $order->getOrCreateRndUploadToken();
+                        $rndQr = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(80)->generate(route('rnd.upload', $uploadToken));
+                    }
+                @endphp
+                <div class="bg-white rounded-xl p-2 text-center shadow-md border border-indigo-200 mt-1 avoid-break">
+                    <div class="flex justify-center items-center">
+                        {!! $rndQr !!}
+                    </div>
+                    <p class="text-[8px] text-gray-500 font-extrabold uppercase tracking-tight mt-1">
+                        📱 Scan QR Upload Progres HP
+                    </p>
+                </div>
+            @endif
 
             {{-- Notes Section --}}
             <div class="mt-1 space-y-1 avoid-break">
@@ -232,11 +263,9 @@
                                 $cleanNotes = substr($cleanNotes, 0, $cxPos);
                             }
                             $cleanNotes = trim($cleanNotes, " \t\n\r\0\x0B-");
-
-                            $isFastTrack = ($order->fast_track_status === 'yes');
                         @endphp
                         <div class="flex flex-col gap-2 items-start">
-                            <span class="inline-block px-2.5 py-1 rounded bg-white text-[11px] font-black shadow-sm {{ $isFastTrack ? 'text-[#ea580c]' : 'text-[#22B086]' }}">
+                            <span class="inline-block px-2.5 py-1 rounded bg-white text-[11px] font-black shadow-sm" style="color: {{ $sidebarBg }};">
                                 {{ $order->hk_days ?? 0 }} HK - {{ $order->is_warranty ? 'Bergaransi' : 'Non-Garansi' }}
                             </span>
                             @if($cleanNotes)
@@ -315,7 +344,7 @@
                 <div class="space-y-2">
                     <div class="bg-gray-50 rounded-lg p-2 px-3 border border-gray-150 flex flex-col justify-center">
                         <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Nomor SPK</span>
-                        <span class="text-xl font-extrabold font-mono tracking-tight" style="color: {{ $order->fast_track_status === 'yes' ? '#ea580c' : '#22B086' }};">{{ $order->spk_number }}</span>
+                        <span class="text-xl font-extrabold font-mono tracking-tight" style="color: {{ $sidebarBg }};">{{ $order->spk_number }}</span>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-2 px-3 border border-gray-100 flex flex-col justify-center">
                         <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Nama Customer</span>

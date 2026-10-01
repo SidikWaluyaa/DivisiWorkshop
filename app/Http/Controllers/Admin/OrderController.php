@@ -36,6 +36,7 @@ class OrderController extends Controller
             'cxIssues.reporter', 'cxIssues.resolver',
             'otos.creator',
             'lead',
+            'rndProgresses.user',
         ])->findOrFail($id);
 
         // All available services for the "add service" dropdown
@@ -844,7 +845,7 @@ class OrderController extends Controller
         }
 
         $request->validate([
-            'priority' => 'required|string|in:Reguler,Prioritas',
+            'priority' => 'required|string|in:Reguler,Prioritas,R&D',
         ]);
 
         $order = WorkOrder::findOrFail($id);
@@ -852,6 +853,11 @@ class OrderController extends Controller
         
         $order->priority = $request->priority;
         $order->save();
+
+        // Jika diubah ke R&D, pastikan token upload & report R&D terinisialisasi
+        if ($order->priority === 'R&D') {
+            $order->getOrCreateRndUploadToken();
+        }
 
         // Audit log
         \App\Models\WorkOrderLog::create([

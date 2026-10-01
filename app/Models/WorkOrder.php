@@ -319,12 +319,18 @@ class WorkOrder extends Model
             'qc_jahit' => 'QC Jahit',
             'prod_cleaning' => 'QC Treatment',
             'qc_cleanup' => 'QC Cleanup',
+            'qc_final' => 'QC Final',
         ];
         $label = $stationLabels[$station] ?? ucwords(str_replace('_', ' ', $station));
         $user = $userId ? User::find($userId) : auth()->user();
         $userName = $user?->name ?? 'Sistem/Admin';
 
-        $step = str_starts_with($station, 'prep_') ? 'PREPARATION' : (str_starts_with($station, 'prod_') || $station === 'qc_jahit' ? 'PRODUCTION' : 'QC');
+        $step = match($station) {
+            'prep_washing', 'prep_sol', 'prep_upper'   => 'PREPARATION',
+            'prod_sol', 'prod_upper', 'qc_jahit'       => 'PRODUCTION',
+            'prod_cleaning', 'qc_cleanup', 'qc_final'  => 'QC',
+            default => str_starts_with($station, 'prep_') ? 'PREPARATION' : (str_starts_with($station, 'prod_') ? 'PRODUCTION' : 'QC'),
+        };
 
         $this->logs()->create([
             'user_id' => $userId ?? auth()->id() ?? 1,
@@ -358,6 +364,7 @@ class WorkOrder extends Model
             'qc_jahit' => 'QC Jahit',
             'prod_cleaning' => 'QC Treatment',
             'qc_cleanup' => 'QC Cleanup',
+            'qc_final' => 'QC Final',
         ];
         $label = $stationLabels[$station] ?? ucwords(str_replace('_', ' ', $station));
         $tech = $techId ? User::find($techId) : null;
@@ -365,7 +372,12 @@ class WorkOrder extends Model
         $user = $userId ? User::find($userId) : auth()->user();
         $userName = $user?->name ?? 'Sistem/Admin';
 
-        $step = str_starts_with($station, 'prep_') ? 'PREPARATION' : (str_starts_with($station, 'prod_') || $station === 'qc_jahit' ? 'PRODUCTION' : 'QC');
+        $step = match($station) {
+            'prep_washing', 'prep_sol', 'prep_upper'   => 'PREPARATION',
+            'prod_sol', 'prod_upper', 'qc_jahit'       => 'PRODUCTION',
+            'prod_cleaning', 'qc_cleanup', 'qc_final'  => 'QC',
+            default => str_starts_with($station, 'prep_') ? 'PREPARATION' : (str_starts_with($station, 'prod_') ? 'PRODUCTION' : 'QC'),
+        };
 
         $this->logs()->create([
             'user_id' => $userId ?? auth()->id() ?? 1,
@@ -1513,6 +1525,9 @@ class WorkOrder extends Model
             'Headwear' => 'H', // Topi, Helm
             'Apparel' => 'A', // Jaket, Baju
             'Lainnya' => 'L',
+            'R&D' => 'RD',
+            'Riset' => 'RD',
+            'RD' => 'RD',
         ];
 
         $code = $typeCodes[$itemType] ?? 'S'; // Default to Sepatu
@@ -2014,4 +2029,59 @@ class WorkOrder extends Model
             'is_on_time' => ($prepOnTime !== false && $sortirOnTime !== false && $prodOnTime !== false && $qcOnTime !== false),
         ];
     }
+
+    /**
+     * Relasi ke Jurnal Progres R&D (work_order_rnd_progress)
+     */
+    public function rndProgresses()
+    {
+        return $this->hasMany(\App\Models\WorkOrderRndProgress::class, 'work_order_id')->orderBy('created_at', 'asc');
+    }
+
+    /**
+     * Dapatkan upload token R&D yang aktif atau buatkan inisialisasi baru secara otomatis
+     */
+    public function getOrCreateRndUploadToken(): string
+    {
+        $latest = $this->rndProgresses()->whereNotNull('upload_token')->latest()->first();
+        if ($latest && !empty($latest->upload_token)) {
+            return $latest->upload_token;
+        }
+
+        $uploadToken = \Illuminate\Support\Str::random(64);
+        $reportToken = \Illuminate\Support\Str::random(64);
+
+        $this->rndProgresses()->create([
+            'stage_title' => 'Inisialisasi Proyek R&D',
+            'result_status' => 'IN_PROGRESS',
+            'upload_token' => $uploadToken,
+            'report_token' => $reportToken,
+            'notes' => 'Token mobile upload diinisialisasi untuk lembar SPK fisik.',
+        ]);
+
+        return $uploadToken;
+    }
+
+    /**
+     * Scope untuk mengecualikan SPK R&D dari antrean reguler
+     */
+    public function scopeWithoutRnd($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('priority')
+              ->orWhere('priority', '!=', 'R&D');
+        })->where('spk_number', 'not like', 'RD-%');
+    }
+
+    /**
+     * Scope khusus untuk mengambil SPK R&D
+     */
+    public function scopeOnlyRnd($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('priority', 'R&D')
+              ->orWhere('spk_number', 'like', 'RD-%');
+        });
+    }
 }
+

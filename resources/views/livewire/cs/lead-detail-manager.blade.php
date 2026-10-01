@@ -1880,10 +1880,16 @@
                                     </div>
                                     <div>
                                         <label class="text-[10px] font-black uppercase text-slate-500 mb-2 block tracking-widest">Prioritas Kerja</label>
-                                        <select wire:model="spkData.priority" class="w-full bg-slate-50 border-0 rounded-2xl p-5 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm">
+                                        <select wire:model.live="spkData.priority" class="w-full bg-slate-50 border-0 rounded-2xl p-5 text-sm font-black focus:ring-4 focus:ring-emerald-500/10 shadow-sm">
                                             <option value="NORMAL">NORMAL</option>
                                             <option value="PRIORITAS">PRIORITAS</option>
+                                            <option value="R&D">R&D</option>
                                         </select>
+                                        @if(($spkData['priority'] ?? '') === 'R&D')
+                                            <div class="mt-2.5 p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-300">
+                                                <span>Mode R&D: SPK akan masuk ke laboratorium workshop dengan Living Report & QR Upload.</span>
+                                            </div>
+                                        @endif
                                     </div>
                                     <div>
                                         <label class="text-[10px] font-black uppercase text-slate-500 mb-2 block tracking-widest">Estimasi Selesai (Opsional)</label>
@@ -2108,6 +2114,7 @@
                                             <option value="Headwear">Headwear / Topi / Helm (Prefix H)</option>
                                             <option value="Apparel">Apparel / Jaket / Baju (Prefix A)</option>
                                             <option value="Lainnya">Lainnya (Prefix L)</option>
+                                            <option value="R&D">R&D / Riset (Prefix RD)</option>
                                         </select>
                                     </div>
                                 </div>

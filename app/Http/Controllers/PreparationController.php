@@ -25,8 +25,8 @@ class PreparationController extends Controller
     {
         $activeTab = $request->get('tab', 'washing');
 
-        // Base Query
-    $baseQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION->value);
+        // Base Query (excluding R&D dedicated module)
+        $baseQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION->value)->withoutRnd();
 
     // Helper queries for "Needs Sol" and "Needs Upper"
     // Helper queries for "Needs Sol" and "Needs Upper" (Unified)

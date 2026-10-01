@@ -22,29 +22,49 @@
                 WorkOrderStatus::PRODUCTION, 
                 WorkOrderStatus::QC, 
                 WorkOrderStatus::REVISI
-            ])->count(),
+            ])->where(function($q) {
+                $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
+            })->where('spk_number', 'not like', 'RD-%')->count(),
             'fastTrack' => WorkOrder::where('fast_track_status', 'yes')
+                ->where(function($q) {
+                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
+                })->where('spk_number', 'not like', 'RD-%')
                 ->whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL])
                 ->count(),
             'inbound' => WorkshopManifest::where('status', 'SENT')->where('manifest_number', 'not like', 'MNF-OUT-%')->count(),
-            'prep' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->count(),
+            'prep' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)
+                ->where(function($q) {
+                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
+                })->where('spk_number', 'not like', 'RD-%')->count(),
             // 2. Sortir Active WIP (SPK still being sorted, not yet classification completed)
             'sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)
+                ->where(function($q) {
+                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
+                })->where('spk_number', 'not like', 'RD-%')
                 ->whereDoesntHave('logs', function($lq) {
                     $lq->where('step', 'SORTIR')
                        ->where('action', 'CLASSIFICATION_COMPLETED');
                 })->count(),
             // 4. Produksi Active WIP (SPK in production, not yet production approved)
             'prod' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)
+                ->where(function($q) {
+                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
+                })->where('spk_number', 'not like', 'RD-%')
                 ->whereDoesntHave('logs', function($lq) {
                     $lq->where('step', 'PRODUCTION')
                        ->where('action', 'PRODUCTION_APPROVED');
                 })->count(),
-            'qc' => WorkOrder::where('status', WorkOrderStatus::QC)->count(),
+            'qc' => WorkOrder::where('status', WorkOrderStatus::QC)
+                ->where(function($q) {
+                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
+                })->where('spk_number', 'not like', 'RD-%')->count(),
             'late' => WorkOrder::productionLate()->whereRaw('DATEDIFF(estimation_date, NOW()) <= 0')->count(),
             'suratJalan' => SuratJalan::where('status', 'DIKIRIM')->count(),
             // 3. SJ Sortir -> Produksi Candidates (Completed Sortir ready for Surat Jalan)
             'suratJalanSortir' => WorkOrder::whereIn('status', [WorkOrderStatus::SORTIR, WorkOrderStatus::PRODUCTION])
+                ->where(function($q) {
+                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
+                })->where('spk_number', 'not like', 'RD-%')
                 ->whereHas('logs', function($lq) {
                     $lq->where('step', 'SORTIR')
                        ->where('action', 'CLASSIFICATION_COMPLETED');
@@ -54,6 +74,9 @@
                 })->count(),
             // 5. SJ Produksi -> QC Candidates (Completed Production ready for Surat Jalan)
             'suratJalanProd' => WorkOrder::whereIn('status', [WorkOrderStatus::PRODUCTION, WorkOrderStatus::QC])
+                ->where(function($q) {
+                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
+                })->where('spk_number', 'not like', 'RD-%')
                 ->whereHas('logs', function($lq) {
                     $lq->where('step', 'PRODUCTION')
                        ->where('action', 'PRODUCTION_APPROVED');
@@ -66,11 +89,19 @@
             'garansiActive' => WorkOrderWarranty::count(),
             'listGaransi' => WorkOrder::whereNotNull('warranty_expires_at')->count(),
             'otoActive' => \App\Models\OTO::whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->count(),
+            'rndActive' => WorkOrder::where(function($q) {
+                    $q->where('priority', 'R&D')->orWhere('spk_number', 'like', 'RD-%');
+                })
+                ->whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL])
+                ->count(),
             'materialTotal' => Material::count(),
             'materialRequests' => Schema::hasTable('material_requests') ? MaterialRequest::where('status', 'PENDING')->count() : 0,
             'disbursement' => Schema::hasTable('material_disbursements') ? MaterialDisbursement::where('status', 'PENDING')->count() : 0,
             'mutationsToday' => Schema::hasTable('material_mutations') ? MaterialMutation::whereDate('created_at', today())->count() : 0,
-            'outboundStaging' => WorkOrder::where('status', WorkOrderStatus::STAGING_OUTBOUND)->count(),
+            'outboundStaging' => WorkOrder::where('status', WorkOrderStatus::STAGING_OUTBOUND)
+                ->where(function($q) {
+                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
+                })->where('spk_number', 'not like', 'RD-%')->count(),
         ];
     });
 
@@ -90,6 +121,7 @@
     $countGaransiActive = $wsCounts['garansiActive'];
     $countListGaransi = $wsCounts['listGaransi'];
     $countOtoActive = $wsCounts['otoActive'];
+    $countRndActive = $wsCounts['rndActive'] ?? 0;
     $countMaterialTotal = $wsCounts['materialTotal'];
     $countMaterialRequests = $wsCounts['materialRequests'];
     $countDisbursement = $wsCounts['disbursement'];
@@ -131,7 +163,7 @@
              openDashboard: {{ request()->routeIs('dashboard', 'workshop.dashboard-v2', 'workshop.fast-track.*', 'internal-tracking.*') ? 'true' : 'false' }},
              openLayanan: {{ request()->routeIs('production.technician-assistant', 'admin.technicians.index', 'admin.technician-skills', 'admin.services.*', 'admin.performance.*') ? 'true' : 'false' }},
              openUtilitas: {{ request()->routeIs('production.late-info', 'surat-jalan.*') ? 'true' : 'false' }},
-             openGaransi: {{ request()->routeIs('revision.*', 'garansi.*', 'finish.list-garansi', 'oto.*', 'workshop.followup.*') ? 'true' : 'false' }},
+             openGaransi: {{ request()->routeIs('revision.*', 'garansi.*', 'finish.list-garansi', 'oto.*', 'workshop.followup.*', 'workshop.rnd.*') ? 'true' : 'false' }},
              openMaterial: {{ request()->routeIs('admin.materials.*', 'material-requests.*', 'storage.disbursement.*', 'storage.history') ? 'true' : 'false' }}
          }"
          x-init="
@@ -1025,6 +1057,41 @@
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
                         <span>Stasiun OTO</span>
                         <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countOtoActive }}</span>
+                    </div>
+                </a>
+
+                {{-- Divisi R&D (Dedicated Station) --}}
+                <a href="{{ route('workshop.rnd.index') }}" 
+                   title="Divisi R&D ({{ $countRndActive }})"
+                   class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
+                   {{ request()->routeIs('workshop.rnd.*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
+                   :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
+                    
+                    @if(request()->routeIs('workshop.rnd.*'))
+                        <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-slate-950 rounded-r-full shadow-sm" x-show="!sidebarCollapsed"></span>
+                    @endif
+
+                    <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('workshop.rnd.*') ? 'text-slate-950' : 'text-[#FFC232]' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1 flex items-center justify-between">
+                        <span>Divisi R&amp;D</span>
+                        <span class="px-1.5 py-0.2 bg-emerald-900/60 text-emerald-200 text-[9px] font-black rounded border border-emerald-400/30">LAB</span>
+                    </span>
+                    @if($countRndActive > 0)
+                        <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black {{ request()->routeIs('workshop.rnd.*') ? 'bg-slate-950 text-[#FFC232]' : 'bg-slate-900 text-[#FFC232] border border-[#FFC232]/50 shadow-sm' }}">
+                            {{ $countRndActive }}
+                        </span>
+                        <span x-show="sidebarCollapsed" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-slate-900 text-[#FFC232] font-black text-[9px] flex items-center justify-center shadow-sm border-2 border-white">
+                            {{ $countRndActive }}
+                        </span>
+                    @endif
+
+                    {{-- Compact Hover Tooltip --}}
+                    <div x-show="sidebarCollapsed" x-cloak 
+                         class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
+                        <span>Divisi R&amp;D (Laboratorium)</span>
+                        <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countRndActive }}</span>
                     </div>
                 </a>
             </div>

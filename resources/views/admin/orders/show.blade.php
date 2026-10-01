@@ -52,14 +52,21 @@
                             @php
                                 $canEditPriority = in_array(auth()->user()?->email, ['admin@workshop.com', 'novi@workshop.com']);
                                 $currentPriorityRaw = $order->priority ?? 'Reguler';
+                                $isRnd = (strtoupper(trim($currentPriorityRaw)) === 'R&D' || str_starts_with($order->spk_number, 'RD-'));
                                 $isPrioritas = in_array(strtolower($currentPriorityRaw), ['prioritas', 'urgent', 'express', 'oto']);
-                                $initialPriority = $isPrioritas ? 'Prioritas' : 'Reguler';
+                                
+                                $initialPriority = match(true) {
+                                    $isRnd => 'R&D',
+                                    $isPrioritas => 'Prioritas',
+                                    default => 'Reguler'
+                                };
                             @endphp
                             <div x-data="{
                                     priority: '{{ $initialPriority }}',
                                     isLoading: false,
                                     canEdit: {{ $canEditPriority ? 'true' : 'false' }},
-                                    async changePriority() {
+                                    async setPriority(targetPriority) {
+                                        if (this.priority === targetPriority) return;
                                         if (!this.canEdit) {
                                             Swal.fire({
                                                 icon: 'warning',
@@ -70,17 +77,33 @@
                                             return;
                                         }
 
-                                        const targetPriority = this.priority === 'Prioritas' ? 'Reguler' : 'Prioritas';
-                                        const confirmMsg = targetPriority === 'Prioritas'
-                                            ? 'Ubah SPK ini menjadi ⚡ PRIORITAS? SPK ini akan diprioritaskan di antrean stasiun pengerjaan.'
-                                            : 'Kembalikan prioritas SPK ini menjadi ⚪ REGULER?';
+                                        let confirmTitle = 'Ubah Prioritas SPK?';
+                                        let confirmMsg = '';
+                                        let confirmColor = '#64748B';
+                                        let confirmIcon = 'question';
+
+                                        if (targetPriority === 'R&D') {
+                                            confirmTitle = 'Ubah SPK ke 🔬 R&D (Riset)?';
+                                            confirmMsg = 'SPK ini akan ditandai sebagai Proyek Research & Development (R&D). Lembar cetak SPK fisik otomatis berwarna Ungu Deep Indigo (#4f46e5) dengan QR Code mobile upload progres.';
+                                            confirmColor = '#4F46E5';
+                                            confirmIcon = 'info';
+                                        } else if (targetPriority === 'Prioritas') {
+                                            confirmTitle = 'Ubah SPK ke ⚡ PRIORITAS?';
+                                            confirmMsg = 'SPK ini akan diprioritaskan di antrean pengerjaan seluruh stasiun bengkel.';
+                                            confirmColor = '#EF4444';
+                                            confirmIcon = 'warning';
+                                        } else {
+                                            confirmTitle = 'Kembalikan ke ⚪ REGULER?';
+                                            confirmMsg = 'Prioritas SPK akan dikembalikan ke status pengerjaan standar/reguler.';
+                                            confirmColor = '#64748B';
+                                        }
 
                                         const result = await Swal.fire({
-                                            title: 'Ubah Prioritas SPK?',
+                                            title: confirmTitle,
                                             text: confirmMsg,
-                                            icon: targetPriority === 'Prioritas' ? 'warning' : 'question',
+                                            icon: confirmIcon,
                                             showCancelButton: true,
-                                            confirmButtonColor: targetPriority === 'Prioritas' ? '#EF4444' : '#64748B',
+                                            confirmButtonColor: confirmColor,
                                             cancelButtonColor: '#CBD5E1',
                                             confirmButtonText: `Ya, Ubah ke ${targetPriority}`,
                                             cancelButtonText: 'Batal',
@@ -127,47 +150,62 @@
                                             this.isLoading = false;
                                         }
                                     }
-                                 }" class="inline-flex items-center">
-                                <button type="button" 
-                                        @click="changePriority()"
-                                        :disabled="isLoading"
-                                        :title="canEdit ? 'Klik untuk mengubah prioritas SPK (Reguler / Prioritas)' : 'Prioritas SPK: ' + priority + ' (Hanya akun khusus yang dapat mengubah)'"
-                                        class="group flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-black transition-all shadow-2xs"
-                                        :class="{
-                                            'bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100 hover:border-rose-400': priority === 'Prioritas',
-                                            'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300': priority !== 'Prioritas',
-                                            'cursor-pointer active:scale-95': canEdit,
-                                            'cursor-default opacity-90': !canEdit
-                                        }">
-                                    
-                                    {{-- Priority Status Indicator --}}
-                                    <template x-if="priority === 'Prioritas'">
-                                        <span class="flex items-center gap-1.5">
-                                            <span class="relative flex h-2 w-2">
-                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
-                                            </span>
-                                            <span class="tracking-wide">⚡ PRIORITAS</span>
-                                        </span>
-                                    </template>
-                                    <template x-if="priority !== 'Prioritas'">
-                                        <span class="flex items-center gap-1.5">
-                                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                                            <span class="tracking-wide">⚪ REGULER</span>
-                                        </span>
-                                    </template>
+                                 }" class="inline-flex items-center gap-2">
+                                
+                                {{-- Segmented 3-Pill Control --}}
+                                <div class="inline-flex p-1 rounded-xl bg-gray-100 border border-gray-200/80 shadow-2xs gap-1">
+                                    {{-- Pill 1: Reguler --}}
+                                    <button type="button" 
+                                            @click="setPriority('Reguler')"
+                                            :disabled="isLoading || !canEdit"
+                                            class="px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5"
+                                            :class="{
+                                                'bg-white text-slate-800 shadow-xs border border-gray-200/60': priority === 'Reguler',
+                                                'text-slate-500 hover:text-slate-800 hover:bg-white/50': priority !== 'Reguler',
+                                                'cursor-pointer active:scale-95': canEdit,
+                                                'cursor-default opacity-80': !canEdit
+                                            }">
+                                        <span class="w-2 h-2 rounded-full" :class="priority === 'Reguler' ? 'bg-slate-500' : 'bg-slate-300'"></span>
+                                        <span>Reguler</span>
+                                    </button>
 
-                                    {{-- Edit indicator if authorized --}}
-                                    @if($canEditPriority)
-                                        <svg x-show="!isLoading" class="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                        </svg>
-                                        <svg x-show="isLoading" class="animate-spin w-3 h-3 text-current ml-0.5" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                        </svg>
-                                    @endif
-                                </button>
+                                    {{-- Pill 2: Prioritas --}}
+                                    <button type="button" 
+                                            @click="setPriority('Prioritas')"
+                                            :disabled="isLoading || !canEdit"
+                                            class="px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5"
+                                            :class="{
+                                                'bg-rose-500 text-white shadow-xs': priority === 'Prioritas',
+                                                'text-slate-500 hover:text-rose-600 hover:bg-rose-50/50': priority !== 'Prioritas',
+                                                'cursor-pointer active:scale-95': canEdit,
+                                                'cursor-default opacity-80': !canEdit
+                                            }">
+                                        <span class="w-2 h-2 rounded-full" :class="priority === 'Prioritas' ? 'bg-white animate-pulse' : 'bg-rose-300'"></span>
+                                        <span>⚡ Prioritas</span>
+                                    </button>
+
+                                    {{-- Pill 3: R&D --}}
+                                    <button type="button" 
+                                            @click="setPriority('R&D')"
+                                            :disabled="isLoading || !canEdit"
+                                            class="px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5"
+                                            :class="{
+                                                'bg-indigo-600 text-white shadow-xs': priority === 'R&D',
+                                                'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/50': priority !== 'R&D',
+                                                'cursor-pointer active:scale-95': canEdit,
+                                                'cursor-default opacity-80': !canEdit
+                                            }">
+                                        <span class="w-2 h-2 rounded-full" :class="priority === 'R&D' ? 'bg-white' : 'bg-indigo-300'"></span>
+                                        <span>🔬 R&D</span>
+                                    </button>
+                                </div>
+
+                                {{-- R&D Badge & Quick Print Link if Active --}}
+                                <template x-if="priority === 'R&D'">
+                                    <a href="{{ route('reception.print-spk', $order->id) }}" target="_blank" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition shadow-2xs" title="Cetak Lembar SPK Ungu R&D">
+                                        <span>🖨️ SPK Ungu</span>
+                                    </a>
+                                </template>
                             </div>
 
                             {{-- Inbound Tracking Badge --}}
@@ -897,6 +935,771 @@
                     @endforeach
                 </div>
             </div>
+
+            {{-- R&D Living Journal Card (Special Section for R&D SPK) --}}
+            @if($order->priority === 'R&D')
+                @php
+                    $rndUploadToken = $order->getOrCreateRndUploadToken();
+                    $firstRnd = $order->rndProgresses->first();
+                    $rndReportToken = $firstRnd?->report_token ?? \Illuminate\Support\Str::random(64);
+                    $rndUploadUrl = route('rnd.upload', $rndUploadToken);
+                    $rndReportUrl = route('rnd.report', $rndReportToken);
+                    $validProgresses = $order->rndProgresses->whereNotNull('photo_path');
+                @endphp
+                <div class="bg-white rounded-2xl shadow-lg border border-slate-200/80 p-6 mb-8 text-slate-800 relative overflow-hidden group hover:shadow-xl transition-all duration-300"
+                     x-data="{ 
+                         showUploadModal: false, 
+                         showQrModal: false,
+                         showEditModal: false,
+                         editProgress: {
+                             id: null,
+                             stage_title: '',
+                             result_status: 'SUCCESS',
+                             notes: '',
+                             current_photo_url: '',
+                             action_url: ''
+                         },
+                         openEdit(id, title, status, notes, photoUrl, actionUrl) {
+                             this.editProgress = {
+                                 id: id,
+                                 stage_title: title,
+                                 result_status: status,
+                                 notes: notes || '',
+                                 current_photo_url: photoUrl,
+                                 action_url: actionUrl
+                             };
+                             this.showEditModal = true;
+                         },
+                         showZoomModal: false,
+                         zoomPhoto: {
+                             url: '',
+                             title: '',
+                             notes: '',
+                             status: '',
+                             iteration: 1,
+                             created_at: '',
+                             uploader: ''
+                         },
+                         openZoom(url, title, notes, status, iteration, createdAt, uploader) {
+                             this.zoomPhoto = {
+                                 url: url,
+                                 title: title,
+                                 notes: notes || '',
+                                 status: status,
+                                 iteration: iteration,
+                                 created_at: createdAt,
+                                 uploader: uploader
+                             };
+                             this.showZoomModal = true;
+                         }
+                     }">
+                    
+                    {{-- Top Brand Gradient Line --}}
+                    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#22B086] via-[#1A9E74] to-[#FFC232]"></div>
+
+                    {{-- Card Header --}}
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100 relative z-10 pt-1">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center text-xl shadow-xs shrink-0">
+                                <svg class="w-6 h-6 text-[#22B086]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-black text-base text-slate-900 tracking-tight">Jurnal Progres Riset (R&D Lab)</h3>
+                                    <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider border border-emerald-200">
+                                        Living Report Aktif
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    Pemantauan evolusi visual, formula pengujian, dan riwayat uji coba laboratorium SPK ini.
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" 
+                                    @click="showUploadModal = true"
+                                    class="px-4 py-2.5 rounded-xl bg-[#22B086] hover:bg-[#1C8D6C] text-white font-bold text-xs shadow-md shadow-emerald-200 hover:-translate-y-0.5 transition-all flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                <span>Tambah Progres (PC)</span>
+                            </button>
+
+                            <button type="button" 
+                                    @click="showQrModal = true"
+                                    class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs shadow-md shadow-slate-200 hover:-translate-y-0.5 transition-all flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                <span>Scan QR HP</span>
+                            </button>
+
+                            <a href="{{ $rndReportUrl }}" target="_blank"
+                               class="px-3.5 py-2.5 rounded-xl bg-[#FFC232] hover:bg-[#FFB000] text-gray-900 font-bold text-xs shadow-md shadow-amber-100 hover:-translate-y-0.5 transition-all flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                <span>Buka Living Report</span>
+                            </a>
+
+                            <button type="button" 
+                                    onclick="navigator.clipboard.writeText('{{ $rndReportUrl }}'); Swal.fire({ icon: 'success', title: 'Tautan Disalin!', text: 'Link Living Report publik berhasil disalin ke clipboard.', timer: 2000, showConfirmButton: false });"
+                                    class="p-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-800 border border-slate-200 transition shadow-2xs"
+                                    title="Salin Tautan Living Report">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Timeline / Gallery of Uploaded Stages --}}
+                    <div class="mt-5 relative z-10">
+                        @if($validProgresses->isEmpty())
+                            <div class="p-8 text-center rounded-2xl bg-slate-50 border border-dashed border-slate-200 space-y-2">
+                                <div class="w-12 h-12 mx-auto rounded-full bg-emerald-50 text-[#22B086] flex items-center justify-center">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                </div>
+                                <h4 class="text-sm font-bold text-slate-700">Belum Ada Progres Foto R&D Terunggah</h4>
+                                <p class="text-xs text-slate-500 max-w-md mx-auto">
+                                    Teknisi dapat memindai QR Code SPK dengan smartphone untuk jepret langsung foto eksperimen, atau klik tombol <strong>"Tambah Progres (PC)"</strong> di atas.
+                                </p>
+                            </div>
+                        @else
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                @foreach($validProgresses as $pIdx => $prog)
+                                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-xs group hover:border-[#22B086] hover:shadow-md transition">
+                                        <div class="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer group/img"
+                                             @click="openZoom('{{ asset('storage/' . $prog->photo_path) }}', '{{ addslashes($prog->stage_title) }}', `{{ addslashes($prog->notes) }}`, '{{ $prog->result_status }}', {{ $loop->iteration }}, '{{ $prog->created_at->format('d M Y, H:i') }}', '{{ $prog->user->name ?? 'Mobile' }}')">
+                                            <img src="{{ asset('storage/' . $prog->photo_path) }}" 
+                                                 alt="{{ $prog->stage_title }}" 
+                                                 class="w-full h-full object-cover group-hover/img:scale-105 transition duration-300">
+                                            
+                                            {{-- Zoom Hover Overlay --}}
+                                            <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                                <div class="px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-lg">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                                    <span>Perbesar Foto</span>
+                                                </div>
+                                            </div>
+
+                                            <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-white/90 backdrop-blur text-[10px] font-mono font-bold text-slate-800 shadow-xs z-10">
+                                                #{{ $loop->iteration }}
+                                            </span>
+                                            @php
+                                                $progBadgeClass = match($prog->result_status) {
+                                                    'SUCCESS' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                                    'NEED_REVISION' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                                    'FAILED' => 'bg-rose-50 text-rose-700 border-rose-200',
+                                                    default => 'bg-blue-50 text-blue-700 border-blue-200',
+                                                };
+                                            @endphp
+                                            <span class="absolute top-2 right-2 text-[9px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider border {{ $progBadgeClass }} shadow-xs z-10">
+                                                {{ $prog->result_status }}
+                                            </span>
+                                        </div>
+                                        <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
+                                            <div>
+                                                <h5 class="text-xs font-bold text-slate-900 truncate">{{ $prog->stage_title }}</h5>
+                                                @if($prog->notes)
+                                                    <p class="text-[11px] text-slate-600 line-clamp-2 mt-1 font-mono bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                                        {{ $prog->notes }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                            <div class="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-100">
+                                                <div class="flex items-center gap-1.5 min-w-0">
+                                                    <span class="shrink-0">{{ $prog->created_at->format('d M, H:i') }}</span>
+                                                    <span class="shrink-0">•</span>
+                                                    <span class="truncate max-w-[70px] font-semibold text-slate-600">{{ $prog->user->name ?? 'Mobile' }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-1 shrink-0">
+                                                    <button type="button" 
+                                                            @click="openEdit({{ $prog->id }}, '{{ addslashes($prog->stage_title) }}', '{{ $prog->result_status }}', `{{ addslashes($prog->notes) }}`, '{{ asset('storage/' . $prog->photo_path) }}', '{{ route('admin.orders.rnd-progress.update', [$order->id, $prog->id]) }}')"
+                                                            title="Edit Tahap Ini"
+                                                            class="w-6 h-6 rounded-md bg-slate-100 hover:bg-emerald-50 text-slate-500 hover:text-[#22B086] border border-slate-200/60 flex items-center justify-center transition shadow-2xs">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                    </button>
+                                                    <button type="button" 
+                                                            onclick="deleteRndProgress({{ $prog->id }}, '{{ addslashes($prog->stage_title) }}')"
+                                                            title="Hapus Tahap Ini"
+                                                            class="w-6 h-6 rounded-md bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200/60 flex items-center justify-center transition shadow-2xs">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    </button>
+                                                    <form id="form-delete-rnd-{{ $prog->id }}" 
+                                                          action="{{ route('admin.orders.rnd-progress.destroy', [$order->id, $prog->id]) }}" 
+                                                          method="POST" 
+                                                          class="hidden">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Modal 1: Tambah Progres (PC Admin) --}}
+                    <template x-teleport="body">
+                        <div x-show="showUploadModal" class="fixed inset-0 z-[999] overflow-y-auto" style="display: none;">
+                            <div class="flex items-center justify-center min-h-screen p-4 text-center">
+                                <div x-show="showUploadModal" 
+                                     x-transition:enter="transition ease-out duration-300" 
+                                     x-transition:enter-start="opacity-0" 
+                                     x-transition:enter-end="opacity-100" 
+                                     x-transition:leave="transition ease-in duration-200" 
+                                     x-transition:leave-start="opacity-100" 
+                                     x-transition:leave-end="opacity-0" 
+                                     @click="showUploadModal = false"
+                                     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+
+                                <div x-show="showUploadModal" 
+                                     x-transition:enter="transition ease-out duration-300" 
+                                     x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95" 
+                                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                                     x-transition:leave="transition ease-in duration-200" 
+                                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                                     x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95" 
+                                     class="relative inline-block w-full max-w-lg my-8 overflow-hidden text-left bg-white border border-slate-200 rounded-3xl shadow-2xl text-slate-800 z-10 font-sans">
+                                    
+                                    {{-- Modal Header --}}
+                                    <div class="bg-gradient-to-r from-[#22B086] to-[#1C8D6C] px-6 py-5 text-white flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-white">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                            </div>
+                                            <div>
+                                                <h3 class="font-black text-base text-white tracking-wide">Tambah Progres R&D (Admin)</h3>
+                                                <p class="text-[11px] text-white/80">Dokumentasikan tahapan eksperimen laboratorium</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" @click="showUploadModal = false" class="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition">✕</button>
+                                    </div>
+
+                                    <form action="{{ route('admin.orders.rnd-progress.store', $order->id) }}" 
+                                          method="POST" 
+                                          enctype="multipart/form-data" 
+                                          class="p-6 space-y-4 text-xs"
+                                          x-data="{
+                                              previewUrl: null,
+                                              compressionInfo: '',
+                                              isCompressing: false,
+                                              isSubmitting: false,
+                                              handleImage(event) {
+                                                  const file = event.target.files[0];
+                                                  if (!file) return;
+
+                                                  const originalMB = (file.size / (1024 * 1024)).toFixed(2);
+                                                  this.isCompressing = true;
+                                                  this.compressionInfo = 'Mengompres foto (' + originalMB + ' MB)...';
+
+                                                  const reader = new FileReader();
+                                                  reader.onload = (e) => {
+                                                      const img = new Image();
+                                                      img.onload = () => {
+                                                          const canvas = document.createElement('canvas');
+                                                          let width = img.width;
+                                                          let height = img.height;
+                                                          const maxDim = 1600;
+
+                                                          if (width > height && width > maxDim) {
+                                                              height = Math.round((height * maxDim) / width);
+                                                              width = maxDim;
+                                                          } else if (height > maxDim) {
+                                                              width = Math.round((width * maxDim) / height);
+                                                              height = maxDim;
+                                                          }
+
+                                                          canvas.width = width;
+                                                          canvas.height = height;
+                                                          const ctx = canvas.getContext('2d');
+                                                          ctx.drawImage(img, 0, 0, width, height);
+
+                                                          canvas.toBlob((blob) => {
+                                                              this.isCompressing = false;
+                                                              if (!blob) {
+                                                                  alert('Gagal memproses kompresi gambar.');
+                                                                  return;
+                                                              }
+
+                                                              const compressedKB = (blob.size / 1024).toFixed(0);
+                                                              this.compressionInfo = 'Terkonversi WebP: ' + compressedKB + ' KB (dari ' + originalMB + ' MB)';
+                                                              this.previewUrl = URL.createObjectURL(blob);
+
+                                                              const newFile = new File([blob], 'rnd_admin.webp', { type: 'image/webp' });
+                                                              const dataTransfer = new DataTransfer();
+                                                              dataTransfer.items.add(newFile);
+                                                              document.getElementById('adminRealPhotoInput').files = dataTransfer.files;
+                                                          }, 'image/webp', 0.82);
+                                                      };
+                                                      img.src = e.target.result;
+                                                  };
+                                                  reader.readAsDataURL(file);
+                                              },
+                                              resetImage() {
+                                                  this.previewUrl = null;
+                                                  this.compressionInfo = '';
+                                                  document.getElementById('adminRealPhotoInput').value = '';
+                                                  document.getElementById('adminRawPhotoInput').value = '';
+                                              }
+                                          }"
+                                          @submit="isSubmitting = true">
+                                        @csrf
+                                        <div>
+                                            <label class="block font-black text-slate-700 uppercase tracking-wider mb-1.5">Judul Tahap / Aktivitas <span class="text-rose-500">*</span></label>
+                                            <input type="text" name="stage_title" required placeholder="Contoh: Uji Rekat Formula Sol B" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#22B086] focus:border-[#22B086]">
+                                        </div>
+
+                                        {{-- Photo Upload with Client-Side Auto-Compression --}}
+                                        <div>
+                                            <div class="flex items-center justify-between mb-1.5">
+                                                <label class="block font-black text-slate-700 uppercase tracking-wider">Foto Bukti Eksperimen <span class="text-rose-500">*</span></label>
+                                                <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-semibold">Auto-Kompres WebP</span>
+                                            </div>
+
+                                            <input type="file" 
+                                                   id="adminRawPhotoInput" 
+                                                   accept="image/*" 
+                                                   class="hidden" 
+                                                   @change="handleImage($event)">
+
+                                            <input type="file" 
+                                                   name="photo" 
+                                                   id="adminRealPhotoInput" 
+                                                   class="hidden" 
+                                                   required>
+
+                                            <!-- Dropzone / Picker State -->
+                                            <div x-show="!previewUrl" 
+                                                 @click="document.getElementById('adminRawPhotoInput').click()"
+                                                 class="border-2 border-dashed border-slate-300 hover:border-[#22B086] bg-slate-50 hover:bg-emerald-50/30 rounded-2xl p-5 text-center cursor-pointer transition group">
+                                                <div class="w-10 h-10 mx-auto rounded-full bg-emerald-50 text-[#22B086] flex items-center justify-center mb-2 group-hover:scale-110 transition shadow-2xs">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                </div>
+                                                <span class="text-xs font-bold text-slate-800 block">Pilih File Foto dari Komputer</span>
+                                                <span class="text-[10px] text-slate-500 mt-0.5 block">Format JPG, PNG, atau WebP (Otomatis dikompresi sebelum diunggah)</span>
+                                            </div>
+
+                                            <!-- Preview State -->
+                                            <div x-show="previewUrl" class="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 aspect-video max-h-56 flex items-center justify-center shadow-xs">
+                                                <img :src="previewUrl" class="w-full h-full object-contain">
+                                                
+                                                <div class="absolute bottom-2.5 left-2.5 text-[10px] font-mono px-2 py-1 rounded bg-black/70 backdrop-blur border border-white/20 text-slate-200">
+                                                    <span x-text="compressionInfo"></span>
+                                                </div>
+
+                                                <button type="button" 
+                                                        @click="resetImage()" 
+                                                        class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white text-[11px] font-bold backdrop-blur flex items-center gap-1 shadow-md transition">
+                                                    <span>Ganti Foto</span>
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block font-black text-slate-700 uppercase tracking-wider mb-1.5">Hasil Evaluasi <span class="text-rose-500">*</span></label>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-[#22B086] transition">
+                                                    <input type="radio" name="result_status" value="SUCCESS" checked class="text-[#22B086] focus:ring-0">
+                                                    <span class="font-bold text-emerald-800">Berhasil</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-[#22B086] transition">
+                                                    <input type="radio" name="result_status" value="IN_PROGRESS" class="text-[#22B086] focus:ring-0">
+                                                    <span class="font-bold text-blue-800">Sedang Berjalan</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-[#22B086] transition">
+                                                    <input type="radio" name="result_status" value="NEED_REVISION" class="text-[#22B086] focus:ring-0">
+                                                    <span class="font-bold text-amber-800">Perlu Revisi</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-[#22B086] transition">
+                                                    <input type="radio" name="result_status" value="FAILED" class="text-[#22B086] focus:ring-0">
+                                                    <span class="font-bold text-rose-800">Gagal / Rusak</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block font-black text-slate-700 uppercase tracking-wider mb-1.5">Catatan Formula & Parameter</label>
+                                            <textarea name="notes" rows="3" placeholder="Suhu oven, durasi, komposisi lem..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#22B086] focus:border-[#22B086]"></textarea>
+                                        </div>
+
+                                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                                            <button type="button" @click="showUploadModal = false" class="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold transition">Batal</button>
+                                            <button type="submit" 
+                                                    :disabled="isSubmitting || isCompressing || !previewUrl"
+                                                    class="px-6 py-2.5 rounded-xl bg-[#22B086] hover:bg-[#1C8D6C] text-white font-bold shadow-md shadow-emerald-200 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                                <template x-if="!isSubmitting">
+                                                    <span>Simpan Progres</span>
+                                                </template>
+                                                <template x-if="isSubmitting">
+                                                    <span class="flex items-center gap-1.5">
+                                                        <svg class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+                                                        <span>Menyimpan...</span>
+                                                    </span>
+                                                </template>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- Modal 2: Scan QR Upload HP --}}
+                    <template x-teleport="body">
+                        <div x-show="showQrModal" class="fixed inset-0 z-[999] overflow-y-auto" style="display: none;">
+                            <div class="flex items-center justify-center min-h-screen p-4 text-center">
+                                <div x-show="showQrModal" 
+                                     x-transition:enter="transition ease-out duration-300" 
+                                     x-transition:enter-start="opacity-0" 
+                                     x-transition:enter-end="opacity-100" 
+                                     x-transition:leave="transition ease-in duration-200" 
+                                     x-transition:leave-start="opacity-100" 
+                                     x-transition:leave-end="opacity-0" 
+                                     @click="showQrModal = false"
+                                     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+
+                                <div x-show="showQrModal" 
+                                     x-transition:enter="transition ease-out duration-300" 
+                                     x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95" 
+                                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                                     x-transition:leave="transition ease-in duration-200" 
+                                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                                     x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95" 
+                                     class="relative inline-block w-full max-w-sm my-8 overflow-hidden text-center bg-white border border-slate-200 rounded-3xl shadow-2xl text-slate-800 z-10 font-sans">
+                                    
+                                    <div class="bg-gradient-to-r from-[#22B086] to-[#1C8D6C] px-6 py-4 text-white flex justify-between items-center">
+                                        <span class="text-xs font-black uppercase tracking-wider">Mobile Upload R&D</span>
+                                        <button type="button" @click="showQrModal = false" class="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition">✕</button>
+                                    </div>
+
+                                    <div class="p-6 flex flex-col items-center justify-center">
+                                        <div class="p-4 bg-slate-50 rounded-2xl shadow-sm border-2 border-emerald-500/30">
+                                            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(200)->generate($rndUploadUrl) !!}
+                                        </div>
+                                        <p class="text-sm font-black text-slate-900 mt-4 font-mono">{{ $order->spk_number }}</p>
+                                        <p class="text-xs text-slate-500 mt-1 max-w-[240px]">
+                                            Arahkan kamera smartphone ke kode QR di atas untuk membuka form upload foto langsung dari HP tanpa login.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-2">
+                                        <button type="button" 
+                                                onclick="navigator.clipboard.writeText('{{ $rndUploadUrl }}'); alert('Tautan form upload HP disalin!');" 
+                                                class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-xs font-bold text-slate-700 border border-slate-200 transition">
+                                            Salin Link Upload
+                                        </button>
+                                        <button type="button" @click="showQrModal = false" class="px-5 py-2 rounded-xl bg-[#22B086] hover:bg-[#1C8D6C] text-xs font-bold text-white transition shadow-sm">
+                                            Tutup
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- Modal 3: Edit Progres (PC Admin) --}}
+                    <template x-teleport="body">
+                        <div x-show="showEditModal" class="fixed inset-0 z-[999] overflow-y-auto" style="display: none;">
+                            <div class="flex items-center justify-center min-h-screen p-4 text-center">
+                                <div x-show="showEditModal" 
+                                     x-transition:enter="transition ease-out duration-300" 
+                                     x-transition:enter-start="opacity-0" 
+                                     x-transition:enter-end="opacity-100" 
+                                     x-transition:leave="transition ease-in duration-200" 
+                                     x-transition:leave-start="opacity-100" 
+                                     x-transition:leave-end="opacity-0" 
+                                     @click="showEditModal = false"
+                                     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+
+                                <div x-show="showEditModal" 
+                                     x-transition:enter="transition ease-out duration-300" 
+                                     x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95" 
+                                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                                     x-transition:leave="transition ease-in duration-200" 
+                                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                                     x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95" 
+                                     class="relative inline-block w-full max-w-lg my-8 overflow-hidden text-left bg-white border border-slate-200 rounded-3xl shadow-2xl text-slate-800 z-10 font-sans">
+                                    
+                                    {{-- Modal Header --}}
+                                    <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-5 text-white flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-white">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            </div>
+                                            <div>
+                                                <h3 class="font-black text-base text-white tracking-wide">Edit Progres R&amp;D (Admin)</h3>
+                                                <p class="text-[11px] text-white/80">Koreksi judul, hasil evaluasi, formula, atau perbarui foto</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" @click="showEditModal = false" class="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition">✕</button>
+                                    </div>
+
+                                    <form :action="editProgress.action_url" 
+                                          method="POST" 
+                                          enctype="multipart/form-data" 
+                                          class="p-6 space-y-4 text-xs"
+                                          x-data="{
+                                              newPreviewUrl: null,
+                                              compressionInfo: '',
+                                              isCompressing: false,
+                                              isSubmitting: false,
+                                              handleEditImage(event) {
+                                                  const file = event.target.files[0];
+                                                  if (!file) return;
+
+                                                  const originalMB = (file.size / (1024 * 1024)).toFixed(2);
+                                                  this.isCompressing = true;
+                                                  this.compressionInfo = 'Mengompres foto (' + originalMB + ' MB)...';
+
+                                                  const reader = new FileReader();
+                                                  reader.onload = (e) => {
+                                                      const img = new Image();
+                                                      img.onload = () => {
+                                                          const canvas = document.createElement('canvas');
+                                                          let width = img.width;
+                                                          let height = img.height;
+                                                          const maxDim = 1600;
+
+                                                          if (width > height && width > maxDim) {
+                                                              height = Math.round((height * maxDim) / width);
+                                                              width = maxDim;
+                                                          } else if (height > maxDim) {
+                                                              width = Math.round((width * maxDim) / height);
+                                                              height = maxDim;
+                                                          }
+
+                                                          canvas.width = width;
+                                                          canvas.height = height;
+                                                          const ctx = canvas.getContext('2d');
+                                                          ctx.drawImage(img, 0, 0, width, height);
+
+                                                          canvas.toBlob((blob) => {
+                                                              this.isCompressing = false;
+                                                              if (!blob) {
+                                                                  alert('Gagal memproses kompresi gambar.');
+                                                                  return;
+                                                              }
+
+                                                              const compressedKB = (blob.size / 1024).toFixed(0);
+                                                              this.compressionInfo = 'Terkonversi WebP: ' + compressedKB + ' KB (dari ' + originalMB + ' MB)';
+                                                              this.newPreviewUrl = URL.createObjectURL(blob);
+
+                                                              const newFile = new File([blob], 'rnd_edit.webp', { type: 'image/webp' });
+                                                              const dataTransfer = new DataTransfer();
+                                                              dataTransfer.items.add(newFile);
+                                                              document.getElementById('adminRealEditPhotoInput').files = dataTransfer.files;
+                                                          }, 'image/webp', 0.82);
+                                                      };
+                                                      img.src = e.target.result;
+                                                  };
+                                                  reader.readAsDataURL(file);
+                                              }
+                                          }"
+                                          @submit="isSubmitting = true">
+                                        @csrf
+                                        @method('PUT')
+
+                                        <div>
+                                            <label class="block font-black text-slate-700 uppercase tracking-wider mb-1.5">Judul Tahap / Aktivitas <span class="text-rose-500">*</span></label>
+                                            <input type="text" name="stage_title" required x-model="editProgress.stage_title" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-bold focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                        </div>
+
+                                        {{-- Foto Bukti Eksperimen --}}
+                                        <div>
+                                            <div class="flex items-center justify-between mb-1.5">
+                                                <label class="block font-black text-slate-700 uppercase tracking-wider">Foto Bukti Eksperimen</label>
+                                                <span class="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-semibold">Opsional jika ingin mengganti</span>
+                                            </div>
+
+                                            <div class="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 aspect-video max-h-52 flex items-center justify-center">
+                                                <img :src="newPreviewUrl || editProgress.current_photo_url" class="w-full h-full object-contain">
+                                                <button type="button" 
+                                                        onclick="document.getElementById('editPhotoPicker').click()"
+                                                        class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-black text-white text-[11px] font-bold backdrop-blur flex items-center gap-1 shadow-md transition">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                    <span>Ganti Foto Baru</span>
+                                                </button>
+                                            </div>
+
+                                            <input type="file" id="editPhotoPicker" accept="image/*" class="hidden" @change="handleEditImage($event)">
+                                            <input type="file" name="photo" id="adminRealEditPhotoInput" class="hidden">
+
+                                            <template x-if="compressionInfo">
+                                                <div class="mt-1 text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                    <span x-text="compressionInfo"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        {{-- Hasil Evaluasi --}}
+                                        <div>
+                                            <label class="block font-black text-slate-700 uppercase tracking-wider mb-1.5">Hasil Evaluasi <span class="text-rose-500">*</span></label>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <label class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition"
+                                                       :class="editProgress.result_status === 'SUCCESS' ? 'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500' : 'bg-slate-50 border-slate-200'">
+                                                    <input type="radio" name="result_status" value="SUCCESS" x-model="editProgress.result_status" class="text-emerald-600 focus:ring-0">
+                                                    <span class="font-bold text-emerald-800">Berhasil</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition"
+                                                       :class="editProgress.result_status === 'IN_PROGRESS' ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-slate-50 border-slate-200'">
+                                                    <input type="radio" name="result_status" value="IN_PROGRESS" x-model="editProgress.result_status" class="text-blue-600 focus:ring-0">
+                                                    <span class="font-bold text-blue-800">Sedang Berjalan</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition"
+                                                       :class="editProgress.result_status === 'NEED_REVISION' ? 'bg-amber-50 border-amber-500 ring-1 ring-amber-500' : 'bg-slate-50 border-slate-200'">
+                                                    <input type="radio" name="result_status" value="NEED_REVISION" x-model="editProgress.result_status" class="text-amber-600 focus:ring-0">
+                                                    <span class="font-bold text-amber-800">Perlu Revisi</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition"
+                                                       :class="editProgress.result_status === 'FAILED' ? 'bg-rose-50 border-rose-500 ring-1 ring-rose-500' : 'bg-slate-50 border-slate-200'">
+                                                    <input type="radio" name="result_status" value="FAILED" x-model="editProgress.result_status" class="text-rose-600 focus:ring-0">
+                                                    <span class="font-bold text-rose-800">Gagal / Rusak</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {{-- Catatan Formula --}}
+                                        <div>
+                                            <label class="block font-black text-slate-700 uppercase tracking-wider mb-1.5">Catatan Formula &amp; Parameter</label>
+                                            <textarea name="notes" rows="3" x-model="editProgress.notes" placeholder="Suhu oven, durasi, komposisi lem..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"></textarea>
+                                        </div>
+
+                                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                                            <button type="button" @click="showEditModal = false" class="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold transition">Batal</button>
+                                            <button type="submit" 
+                                                    :disabled="isSubmitting || isCompressing"
+                                                    class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-md shadow-amber-200 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                                <template x-if="!isSubmitting">
+                                                    <span>Simpan Perubahan</span>
+                                                </template>
+                                                <template x-if="isSubmitting">
+                                                    <span class="flex items-center gap-1.5">
+                                                        <svg class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+                                                        <span>Menyimpan...</span>
+                                                    </span>
+                                                </template>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- Modal 4: Perbesar Foto Progres R&D (Lightbox HD) --}}
+                    <template x-teleport="body">
+                        <div x-show="showZoomModal" 
+                             class="fixed inset-0 z-[9999] overflow-y-auto flex items-center justify-center p-3 sm:p-6" 
+                             style="display: none;"
+                             @keydown.escape.window="showZoomModal = false">
+                            <div x-show="showZoomModal" 
+                                 x-transition:enter="transition ease-out duration-300" 
+                                 x-transition:enter-start="opacity-0" 
+                                 x-transition:enter-end="opacity-100" 
+                                 x-transition:leave="transition ease-in duration-200" 
+                                 x-transition:leave-start="opacity-100" 
+                                 x-transition:leave-end="opacity-0" 
+                                 @click="showZoomModal = false"
+                                 class="fixed inset-0 bg-slate-950/90 backdrop-blur-md"></div>
+
+                            <div x-show="showZoomModal" 
+                                 x-transition:enter="transition ease-out duration-300" 
+                                 x-transition:enter-start="opacity-0 scale-95 translate-y-2" 
+                                 x-transition:enter-end="opacity-100 scale-100 translate-y-0" 
+                                 x-transition:leave="transition ease-in duration-200" 
+                                 x-transition:leave-start="opacity-100 scale-100 translate-y-0" 
+                                 x-transition:leave-end="opacity-0 scale-95 translate-y-2" 
+                                 class="relative max-w-5xl w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col z-10 text-white font-sans">
+                                
+                                {{-- Header Lightbox --}}
+                                <div class="px-5 sm:px-6 py-4 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between gap-4">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <span class="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono text-xs font-black shrink-0" x-text="'Tahap #' + zoomPhoto.iteration"></span>
+                                        <div class="min-w-0">
+                                            <h3 class="text-sm sm:text-base font-black text-white truncate" x-text="zoomPhoto.title"></h3>
+                                            <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                                                <span x-text="zoomPhoto.created_at"></span>
+                                                <span>•</span>
+                                                <span class="text-slate-300 font-semibold" x-text="zoomPhoto.uploader"></span>
+                                                <template x-if="zoomPhoto.status">
+                                                    <span class="inline-flex items-center gap-1.5 ml-1">
+                                                        <span>•</span>
+                                                        <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider"
+                                                              :class="{
+                                                                  'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30': zoomPhoto.status === 'SUCCESS',
+                                                                  'bg-amber-500/20 text-amber-300 border border-amber-500/30': zoomPhoto.status === 'NEED_REVISION',
+                                                                  'bg-rose-500/20 text-rose-300 border border-rose-500/30': zoomPhoto.status === 'FAILED',
+                                                                  'bg-blue-500/20 text-blue-300 border border-blue-500/30': zoomPhoto.status === 'IN_PROGRESS'
+                                                              }"
+                                                              x-text="zoomPhoto.status"></span>
+                                                    </span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <a :href="zoomPhoto.url" target="_blank" title="Buka Gambar Resolusi Asli di Tab Baru"
+                                           class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs font-bold border border-slate-700">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                            <span class="hidden sm:inline">Ukuran Penuh</span>
+                                        </a>
+                                        <button type="button" @click="showZoomModal = false" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition border border-slate-700">
+                                            ✕
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Image Stage --}}
+                                <div class="relative bg-black flex items-center justify-center p-2 sm:p-4 min-h-[320px] max-h-[70vh] overflow-hidden select-none">
+                                    <img :src="zoomPhoto.url" 
+                                         :alt="zoomPhoto.title" 
+                                         class="max-w-full max-h-[66vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition duration-200">
+                                </div>
+
+                                {{-- Formula Notes / Parameters --}}
+                                <template x-if="zoomPhoto.notes">
+                                    <div class="px-5 sm:px-6 py-3.5 bg-slate-900/95 border-t border-slate-800 flex items-start gap-3">
+                                        <div class="p-1 rounded-lg bg-emerald-500/10 text-emerald-400 shrink-0 mt-0.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        </div>
+                                        <div class="text-xs min-w-0">
+                                            <span class="font-bold text-slate-400 block uppercase tracking-wider text-[10px]">Catatan Formula &amp; Parameter Uji Coba:</span>
+                                            <p class="text-slate-200 mt-0.5 whitespace-pre-line leading-relaxed font-mono text-[11px] sm:text-xs" x-text="zoomPhoto.notes"></p>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <script>
+                        function deleteRndProgress(id, title) {
+                            Swal.fire({
+                                title: 'Hapus Progres R&D?',
+                                html: `Apakah Anda yakin ingin menghapus tahap <strong>"${title}"</strong>?<br><span class="text-xs text-rose-500 font-semibold mt-1 block">Foto bukti dan catatan formula akan dihapus permanen dari server.</span>`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#e11d48',
+                                cancelButtonColor: '#64748b',
+                                confirmButtonText: 'Ya, Hapus Data',
+                                cancelButtonText: 'Batal',
+                                reverseButtons: true,
+                                customClass: {
+                                    popup: 'rounded-3xl shadow-2xl border border-slate-100',
+                                    confirmButton: 'rounded-xl font-bold text-xs px-5 py-2.5 shadow-md shadow-rose-200',
+                                    cancelButton: 'rounded-xl font-bold text-xs px-5 py-2.5'
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    const form = document.getElementById(`form-delete-rnd-${id}`);
+                                    if (form) form.submit();
+                                }
+                            });
+                        }
+                    </script>
+                </div>
+            @endif
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
@@ -3101,17 +3904,34 @@
                             $step = strtoupper($log->step);
                             $act = strtolower($log->action);
 
+                            $desc = strtolower($log->description);
+
                             if ($act === 'revision_requested') {
                                 $phase = 'REVISION';
                             } elseif (in_array($step, ['READY_TO_DISPATCH', 'OTW_WORKSHOP', 'DITERIMA', 'DIANTAR', 'LOGISTICS'])) {
                                 $phase = 'LOGISTICS';
                             } elseif (in_array($step, ['ASSESSMENT', 'WAITING_PAYMENT', 'WAITING_VERIFICATION', 'CX_FOLLOWUP', 'WORKSHOP', 'RECEPTION'])) {
                                 $phase = 'ASSESSMENT';
-                            } elseif (in_array($step, ['PREPARATION', 'SORTIR', 'PRODUCTION']) || str_contains($act, 'prep_') || str_contains($act, 'prod_')) {
-                                $phase = 'PRODUCTION';
-                            } elseif ($step === 'QC' || str_contains($act, 'qc_')) {
+                            } elseif (
+                                $step === 'QC' || 
+                                str_contains($act, 'cleaning') || 
+                                str_contains($act, 'qc_cleanup') || 
+                                str_contains($act, 'qc_final') || 
+                                str_contains($desc, 'treatment') || 
+                                str_contains($desc, 'qc cleanup') || 
+                                str_contains($desc, 'qc final') || 
+                                str_contains($desc, 'ke qc')
+                            ) {
                                 $phase = 'QC';
-                            } elseif ($step === 'SELESAI') {
+                            } elseif (
+                                in_array($step, ['PREPARATION', 'SORTIR', 'PRODUCTION']) || 
+                                str_contains($act, 'prep_') || 
+                                str_contains($act, 'prod_') || 
+                                str_contains($act, 'qc_jahit') || 
+                                str_contains($desc, 'qc jahit')
+                            ) {
+                                $phase = 'PRODUCTION';
+                            } elseif (in_array($step, ['SELESAI', 'FINISH']) || str_contains($act, 'completed') || str_contains($act, 'finish')) {
                                 $phase = 'FINAL';
                             } elseif (in_array($act, ['oto_created', 'oto_contacted', 'oto_accepted', 'oto_rejected', 'oto_cancelled'])) {
                                 $phase = 'OTO_UPSELL';
@@ -3148,12 +3968,14 @@
                             $isStatusChange = str_contains(strtolower($log->description), 'status berubah') || str_contains(strtolower($log->action), 'status');
                             $techName = $log->user?->name ?? 'System';
 
+                            $displayStep = ($phase === 'QC' && in_array($step, ['PRODUCTION', 'PREPARATION', 'WORKSHOP'])) ? 'QC' : $log->step;
+
                             $timelineEvents->push([
                                 'id' => 'log-' . $log->id,
                                 'timestamp' => $log->created_at,
                                 'description' => $log->description,
                                 'action' => $log->action,
-                                'step' => $log->step,
+                                'step' => $displayStep,
                                 'phase' => $phase,
                                 'tech_name' => $techName,
                                 'type' => 'log',

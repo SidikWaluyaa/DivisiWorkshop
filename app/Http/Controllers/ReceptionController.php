@@ -869,8 +869,14 @@ class ReceptionController extends Controller
         $qr = QrCode::size(100);
         $barcode = $qr->generate($order->spk_number);
 
+        // Jika R&D, siapkan QR Code khusus upload mobile HP
+        $rndUploadQr = null;
+        if ($order->priority === 'R&D' || str_starts_with($order->spk_number, 'RD-')) {
+            $uploadToken = $order->getOrCreateRndUploadToken();
+            $rndUploadQr = QrCode::size(80)->generate(route('rnd.upload', $uploadToken));
+        }
 
-        return view('assessment.print-spk-premium', compact('order', 'barcode'));
+        return view('assessment.print-spk-premium', compact('order', 'barcode', 'rndUploadQr'));
     }
 
     /**

@@ -74,6 +74,7 @@ class ProductionController extends Controller
     private function getTabCounts(): array
     {
         $base = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+            ->withoutRnd()
             ->whereDoesntHave('otos', fn($q) => $q->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']));
 
         return [
@@ -87,6 +88,7 @@ class ProductionController extends Controller
     private function buildBaseQuery()
     {
         return WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+            ->withoutRnd()
             ->whereDoesntHave('otos', fn($q) => $q->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']))
             ->with(['customer', 'services', 'workOrderServices', 'materials', 'technicianProduction', 'cxIssues', 
                     'prodSolBy', 'prodUpperBy', 'prodCleaningBy',

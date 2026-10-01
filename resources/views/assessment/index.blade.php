@@ -142,7 +142,10 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 @forelse($queue as $order)
-                                <tr class="transition-all duration-200 {{ $order->fast_track_status === 'yes' ? 'bg-orange-50/40 border-l-4 border-orange-500 hover:bg-orange-50/60' : 'bg-white hover:bg-slate-50/80 hover:scale-[1.002] hover:shadow-xs' }}">
+                                @php
+                                    $isRnd = ($order->priority === 'R&D' || str_starts_with($order->spk_number, 'RD-'));
+                                @endphp
+                                <tr class="transition-all duration-200 {{ $order->fast_track_status === 'yes' ? 'bg-orange-50/40 border-l-4 border-orange-500 hover:bg-orange-50/60' : ($isRnd ? 'bg-indigo-50/30 border-l-4 border-indigo-500 hover:bg-indigo-50/50 hover:scale-[1.002] hover:shadow-xs' : 'bg-white hover:bg-slate-50/80 hover:scale-[1.002] hover:shadow-xs') }}">
                                     <td class="px-2 py-2.5 text-center whitespace-nowrap w-8">
                                         <input type="checkbox" name="spk_ids[]" value="{{ $order->id }}" class="spk-checkbox w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer transition-colors duration-150">
                                     </td>
@@ -150,6 +153,10 @@
                                         @if($order->fast_track_status === 'yes')
                                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-100 text-orange-850 border border-orange-200 shadow-xs ring-4 ring-orange-50/50 animate-pulse">
                                                 🚀 FAST TRACK
+                                            </span>
+                                        @elseif($isRnd)
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-xs ring-4 ring-indigo-50/50">
+                                                🔬 R&D
                                             </span>
                                         @elseif(in_array($order->priority, ['Prioritas', 'Urgent', 'Express', 'OTO']))
                                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 shadow-xs ring-4 ring-rose-50/50">
@@ -165,6 +172,10 @@
                                     <td class="px-2 py-2.5 whitespace-nowrap">
                                         @if($order->fast_track_status === 'yes')
                                             <span class="font-mono font-black text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded-lg border border-orange-200 shadow-xs hover:bg-orange-100 transition-colors duration-150 cursor-pointer inline-block" title="Salin No SPK" onclick="navigator.clipboard.writeText('{{ $order->spk_number }}'); Swal.fire({icon: 'success', title: 'SPK Berhasil Disalin!', showConfirmButton: false, timer: 1200, customClass: {popup: 'rounded-2xl'}})">
+                                                {{ $order->spk_number }}
+                                            </span>
+                                        @elseif($isRnd)
+                                            <span class="font-mono font-black text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-lg border border-indigo-200 shadow-xs hover:bg-indigo-100 transition-colors duration-150 cursor-pointer inline-block" title="Salin No SPK" onclick="navigator.clipboard.writeText('{{ $order->spk_number }}'); Swal.fire({icon: 'success', title: 'SPK Berhasil Disalin!', showConfirmButton: false, timer: 1200, customClass: {popup: 'rounded-2xl'}})">
                                                 {{ $order->spk_number }}
                                             </span>
                                         @else

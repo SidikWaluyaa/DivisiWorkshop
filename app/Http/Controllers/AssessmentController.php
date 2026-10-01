@@ -189,7 +189,22 @@ class AssessmentController extends Controller
                     $invoiceIsPaidOrDp = true;
                 }
 
-                if ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
+                $isRnd = ($order->priority === 'R&D' || str_starts_with($order->spk_number, 'RD-'));
+
+                if ($isRnd) {
+                    // SPK R&D: Langsung dialihkan ke tahap riset Workshop (PREPARATION) tanpa antre manifest kirim
+                    $order->update([
+                        'status' => WorkOrderStatus::PREPARATION,
+                        'current_location' => 'Workshop (Stasiun R&D)',
+                    ]);
+
+                    $order->logs()->create([
+                        'step' => 'ASSESSMENT',
+                        'action' => 'RND_DIRECT_TO_PREPARATION',
+                        'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                        'description' => "Assessment SPK R&D selesai. Langsung dialihkan ke tahap PREPARATION Divisi R&D Workshop.",
+                    ]);
+                } elseif ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
                     // Auto-pass Finance Gate as it was already verified at SPK stage or Invoice is already paid/DP
                     $order->update([
                         'status' => WorkOrderStatus::READY_TO_DISPATCH,
@@ -214,8 +229,13 @@ class AssessmentController extends Controller
                 }
             });
 
+            $isRndOrder = ($order->priority === 'R&D' || str_starts_with($order->spk_number, 'RD-'));
+            $successMsg = $isRndOrder 
+                ? 'Assessment SPK R&D selesai! SPK langsung dialihkan ke tahap PREPARATION (Divisi R&D Workshop).'
+                : 'Assessment selesai! Data masuk ke Finance untuk Approval/Pembayaran.';
+
             return redirect()->route('assessment.index')
-                ->with('success', 'Assessment selesai! Data masuk ke Finance untuk Approval/Pembayaran.')
+                ->with('success', $successMsg)
                 ->with('print_spk_final_id', $order->id);
 
         } catch (\Exception $e) {
@@ -240,6 +260,7 @@ class AssessmentController extends Controller
         }
 
         $barcodes = [];
+        $rndUploadQrs = [];
         foreach ($orders as $order) {
             if (!$order->csLead) {
                 $fallbackLead = \App\Models\CsLead::where('customer_phone', $order->customer_phone)->latest()->first();
@@ -251,9 +272,15 @@ class AssessmentController extends Controller
             /** @var \SimpleSoftwareIO\QrCode\Generator $qr */
             $qr = QrCode::size(100);
             $barcodes[$order->id] = $qr->generate($order->spk_number);
+
+            // Jika R&D, siapkan QR Code khusus upload mobile HP
+            if ($order->priority === 'R&D' || str_starts_with($order->spk_number, 'RD-')) {
+                $uploadToken = $order->getOrCreateRndUploadToken();
+                $rndUploadQrs[$order->id] = QrCode::size(80)->generate(route('rnd.upload', $uploadToken));
+            }
         }
 
-        return view('assessment.print-bulk', compact('orders', 'barcodes'));
+        return view('assessment.print-bulk', compact('orders', 'barcodes', 'rndUploadQrs'));
     }
 
     public function printSpk($id)
@@ -273,7 +300,14 @@ class AssessmentController extends Controller
         $qr = QrCode::size(100);
         $barcode = $qr->generate($order->spk_number);
 
-        return view('assessment.print-spk-premium', compact('order', 'barcode'));
+        // Jika R&D, siapkan QR Code khusus upload mobile HP
+        $rndUploadQr = null;
+        if ($order->priority === 'R&D' || str_starts_with($order->spk_number, 'RD-')) {
+            $uploadToken = $order->getOrCreateRndUploadToken();
+            $rndUploadQr = QrCode::size(80)->generate(route('rnd.upload', $uploadToken));
+        }
+
+        return view('assessment.print-spk-premium', compact('order', 'barcode', 'rndUploadQr'));
     }
 
     public function gallerySpk($id)
@@ -359,8 +393,24 @@ class AssessmentController extends Controller
                 $invoiceIsPaidOrDp = true;
             }
 
-            DB::transaction(function () use ($order, $oldStatus, $finalTotal, $alreadyPaid, $invoiceIsPaidOrDp) {
-                if ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
+            $isRnd = ($order->priority === 'R&D' || str_starts_with($order->spk_number, 'RD-'));
+
+            DB::transaction(function () use ($order, $oldStatus, $finalTotal, $alreadyPaid, $invoiceIsPaidOrDp, $isRnd) {
+                if ($isRnd) {
+                    // Skenario R&D: Langsung bypass manifest kirim dan masuk ke tahap PREPARATION di Workshop
+                    $order->status = WorkOrderStatus::PREPARATION;
+                    $order->current_location = 'Workshop (Stasiun R&D)';
+                    $order->save();
+
+                    // Dispatch Event
+                    \App\Events\WorkOrderStatusUpdated::dispatch(
+                        $order, 
+                        $oldStatus, 
+                        WorkOrderStatus::PREPARATION, 
+                        'Direct to Preparation (SPK R&D selesai assessment, langsung dialihkan ke tahap PREPARATION Divisi R&D Workshop)', 
+                        \Illuminate\Support\Facades\Auth::id()
+                    );
+                } elseif ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
                     // Skenario A: Lunas / DP Cukup -> Siap Kirim ke Workshop (Antrean Manifest)
                     $order->status = WorkOrderStatus::READY_TO_DISPATCH;
                     $order->current_location = 'Gudang (Pool Kirim)';
@@ -391,7 +441,9 @@ class AssessmentController extends Controller
                 }
             });
 
-            if ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
+            if ($isRnd) {
+                return redirect()->back()->with('success', 'SPK R&D berhasil diselesaikan dan langsung dialihkan ke tahap PREPARATION (Divisi R&D Workshop)!');
+            } elseif ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
                 return redirect()->back()->with('success', 'Order lunas/DP terverifikasi, berhasil dipindahkan ke Siap Kirim (Antrean Manifest)!');
             } else {
                 return redirect()->back()->with('success', 'Order belum lunas (BB), berhasil dikirim ke antrean Menunggu Pembayaran (Finance Gate)!');
@@ -445,10 +497,12 @@ class AssessmentController extends Controller
         try {
             $processedToDispatch = 0;
             $processedToFinance = 0;
+            $processedToRnd = 0;
 
-            DB::transaction(function () use ($orders, &$processedToDispatch, &$processedToFinance) {
+            DB::transaction(function () use ($orders, &$processedToDispatch, &$processedToFinance, &$processedToRnd) {
                 foreach ($orders as $order) {
                     $oldStatus = $order->status;
+                    $isRnd = ($order->priority === 'R&D' || str_starts_with($order->spk_number, 'RD-'));
 
                     // Calculate final total based on existing services
                     $totalCost = $order->workOrderServices->sum('cost');
@@ -470,7 +524,21 @@ class AssessmentController extends Controller
                         $invoiceIsPaidOrDp = true;
                     }
 
-                    if ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
+                    if ($isRnd) {
+                        // Skenario Khusus R&D: Langsung ke PREPARATION di Workshop
+                        $order->status = WorkOrderStatus::PREPARATION;
+                        $order->current_location = 'Workshop (Stasiun R&D)';
+                        $order->save();
+
+                        \App\Events\WorkOrderStatusUpdated::dispatch(
+                            $order, 
+                            $oldStatus, 
+                            WorkOrderStatus::PREPARATION, 
+                            'Direct to Preparation (Bulk Skip Assessment - SPK R&D langsung dialihkan ke tahap PREPARATION Divisi R&D Workshop)', 
+                            \Illuminate\Support\Facades\Auth::id()
+                        );
+                        $processedToRnd++;
+                    } elseif ($invoiceIsPaidOrDp || ($alreadyPaid >= $finalTotal && $finalTotal > 0)) {
                         // Skenario A: Lunas / DP Cukup -> Langsung Lanjut ke READY_TO_DISPATCH
                         $order->status = WorkOrderStatus::READY_TO_DISPATCH;
                         $order->current_location = 'Gudang (Pool Kirim)';
@@ -504,7 +572,12 @@ class AssessmentController extends Controller
                 }
             });
 
-            $msg = "Koleksi SPK diproses massal: {$processedToDispatch} SPK lunas/DP terverifikasi dikirim ke Siap Kirim (Antrean Manifest), {$processedToFinance} SPK belum lunas (BB) dikirim ke Menunggu Pembayaran (Finance Gate).";
+            $msgParts = [];
+            if ($processedToRnd > 0) $msgParts[] = "{$processedToRnd} SPK R&D langsung dialihkan ke tahap PREPARATION (Divisi R&D)";
+            if ($processedToDispatch > 0) $msgParts[] = "{$processedToDispatch} SPK lunas/DP terverifikasi dikirim ke Siap Kirim (Antrean Manifest)";
+            if ($processedToFinance > 0) $msgParts[] = "{$processedToFinance} SPK belum lunas (BB) dikirim ke Menunggu Pembayaran (Finance Gate)";
+
+            $msg = "Koleksi SPK diproses massal: " . implode(', ', $msgParts) . ".";
             return redirect()->back()->with('success', $msg);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memproses order massal: ' . $e->getMessage());

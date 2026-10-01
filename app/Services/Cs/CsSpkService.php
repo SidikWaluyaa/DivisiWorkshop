@@ -266,7 +266,12 @@ class CsSpkService
                     'shoe_color' => $itemInput['shoe_color'] ?: $spkItem->shoe_color,
                     'shoe_size' => $itemInput['shoe_size'] ?: $spkItem->shoe_size,
                     'category' => $spkItem->category,
-                    'priority' => $spk->priority,
+                    'priority' => match(true) {
+                        ($itemInput['item_type'] ?? '') === 'R&D' => 'R&D',
+                        in_array(strtoupper(trim($spk->priority ?? '')), ['R&D', 'RND']) => 'R&D',
+                        strtoupper(trim($spk->priority ?? '')) === 'PRIORITAS' => 'Prioritas',
+                        default => 'Reguler',
+                    },
                     'shipping_type' => $spk->delivery_type,
                     'cs_code' => $spk->cs_code ?? ($spk->lead->cs->cs_code ?? 'SW'),
                     'current_location' => 'Gudang Penerimaan',
@@ -275,6 +280,11 @@ class CsSpkService
                     'is_warranty' => $spkItem->is_warranty,
                     'created_by' => $userId,
                 ]);
+
+                // Auto initialize R&D token & progress journal if priority is R&D
+                if ($workOrder->priority === 'R&D') {
+                    $workOrder->getOrCreateRndUploadToken();
+                }
 
                 // Attach requested materials from SPK ITEM specifically
                 if ($spkItem->requested_materials && is_array($spkItem->requested_materials)) {
