@@ -144,44 +144,66 @@
   6. Menyepakati mekanisme **Auto-Backfill saat Deploy ke Production** via migrasi database (`php artisan migrate`), sehingga 2.955+ pelanggan di database live langsung terisi nilai `total_spend` dan `membership_tier` seketika.
   7. Menetapkan 2 titik sentuh visual utama: **Detail Order Admin (`/admin/orders/{id}`)** dan **Master Pelanggan Admin (`/admin/customers`)** lengkap dengan segmented tab filter (`Semua`, `Platinum VIP`, `Gold Member`, `Reguler Member`).
 
+### 7. Pembuatan Endpoint API Sinkronisasi SPK R&D ke Google Sheets (/public/api/sync_spk_rnd.php)
+- **Konteks Kebutuhan**:
+  - Tim operasional & manajemen membutuhkan penarikan data SPK khusus Research & Development (R&D) secara otomatis ke Google Sheets untuk pelaporan, monitoring lab riset, dan analisis perkembangan berkala.
+  - Data yang wajib disinkronkan:
+    1. Data SPK dari tabel `work_orders`: `customer_name`, `customer_phone`, `spk_number`, `status`.
+    2. Data Jurnal Progres dari tabel `work_order_rnd_progress`: `stage_title`, `notes`, `report_url`.
+- **Langkah Solusi & Implementasi**:
+  1. **Pembuatan Endpoint Mandiri (`public/api/sync_spk_rnd.php`)**:
+     - Mengikuti konvensi endpoint API Google Sheets yang sudah terstandarisasi di folder `/public/api/` (seperti `sync_taken_orders.php`, `sync_customers.php`, dan `sync_warehouse_qc.php`).
+     - Membaca kredensial database dan token autentikasi secara dinamis dari file `.env` (`SYNC_API_TOKEN`, `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`) dengan fallback yang aman.
+     - Proteksi keamanan HTTP 401 Unauthorized jika parameter `?token=` tidak disertakan atau tidak cocok.
+     - Header standar format JSON (`Content-Type: application/json; charset=utf-8`) dan CORS (`Access-Control-Allow-Origin: *`) agar dapat diakses langsung oleh Google Apps Script (`UrlFetchApp.fetch()`) maupun formula Google Sheets.
+  2. **Query Relasi Data & Optimalisasi Tabular**:
+     - Menggunakan relasi `LEFT JOIN` dari `work_orders` ke `work_order_rnd_progress` dengan filter presisi SPK R&D: `(wo.priority = 'R&D' OR wo.spk_number LIKE 'RD-%') AND wo.deleted_at IS NULL`.
+     - Menyediakan mode output default berbentuk baris datar (**flat table rows**) yang langsung cocok di-mapping ke baris kolom spreadsheet, serta mode terkelompok (**`format=grouped`**) jika dibutuhkan data nested per SPK.
+     - Menyediakan parameter filter opsional: `status` (filter status order), `start_date` & `end_date` (rentang tanggal SPK), dan `limit`.
+- **Verifikasi & Hasil Pengujian**:
+  - Akses tanpa token / token salah berhasil di-reject dengan HTTP 401 (`status: error, message: Unauthorized`).
+  - Akses dengan token valid berhasil mengekspor seluruh data SPK R&D beserta riwayat jurnal progresnya, link Living Report publik (`report_url`), nama pelanggan, kontak WhatsApp, dan status pengerjaan.
+
 ---
 
-### 7. Rincian Berkas yang Dibuat / Diubah Hari Ini
+### 8. Rincian Berkas yang Dibuat / Diubah Hari Ini
 
 | No. | Nama Berkas | Aksi | Deskripsi |
 | :---: | :--- | :---: | :--- |
 | 1 | `laporan_kerja/2026-10/laporan_kerja_02102026.md` | `Ubah` | Dokumentasi berkala aktivitas harian Jumat, 2 Oktober 2026 dengan penomoran angka standar. |
-| 2 | `docs/ALUR_DAN_ARSITEKTUR_SISTEM_LABEL_MEMBERSHIP_CUSTOMER.md` | `Baru` | Dokumen arsitektur lengkap sistem label & tier membership customer (RFM monetary engine) siap PDF. |
-| 3 | `docs/ALUR_DAN_ARSITEKTUR_SISTEM_LABEL_MEMBERSHIP_CUSTOMER.pdf` | `Baru` | Berkas cetak fisik PDF resmi dokumen arsitektur label & tier membership (1,29 MB). |
-| 4 | `docs/images/flowchart_membership_customer.svg` | `Baru` | Diagram alur SVG sistem kalkulasi real-time membership customer berbasis `paid_amount`. |
-| 5 | `docs/images/erd_membership_customer.svg` | `Baru` | Entity Relationship Diagram (ERD) SVG skema database membership highlight `paid_amount`. |
-| 6 | `docs/images/wireframe_customer_membership_ui.svg` | `Baru` | Wireframe SVG desain UI Detail Order dan Master Customer. |
-| 7 | `app/Http/Controllers/CsLeadController.php` | `Ubah` | Mengubah validasi `customer_email` dari required menjadi nullable pada method `store`. |
-| 8 | `resources/views/cs/leads/partials/create-modal.blade.php` | `Ubah` | Menghapus atribut required dan asterisk pada input email modal tambah lead baru CS. |
-| 9 | `app/Services/ReceptionService.php` | `Ubah` | Sinkronisasi `warehouse_qc_notes` ke `technician_notes` saat proses penerimaan QC gudang. |
-| 10 | `app/Http/Controllers/Admin/OrderController.php` | `Ubah` | Sinkronisasi catatan 2 arah & implementasi policy role-based pada `updatePriority`. |
-| 11 | `app/Http/Controllers/ReceptionController.php` | `Ubah` | Sinkronisasi 2 arah `technician_notes` dan `warehouse_qc_notes` saat quick-save gudang. |
-| 12 | `app/Policies/WorkOrderPolicy.php` | `Ubah` | Penambahan method otorisasi `updatePriority` untuk role Admin, Owner, SPV, dan akun khusus. |
-| 13 | `app/Livewire/Preparation/PrepIndex.php` | `Ubah` | Penerapan `withoutRnd()` pada query antrean, counts, dan auto-assign stasiun Preparation. |
-| 14 | `app/Livewire/Sortir/Index.php` | `Ubah` | Penerapan `withoutRnd()` pada query antrean, filter tab, dan metrik stasiun Sortir. |
-| 15 | `app/Livewire/Production/StationIndex.php` | `Ubah` | Penerapan `withoutRnd()` pada query antrean pengerjaan & review stasiun Produksi (Reparasi). |
-| 16 | `app/Livewire/Qc/QcIndex.php` | `Ubah` | Penerapan `withoutRnd()` pada query antrean QC & review stasiun Quality Control. |
-| 17 | `app/Livewire/Workshop/Widgets/WorkloadHeatmap.php` | `Ubah` | Penerapan `withoutRnd()` pada hitungan beban kerja per stasiun. |
-| 18 | `app/Livewire/Workshop/Widgets/UrgentActionGrid.php` | `Ubah` | Penerapan `withoutRnd()` pada antrean deadline pengerjaan bengkel reguler. |
-| 19 | `resources/views/assessment/print-spk-premium.blade.php` | `Ubah` | Fallback catatan gudang `$order->technician_notes ?: $order->warehouse_qc_notes`. |
-| 20 | `resources/views/assessment/print-bulk.blade.php` | `Ubah` | Fallback catatan gudang `$order->technician_notes ?: $order->warehouse_qc_notes`. |
-| 21 | `resources/views/reception/pdf-spk-content.blade.php` | `Ubah` | Fallback catatan gudang `$order->technician_notes ?: $order->warehouse_qc_notes`. |
-| 22 | `resources/views/assessment/print-spk-a4.blade.php` | `Ubah` | Fallback catatan gudang `$order->technician_notes ?: $order->warehouse_qc_notes`. |
-| 23 | `resources/views/garansi/print-spk.blade.php` | `Ubah` | Fallback catatan gudang `$order->technician_notes ?: $order->warehouse_qc_notes`. |
-| 24 | `resources/views/admin/orders/show.blade.php` | `Ubah` | Fallback catatan gudang & adopsi policy `updatePriority` pada segmented pill switcher. |
-| 25 | `resources/views/reception/show.blade.php` | `Ubah` | Fallback catatan gudang pada input QC dan textarea quick-save penerimaan. |
-| 26 | `resources/views/workshop/rnd/index.blade.php` | `Ubah` | Fallback catatan gudang pada tampilan collapsible card & target riset Workshop R&D. |
+| 2 | `public/api/sync_spk_rnd.php` | `Baru` | Endpoint API ekspor data SPK R&D & jurnal progres untuk sinkronisasi otomatis ke Google Sheets. |
+| 3 | `docs/ALUR_DAN_ARSITEKTUR_SISTEM_LABEL_MEMBERSHIP_CUSTOMER.md` | `Baru` | Dokumen arsitektur lengkap sistem label & tier membership customer (RFM monetary engine) siap PDF. |
+| 4 | `docs/ALUR_DAN_ARSITEKTUR_SISTEM_LABEL_MEMBERSHIP_CUSTOMER.pdf` | `Baru` | Berkas cetak fisik PDF resmi dokumen arsitektur label & tier membership (1,29 MB). |
+| 5 | `docs/images/flowchart_membership_customer.svg` | `Baru` | Diagram alur SVG sistem kalkulasi real-time membership customer berbasis `paid_amount`. |
+| 6 | `docs/images/erd_membership_customer.svg` | `Baru` | Entity Relationship Diagram (ERD) SVG skema database membership highlight `paid_amount`. |
+| 7 | `docs/images/wireframe_customer_membership_ui.svg` | `Baru` | Wireframe SVG desain UI Detail Order dan Master Customer. |
+| 8 | `app/Http/Controllers/CsLeadController.php` | `Ubah` | Mengubah validasi `customer_email` dari required menjadi nullable pada method `store`. |
+| 9 | `resources/views/cs/leads/partials/create-modal.blade.php` | `Ubah` | Menghapus atribut required dan asterisk pada input email modal tambah lead baru CS. |
+| 10 | `app/Services/ReceptionService.php` | `Ubah` | Sinkronisasi `warehouse_qc_notes` ke `technician_notes` saat proses penerimaan QC gudang. |
+| 11 | `app/Http/Controllers/Admin/OrderController.php` | `Ubah` | Sinkronisasi catatan 2 arah & implementasi policy role-based pada `updatePriority`. |
+| 12 | `app/Http/Controllers/ReceptionController.php` | `Ubah` | Sinkronisasi 2 arah `technician_notes` dan `warehouse_qc_notes` saat quick-save gudang. |
+| 13 | `app/Policies/WorkOrderPolicy.php` | `Ubah` | Penambahan method otorisasi `updatePriority` untuk role Admin, Owner, SPV, dan akun khusus. |
+| 14 | `app/Livewire/Preparation/PrepIndex.php` | `Ubah` | Penerapan `withoutRnd()` pada query antrean, counts, dan auto-assign stasiun Preparation. |
+| 15 | `app/Livewire/Sortir/Index.php` | `Ubah` | Penerapan `withoutRnd()` pada query antrean, filter tab, dan metrik stasiun Sortir. |
+| 16 | `app/Livewire/Production/StationIndex.php` | `Ubah` | Penerapan `withoutRnd()` pada query antrean pengerjaan & review stasiun Produksi (Reparasi). |
+| 17 | `app/Livewire/Qc/QcIndex.php` | `Ubah` | Penerapan `withoutRnd()` pada query antrean QC & review stasiun Quality Control. |
+| 18 | `app/Livewire/Workshop/Widgets/WorkloadHeatmap.php` | `Ubah` | Penerapan `withoutRnd()` pada hitungan beban kerja per stasiun. |
+| 19 | `app/Livewire/Workshop/Widgets/UrgentActionGrid.php` | `Ubah` | Penerapan `withoutRnd()` pada antrean deadline pengerjaan bengkel reguler. |
+| 20 | `resources/views/assessment/print-spk-premium.blade.php` | `Ubah` | Fallback catatan gudang `$order->technician_notes ?: $order->warehouse_qc_notes`. |
+| 21 | `resources/views/assessment/print-bulk.blade.php` | `Ubah` | Fallback catatan gudang `$order->technician_notes ?: $order->warehouse_qc_notes`. |
+| 22 | `resources/views/reception/pdf-spk-content.blade.php` | `Ubah` | Fallback catatan gudang `$order->technician_notes ?: $order->warehouse_qc_notes`. |
+| 23 | `resources/views/assessment/print-spk-a4.blade.php` | `Ubah` | Fallback catatan gudang `$order->technician_notes ?: $order->warehouse_qc_notes`. |
+| 24 | `resources/views/garansi/print-spk.blade.php` | `Ubah` | Fallback catatan gudang `$order->technician_notes ?: $order->warehouse_qc_notes`. |
+| 25 | `resources/views/admin/orders/show.blade.php` | `Ubah` | Fallback catatan gudang & adopsi policy `updatePriority` pada segmented pill switcher. |
+| 26 | `resources/views/reception/show.blade.php` | `Ubah` | Fallback catatan gudang pada input QC dan textarea quick-save penerimaan. |
+| 27 | `resources/views/workshop/rnd/index.blade.php` | `Ubah` | Fallback catatan gudang pada tampilan collapsible card & target riset Workshop R&D. |
 
 ---
 
-### 8. Kesimpulan & Rencana Selanjutnya
+### 9. Kesimpulan & Rencana Selanjutnya
 1. Catatan QC Gudang (Opsional) kini 100% tersimpan dan tersinkronisasi ke seluruh cetakan SPK dan kartu admin tanpa ada risiko terhapus atau kosong.
 2. Sistem peralihan SPK Biasa ke R&D telah distandarisasi secara aman menggunakan Policy Laravel berbasis role (Admin, Owner, SPV) dengan nomor SPK yang tetap konsisten dan fitur R&D (token WebP & Living Report) aktif otomatis.
 3. SPK R&D telah terisolasi 100% dari stasiun fisik reguler (Preparation, Sortir, Production, QC) dan terpusat eksklusif di dashboard Stasiun R&D (`/workshop/rnd`).
 4. Form tambah lead baru CS Hub (`/cs/dashboard`) kini fleksibel dengan email bersifat opsional, mempercepat input data lead harian CS.
 5. Cetak biru Alur & Arsitektur Sistem Label Membership Customer telah selesai disusun secara mendalam berbasis `paid_amount`, lengkap dengan berkas PDF resmi, ERD, Flowchart, dan Wireframe, siap dieksekusi kapan pun disetujui.
+6. API sinkronisasi SPK R&D ke Google Sheets telah selesai dibuat di `/public/api/sync_spk_rnd.php`, mengembalikan data lengkap pelanggan, status pengerjaan, tahapan jurnal R&D, catatan riset, dan tautan laporan interaktif (`report_url`).
