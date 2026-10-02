@@ -29,8 +29,11 @@
 
                 <div class="sidebar-label">Catatan Gudang</div>
                 <div class="sidebar-box" style="min-height: 100px;">
-                    @if($order->technician_notes)
-                        @foreach(explode("\n", $order->technician_notes) as $line)
+                    @php
+                        $whNotes = $order->technician_notes ?: $order->warehouse_qc_notes;
+                    @endphp
+                    @if($whNotes)
+                        @foreach(explode("\n", $whNotes) as $line)
                             @if(trim($line))
                                 • {{ trim($line) }}<br>
                             @endif

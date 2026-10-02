@@ -26,7 +26,8 @@ class UrgentActionGrid extends Component
             WorkOrderStatus::QC,
         ];
 
-        $query = WorkOrder::whereIn('status', $activeStatuses)
+        $query = WorkOrder::withoutRnd()
+            ->whereIn('status', $activeStatuses)
             ->whereNotNull('estimation_date');
 
         if ($this->search) {

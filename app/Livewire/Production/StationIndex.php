@@ -105,7 +105,7 @@ class StationIndex extends Component
     #[Computed]
     public function counts()
     {
-        $baseQuery = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+        $baseQuery = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::PRODUCTION->value)
             ->whereDoesntHave('otos', fn($q) => $q->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']));
 
         // SPK yang fisik pengerjaannya selesai dan menunggu review/approval Admin
@@ -391,7 +391,7 @@ class StationIndex extends Component
 
     public function autoAssignUnassignedTechnicians()
     {
-        $unassignedOrders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION)
+        $unassignedOrders = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::PRODUCTION)
             ->where(function($q) {
                 $q->where(function($sq) {
                     $sq->whereNull('prod_sol_by')
@@ -509,7 +509,7 @@ class StationIndex extends Component
     {
         try {
             $techService = app(\App\Services\TechnicianAssignmentService::class);
-            $unassignedOrders = WorkOrder::where('status', WorkOrderStatus::PRODUCTION->value)
+            $unassignedOrders = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::PRODUCTION->value)
                 ->where(function($q) {
                     $q->whereNull('prod_upper_by')
                       ->orWhereNull('prod_sol_by')
@@ -531,6 +531,7 @@ class StationIndex extends Component
         $this->autoAssignUnassignedOrders();
 
         $query = WorkOrder::query()
+            ->withoutRnd()
             ->with(['customer', 'workOrderServices', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions', 'suratJalanItems.suratJalan']);
 
         // Base Filter: Only show items in PRODUCTION status (excluding active OTOs which are handled in Stasiun OTO)

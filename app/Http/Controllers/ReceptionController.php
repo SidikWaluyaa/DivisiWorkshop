@@ -662,7 +662,8 @@ class ReceptionController extends Controller
         ]);
 
         $order->update([
-            'technician_notes' => $request->technician_notes
+            'technician_notes' => $request->technician_notes,
+            'warehouse_qc_notes' => $request->technician_notes,
         ]);
 
         return response()->json([

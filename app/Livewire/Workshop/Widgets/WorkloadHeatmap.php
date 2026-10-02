@@ -28,11 +28,11 @@ class WorkloadHeatmap extends Component
         $end = Carbon::parse($this->endDate)->endOfDay();
 
         $stations = [
-            'Assessment' => WorkOrder::where('status', WorkOrderStatus::ASSESSMENT)->count(),
-            'Preparation' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)->count(),
-            'Sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)->count(),
-            'Production' => WorkOrder::where('status', WorkOrderStatus::PRODUCTION)->count(),
-            'QC' => WorkOrder::where('status', WorkOrderStatus::QC)->count(),
+            'Assessment' => WorkOrder::withoutRnd()->where('status', WorkOrderStatus::ASSESSMENT)->count(),
+            'Preparation' => WorkOrder::withoutRnd()->where('status', WorkOrderStatus::PREPARATION)->count(),
+            'Sortir' => WorkOrder::withoutRnd()->where('status', WorkOrderStatus::SORTIR)->count(),
+            'Production' => WorkOrder::withoutRnd()->where('status', WorkOrderStatus::PRODUCTION)->count(),
+            'QC' => WorkOrder::withoutRnd()->where('status', WorkOrderStatus::QC)->count(),
         ];
 
         $this->stationData = $stations;

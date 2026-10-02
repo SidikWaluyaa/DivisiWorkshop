@@ -117,7 +117,7 @@ class QcIndex extends Component
     #[Computed]
     public function counts()
     {
-        $baseQuery = WorkOrder::where('status', WorkOrderStatus::QC);
+        $baseQuery = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::QC);
 
         return [
             'qc' => (clone $baseQuery)->where(function($q) {
@@ -266,7 +266,7 @@ class QcIndex extends Component
     {
         $drShoeIds = User::where('name', 'like', '%Dr. Shoe%')->pluck('id')->toArray();
 
-        $unassignedOrders = WorkOrder::where('status', WorkOrderStatus::QC)
+        $unassignedOrders = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::QC)
             ->where(function($q) use ($drShoeIds) {
                 $q->where(function($sq) {
                     $sq->whereNull('prod_cleaning_by')
@@ -456,6 +456,7 @@ class QcIndex extends Component
     public function orders()
     {
         $query = WorkOrder::query()
+            ->withoutRnd()
             ->with(['customer', 'workOrderServices', 'prodCleaningBy', 'qcCleanupBy', 'qcFinalBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions']);
 
         // Base Status Filter (QC)

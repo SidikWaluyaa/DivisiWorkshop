@@ -498,7 +498,7 @@ class Index extends Component
         $materialService->autoAllocateStock();
 
         // Fetch Lists for Filters
-        $baseQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+        $baseQuery = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::SORTIR->value)
             ->whereDoesntHave('logs', function($lq) {
                 $lq->where('step', 'SORTIR')
                    ->where('action', 'CLASSIFICATION_COMPLETED');
@@ -517,7 +517,7 @@ class Index extends Component
             ->pluck('shoe_type');
 
         // 1. All Sortir Queue (Base)
-        $allSortirQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+        $allSortirQuery = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::SORTIR->value)
             ->whereDoesntHave('logs', function($lq) {
                 $lq->where('step', 'SORTIR')
                    ->where('action', 'CLASSIFICATION_COMPLETED');
@@ -526,7 +526,7 @@ class Index extends Component
         $allSortirOrders = $this->applyFilters(clone $allSortirQuery)->paginate(20, ['*'], 'allPage');
 
         // 2. Priority & Fast Track Queue
-        $priorityQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+        $priorityQuery = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::SORTIR->value)
             ->whereDoesntHave('logs', function($lq) {
                 $lq->where('step', 'SORTIR')
                    ->where('action', 'CLASSIFICATION_COMPLETED');
@@ -540,7 +540,7 @@ class Index extends Component
         $priorityOrders = $this->applyFilters(clone $priorityQuery)->paginate(20, ['*'], 'prioPage');
 
         // 3. Waiting Finlog Belanja Queue (Includes SPKs awaiting PO or currently in-flight with Finlog)
-        $waitingQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+        $waitingQuery = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::SORTIR->value)
             ->whereDoesntHave('logs', function($lq) {
                 $lq->where('step', 'SORTIR')
                    ->where('action', 'CLASSIFICATION_COMPLETED');
@@ -554,7 +554,7 @@ class Index extends Component
         $waitingOrders = $this->applyFilters(clone $waitingQuery)->paginate(20, ['*'], 'waitingPage');
 
         // 4. Ready / Standard Sortir Queue (exclude waiting orders)
-        $readyQuery = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+        $readyQuery = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::SORTIR->value)
             ->whereDoesntHave('logs', function($lq) {
                 $lq->where('step', 'SORTIR')
                    ->where('action', 'CLASSIFICATION_COMPLETED');
@@ -580,7 +580,7 @@ class Index extends Component
             ->count();
 
         // Average Lead Time in Sortir (hours)
-        $avgLeadTimeHours = WorkOrder::where('status', WorkOrderStatus::SORTIR->value)
+        $avgLeadTimeHours = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::SORTIR->value)
             ->whereNotNull('created_at')
             ->avg(DB::raw('TIMESTAMPDIFF(HOUR, created_at, NOW())'));
 

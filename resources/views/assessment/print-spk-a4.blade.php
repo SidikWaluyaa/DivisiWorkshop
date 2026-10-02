@@ -220,7 +220,7 @@
                                 $cleanNotes = trim($cleanNotes, " \t\n\r\0\x0B-");
                             @endphp
                             <p class="text-[10px] font-bold text-gray-900 leading-snug mt-1">
-                                {{ $order->technician_notes ?? $cleanNotes ?: '-' }}
+                                {{ ($order->technician_notes ?: $order->warehouse_qc_notes) ?? $cleanNotes ?: '-' }}
                             </p>
                             @if($order->priority == 'High')
                                 <div class="absolute bottom-2 right-2 px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black rounded uppercase">URGENT</div>

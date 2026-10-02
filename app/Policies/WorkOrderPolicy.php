@@ -208,4 +208,15 @@ class WorkOrderPolicy
     {
         return in_array($user->email, ['admin@workshop.com', 'limu@workshop.com']);
     }
+
+    /**
+     * Determine if the user can update the SPK priority (Reguler, Prioritas, R&D).
+     */
+    public function updatePriority(User $user)
+    {
+        return $user->isAdmin() 
+            || $user->isOwner() 
+            || $user->role === 'spv' 
+            || in_array($user->email, ['admin@workshop.com', 'novi@workshop.com']);
+    }
 }

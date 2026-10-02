@@ -729,8 +729,8 @@ class OrderController extends Controller
         ]);
 
         $order = WorkOrder::findOrFail($id);
-        
         $order->technician_notes = $request->technician_notes;
+        $order->warehouse_qc_notes = $request->technician_notes;
         $order->save();
 
         // [AUDIT LOG] Record change
@@ -832,17 +832,7 @@ class OrderController extends Controller
      */
     public function updatePriority(Request $request, $id)
     {
-        $allowedEmails = [
-            'admin@workshop.com',
-            'novi@workshop.com',
-        ];
-
-        if (!in_array(auth()->user()->email, $allowedEmails)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hanya akun admin@workshop.com dan novi@workshop.com yang memiliki hak akses untuk mengubah prioritas SPK.'
-            ], 403);
-        }
+        $this->authorize('updatePriority', WorkOrder::class);
 
         $request->validate([
             'priority' => 'required|string|in:Reguler,Prioritas,R&D',
@@ -855,8 +845,9 @@ class OrderController extends Controller
         $order->save();
 
         // Jika diubah ke R&D, pastikan token upload & report R&D terinisialisasi
+        $rndToken = null;
         if ($order->priority === 'R&D') {
-            $order->getOrCreateRndUploadToken();
+            $rndToken = $order->getOrCreateRndUploadToken();
         }
 
         // Audit log
@@ -871,6 +862,7 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'priority' => $order->priority,
+            'rnd_token' => $rndToken,
             'message' => "Prioritas SPK berhasil diubah menjadi {$order->priority}."
         ]);
     }

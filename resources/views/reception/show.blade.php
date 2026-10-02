@@ -709,7 +709,7 @@
                                         </svg>
                                         <span>Catatan QC Gudang (Opsional)</span>
                                     </label>
-                                    <input type="text" name="warehouse_qc_notes" value="{{ old('warehouse_qc_notes', $order->warehouse_qc_notes) }}"
+                                    <input type="text" name="warehouse_qc_notes" value="{{ old('warehouse_qc_notes', $order->warehouse_qc_notes ?: $order->technician_notes) }}"
                                            placeholder="Masukkan catatan pemeriksaan fisik gudang jika ada (misal: aksesoris lengkap, tali ori bawaan)..."
                                            class="w-full bg-white border border-gray-200 text-gray-900 rounded-xl py-3.5 px-4 text-sm font-bold focus:ring-[#22AF85] focus:border-[#22AF85] shadow-sm">
                                 </div>
@@ -1188,7 +1188,7 @@
                                     Tambahan Gudang</label>
                                 <textarea name="technician_notes" rows="3"
                                     placeholder="Tambahkan catatan jika ada kondisi khusus saat barang diterima..."
-                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">{{ $order->technician_notes }}</textarea>
+                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">{{ $order->technician_notes ?: $order->warehouse_qc_notes }}</textarea>
                                 <div class="mt-3 text-right">
                                     <button type="button" onclick="quickSaveReceptionNotesBtn()"
                                         class="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md transition-all transform hover:-translate-y-0.5">

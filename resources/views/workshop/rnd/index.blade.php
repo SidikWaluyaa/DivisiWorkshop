@@ -372,7 +372,7 @@
                                                         <div>
                                                             <div class="font-black text-slate-700 mb-1">Catatan Pendaftaran &amp; Target Riset CS:</div>
                                                             <p class="text-slate-600 italic">
-                                                                "{{ $order->notes ?? $order->technician_notes ?? 'Tidak ada catatan khusus dari CS.' }}"
+                                                                "{{ $order->notes ?? ($order->technician_notes ?: $order->warehouse_qc_notes) ?? 'Tidak ada catatan khusus dari CS.' }}"
                                                             </p>
                                                         </div>
                                                         <div class="mt-2 text-[10px] text-slate-400 font-semibold">
@@ -938,7 +938,7 @@
                                                         <div>
                                                             <span class="font-black text-slate-700">Target Riset / Formulasi:</span>
                                                             <p class="text-slate-600 italic mt-0.5 bg-slate-50 p-2.5 rounded-xl border border-slate-200/70">
-                                                                "{{ $order->notes ?? $order->technician_notes ?? 'Tidak ada catatan khusus.' }}"
+                                                                "{{ $order->notes ?? ($order->technician_notes ?: $order->warehouse_qc_notes) ?? 'Tidak ada catatan khusus.' }}"
                                                             </p>
                                                         </div>
                                                         <div class="mt-1.5 text-[10px] text-slate-400 font-semibold">

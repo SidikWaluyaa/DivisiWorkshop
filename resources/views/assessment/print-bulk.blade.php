@@ -283,9 +283,12 @@
                     </div>
                     <div class="p-3">
                         <div class="text-[10px] font-black text-white text-left leading-snug uppercase">
-                            @if($order->technician_notes)
+                            @php
+                                $whNotes = $order->technician_notes ?: $order->warehouse_qc_notes;
+                            @endphp
+                            @if($whNotes)
                                 <div class="space-y-1">
-                                    @foreach(explode("\n", $order->technician_notes) as $line)
+                                    @foreach(explode("\n", $whNotes) as $line)
                                         @if(trim($line))
                                             <div class="flex items-start gap-2">
                                                 <span style="color: #FFC232;">•</span>

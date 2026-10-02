@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .table-box { rx: 8; fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
+      .header-cust { fill: #065f46; }
+      .header-inv { fill: #1e40af; }
+      .header-wo { fill: #7c2d12; }
+      .table-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 800; fill: #ffffff; letter-spacing: 0.05em; }
+      .col-pk { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; fill: #b45309; }
+      .col-fk { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; fill: #2563eb; }
+      .col-name { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; fill: #1e293b; }
+      .col-highlight { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; fill: #047857; }
+      .col-type { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #64748b; }
+      .rel-line { stroke: #059669; stroke-width: 2; fill: none; stroke-dasharray: 4,4; }
+      .rel-line-solid { stroke: #2563eb; stroke-width: 2; fill: none; }
+      .erd-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 800; fill: #065f46; }
+      .erd-sub { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; fill: #64748b; }
+    </style>
+  </defs>
+
+  <rect width="960" height="480" fill="#f8fafc" rx="16"/>
+
+  <!-- Title -->
+  <text x="40" y="42" class="erd-title">ENTITY RELATIONSHIP DIAGRAM (ERD) SISTEM LABEL MEMBERSHIP</text>
+  <text x="40" y="62" class="erd-sub">Relasi Multi-Tabel, Atribut Finansial, dan Kunci Asosiasi Database Sistem Workshop</text>
+
+  <!-- Table 1: CUSTOMERS -->
+  <g transform="translate(40, 95)">
+    <rect width="280" height="340" class="table-box" stroke="#059669"/>
+    <path d="M 0 8 Q 0 0 8 0 L 272 0 Q 280 0 280 8 L 280 32 L 0 32 Z" class="header-cust"/>
+    <text x="14" y="21" class="table-title">TABLE: CUSTOMERS</text>
+    
+    <!-- Columns -->
+    <text x="14" y="52" class="col-pk">PK</text>
+    <text x="42" y="52" class="col-name">id</text>
+    <text x="190" y="52" class="col-type">BIGINT (Auto)</text>
+
+    <text x="42" y="74" class="col-name">name</text>
+    <text x="190" y="74" class="col-type">VARCHAR(255)</text>
+
+    <text x="42" y="96" class="col-name">phone</text>
+    <text x="190" y="96" class="col-type">VARCHAR(50) [IDX]</text>
+
+    <text x="42" y="118" class="col-name">email</text>
+    <text x="190" y="118" class="col-type">VARCHAR(255) [NULL]</text>
+
+    <text x="42" y="140" class="col-name">city</text>
+    <text x="190" y="140" class="col-type">VARCHAR(100) [NULL]</text>
+
+    <line x1="10" y1="152" x2="270" y2="152" stroke="#e2e8f0" stroke-width="1"/>
+
+    <!-- New Membership Columns Highlighted -->
+    <rect x="8" y="160" width="264" height="66" fill="#ecfdf5" rx="6" stroke="#a7f3d0" stroke-width="1"/>
+    
+    <text x="14" y="178" class="col-pk" fill="#047857">NEW</text>
+    <text x="42" y="178" class="col-highlight">membership_tier</text>
+    <text x="190" y="178" class="col-type">VARCHAR(20) [IDX]</text>
+
+    <text x="14" y="198" class="col-pk" fill="#047857">NEW</text>
+    <text x="42" y="198" class="col-highlight">total_spend</text>
+    <text x="190" y="198" class="col-type">DECIMAL(14,2) [IDX]</text>
+
+    <text x="14" y="218" class="col-pk" fill="#047857">NEW</text>
+    <text x="42" y="218" class="col-highlight">tier_updated_at</text>
+    <text x="190" y="218" class="col-type">TIMESTAMP [NULL]</text>
+
+    <line x1="10" y1="236" x2="270" y2="236" stroke="#e2e8f0" stroke-width="1"/>
+
+    <text x="42" y="256" class="col-name">created_at</text>
+    <text x="190" y="256" class="col-type">TIMESTAMP</text>
+
+    <text x="42" y="278" class="col-name">updated_at</text>
+    <text x="190" y="278" class="col-type">TIMESTAMP</text>
+
+    <text x="42" y="300" class="col-name">deleted_at</text>
+    <text x="190" y="300" class="col-type">TIMESTAMP [NULL]</text>
+  </g>
+
+  <!-- Table 2: INVOICES -->
+  <g transform="translate(370, 95)">
+    <rect width="260" height="340" class="table-box" stroke="#2563eb"/>
+    <path d="M 0 8 Q 0 0 8 0 L 252 0 Q 260 0 260 8 L 260 32 L 0 32 Z" class="header-inv"/>
+    <text x="14" y="21" class="table-title">TABLE: INVOICES</text>
+
+    <!-- Columns -->
+    <text x="14" y="52" class="col-pk">PK</text>
+    <text x="42" y="52" class="col-name">id</text>
+    <text x="180" y="52" class="col-type">BIGINT</text>
+
+    <text x="14" y="74" class="col-fk">FK</text>
+    <text x="42" y="74" class="col-name" fill="#2563eb">customer_id</text>
+    <text x="180" y="74" class="col-type">BIGINT [IDX]</text>
+
+    <text x="42" y="96" class="col-name">invoice_number</text>
+    <text x="180" y="96" class="col-type">VARCHAR(50)</text>
+
+    <text x="42" y="122" class="col-name">total_amount</text>
+    <text x="180" y="122" class="col-type">DECIMAL(12,2)</text>
+    <text x="42" y="142" class="col-name">status</text>
+    <text x="180" y="142" class="col-type">VARCHAR(50)</text>
+
+    <rect x="8" y="154" width="244" height="28" fill="#ecfdf5" rx="4" stroke="#a7f3d0" stroke-width="1"/>
+    <text x="42" y="172" class="col-name" font-weight="bold" fill="#047857">paid_amount [RIIL]</text>
+    <text x="180" y="172" class="col-type" font-weight="bold" fill="#047857">DECIMAL(12,2)</text>
+
+    <text x="42" y="198" class="col-name">discount</text>
+    <text x="180" y="198" class="col-type">DECIMAL(12,2)</text>
+
+    <text x="42" y="220" class="col-name">created_at</text>
+    <text x="180" y="220" class="col-type">TIMESTAMP</text>
+
+    <rect x="8" y="235" width="244" height="70" fill="#f8fafc" stroke="#cbd5e1" rx="4"/>
+    <text x="14" y="252" class="col-type" font-weight="bold" fill="#0f172a">Aturan Evaluasi Transaksi:</text>
+    <text x="14" y="268" class="col-type">• Status != 'Batal'</text>
+    <text x="14" y="284" class="col-type">• Total Spend = SUM(paid_amount)</text>
+    <text x="14" y="298" class="col-type">• Trigger: Invoice::saved</text>
+  </g>
+
+  <!-- Table 3: WORK ORDERS -->
+  <g transform="translate(680, 95)">
+    <rect width="240" height="340" class="table-box" stroke="#ea580c"/>
+    <path d="M 0 8 Q 0 0 8 0 L 232 0 Q 240 0 240 8 L 240 32 L 0 32 Z" class="header-wo"/>
+    <text x="14" y="21" class="table-title">TABLE: WORK_ORDERS</text>
+
+    <!-- Columns -->
+    <text x="14" y="52" class="col-pk">PK</text>
+    <text x="42" y="52" class="col-name">id</text>
+    <text x="160" y="52" class="col-type">BIGINT</text>
+
+    <text x="14" y="74" class="col-fk">FK</text>
+    <text x="42" y="74" class="col-name" fill="#ea580c">invoice_id</text>
+    <text x="160" y="74" class="col-type">BIGINT [NULL]</text>
+
+    <text x="42" y="96" class="col-name">spk_number</text>
+    <text x="160" y="96" class="col-type">VARCHAR(50)</text>
+
+    <text x="42" y="118" class="col-name">customer_name</text>
+    <text x="160" y="118" class="col-type">VARCHAR(255)</text>
+
+    <text x="42" y="140" class="col-name">customer_phone</text>
+    <text x="160" y="140" class="col-type">VARCHAR(50)</text>
+
+    <text x="42" y="162" class="col-name">shoe_brand</text>
+    <text x="160" y="162" class="col-type">VARCHAR(100)</text>
+
+    <text x="42" y="184" class="col-name">status</text>
+    <text x="160" y="184" class="col-type">VARCHAR(50)</text>
+
+    <text x="42" y="206" class="col-name">priority</text>
+    <text x="160" y="206" class="col-type">VARCHAR(20)</text>
+
+    <rect x="8" y="235" width="224" height="70" fill="#fff7ed" stroke="#fed7aa" rx="4"/>
+    <text x="14" y="252" class="col-type" font-weight="bold" fill="#9a3412">Korelasi Unit Fisik:</text>
+    <text x="14" y="268" class="col-type">• 1 Invoice = N Sepatu (WO)</text>
+    <text x="14" y="284" class="col-type">• COUNT(DISTINCT wo.id)</text>
+    <text x="14" y="298" class="col-type">• Tampil Badge di Detail Order</text>
+  </g>
+
+  <!-- Relationship Lines -->
+  <!-- Customers.id to Invoices.customer_id -->
+  <path d="M 320 74 L 370 74" class="rel-line-solid" stroke="#2563eb"/>
+  <circle cx="320" cy="74" r="4" fill="#059669"/>
+  <polygon points="370,74 362,70 362,78" fill="#2563eb"/>
+
+  <!-- Invoices.id to WorkOrders.invoice_id -->
+  <path d="M 630 74 L 680 74" class="rel-line-solid" stroke="#ea580c"/>
+  <circle cx="630" cy="74" r="4" fill="#2563eb"/>
+  <polygon points="680,74 672,70 672,78" fill="#ea580c"/>
+
+  <!-- Soft Match Customer.phone to WorkOrder.customer_phone -->
+  <path d="M 180 435 L 180 455 L 800 455 L 800 435" class="rel-line"/>
+  <text x="430" y="470" font-family="'Plus Jakarta Sans', sans-serif" font-size="9px" fill="#059669" text-anchor="middle">Fallback Relasi via Nomor Telepon (customer_phone ── phone)</text>
+
+</svg>

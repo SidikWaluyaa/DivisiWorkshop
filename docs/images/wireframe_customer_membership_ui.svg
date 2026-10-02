@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="100%" height="100%">
+  <defs>
+    <style>
+      .wf-bg { fill: #f1f5f9; }
+      .wf-card { rx: 12; fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
+      .wf-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 800; fill: #0f172a; }
+      .wf-sub { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10px; font-weight: 600; fill: #64748b; }
+      .wf-text { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10px; fill: #334155; }
+      .wf-bold { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10px; font-weight: 700; fill: #0f172a; }
+      .badge-plat { fill: #1e1b4b; stroke: #f59e0b; stroke-width: 1.2; rx: 12; }
+      .badge-gold { fill: #fef3c7; stroke: #f59e0b; stroke-width: 1.2; rx: 12; }
+      .badge-reg { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 1.2; rx: 12; }
+      .tab-active { fill: #059669; rx: 8; }
+      .tab-inactive { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1; rx: 8; }
+      .table-head { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; }
+      .row-odd { fill: #ffffff; }
+      .row-even { fill: #fafafa; }
+    </style>
+  </defs>
+
+  <rect width="960" height="520" fill="#f8fafc" rx="16"/>
+
+  <!-- Top Title -->
+  <text x="40" y="38" font-family="'Plus Jakarta Sans', sans-serif" font-size="16px" font-weight="800" fill="#065f46">WIREFRAME DESAIN VISUAL SISTEM LABEL &amp; TIER MEMBERSHIP</text>
+  <text x="40" y="56" font-family="'Plus Jakarta Sans', sans-serif" font-size="11px" fill="#64748b">Implementasi Visual pada Detail Order Admin &amp; Master Data Customer Shoe Workshop</text>
+
+  <!-- LEFT: Detail Order Customer Card -->
+  <g transform="translate(40, 80)">
+    <rect width="320" height="400" class="wf-card"/>
+    <!-- Card Header -->
+    <path d="M 0 12 Q 0 0 12 0 L 308 0 Q 320 0 320 12 L 320 40 L 0 40 Z" fill="#ffffff"/>
+    <text x="16" y="25" class="wf-title" font-size="12px">IDENTITAS CUSTOMER (ORDER DETAIL)</text>
+    <line x1="0" y1="40" x2="320" y2="40" stroke="#f1f5f9" stroke-width="1.5"/>
+
+    <!-- Avatar Circle -->
+    <circle cx="160" cy="95" r="32" fill="#22af85"/>
+    <text x="160" y="103" font-family="'Plus Jakarta Sans', sans-serif" font-size="20px" font-weight="800" fill="#ffffff" text-anchor="middle">DW</text>
+
+    <!-- Name & Phone -->
+    <text x="160" y="145" class="wf-title" text-anchor="middle" font-size="14px">Dimas Wahyu</text>
+    <text x="160" y="162" class="wf-sub" text-anchor="middle">0812-3456-7890</text>
+
+    <!-- TIER BADGE HIGHLIGHT -->
+    <g transform="translate(90, 172)">
+      <rect width="140" height="26" class="badge-gold"/>
+      <text x="70" y="18" font-family="'Plus Jakarta Sans', sans-serif" font-size="10px" font-weight="800" fill="#92400e" text-anchor="middle">⭐ GOLD MEMBER</text>
+    </g>
+
+    <!-- Spending & Info Boxes -->
+    <g transform="translate(20, 215)">
+      <rect width="280" height="34" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" rx="8"/>
+      <text x="12" y="21" class="wf-sub" font-size="9px">TOTAL BELANJA</text>
+      <text x="268" y="22" font-family="'JetBrains Mono', monospace" font-size="11px" font-weight="800" fill="#047857" text-anchor="end">Rp 1.850.000</text>
+    </g>
+
+    <g transform="translate(20, 255)">
+      <rect width="280" height="34" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" rx="8"/>
+      <text x="12" y="21" class="wf-sub" font-size="9px">HAK BENEFIT</text>
+      <text x="268" y="21" class="wf-bold" font-size="9.5px" fill="#b45309" text-anchor="end">Diskon 15% Lem Jahit</text>
+    </g>
+
+    <g transform="translate(20, 295)">
+      <rect width="280" height="34" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" rx="8"/>
+      <text x="12" y="21" class="wf-sub" font-size="9px">MEMBER SEJAK</text>
+      <text x="268" y="21" class="wf-bold" font-size="9.5px" text-anchor="end">Juni 2026</text>
+    </g>
+
+    <g transform="translate(20, 335)">
+      <rect width="280" height="34" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" rx="8"/>
+      <text x="12" y="21" class="wf-sub" font-size="9px">CHANNEL ACQUISITION</text>
+      <text x="268" y="21" class="wf-bold" font-size="9.5px" fill="#2563eb" text-anchor="end">ONLINE (CS)</text>
+    </g>
+
+    <!-- Operational Note -->
+    <rect x="20" y="376" width="280" height="16" fill="#fef3c7" rx="4"/>
+    <text x="160" y="388" font-family="'Plus Jakarta Sans', sans-serif" font-size="8px" font-weight="700" fill="#78350f" text-anchor="middle">Prioritas Produksi &amp; Extra QC Care untuk Member</text>
+  </g>
+
+  <!-- RIGHT: Master Customer Table & Tabs -->
+  <g transform="translate(390, 80)">
+    <rect width="530" height="400" class="wf-card"/>
+    
+    <!-- Header with Segmented Tabs -->
+    <path d="M 0 12 Q 0 0 12 0 L 518 0 Q 530 0 530 12 L 530 50 L 0 50 Z" fill="#ffffff"/>
+    <text x="16" y="24" class="wf-title" font-size="12px">MASTER DATA CUSTOMER (/admin/customers)</text>
+
+    <!-- Segmented Tabs -->
+    <g transform="translate(16, 26)">
+      <!-- Tab 1: All -->
+      <rect x="0" y="6" width="70" height="24" class="tab-active"/>
+      <text x="35" y="22" font-family="'Plus Jakarta Sans', sans-serif" font-size="9.5px" font-weight="700" fill="#ffffff" text-anchor="middle">Semua</text>
+
+      <!-- Tab 2: Platinum VIP -->
+      <rect x="76" y="6" width="115" height="24" class="tab-inactive"/>
+      <text x="133" y="22" font-family="'Plus Jakarta Sans', sans-serif" font-size="9px" font-weight="700" fill="#1e1b4b" text-anchor="middle">👑 Platinum VIP (47)</text>
+
+      <!-- Tab 3: Gold Member -->
+      <rect x="197" y="6" width="115" height="24" class="tab-inactive"/>
+      <text x="254" y="22" font-family="'Plus Jakarta Sans', sans-serif" font-size="9px" font-weight="700" fill="#92400e" text-anchor="middle">⭐ Gold Member (190)</text>
+
+      <!-- Tab 4: Reguler -->
+      <rect x="318" y="6" width="105" height="24" class="tab-inactive"/>
+      <text x="370" y="22" font-family="'Plus Jakarta Sans', sans-serif" font-size="9px" font-weight="700" fill="#475569" text-anchor="middle">Reguler (2.718)</text>
+    </g>
+
+    <line x1="0" y1="62" x2="530" y2="62" stroke="#e2e8f0" stroke-width="1.5"/>
+
+    <!-- Table Header -->
+    <rect x="0" y="62" width="530" height="30" class="table-head"/>
+    <text x="16" y="81" class="wf-sub" font-weight="bold">CUSTOMER</text>
+    <text x="170" y="81" class="wf-sub" font-weight="bold">TIER MEMBERSHIP</text>
+    <text x="300" y="81" class="wf-sub" font-weight="bold">TOTAL BELANJA</text>
+    <text x="430" y="81" class="wf-sub" font-weight="bold">AKSI</text>
+
+    <!-- Row 1: Platinum -->
+    <g transform="translate(0, 92)">
+      <rect width="530" height="44" class="row-odd"/>
+      <text x="16" y="20" class="wf-bold">Dena Pramudya</text>
+      <text x="16" y="34" class="wf-sub" font-size="8.5px">0812-9988-7766 • Jakarta</text>
+
+      <rect x="165" y="10" width="105" height="22" class="badge-plat"/>
+      <text x="217" y="25" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5px" font-weight="800" fill="#fbbf24" text-anchor="middle">👑 PLATINUM VIP</text>
+
+      <text x="300" y="26" font-family="'JetBrains Mono', monospace" font-size="10.5px" font-weight="800" fill="#047857">Rp 4.250.000</text>
+
+      <rect x="425" y="10" width="55" height="22" fill="#f0fdf4" stroke="#22af85" stroke-width="1" rx="6"/>
+      <text x="452" y="25" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5px" font-weight="700" fill="#065f46" text-anchor="middle">Detail →</text>
+      <line x1="0" y1="44" x2="530" y2="44" stroke="#f1f5f9" stroke-width="1"/>
+    </g>
+
+    <!-- Row 2: Gold -->
+    <g transform="translate(0, 136)">
+      <rect width="530" height="44" class="row-even"/>
+      <text x="16" y="20" class="wf-bold">Dimas Wahyu</text>
+      <text x="16" y="34" class="wf-sub" font-size="8.5px">0812-3456-7890 • Bandung</text>
+
+      <rect x="165" y="10" width="105" height="22" class="badge-gold"/>
+      <text x="217" y="25" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5px" font-weight="800" fill="#92400e" text-anchor="middle">⭐ GOLD MEMBER</text>
+
+      <text x="300" y="26" font-family="'JetBrains Mono', monospace" font-size="10.5px" font-weight="800" fill="#047857">Rp 1.850.000</text>
+
+      <rect x="425" y="10" width="55" height="22" fill="#f0fdf4" stroke="#22af85" stroke-width="1" rx="6"/>
+      <text x="452" y="25" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5px" font-weight="700" fill="#065f46" text-anchor="middle">Detail →</text>
+      <line x1="0" y1="44" x2="530" y2="44" stroke="#f1f5f9" stroke-width="1"/>
+    </g>
+
+    <!-- Row 3: Reguler -->
+    <g transform="translate(0, 180)">
+      <rect width="530" height="44" class="row-odd"/>
+      <text x="16" y="20" class="wf-bold">Budi Santoso</text>
+      <text x="16" y="34" class="wf-sub" font-size="8.5px">0857-1122-3344 • Surabaya</text>
+
+      <rect x="165" y="10" width="105" height="22" class="badge-reg"/>
+      <text x="217" y="25" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5px" font-weight="800" fill="#475569" text-anchor="middle">REGULER MEMBER</text>
+
+      <text x="300" y="26" font-family="'JetBrains Mono', monospace" font-size="10.5px" font-weight="800" fill="#475569">Rp 450.000</text>
+
+      <rect x="425" y="10" width="55" height="22" fill="#f0fdf4" stroke="#22af85" stroke-width="1" rx="6"/>
+      <text x="452" y="25" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5px" font-weight="700" fill="#065f46" text-anchor="middle">Detail →</text>
+      <line x1="0" y1="44" x2="530" y2="44" stroke="#f1f5f9" stroke-width="1"/>
+    </g>
+
+    <!-- Pagination Summary -->
+    <g transform="translate(16, 350)">
+      <text x="0" y="20" class="wf-sub" font-size="9px">Menampilkan 1-20 dari 2.955 Customer (Sinkronisasi Otomatis Real-Time)</text>
+    </g>
+  </g>
+
+</svg>

@@ -157,7 +157,7 @@ class CsLeadController extends Controller
         $validated = $request->validate([
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'required|string|max:20',
-            'customer_email' => 'required|email|max:255',
+            'customer_email' => 'nullable|email|max:255',
             'source' => 'required|in:WhatsApp,Instagram,Website,Referral,Walk-in',
             'source_detail' => 'nullable|string',
             'priority' => 'required|in:HOT,WARM,COLD',

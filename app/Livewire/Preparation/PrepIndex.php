@@ -136,7 +136,7 @@ class PrepIndex extends Component
     #[Computed]
     public function counts()
     {
-        $baseQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION);
+        $baseQuery = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::PREPARATION);
 
         // PREP stage: 3 Sub-Tabs
         $queueCount = (clone $baseQuery)->whereNull('prep_washing_started_at')->count();
@@ -250,7 +250,7 @@ class PrepIndex extends Component
     public function autoAssignManifestPrep($manifestId)
     {
         try {
-            $ordersQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION);
+            $ordersQuery = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::PREPARATION);
             if ($manifestId === 'orphan') {
                 $ordersQuery->whereNull('workshop_manifest_id');
             } else {
@@ -308,7 +308,8 @@ class PrepIndex extends Component
             $now = \Illuminate\Support\Carbon::now();
             $authId = Auth::id() ?? 1;
 
-            $ordersQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION)
+            $ordersQuery = WorkOrder::withoutRnd()
+                ->where('status', WorkOrderStatus::PREPARATION)
                 ->whereNull('prep_washing_started_at');
 
             if ($manifestId === 'orphan') {
@@ -361,7 +362,8 @@ class PrepIndex extends Component
             $now = \Illuminate\Support\Carbon::now();
             $authId = Auth::id() ?? 1;
 
-            $ordersQuery = WorkOrder::where('status', WorkOrderStatus::PREPARATION)
+            $ordersQuery = WorkOrder::withoutRnd()
+                ->where('status', WorkOrderStatus::PREPARATION)
                 ->whereNotNull('prep_washing_started_at')
                 ->whereNull('prep_washing_completed_at');
 
@@ -753,6 +755,7 @@ class PrepIndex extends Component
     public function orders()
     {
         $woQuery = WorkOrder::query()
+            ->withoutRnd()
             ->where('status', WorkOrderStatus::PREPARATION);
 
         // Search Filter

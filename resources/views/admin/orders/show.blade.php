@@ -48,9 +48,9 @@
                                 <span class="text-gray-700 text-sm font-bold">{{ str_replace('_', ' ', $order->status->value) }}</span>
                             </div>
 
-                            {{-- SPK Priority Badge & Switcher (Restricted to admin@workshop.com & novi@workshop.com) --}}
+                            {{-- SPK Priority Badge & Switcher (Role-based: Admin, Owner, SPV, and Authorized Staff) --}}
                             @php
-                                $canEditPriority = in_array(auth()->user()?->email, ['admin@workshop.com', 'novi@workshop.com']);
+                                $canEditPriority = auth()->user()?->can('updatePriority', \App\Models\WorkOrder::class) ?? false;
                                 $currentPriorityRaw = $order->priority ?? 'Reguler';
                                 $isRnd = (strtoupper(trim($currentPriorityRaw)) === 'R&D' || str_starts_with($order->spk_number, 'RD-'));
                                 $isPrioritas = in_array(strtolower($currentPriorityRaw), ['prioritas', 'urgent', 'express', 'oto']);
@@ -71,7 +71,7 @@
                                             Swal.fire({
                                                 icon: 'warning',
                                                 title: 'Akses Ditolak',
-                                                text: 'Hanya akun admin@workshop.com dan novi@workshop.com yang memiliki hak akses untuk mengubah prioritas SPK.',
+                                                text: 'Anda tidak memiliki wewenang untuk mengubah prioritas SPK ini.',
                                                 confirmButtonColor: '#22B086'
                                             });
                                             return;
@@ -3158,8 +3158,8 @@
                     <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 p-8 relative overflow-hidden mb-8"
                          x-data="{
                             editing: false,
-                            notes: {{ json_encode($order->technician_notes ?? '') }},
-                            displayNotes: {{ json_encode($order->technician_notes ?? '') }},
+                            notes: {{ json_encode($order->technician_notes ?: ($order->warehouse_qc_notes ?? '')) }},
+                            displayNotes: {{ json_encode($order->technician_notes ?: ($order->warehouse_qc_notes ?? '')) }},
                             isLoading: false,
                             async save() {
                                 this.isLoading = true;

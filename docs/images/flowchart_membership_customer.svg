@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .box { rx: 12; stroke-width: 1.5; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05)); }
+      .box-trans { fill: #ffffff; stroke: #94a3b8; }
+      .box-event { fill: #f0fdf4; stroke: #22af85; }
+      .box-calc { fill: #ecfdf5; stroke: #10b981; }
+      .box-tier { fill: #ffffff; stroke: #e2e8f0; }
+      .box-ui { fill: #eff6ff; stroke: #3b82f6; }
+      .title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 800; fill: #0f172a; }
+      .subtitle { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10px; font-weight: 600; fill: #64748b; }
+      .desc { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 9.5px; fill: #334155; }
+      .badge-plat { fill: #1e1b4b; stroke: #f59e0b; stroke-width: 1.5; }
+      .badge-gold { fill: #fef3c7; stroke: #f59e0b; stroke-width: 1.5; }
+      .badge-reg { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 1.5; }
+      .line { stroke: #64748b; stroke-width: 2; fill: none; stroke-linecap: round; }
+      .arrow { fill: #64748b; }
+      .head-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 800; fill: #065f46; }
+      .head-sub { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; fill: #64748b; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#22af85"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="960" height="480" fill="#f8fafc" rx="16"/>
+
+  <!-- Header -->
+  <text x="40" y="42" class="head-title">ALUR REAL-TIME KALKULASI &amp; SISTEM LABEL MEMBERSHIP CUSTOMER</text>
+  <text x="40" y="62" class="head-sub">Shoe Workshop Enterprise CRM • RFM Frequency &amp; Monetary Lifecycle Architecture</text>
+
+  <!-- Step 1: Transaction Lifecycle -->
+  <g transform="translate(40, 90)">
+    <rect width="200" height="150" class="box box-trans"/>
+    <rect width="200" height="34" fill="#f1f5f9" rx="12"/>
+    <rect y="22" width="200" height="12" fill="#f1f5f9"/>
+    <text x="16" y="22" class="title">1. TRANSAKSI INVOICE</text>
+    <text x="16" y="56" class="desc" font-weight="bold">• Invoice Created / Saved</text>
+    <text x="16" y="74" class="desc" font-weight="bold">• Status Updated (Lunas / DP)</text>
+    <text x="16" y="92" class="desc">• Filter: Status != 'Batal'</text>
+    <text x="16" y="110" class="desc">• Nominal Paid Amount (Dibayar)</text>
+    <rect x="16" y="122" width="168" height="18" fill="#e2e8f0" rx="4"/>
+    <text x="24" y="135" class="subtitle" font-size="8.5px">Event: Invoice::saved</text>
+  </g>
+
+  <!-- Connection 1 -> 2 -->
+  <path d="M 240 165 L 290 165" class="line" marker-end="url(#arrow-green)" stroke="#22af85"/>
+
+  <!-- Step 2: Real-time Event Listener -->
+  <g transform="translate(290, 90)">
+    <rect width="220" height="150" class="box box-event"/>
+    <rect width="220" height="34" fill="#dcfce7" rx="12"/>
+    <rect y="22" width="220" height="12" fill="#dcfce7"/>
+    <text x="16" y="22" class="title" fill="#065f46">2. ELOQUENT EVENT ENGINE</text>
+    <text x="16" y="56" class="desc" font-weight="bold">Customer::recalculateTier($id)</text>
+    <text x="16" y="74" class="desc">• Ambil customer_id tertaut</text>
+    <text x="16" y="92" class="desc">• SUM(paid_amount) uang riil</text>
+    <text x="16" y="110" class="desc">• Eksekusi secara background</text>
+    <rect x="16" y="122" width="188" height="18" fill="#bbf7d0" rx="4"/>
+    <text x="24" y="135" class="subtitle" fill="#065f46" font-size="8.5px">Zero Manual Command / Realtime</text>
+  </g>
+
+  <!-- Connection 2 -> 3 -->
+  <path d="M 510 165 L 560 165" class="line" marker-end="url(#arrow-green)" stroke="#22af85"/>
+
+  <!-- Step 3: Tier Classifier -->
+  <g transform="translate(560, 90)">
+    <rect width="360" height="150" class="box box-calc"/>
+    <rect width="360" height="34" fill="#ccfbf1" rx="12"/>
+    <rect y="22" width="360" height="12" fill="#ccfbf1"/>
+    <text x="16" y="22" class="title" fill="#0f766e">3. KLASIFIKASI 3 TIER MEMBERSHIP</text>
+
+    <!-- Plat -->
+    <rect x="16" y="44" width="328" height="28" fill="#1e1b4b" rx="6"/>
+    <text x="26" y="62" class="title" fill="#fbbf24" font-size="10.5px">👑 PLATINUM VIP</text>
+    <text x="160" y="62" class="desc" fill="#f8fafc" font-size="9px">≥ Rp 3.500.000 (Diskon 30% + DC 60k)</text>
+
+    <!-- Gold -->
+    <rect x="16" y="78" width="328" height="28" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" rx="6"/>
+    <text x="26" y="96" class="title" fill="#92400e" font-size="10.5px">⭐ GOLD MEMBER</text>
+    <text x="160" y="96" class="desc" fill="#78350f" font-size="9px">≥ Rp 1.500.000 (Diskon 15% + Stempel)</text>
+
+    <!-- Reg -->
+    <rect x="16" y="112" width="328" height="28" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" rx="6"/>
+    <text x="26" y="130" class="title" fill="#475569" font-size="10.5px">REGULER MEMBER</text>
+    <text x="160" y="130" class="desc" fill="#475569" font-size="9px">&lt; Rp 1.500.000 (Garansi 30 Hari &amp; Tabung)</text>
+  </g>
+
+  <!-- Down Branch from Step 3 to UI Touchpoints -->
+  <path d="M 740 240 L 740 280 L 480 280 L 480 305" class="line" marker-end="url(#arrow)" stroke="#3b82f6"/>
+
+  <!-- Step 4: UI & Operational Touchpoints -->
+  <g transform="translate(40, 310)">
+    <rect width="880" height="140" class="box box-ui"/>
+    <rect width="880" height="32" fill="#dbeafe" rx="12"/>
+    <rect y="20" width="880" height="12" fill="#dbeafe"/>
+    <text x="20" y="22" class="title" fill="#1e40af">4. TITIK SENTUH OPERASIONAL &amp; ANTARMUKA SISTEM (UI TOUCHPOINTS)</text>
+
+    <!-- Sub 1: Detail Order -->
+    <g transform="translate(20, 44)">
+      <rect width="410" height="78" fill="#ffffff" stroke="#bfdbfe" rx="8"/>
+      <text x="14" y="22" class="title" font-size="11.5px">A. DETAIL ORDER ADMIN (/admin/orders/{id})</text>
+      <text x="14" y="42" class="desc">• Badge Tier tampil menonjol tepat di bawah nama customer</text>
+      <text x="14" y="58" class="desc">• Baris ringkasan: Total Belanja (Rp) &amp; Status Membership</text>
+      <text x="14" y="72" class="desc">• Notifikasi visual prioritas untuk teknisi bengkel &amp; tim QC</text>
+    </g>
+
+    <!-- Sub 2: Master Customer -->
+    <g transform="translate(450, 44)">
+      <rect width="410" height="78" fill="#ffffff" stroke="#bfdbfe" rx="8"/>
+      <text x="14" y="22" class="title" font-size="11.5px">B. MASTER PELANGGAN ADMIN (/admin/customers)</text>
+      <text x="14" y="42" class="desc">• Filter Tab Segmented: Semua, Platinum VIP, Gold, Reguler</text>
+      <text x="14" y="58" class="desc">• Kolom khusus: Tier Badge &amp; Akumulasi Total Belanja</text>
+      <text x="14" y="72" class="desc">• Halaman Profil Customer: Riwayat belanja &amp; order tertaut</text>
+    </g>
+  </g>
+
+</svg>

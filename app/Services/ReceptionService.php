@@ -280,7 +280,14 @@ class ReceptionService
             // 2. Sync Customer
             $this->customerService->syncCustomer($data);
 
-            // 3. Update Order Details
+            // 3. Prepare Notes & Details
+            $receptionNote = !empty($data['warehouse_qc_notes']) 
+                ? $data['warehouse_qc_notes'] 
+                : ($passed ? null : ($data['reception_rejection_reason'] ?? null));
+            $effectiveTechNotes = !empty($data['technician_notes']) 
+                ? $data['technician_notes'] 
+                : ($receptionNote ?: $order->technician_notes);
+
             $updateData = [
                 // Access customer data via Input names directly or mapped? 
                 // The dataset passed here comes from request, so uses field names.
@@ -295,7 +302,7 @@ class ReceptionService
                 
                 'reception_qc_passed' => $passed,
                 'warehouse_qc_status' => $passed ? 'lolos' : 'reject',
-                'warehouse_qc_notes' => !empty($data['warehouse_qc_notes']) ? $data['warehouse_qc_notes'] : ($passed ? null : ($data['reception_rejection_reason'] ?? null)),
+                'warehouse_qc_notes' => $receptionNote ?: ($effectiveTechNotes ?: null),
                 'desc_upper' => $data['desc_upper'] ?? null,
                 'desc_sol' => $data['desc_sol'] ?? null,
                 'desc_kondisi_bawaan' => $data['desc_kondisi_bawaan'] ?? null,
@@ -303,7 +310,7 @@ class ReceptionService
                     ? array_values(array_filter(array_merge((array)($data['recommended_services'] ?? []), (array)($data['suggested_services'] ?? [])))) 
                     : null,
                 
-                'technician_notes' => $data['technician_notes'] ?? null,
+                'technician_notes' => $effectiveTechNotes,
                 'warehouse_qc_by' => Auth::id(),
                 'warehouse_qc_at' => now(),
 

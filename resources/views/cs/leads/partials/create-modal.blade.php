@@ -80,8 +80,8 @@
                         <input type="text" name="customer_phone" required x-model="customer_phone" @input="sanitizePhone()" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-[#22AF85] focus:border-[#22AF85] font-bold transition-all" placeholder="08xxx">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Email <span class="text-red-400">*</span></label>
-                        <input type="email" name="customer_email" required x-model="customer_email" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-[#22AF85] focus:border-[#22AF85] font-bold transition-all" placeholder="nama@email.com">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Email <span class="text-[10px] text-gray-400 font-medium normal-case">(opsional)</span></label>
+                        <input type="email" name="customer_email" x-model="customer_email" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-[#22AF85] focus:border-[#22AF85] font-bold transition-all" placeholder="nama@email.com (opsional)">
                     </div>
                 </div>
 
