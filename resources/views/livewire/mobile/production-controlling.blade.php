@@ -284,14 +284,14 @@
                         $custName = $order->customer_name ?: ($order->customer->name ?? '-');
                     @endphp
                     <div class="flex gap-3 items-center">
-                        <div class="relative flex-shrink-0">
+                        <div class="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] flex-shrink-0 relative">
                             <div @if($hasPhotos) 
                                     @click="openPhotoModal('{{ $order->spk_number }}', '{{ addslashes($custName) }}', {{ json_encode($orderPhotos) }})"
                                     role="button"
                                     title="Klik untuk lihat {{ $orderPhotos->count() }} foto dokumentasi"
-                                    class="w-13 h-13 rounded-2xl overflow-hidden bg-slate-900 flex-shrink-0 border-2 border-slate-200/90 relative shadow-sm cursor-pointer group active:scale-95 transition-all hover:border-[#22AF85]"
+                                    class="w-14 h-14 min-w-[56px] min-h-[56px] rounded-2xl overflow-hidden bg-slate-900 border-2 border-slate-200/90 relative shadow-sm cursor-pointer group active:scale-95 transition-all hover:border-[#22AF85]"
                                  @else
-                                    class="w-13 h-13 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200/90 relative shadow-inner flex flex-col items-center justify-center text-slate-400"
+                                    class="w-14 h-14 min-w-[56px] min-h-[56px] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/90 relative shadow-inner flex flex-col items-center justify-center text-slate-400"
                                  @endif>
                                 @if($coverPhotoUrl)
                                     <img src="{{ $coverPhotoUrl }}" 
@@ -317,8 +317,9 @@
 
                         <div class="flex-1 min-w-0 pr-11">
                             <div class="flex items-center gap-1.5">
-                                <a href="{{ route('mobile.spk.track', $order->spk_number) }}" class="text-xs font-black font-mono text-[#22AF85] hover:underline truncate block">
-                                    {{ $order->spk_number }}
+                                <a href="{{ route('mobile.spk.track', $order->spk_number) }}" class="text-xs font-black font-mono text-[#22AF85] hover:underline truncate flex items-center gap-1">
+                                    <span>{{ $order->spk_number }}</span>
+                                    <svg class="w-2.5 h-2.5 opacity-60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                 </a>
                                 @if($order->is_warranty)
                                     <span class="text-[8px] font-black px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">
@@ -326,8 +327,10 @@
                                     </span>
                                 @endif
                             </div>
-                            <p class="text-xs font-extrabold text-slate-900 truncate mt-0.5">{{ $custName }}</p>
-                            <p class="text-[10px] font-semibold text-slate-500 truncate">{{ $order->shoe_brand }} {{ $order->shoe_type }}</p>
+                            <a href="{{ route('mobile.spk.track', $order->spk_number) }}" class="block group" title="Buka Detail SPK">
+                                <p class="text-xs font-extrabold text-slate-900 group-hover:text-[#22AF85] transition-colors truncate mt-0.5">{{ $custName }}</p>
+                                <p class="text-[10px] font-semibold text-slate-500 truncate">{{ $order->shoe_brand }} {{ $order->shoe_type }}</p>
+                            </a>
                         </div>
 
                         {{-- Shoe Size Badge --}}
@@ -480,9 +483,10 @@
 
                         {{-- Link to Detail SPK --}}
                         <a href="{{ route('mobile.spk.track', $order->spk_number) }}" 
-                           class="p-2 rounded-xl text-slate-400 hover:text-[#22AF85] hover:bg-slate-50 transition-colors flex-shrink-0"
-                           title="Buka Lembar Kerja SPK">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                           class="h-8 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-[#22AF85] transition-all flex items-center gap-1 flex-shrink-0 text-[10px] font-black uppercase tracking-wider"
+                           title="Buka Lembar Kerja / Detail SPK">
+                            <span>Detail</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                         </a>
                     </div>
                 </div>
