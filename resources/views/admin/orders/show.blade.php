@@ -4530,7 +4530,7 @@
                                 });
                                 const data = await res.json();
                                 if(data.success) {
-                                    this.isCover = true;
+                                    this.isCover = data.is_spk_cover;
                                     Swal.fire({
                                         icon: 'success',
                                         title: 'Berhasil!',
@@ -4538,10 +4538,11 @@
                                         toast: false,
                                         position: 'center',
                                         showConfirmButton: false,
-                                        timer: 2500,
+                                        timer: 1500,
                                         timerProgressBar: true,
                                         iconColor: '#1B8A68'
                                     });
+                                    setTimeout(() => window.location.reload(), 1000);
                                 }
                             } catch(e) { console.error(e); }
                         },
@@ -4556,7 +4557,7 @@
                                 });
                                 const data = await res.json();
                                 if(data.success) {
-                                    this.isRef = true;
+                                    this.isRef = data.is_primary_reference;
                                     Swal.fire({
                                         icon: 'success',
                                         title: 'Berhasil!',
@@ -4564,10 +4565,11 @@
                                         toast: false,
                                         position: 'center',
                                         showConfirmButton: false,
-                                        timer: 2500,
+                                        timer: 1500,
                                         timerProgressBar: true,
                                         iconColor: '#1B8A68'
                                     });
+                                    setTimeout(() => window.location.reload(), 1000);
                                 }
                             } catch(e) { console.error(e); }
                         },
@@ -4948,22 +4950,22 @@
 
                                     <button @click="setAsReference()" 
                                             x-show="activeId"
-                                            :disabled="isRef"
-                                            :class="isRef ? 'bg-purple-600 text-white cursor-default' : 'bg-gray-100 hover:bg-gray-200 text-purple-600 border border-purple-500/50'"
-                                            class="w-full py-3 px-4 font-bold rounded-xl flex items-center justify-center gap-2 transition-all">
+                                            :class="isRef ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30 ring-2 ring-purple-400' : 'bg-gray-100 hover:bg-gray-200 text-purple-600 border border-purple-500/50'"
+                                            class="w-full py-3 px-4 font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                                            :title="isRef ? 'Klik untuk membatalkan status referensi utama' : 'Atur foto ini sebagai referensi utama'">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M6 20h2.2c.462 0 .694 0 .898-.053.204-.053.385-.143.748-.325l.443-.221c.643-.322.964-.482 1.275-.482.311 0 .632.16 1.275.482l.443.221c.363.182.544.272.748.325.204.053.436.053.898.053H18c1.105 0 2-.895 2-2V7c0-1.105-.895-2-2-2H8c-1.105 0-2 .895-2 2v13z"></path></svg>
-                                        <span x-text="isRef ? 'Referensi Utama Aktif' : 'Atur Sebagai Referensi'"></span>
+                                        <span x-text="isRef ? '✓ Referensi Utama (Klik Batal)' : 'Atur Sebagai Referensi'"></span>
                                     </button>
 
                                     <button @click="setAsCover()" 
                                             x-show="activeId"
-                                            :disabled="isCover"
-                                            :class="isCover ? 'bg-[#FFC232] text-white cursor-default' : 'bg-gray-100 hover:bg-gray-200 text-[#FFC232] border border-[#FFC232]/50'"
-                                            class="w-full py-3 px-4 font-bold rounded-xl flex items-center justify-center gap-2 transition-all">
+                                            :class="isCover ? 'bg-[#FFC232] text-slate-950 font-black shadow-lg shadow-[#FFC232]/30 ring-2 ring-amber-400' : 'bg-gray-100 hover:bg-gray-200 text-[#FFC232] border border-[#FFC232]/50'"
+                                            class="w-full py-3 px-4 font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                                            :title="isCover ? 'Klik untuk membatalkan status cover SPK' : 'Atur foto ini sebagai cover SPK'">
                                         <svg class="w-5 h-5" :class="isCover ? 'fill-current' : 'fill-none'" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.921-.755 1.688-1.54 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.784.57-1.838-.197-1.539-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
                                         </svg>
-                                        <span x-text="isCover ? 'SPK Cover Aktif' : 'Atur Sebagai Cover'"></span>
+                                        <span x-text="isCover ? '⭐ SPK Cover (Klik Batal)' : 'Atur Sebagai Cover'"></span>
                                     </button>
                                 @endcan
                                     <button @click="downloadImage()" class="w-full py-3 px-4 bg-[#22B086] hover:bg-[#1C8D6C] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-200">
