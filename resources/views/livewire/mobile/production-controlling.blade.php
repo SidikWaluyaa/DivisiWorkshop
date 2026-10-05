@@ -46,6 +46,32 @@
              } else {
                  this.scannerOpen = false;
              }
+         },
+         photoModalOpen: false,
+         activePhotoSpk: '',
+         activePhotoCustomer: '',
+         activePhotos: [],
+         activePhotoIndex: 0,
+         touchStartX: 0,
+         openPhotoModal(spk, customer, photos) {
+             if (!photos || photos.length === 0) return;
+             this.activePhotoSpk = spk;
+             this.activePhotoCustomer = customer;
+             this.activePhotos = photos;
+             this.activePhotoIndex = 0;
+             this.photoModalOpen = true;
+         },
+         nextPhoto() {
+             if (this.activePhotos.length <= 1) return;
+             this.activePhotoIndex = (this.activePhotoIndex + 1) % this.activePhotos.length;
+         },
+         prevPhoto() {
+             if (this.activePhotos.length <= 1) return;
+             this.activePhotoIndex = (this.activePhotoIndex - 1 + this.activePhotos.length) % this.activePhotos.length;
+         },
+         closePhotoModal() {
+             this.photoModalOpen = false;
+             this.activePhotos = [];
          }
      }">
 
@@ -221,13 +247,49 @@
                 <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/90 hover:border-[#22AF85]/50 transition-all flex flex-col justify-between gap-2.5 relative overflow-hidden">
                     
                     {{-- Row 1: Header (Thumbnail + Info + Shoe Size Badge) --}}
+                    @php
+                        $orderPhotos = $order->photos ? $order->photos->map(function($p) {
+                            return [
+                                'url' => $p->photo_url,
+                                'caption' => $p->caption ?: ($p->step ? str_replace('_', ' ', $p->step) : 'Foto Dokumentasi'),
+                                'step' => $p->step,
+                                'date' => $p->created_at ? $p->created_at->format('d M Y H:i') : null,
+                            ];
+                        })->filter(fn($p) => !empty($p['url']))->values() : collect();
+                        $hasPhotos = $orderPhotos->isNotEmpty();
+                        $coverPhotoUrl = $order->spk_cover_photo_url ?: ($hasPhotos ? $orderPhotos[0]['url'] : null);
+                        $custName = $order->customer_name ?: ($order->customer->name ?? '-');
+                    @endphp
                     <div class="flex gap-3 items-center">
-                        <div class="w-12 h-12 rounded-xl overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-200 relative shadow-inner">
-                            @if($order->spk_cover_photo_url)
-                                <img src="{{ $order->spk_cover_photo_url }}" class="w-full h-full object-cover">
-                            @else
-                                <div class="w-full h-full flex items-center justify-center text-[7px] font-bold text-slate-500 uppercase">Foto</div>
-                            @endif
+                        <div class="relative flex-shrink-0">
+                            <div @if($hasPhotos) 
+                                    @click="openPhotoModal('{{ $order->spk_number }}', '{{ addslashes($custName) }}', {{ json_encode($orderPhotos) }})"
+                                    role="button"
+                                    title="Klik untuk lihat {{ $orderPhotos->count() }} foto dokumentasi"
+                                    class="w-13 h-13 rounded-2xl overflow-hidden bg-slate-900 flex-shrink-0 border-2 border-slate-200/90 relative shadow-sm cursor-pointer group active:scale-95 transition-all hover:border-[#22AF85]"
+                                 @else
+                                    class="w-13 h-13 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200/90 relative shadow-inner flex flex-col items-center justify-center text-slate-400"
+                                 @endif>
+                                @if($coverPhotoUrl)
+                                    <img src="{{ $coverPhotoUrl }}" 
+                                         alt="{{ $order->spk_number }}" 
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                         loading="lazy">
+                                    @if($orderPhotos->count() > 1)
+                                        <div class="absolute bottom-1 right-1 bg-black/75 backdrop-blur-xs text-white text-[8px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-sm">
+                                            <span>📷</span>
+                                            <span>{{ $orderPhotos->count() }}</span>
+                                        </div>
+                                    @endif
+                                @else
+                                    <div class="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
+                                        <svg class="w-5 h-5 text-slate-300 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <span class="text-[7px] font-extrabold uppercase tracking-tight text-slate-400 leading-none">No Foto</span>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div class="flex-1 min-w-0 pr-11">
@@ -241,8 +303,8 @@
                                     </span>
                                 @endif
                             </div>
-                            <p class="text-xs font-extrabold text-slate-900 truncate mt-0.5">{{ $order->customer->name ?? '-' }}</p>
-                            <p class="text-[10px] font-semibold text-slate-500 truncate">{{ $order->shoe_brand }} {{ $order->shoe_model }}</p>
+                            <p class="text-xs font-extrabold text-slate-900 truncate mt-0.5">{{ $custName }}</p>
+                            <p class="text-[10px] font-semibold text-slate-500 truncate">{{ $order->shoe_brand }} {{ $order->shoe_type }}</p>
                         </div>
 
                         {{-- Shoe Size Badge --}}
@@ -727,6 +789,100 @@
             <p class="text-xs text-slate-400 font-bold mt-4 text-center">
                 Arahkan kamera HP ke QR Code pada lembar cetak SPK fisik.
             </p>
+        </div>
+    </div>
+
+    {{-- Interactive Fullscreen Photo Viewer Lightbox Modal (Alpine.js) --}}
+    <div x-show="photoModalOpen" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @keydown.escape.window="closePhotoModal()"
+         @keydown.arrow-right.window="nextPhoto()"
+         @keydown.arrow-left.window="prevPhoto()"
+         class="fixed inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur-md text-white select-none">
+        
+        {{-- Header --}}
+        <div class="p-4 flex items-center justify-between border-b border-white/10 bg-slate-900/60">
+            <div class="min-w-0 pr-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-mono font-black text-[#22AF85] tracking-wide" x-text="activePhotoSpk"></span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-emerald-300"
+                          x-show="activePhotos.length > 0"
+                          x-text="(activePhotoIndex + 1) + ' / ' + activePhotos.length"></span>
+                </div>
+                <p class="text-xs font-bold text-slate-300 truncate mt-0.5" x-text="activePhotoCustomer"></p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a :href="activePhotos[activePhotoIndex] ? activePhotos[activePhotoIndex].url : '#'" 
+                   target="_blank" 
+                   class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95" 
+                   title="Buka resolusi penuh di tab baru">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+                <button @click="closePhotoModal()" type="button" class="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 text-white transition-all active:scale-95" title="Tutup">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Main Image Stage with Touch Swipe --}}
+        <div class="flex-1 relative flex items-center justify-center p-2 sm:p-4 overflow-hidden touch-pan-y"
+             x-on:touchstart="touchStartX = $event.changedTouches[0].screenX"
+             x-on:touchend="if ($event.changedTouches[0].screenX < touchStartX - 40) nextPhoto(); if ($event.changedTouches[0].screenX > touchStartX + 40) prevPhoto();">
+            
+            <template x-if="activePhotos.length > 0 && activePhotos[activePhotoIndex]">
+                <img :src="activePhotos[activePhotoIndex].url" 
+                     :alt="activePhotoSpk" 
+                     class="max-w-full max-h-[72vh] object-contain rounded-xl shadow-2xl transition-all duration-200">
+            </template>
+
+            {{-- Nav Prev Button --}}
+            <button x-show="activePhotos.length > 1" 
+                    @click="prevPhoto()" 
+                    type="button" 
+                    class="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-900/70 hover:bg-slate-900 border border-white/20 text-white transition-all active:scale-90 shadow-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+
+            {{-- Nav Next Button --}}
+            <button x-show="activePhotos.length > 1" 
+                    @click="nextPhoto()" 
+                    type="button" 
+                    class="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-900/70 hover:bg-slate-900 border border-white/20 text-white transition-all active:scale-90 shadow-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+
+        {{-- Caption & Thumbnail Strip Footer --}}
+        <div class="p-3 border-t border-white/10 bg-slate-900/80 backdrop-blur-md">
+            <div class="max-w-md mx-auto text-center space-y-2">
+                <template x-if="activePhotos.length > 0 && activePhotos[activePhotoIndex]">
+                    <div>
+                        <span class="inline-block px-2.5 py-0.5 rounded-md bg-[#22AF85]/30 border border-[#22AF85]/50 text-emerald-300 font-extrabold text-[10px] uppercase tracking-wider"
+                              x-text="activePhotos[activePhotoIndex].caption"></span>
+                        <span class="block text-[10px] text-slate-400 mt-0.5 font-medium"
+                              x-show="activePhotos[activePhotoIndex].date"
+                              x-text="activePhotos[activePhotoIndex].date"></span>
+                    </div>
+                </template>
+
+                {{-- Thumbnail Dots / Mini Previews --}}
+                <div x-show="activePhotos.length > 1" class="flex items-center justify-center gap-1.5 overflow-x-auto py-1">
+                    <template x-for="(ph, idx) in activePhotos" :key="idx">
+                        <button @click="activePhotoIndex = idx" 
+                                type="button" 
+                                class="w-9 h-9 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0"
+                                :class="activePhotoIndex === idx ? 'border-[#22AF85] ring-2 ring-[#22AF85]/50 scale-105' : 'border-white/20 opacity-50 hover:opacity-80'">
+                            <img :src="ph.url" class="w-full h-full object-cover">
+                        </button>
+                    </template>
+                </div>
+            </div>
         </div>
     </div>
 

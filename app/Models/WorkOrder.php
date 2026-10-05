@@ -1407,14 +1407,30 @@ class WorkOrder extends Model
      */
     public function getSpkCoverPhotoUrlAttribute()
     {
+        if ($this->relationLoaded('photos') && $this->photos && $this->photos->isNotEmpty()) {
+            $cover = $this->photos->firstWhere('is_spk_cover', true)
+                ?? $this->photos->firstWhere('step', 'RECEPTION')
+                ?? $this->photos->firstWhere('step', 'WAREHOUSE_BEFORE')
+                ?? $this->photos->first();
+            if ($cover && method_exists($cover, 'getPhotoUrlAttribute')) {
+                return $cover->photo_url;
+            }
+        }
+
         $path = $this->spk_cover_photo;
 
         if (!$path) {
             return null;
         }
 
+        $path = trim(preg_replace('/\s+/', '', $path));
+
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
+        }
+
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, 8);
         }
 
         return asset('storage/' . $path);

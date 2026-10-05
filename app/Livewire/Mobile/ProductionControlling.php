@@ -468,9 +468,10 @@ class ProductionControlling extends Component
             $term = '%' . trim($this->search) . '%';
             $baseQuery->where(function ($q) use ($term) {
                 $q->where('spk_number', 'like', $term)
+                  ->orWhere('customer_name', 'like', $term)
                   ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', $term))
                   ->orWhere('shoe_brand', 'like', $term)
-                  ->orWhere('shoe_model', 'like', $term);
+                  ->orWhere('shoe_type', 'like', $term);
             });
         }
 
@@ -515,6 +516,10 @@ class ProductionControlling extends Component
             'confirmOrderId' => $this->confirmOrderId,
             'confirmStation' => $this->confirmStation,
             'confirmDuration' => $this->confirmDuration,
+            'pauseOrderId' => $this->pauseOrderId,
+            'pauseStation' => $this->pauseStation,
+            'pauseReason' => $this->pauseReason,
+            'pauseCustomNote' => $this->pauseCustomNote,
         ])->layout('layouts.mobile-pwa');
     }
 }
