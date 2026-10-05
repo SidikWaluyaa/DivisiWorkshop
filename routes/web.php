@@ -398,6 +398,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/bulk-update', [ProductionController::class, 'bulkUpdate'])->name('bulk-update');
     });
 
+    // Mobile Controlling & SPK Tracking (PWA & QR Scanner)
+    Route::prefix('m')->name('mobile.')->group(function () {
+        Route::get('/production', \App\Livewire\Mobile\ProductionControlling::class)->name('production.index');
+        Route::get('/spk/{spk_number}', \App\Livewire\Mobile\SpkTracker::class)->name('spk.track');
+    });
+
     // QC
     Route::prefix('qc')->name('qc.')->middleware('access:qc')->group(function () {
         Route::get('/', \App\Livewire\Qc\QcIndex::class)->lazy()->name('index');

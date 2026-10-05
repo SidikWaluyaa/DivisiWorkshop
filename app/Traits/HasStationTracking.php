@@ -64,6 +64,12 @@ trait HasStationTracking
             
             $dateNote = $finishedAt ? " (Manual: $finishedAt)" : "";
             $logDescription = "Menyelesaikan proses " . $this->formatStationName($type) . $dateNote;
+
+            // Jika stasiun saat ini dalam keadaan dijeda, tutup jeda otomatis terlebih dahulu
+            $pauseInfo = $this->getStationPauseInfo($order, $type);
+            if ($pauseInfo['is_paused']) {
+                $this->resumeStationTracking($order, $type, $techId, $logStep);
+            }
         }
 
         // Determine who should be logged as the actor
@@ -89,9 +95,128 @@ trait HasStationTracking
         ]);
     }
 
+    /**
+     * Pause a station progress with preset reason and optional note.
+     */
+    public function pauseStationTracking($order, string $station, string $reason, int $userId, string $step = 'production', ?string $customNote = null)
+    {
+        $pauseInfo = $this->getStationPauseInfo($order, $station);
+        if ($pauseInfo['is_paused']) {
+            throw new \Exception("Stasiun " . $this->formatStationName($station) . " sudah dalam status dijeda.");
+        }
+
+        $notePart = $customNote ? " - " . trim($customNote) : "";
+        $description = "[JEDA: {$reason}]{$notePart}";
+
+        WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => $userId,
+            'action' => "{$station}_pause",
+            'description' => $description,
+            'step' => $step,
+        ]);
+
+        if ($order->relationLoaded('logs')) {
+            $order->load('logs.user');
+        }
+    }
+
+    /**
+     * Resume a paused station progress.
+     */
+    public function resumeStationTracking($order, string $station, int $userId, string $step = 'production')
+    {
+        $pauseInfo = $this->getStationPauseInfo($order, $station);
+        if (!$pauseInfo['is_paused']) {
+            return;
+        }
+
+        $pausedSeconds = $pauseInfo['current_pause_seconds'];
+        $pausedMinutes = max(1, (int) round($pausedSeconds / 60));
+        $description = "[LANJUT] Melanjutkan pengerjaan setelah jeda {$pausedMinutes} menit";
+
+        WorkOrderLog::create([
+            'work_order_id' => $order->id,
+            'user_id' => $userId,
+            'action' => "{$station}_resume",
+            'description' => $description,
+            'step' => $step,
+        ]);
+
+        if ($order->relationLoaded('logs')) {
+            $order->load('logs.user');
+        }
+    }
+
+    /**
+     * Get pause metadata and net active duration for a station.
+     */
+    public function getStationPauseInfo($order, string $station): array
+    {
+        $logs = $order->relationLoaded('logs')
+            ? $order->logs
+            : $order->logs()->whereIn('action', ["{$station}_pause", "{$station}_resume"])->orderBy('id', 'asc')->get();
+
+        $stationLogs = $logs->filter(fn($l) => in_array($l->action, ["{$station}_pause", "{$station}_resume"], true))->sortBy('id')->values();
+
+        $totalPausedSeconds = 0;
+        $isPaused = false;
+        $currentPauseSeconds = 0;
+        $lastReason = null;
+        $pausedAt = null;
+
+        $lastPauseLog = null;
+        foreach ($stationLogs as $log) {
+            if ($log->action === "{$station}_pause") {
+                $lastPauseLog = $log;
+                $isPaused = true;
+                $pausedAt = $log->created_at;
+                if (preg_match('/\[JEDA:\s*([^\]]+)\]/', $log->description, $m)) {
+                    $lastReason = trim($m[1]);
+                } else {
+                    $lastReason = 'Dijeda';
+                }
+            } elseif ($log->action === "{$station}_resume") {
+                if ($lastPauseLog) {
+                    $diff = max(0, Carbon::parse($log->created_at)->getTimestamp() - Carbon::parse($lastPauseLog->created_at)->getTimestamp());
+                    $totalPausedSeconds += $diff;
+                    $lastPauseLog = null;
+                    $isPaused = false;
+                    $pausedAt = null;
+                }
+            }
+        }
+
+        if ($isPaused && $lastPauseLog) {
+            $currentPauseSeconds = max(0, Carbon::now()->getTimestamp() - Carbon::parse($lastPauseLog->created_at)->getTimestamp());
+            $totalPausedSeconds += $currentPauseSeconds;
+        }
+
+        // Net active working time
+        $startedAt = $order->{"{$station}_started_at"} ? Carbon::parse($order->{"{$station}_started_at"}) : null;
+        $completedAt = $order->{"{$station}_completed_at"} ? Carbon::parse($order->{"{$station}_completed_at"}) : null;
+
+        $netElapsedSeconds = 0;
+        if ($startedAt) {
+            $endPoint = $completedAt ?: ($isPaused && $pausedAt ? Carbon::parse($pausedAt) : Carbon::now());
+            $grossSeconds = max(0, $endPoint->getTimestamp() - $startedAt->getTimestamp());
+            $resolvedPaused = $isPaused ? ($totalPausedSeconds - $currentPauseSeconds) : $totalPausedSeconds;
+            $netElapsedSeconds = max(0, $grossSeconds - $resolvedPaused);
+        }
+
+        return [
+            'is_paused' => $isPaused,
+            'reason' => $lastReason,
+            'paused_at' => $pausedAt ? Carbon::parse($pausedAt) : null,
+            'total_paused_seconds' => (int) $totalPausedSeconds,
+            'current_pause_seconds' => (int) $currentPauseSeconds,
+            'net_elapsed_seconds' => (int) $netElapsedSeconds,
+        ];
+    }
+
     protected function formatStationName($type)
     {
-        // Convert snake_case like 'prod_sol' or 'prep_washing' to readable 'Production Sol' or 'Preparation Washing'
         return ucwords(str_replace('_', ' ', $type));
     }
 }
+

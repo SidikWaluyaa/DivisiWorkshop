@@ -1,4 +1,4 @@
-<div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 font-sans">
+<div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 font-sans" wire:poll.30000ms>
     {{-- Header Banner --}}
     <div class="bg-gradient-to-r from-[#1a3b34] via-[#22AF85] to-[#1a3b34] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-emerald-400/20">
         <div class="absolute -top-12 -right-12 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
@@ -148,6 +148,12 @@
                     <span class="text-3xl sm:text-4xl font-black text-amber-950 tracking-tight">{{ $runningCount }}</span>
                     <span class="text-xs font-black text-amber-700 uppercase tracking-wider">SPK Active</span>
                 </div>
+                @if($pausedCount > 0)
+                    <div class="mt-2 flex items-center gap-1.5 text-[10px] font-black text-orange-700">
+                        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                        <span>{{ $pausedCount }} SPK Dijeda</span>
+                    </div>
+                @endif
             </div>
 
             {{-- Assigned Queue Card --}}
@@ -205,7 +211,10 @@
                 <button wire:click="switchTab('running')" 
                         class="flex-1 px-5 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap flex items-center justify-center gap-2 active:scale-95
                         {{ $activeTab === 'running' ? 'bg-[#22AF85] text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 font-extrabold' }}">
-                    <span>Sedang Dikerjakan ({{ $runningCount }})</span>
+                    <span>Sedang Dikerjakan ({{ $runningCount + $pausedCount }})</span>
+                    @if($pausedCount > 0)
+                        <span class="px-1.5 py-0.5 text-[9px] font-black rounded-full bg-orange-500 text-white">{{ $pausedCount }}⏸</span>
+                    @endif
                 </button>
 
                 <button wire:click="switchTab('assigned')" 
@@ -246,8 +255,8 @@
                             </div>
 
                             <span class="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider rounded-xl border shadow-2xs shrink-0
-                                {{ $job['started_at'] && !$job['completed_at'] ? 'bg-amber-400 text-slate-950 border-amber-500 font-black' : ($job['completed_at'] ? 'bg-emerald-500 text-white border-emerald-600 font-black' : 'bg-blue-100 text-blue-900 border-blue-200 font-bold') }}">
-                                {{ $job['started_at'] && !$job['completed_at'] ? 'IN_PROGRESS' : ($job['completed_at'] ? 'COMPLETED' : 'ASSIGNED') }}
+                                {{ $job['is_paused'] ? 'bg-orange-400 text-white border-orange-500 font-black' : ($job['started_at'] && !$job['completed_at'] ? 'bg-amber-400 text-slate-950 border-amber-500 font-black' : ($job['completed_at'] ? 'bg-emerald-500 text-white border-emerald-600 font-black' : 'bg-blue-100 text-blue-900 border-blue-200 font-bold')) }}">
+                                {{ $job['is_paused'] ? '⏸ DIJEDA' : ($job['started_at'] && !$job['completed_at'] ? 'IN_PROGRESS' : ($job['completed_at'] ? 'COMPLETED' : 'ASSIGNED')) }}
                             </span>
                         </div>
 
@@ -267,15 +276,37 @@
 
                         {{-- LIVE TIMER STOPWATCH PANEL (For Running / In Progress) --}}
                         @if($job['started_at'] && !$job['completed_at'])
-                            <div class="p-4 bg-slate-950 rounded-2xl text-white border border-slate-800 text-center space-y-1 shadow-inner"
-                                 x-data="stopwatchTimer('{{ $job['started_at']->toIso8601String() }}')" x-init="startTimer()">
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-[#FFC232] animate-ping"></span>
-                                    <span class="text-[9px] font-black uppercase tracking-widest text-[#FFC232]">Live Running Timer</span>
+                            @if($job['is_paused'])
+                                {{-- PAUSED: Show frozen net elapsed time + reason --}}
+                                <div class="p-4 bg-slate-800 rounded-2xl text-white border border-orange-500/50 text-center space-y-1 shadow-inner">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <span class="text-lg">⏸</span>
+                                        <span class="text-[9px] font-black uppercase tracking-widest text-orange-400">PENGERJAAN DIJEDA</span>
+                                    </div>
+                                    @php
+                                        $frozenSecs = $job['net_elapsed_seconds'];
+                                        $fh = str_pad(floor($frozenSecs / 3600), 2, '0', STR_PAD_LEFT);
+                                        $fm = str_pad(floor(($frozenSecs % 3600) / 60), 2, '0', STR_PAD_LEFT);
+                                        $fs = str_pad($frozenSecs % 60, 2, '0', STR_PAD_LEFT);
+                                    @endphp
+                                    <div class="font-mono text-3xl font-black text-orange-300 tracking-widest drop-shadow-md">{{ "{$fh}:{$fm}:{$fs}" }}</div>
+                                    <span class="text-[9px] text-slate-400 font-extrabold block">Waktu Aktif (Dijeda sejak: {{ $job['paused_at']?->format('H:i:s') }} WIB)</span>
+                                    @if($job['pause_reason'])
+                                        <span class="inline-block text-[9px] font-black bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/40 mt-1">Alasan: {{ $job['pause_reason'] }}</span>
+                                    @endif
                                 </div>
-                                <div class="font-mono text-3xl font-black text-white tracking-widest drop-shadow-md" x-text="formattedTime">00:00:00</div>
-                                <span class="text-[9px] text-slate-400 font-extrabold block">Mulai Pengerjaan: {{ $job['started_at']->format('H:i:s') }} WIB</span>
-                            </div>
+                            @else
+                                {{-- RUNNING: Show live timer using net_elapsed_seconds as base (same as mobile) --}}
+                                <div class="p-4 bg-slate-950 rounded-2xl text-white border border-slate-800 text-center space-y-1 shadow-inner"
+                                     x-data="stopwatchTimer({{ $job['net_elapsed_seconds'] ?? 0 }})" x-init="startTimer()">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-[#FFC232] animate-ping"></span>
+                                        <span class="text-[9px] font-black uppercase tracking-widest text-[#FFC232]">Live Running Timer</span>
+                                    </div>
+                                    <div class="font-mono text-3xl font-black text-white tracking-widest drop-shadow-md" x-text="formattedTime">00:00:00</div>
+                                    <span class="text-[9px] text-slate-400 font-extrabold block">Mulai Pengerjaan: {{ $job['started_at']->format('H:i:s') }} WIB</span>
+                                </div>
+                            @endif
                         @elseif($job['completed_at'])
                             <div class="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200/80 text-emerald-900 text-xs font-bold space-y-1">
                                 <div class="flex justify-between items-center">
@@ -339,22 +370,24 @@
 
 <script>
     document.addEventListener('alpine:init', () => {
-        Alpine.data('stopwatchTimer', (startedAtIso) => ({
-            startedAt: startedAtIso ? new Date(startedAtIso) : null,
+        // baseSeconds = net_elapsed_seconds computed server-side at render time (total active work time, excluding pauses)
+        // clientStart  = Unix epoch seconds at JS init time (to track elapsed since render)
+        // Each tick: formattedTime = baseSeconds + (now - clientStart)
+        // This mirrors the mobile timer logic exactly and is correct after any number of pause/resume cycles.
+        Alpine.data('stopwatchTimer', (baseSeconds = 0) => ({
+            baseSeconds: baseSeconds || 0,
+            clientStart: Math.floor(Date.now() / 1000),
             formattedTime: '00:00:00',
             timerInterval: null,
             startTimer() {
-                if (!this.startedAt) return;
                 this.updateTimer();
                 this.timerInterval = setInterval(() => this.updateTimer(), 1000);
             },
             updateTimer() {
-                const now = new Date();
-                const diffMs = Math.max(0, now - this.startedAt);
-                const totalSeconds = Math.floor(diffMs / 1000);
-                const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-                const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-                const secs = String(totalSeconds % 60).padStart(2, '0');
+                const diff = Math.max(0, this.baseSeconds + (Math.floor(Date.now() / 1000) - this.clientStart));
+                const hrs  = String(Math.floor(diff / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+                const secs = String(diff % 60).padStart(2, '0');
                 this.formattedTime = `${hrs}:${mins}:${secs}`;
             }
         }));

@@ -206,7 +206,8 @@ export default {
 
         // Detect if on workshop layout (workshop already has its own Blade bottom nav)
         const isWorkshopLayout = computed(() => {
-            return currentPath.value.startsWith('/workshop') || 
+            return currentPath.value.startsWith('/m') ||
+                   currentPath.value.startsWith('/workshop') || 
                    currentPath.value.startsWith('/manifest') ||
                    currentPath.value.startsWith('/production') ||
                    currentPath.value.startsWith('/sortir') ||

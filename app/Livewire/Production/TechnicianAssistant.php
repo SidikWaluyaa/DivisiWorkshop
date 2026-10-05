@@ -9,12 +9,14 @@ use App\Models\WorkOrder;
 use App\Models\WorkOrderService;
 use App\Models\WorkOrderLog;
 use App\Enums\WorkOrderStatus;
+use App\Traits\HasStationTracking;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class TechnicianAssistant extends Component
 {
+    use HasStationTracking;
     use WithPagination;
 
     public $selectedTechnicianId = null;
@@ -475,6 +477,98 @@ class TechnicianAssistant extends Component
             }
         }
 
+        // Enrich each job with pause status from work_order_logs
+        // Map station_type => column prefix used in HasStationTracking / work_order_logs
+        $stationColumnMap = [
+            'washing'  => 'prep_washing',
+            'prep_sol' => 'prep_sol',
+            'prep_upper' => 'prep_upper',
+            'sol'      => 'prod_sol',
+            'upper'    => 'prod_upper',
+            'cleaning' => 'prod_cleaning',
+            'qc_jahit' => 'qc_jahit',
+            'qc_cleanup' => 'qc_cleanup',
+            'qc_final' => 'qc_final',
+        ];
+
+        // Pre-load work_order_logs for all unique work orders in jobs to avoid N+1
+        $workOrderIds = $jobs->pluck('work_order_id')->unique()->values()->toArray();
+        $allPauseLogs = WorkOrderLog::whereIn('work_order_id', $workOrderIds)
+            ->where(function ($q) {
+                $q->where('action', 'like', '%_pause')
+                  ->orWhere('action', 'like', '%_resume');
+            })
+            ->orderBy('id', 'asc')
+            ->get()
+            ->groupBy('work_order_id');
+
+        $jobs = $jobs->map(function ($job) use ($stationColumnMap, $allPauseLogs) {
+            $stationType = $job['station_type'] ?? 'service';
+            $station = $stationColumnMap[$stationType] ?? null;
+
+            if ($station && $job['started_at'] && !$job['completed_at']) {
+                $workOrderId = $job['work_order_id'];
+                $logsForWo = $allPauseLogs->get($workOrderId, collect());
+
+                // Build a fake order object with the needed interface
+                $stationLogs = $logsForWo->filter(fn($l) => in_array($l->action, ["{$station}_pause", "{$station}_resume"]));
+
+                $isPaused = false;
+                $lastReason = null;
+                $pausedAt = null;
+                $lastPauseLog = null;
+                $totalPausedSeconds = 0;
+                $currentPauseSeconds = 0;
+
+                foreach ($stationLogs->sortBy('id') as $log) {
+                    if ($log->action === "{$station}_pause") {
+                        $lastPauseLog = $log;
+                        $isPaused = true;
+                        $pausedAt = $log->created_at;
+                        if (preg_match('/\[JEDA:\s*([^\]]+)\]/', $log->description, $m)) {
+                            $lastReason = trim($m[1]);
+                        } else {
+                            $lastReason = 'Dijeda';
+                        }
+                    } elseif ($log->action === "{$station}_resume") {
+                        if ($lastPauseLog) {
+                            $diff = max(0, Carbon::parse($log->created_at)->getTimestamp() - Carbon::parse($lastPauseLog->created_at)->getTimestamp());
+                            $totalPausedSeconds += $diff;
+                            $lastPauseLog = null;
+                            $isPaused = false;
+                            $pausedAt = null;
+                        }
+                    }
+                }
+
+                if ($isPaused && $lastPauseLog) {
+                    $currentPauseSeconds = max(0, Carbon::now()->getTimestamp() - Carbon::parse($lastPauseLog->created_at)->getTimestamp());
+                    $totalPausedSeconds += $currentPauseSeconds;
+                }
+
+                // Net elapsed
+                $startedAt = $job['started_at'];
+                $endPoint = $isPaused && $pausedAt ? Carbon::parse($pausedAt) : Carbon::now();
+                $grossSeconds = max(0, $endPoint->getTimestamp() - $startedAt->getTimestamp());
+                $resolvedPaused = $isPaused ? ($totalPausedSeconds - $currentPauseSeconds) : $totalPausedSeconds;
+                $netElapsedSeconds = max(0, $grossSeconds - $resolvedPaused);
+
+                $job['is_paused'] = $isPaused;
+                $job['pause_reason'] = $lastReason;
+                $job['paused_at'] = $pausedAt ? Carbon::parse($pausedAt) : null;
+                $job['net_elapsed_seconds'] = (int) $netElapsedSeconds;
+                $job['total_paused_seconds'] = (int) $totalPausedSeconds;
+            } else {
+                $job['is_paused'] = false;
+                $job['pause_reason'] = null;
+                $job['paused_at'] = null;
+                $job['net_elapsed_seconds'] = 0;
+                $job['total_paused_seconds'] = 0;
+            }
+
+            return $job;
+        });
+
         return $jobs;
     }
 
@@ -495,12 +589,14 @@ class TechnicianAssistant extends Component
         // Fetch All Jobs assigned to this technician (both work_orders and work_order_services)
         $allJobs = $this->getTechAssignedJobs($this->selectedTechnicianId);
 
-        // Classify into 3 Tabs: Running (In Progress), Assigned (Queued), History (Completed)
-        $runningJobs = $allJobs->filter(fn($j) => $j['started_at'] !== null && $j['completed_at'] === null);
+        // Classify into 3 Tabs: Running (In Progress), Paused, Assigned (Queued), History (Completed)
+        $runningJobs = $allJobs->filter(fn($j) => $j['started_at'] !== null && $j['completed_at'] === null && !$j['is_paused']);
+        $pausedJobs  = $allJobs->filter(fn($j) => $j['started_at'] !== null && $j['completed_at'] === null && $j['is_paused']);
         $assignedJobs = $allJobs->filter(fn($j) => $j['completed_at'] === null && $j['started_at'] === null);
         $completedJobs = $allJobs->filter(fn($j) => $j['completed_at'] !== null);
 
         $runningCount = $runningJobs->count();
+        $pausedCount  = $pausedJobs->count();
         $assignedCount = $assignedJobs->count();
 
         // Period filtered completed jobs
@@ -525,7 +621,8 @@ class TechnicianAssistant extends Component
 
         // Active List for Current Tab
         if ($this->activeTab === 'running') {
-            $displayJobs = $runningJobs;
+            // Show both actively running and paused jobs together in the running tab
+            $displayJobs = $runningJobs->merge($pausedJobs);
         } elseif ($this->activeTab === 'assigned') {
             $displayJobs = $assignedJobs;
         } else {
@@ -542,6 +639,7 @@ class TechnicianAssistant extends Component
             'countQc' => $countQc,
             'selectedTech' => $selectedTech,
             'runningCount' => $runningCount,
+            'pausedCount' => $pausedCount,
             'assignedCount' => $assignedCount,
             'completedTodayCount' => $completedTodayCount,
             'completedMonthCount' => $completedMonthCount,

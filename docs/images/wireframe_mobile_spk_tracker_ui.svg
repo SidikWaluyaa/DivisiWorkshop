@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" width="900" height="700" style="background:#0f172a; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <defs>
+    <filter id="phoneShadow" x="-10%" y="-5%" width="120%" height="115%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.65"/>
+    </filter>
+    <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Title Left -->
+  <g transform="translate(40, 40)">
+    <text x="0" y="20" fill="#10b981" font-size="12" font-weight="800" letter-spacing="2">MOBILE DEVELOPER UI SPECIFICATION</text>
+    <text x="0" y="46" fill="#ffffff" font-size="20" font-weight="800">Antarmuka Mobile Kontrol Teknisi &amp; Live Timer (/m/spk/{spk})</text>
+    <text x="0" y="70" fill="#94a3b8" font-size="12">Dioptimalkan untuk satu tangan, tombol ekstra besar, dan visual status kontras tinggi</text>
+  </g>
+
+  <!-- SMARTPHONE MOCKUP FRAME (Center-Left) -->
+  <g transform="translate(80, 110)" filter="url(#phoneShadow)">
+    <!-- Outer Phone Body -->
+    <rect width="360" height="560" rx="36" fill="#1e293b" stroke="#334155" stroke-width="4"/>
+    <!-- Screen Area -->
+    <rect x="8" y="8" width="344" height="544" rx="28" fill="url(#screenGrad)"/>
+
+    <!-- Dynamic Island / Notch -->
+    <rect x="132" y="16" width="96" height="20" rx="10" fill="#000000"/>
+    <circle cx="212" cy="26" r="4" fill="#1e293b"/>
+
+    <!-- Status Bar -->
+    <text x="32" y="30" fill="#ffffff" font-size="10" font-weight="700">09:41</text>
+    <text x="300" y="30" fill="#ffffff" font-size="10" font-weight="700">5G  🔋</text>
+
+    <!-- App Header Inside Screen -->
+    <g transform="translate(20, 48)">
+      <rect width="304" height="42" rx="10" fill="#1e293b" stroke="#334155"/>
+      <text x="12" y="26" fill="#ffffff" font-size="11" font-weight="900">🔧 KONTROL TEKNISI BENGKEL</text>
+      <circle cx="280" cy="21" r="5" fill="#10b981"/>
+    </g>
+
+    <!-- SPK Card -->
+    <g transform="translate(20, 98)">
+      <rect width="304" height="74" rx="12" fill="#1e293b" stroke="#22b086" stroke-width="1.5"/>
+      <text x="14" y="22" fill="#94a3b8" font-size="9" font-weight="700">NOMOR SPK</text>
+      <text x="14" y="40" fill="#34d399" font-size="13" font-weight="900" font-family="monospace">S-2608-12-0004-SW</text>
+      <text x="14" y="58" fill="#e2e8f0" font-size="11" font-weight="700">Budi FastTrack • Nike Pegasus</text>
+
+      <rect x="234" y="14" width="56" height="46" rx="8" fill="#22b086" fill-opacity="0.15" stroke="#22b086"/>
+      <text x="262" y="30" fill="#34d399" font-size="8" font-weight="800" text-anchor="middle">SIZE</text>
+      <text x="262" y="50" fill="#ffffff" font-size="16" font-weight="900" text-anchor="middle">42</text>
+    </g>
+
+    <!-- STATION 1: SOLING (ACTIVE IN PROGRESS) -->
+    <g transform="translate(20, 180)">
+      <rect width="304" height="135" rx="14" fill="#0f172a" stroke="#0284c7" stroke-width="2"/>
+      
+      <!-- Top Title Bar -->
+      <rect width="304" height="30" rx="14" fill="#0284c7" fill-opacity="0.15"/>
+      <text x="14" y="20" fill="#38bdf8" font-size="11" font-weight="900">1. STASIUN SOLING (REPARASI SOL)</text>
+      
+      <!-- Live Stopwatch Section -->
+      <g transform="translate(14, 40)">
+        <text x="0" y="14" fill="#94a3b8" font-size="9" font-weight="700">TEKNISI: <tspan fill="#ffffff" font-weight="900">PADON</tspan></text>
+        
+        <!-- Live Stopwatch Box -->
+        <rect x="140" y="-4" width="136" height="28" rx="6" fill="#0284c7"/>
+        <text x="208" y="15" fill="#ffffff" font-size="12" font-weight="900" font-family="monospace" text-anchor="middle">⏱ 00:41:25</text>
+      </g>
+
+      <!-- Action Buttons Row -->
+      <g transform="translate(14, 78)">
+        <rect width="276" height="44" rx="10" fill="#f43f5e"/>
+        <text x="138" y="27" fill="#ffffff" font-size="12" font-weight="900" text-anchor="middle">⏹ SELESAIKAN SOLING</text>
+      </g>
+    </g>
+
+    <!-- STATION 2: QC JAHIT (PENDING / NEXT IN LINE) -->
+    <g transform="translate(20, 325)">
+      <rect width="304" height="115" rx="14" fill="#1e293b" stroke="#334155"/>
+      
+      <rect width="304" height="28" rx="14" fill="#334155" fill-opacity="0.4"/>
+      <text x="14" y="19" fill="#e2e8f0" font-size="11" font-weight="800">2. QC JAHIT</text>
+      <text x="220" y="19" fill="#94a3b8" font-size="9" font-weight="700">BELUM MULAI</text>
+
+      <!-- Tech Selection Dropdown Simulation -->
+      <g transform="translate(14, 38)">
+        <rect width="276" height="30" rx="8" fill="#0f172a" stroke="#475569"/>
+        <text x="12" y="20" fill="#e2e8f0" font-size="10" font-weight="700">Teknisi: Devi (QC Jahit)</text>
+        <text x="250" y="20" fill="#94a3b8" font-size="10">▼</text>
+      </g>
+
+      <!-- Start Button -->
+      <g transform="translate(14, 76)">
+        <rect width="276" height="30" rx="8" fill="#10b981"/>
+        <text x="138" y="20" fill="#ffffff" font-size="11" font-weight="900" text-anchor="middle">▶ MULAI QC JAHIT</text>
+      </g>
+    </g>
+
+    <!-- STATION 3: UPPER (UNNEEDED) -->
+    <g transform="translate(20, 450)">
+      <rect width="304" height="40" rx="10" fill="#1e293b" fill-opacity="0.5" stroke="#334155" stroke-dasharray="4,4"/>
+      <text x="14" y="24" fill="#64748b" font-size="10" font-weight="700">3. UPPER STASIUN</text>
+      <text x="200" y="24" fill="#64748b" font-size="9" font-weight="700">⚪ Tidak Diperlukan</text>
+    </g>
+
+    <!-- Bottom Nav Indicator Bar -->
+    <rect x="120" y="535" width="120" height="4" rx="2" fill="#64748b"/>
+  </g>
+
+  <!-- CALLOUT LABELS ON THE RIGHT -->
+  <g transform="translate(480, 140)">
+    <!-- Callout 1: No Login Required -->
+    <g transform="translate(0, 0)">
+      <rect width="360" height="75" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+      <text x="16" y="24" fill="#34d399" font-size="12" font-weight="800">1. ZERO-FRICTION ACCESS (TANPA LOGIN)</text>
+      <text x="16" y="44" fill="#cbd5e1" font-size="11">Cukup scan QR Code di lembar SPK, halaman langsung</text>
+      <text x="16" y="60" fill="#cbd5e1" font-size="11">terbuka menampilkan rincian sepatu dan stasiun kerja.</text>
+    </g>
+
+    <!-- Callout 2: Live Stopwatch Timer -->
+    <g transform="translate(0, 95)">
+      <rect width="360" height="85" rx="10" fill="#1e293b" stroke="#0284c7" stroke-width="1.5"/>
+      <text x="16" y="24" fill="#38bdf8" font-size="12" font-weight="800">2. LIVE STOPWATCH &amp; TIME TRACKING</text>
+      <text x="16" y="44" fill="#cbd5e1" font-size="11">Saat tombol 'Mulai' ditekan, timer langsung berjalan</text>
+      <text x="16" y="60" fill="#cbd5e1" font-size="11">dan menyimpan jam mulai ke kolom eksisting</text>
+      <text x="16" y="74" fill="#38bdf8" font-size="10" font-family="monospace">prod_sol_started_at</text>
+    </g>
+
+    <!-- Callout 3: Ergonomic Touch Buttons -->
+    <g transform="translate(0, 200)">
+      <rect width="360" height="85" rx="10" fill="#1e293b" stroke="#f43f5e" stroke-width="1.5"/>
+      <text x="16" y="24" fill="#fb7185" font-size="12" font-weight="800">3. TOMBOL BESAR RAMAH TEKNISI</text>
+      <text x="16" y="44" fill="#cbd5e1" font-size="11">Didesain dengan tinggi 44px+ agar mudah ditekan</text>
+      <text x="16" y="60" fill="#cbd5e1" font-size="11">walaupun teknisi menggunakan sarung tangan kerja</text>
+      <text x="16" y="74" fill="#cbd5e1" font-size="11">atau tangan berdebu di meja reparasi.</text>
+    </g>
+
+    <!-- Callout 4: Dual Sync to Desktop -->
+    <g transform="translate(0, 305)">
+      <rect width="360" height="85" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="16" y="24" fill="#fbbf24" font-size="12" font-weight="800">4. AUTO-SYNC KE DASHBOARD PRODUKSI</text>
+      <text x="16" y="44" fill="#cbd5e1" font-size="11">Admin di komputer kantor langsung melihat status</text>
+      <text x="16" y="60" fill="#cbd5e1" font-size="11">berubah 'Sedang Berjalan' atau 'Selesai: Padon'</text>
+      <text x="16" y="74" fill="#cbd5e1" font-size="11">pada halaman /production secara instan!</text>
+    </g>
+  </g>
+</svg>
