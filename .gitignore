@@ -23,4 +23,5 @@ Thumbs.db
 heal_transactions.php
 *.sql
 laporan_kerja_*.md
+!laporan_kerja/2026-10/*
 /.gemini-scratch/

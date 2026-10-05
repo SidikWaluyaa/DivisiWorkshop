@@ -208,6 +208,25 @@
                 </div>
             @endif
 
+            {{-- QR Code Mobile Kontrol Teknisi (Semua SPK Non-RND) --}}
+            @if(!$isRnd)
+                @php
+                    $mobileTrackUrl = route('mobile.spk.track', $order->spk_number);
+                    $mobileTrackQr = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(85)->generate($mobileTrackUrl);
+                @endphp
+                <div class="bg-white rounded-xl p-2 text-center shadow-md border-2 border-[#FFC232] mt-1 avoid-break">
+                    <div class="flex justify-center items-center">
+                        {!! $mobileTrackQr !!}
+                    </div>
+                    <p class="text-[8px] text-gray-800 font-black uppercase tracking-tight mt-1">
+                        📱 SCAN KONTROL TEKNISI
+                    </p>
+                    <p class="text-[7px] text-gray-500 font-bold uppercase tracking-tighter">
+                        Mulai • Waktu • Selesai
+                    </p>
+                </div>
+            @endif
+
             {{-- Notes Section --}}
             <div class="mt-1 space-y-1 avoid-break">
                 <p class="text-[9px] font-black text-white uppercase tracking-widest">Keterangan Besar :</p>
