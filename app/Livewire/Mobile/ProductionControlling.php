@@ -452,27 +452,46 @@ class ProductionControlling extends Component
         return $q;
     }
 
+    public function clearSearch()
+    {
+        $this->search = '';
+        $this->resetPage();
+    }
+
     public function render()
     {
-        // Query sesuai tab aktif
-        if ($this->activeTab === 'completed_today') {
+        $isSearching = !empty(trim($this->search));
+
+        if ($isSearching) {
+            // Universal Search Mode (Sinkron dengan Desktop StationIndex.php)
+            // Mencari ke seluruh SPK Produksi aktif tanpa terhalang tab atau filter sub-stasiun
+            $rawTerm = trim($this->search);
+            $normalizedTerm = str_replace(["\xe2\x80\x93", "\xe2\x80\x94", '–', '—'], '-', $rawTerm);
+            $terms = array_unique(array_filter([$rawTerm, $normalizedTerm]));
+
+            $baseQuery = $this->baseProductionQuery()->with(['customer', 'photos', 'workOrderServices', 'logs']);
+
+            $baseQuery->where(function ($q) use ($terms) {
+                foreach ($terms as $t) {
+                    $likeTerm = '%' . $t . '%';
+                    $q->orWhere('spk_number', 'like', $likeTerm)
+                      ->orWhere('customer_name', 'like', $likeTerm)
+                      ->orWhere('customer_phone', 'like', $likeTerm)
+                      ->orWhere('shoe_brand', 'like', $likeTerm)
+                      ->orWhere('shoe_type', 'like', $likeTerm)
+                      ->orWhereHas('customer', function ($cq) use ($likeTerm) {
+                          $cq->where('name', 'like', $likeTerm)
+                             ->orWhere('phone', 'like', $likeTerm);
+                      });
+                }
+            });
+        } elseif ($this->activeTab === 'completed_today') {
             $baseQuery = $this->completedTodayQuery()->with(['customer', 'photos', 'workOrderServices', 'logs']);
             $this->applyStationFilter($baseQuery, $this->activeTab, $this->stationFilter);
         } else {
             $baseQuery = $this->activeReparasiQuery()->with(['customer', 'photos', 'workOrderServices', 'logs']);
             $this->applyTab($baseQuery, $this->activeTab);
             $this->applyStationFilter($baseQuery, $this->activeTab, $this->stationFilter);
-        }
-
-        if (!empty($this->search)) {
-            $term = '%' . trim($this->search) . '%';
-            $baseQuery->where(function ($q) use ($term) {
-                $q->where('spk_number', 'like', $term)
-                  ->orWhere('customer_name', 'like', $term)
-                  ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', $term))
-                  ->orWhere('shoe_brand', 'like', $term)
-                  ->orWhere('shoe_type', 'like', $term);
-            });
         }
 
         $orders = $baseQuery->orderBy('updated_at', 'desc')->paginate(15);

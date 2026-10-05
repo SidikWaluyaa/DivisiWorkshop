@@ -110,12 +110,35 @@
         <div class="relative">
             <input type="text" 
                    wire:model.live.debounce.300ms="search" 
-                   placeholder="Cari No SPK, Pelanggan, atau Sepatu..." 
-                   class="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-bold text-slate-800 shadow-sm focus:ring-2 focus:ring-[#22AF85] focus:border-[#22AF85] focus:outline-none placeholder:text-slate-400">
+                   placeholder="Cari No SPK, Pelanggan, No HP, atau Sepatu..." 
+                   class="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-9 py-2.5 text-xs font-bold text-slate-800 shadow-sm focus:ring-2 focus:ring-[#22AF85] focus:border-[#22AF85] focus:outline-none placeholder:text-slate-400">
             <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
+            @if(!empty($search))
+                <button wire:click="clearSearch" 
+                        type="button" 
+                        class="absolute right-3 top-2.5 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors active:scale-95" 
+                        title="Hapus Pencarian">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            @endif
         </div>
+
+        {{-- Banner Hasil Pencarian Universal --}}
+        @if(!empty(trim($search)))
+            <div class="flex items-center justify-between gap-3 bg-emerald-50 border border-[#22AF85]/30 rounded-2xl px-4 py-2.5 text-xs text-emerald-900 shadow-xs animate-in fade-in duration-150">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-2 h-2 rounded-full bg-[#22AF85] animate-ping flex-shrink-0"></span>
+                    <p class="truncate font-semibold text-slate-700">
+                        Hasil pencarian: <span class="font-black text-[#22AF85]">"{{ $search }}"</span> <span class="text-slate-500 font-bold">({{ $orders->total() }} SPK)</span>
+                    </p>
+                </div>
+                <button wire:click="clearSearch" type="button" class="flex-shrink-0 px-2.5 py-1 rounded-xl bg-white border border-[#22AF85]/40 text-[#22AF85] hover:bg-[#22AF85] hover:text-white font-black text-[11px] transition-all active:scale-95 shadow-2xs">
+                    Reset ✕
+                </button>
+            </div>
+        @endif
 
         {{-- 3 Segmented Tabs (Identik dengan Antrean Kerja Reparasi & Siap ACC Desktop) --}}
         <div class="grid grid-cols-3 gap-1.5 bg-slate-200/90 p-1.5 rounded-2xl">
