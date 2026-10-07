@@ -166,6 +166,8 @@ if ($format === 'grouped') {
 
         if (!empty($row['progress_id']) || !empty($row['stage_title'])) {
             $groupedData[$woId]['progress_list'][] = [
+                'id'                  => !empty($row['progress_id']) ? (int)$row['progress_id'] : null,
+                'progress_id'         => !empty($row['progress_id']) ? (int)$row['progress_id'] : null,
                 'stage_title'         => $row['stage_title'] ?? '',
                 'notes'               => $row['notes'] ?? '',
                 'report_url'          => $row['report_url'] ?? '',
@@ -181,10 +183,14 @@ if ($format === 'grouped') {
     $finalData = [];
     while ($row = $result->fetch_assoc()) {
         $finalData[] = [
+            'id'                  => !empty($row['progress_id']) ? (int)$row['progress_id'] : null,
+            'progress_id'         => !empty($row['progress_id']) ? (int)$row['progress_id'] : null,
+            'work_order_id'       => (int)$row['work_order_id'],
             'spk_number'          => $row['spk_number'] ?? '',
             'customer_name'       => $row['customer_name'] ?? '',
             'customer_phone'      => $row['customer_phone'] ?? '',
             'status'              => $row['status'] ?? '',
+            'priority'            => $row['priority'] ?? '',
             'stage_title'         => $row['stage_title'] ?? '',
             'notes'               => $row['notes'] ?? '',
             'report_url'          => $row['report_url'] ?? '',

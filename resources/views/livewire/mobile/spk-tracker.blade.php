@@ -20,12 +20,12 @@
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto px-4 py-4 space-y-4">
+    <main class="max-w-4xl mx-auto px-4 py-5 space-y-5">
 
         {{-- Shoe Identity Card with Dedicated SPK Banner --}}
-        <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/90 relative overflow-hidden">
+        <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/90 relative overflow-hidden">
             {{-- SPK Header Banner inside Card (Single-line Monospace) --}}
-            <div class="flex items-center justify-between pb-3 mb-3.5 border-b border-slate-100">
+            <div class="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100">
                 <div class="flex items-center gap-2 min-w-0 pr-2">
                     <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-[#22AF85]/15 text-[#22AF85] border border-[#22AF85]/25">
                         NO. SPK
@@ -40,29 +40,30 @@
             </div>
 
             <div class="flex gap-4 items-start">
-                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-200 relative shadow-inner">
+                <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-200 relative shadow-inner">
                     @if($order->spk_cover_photo_url)
                         <img src="{{ $order->spk_cover_photo_url }}" alt="Cover Sepatu" class="w-full h-full object-cover">
                     @else
-                        <div class="w-full h-full flex flex-col items-center justify-center text-slate-500 text-[9px] font-bold uppercase">
-                            Tanpa Foto
+                        <div class="w-full h-full flex flex-col items-center justify-center text-slate-500 text-[10px] font-bold uppercase gap-1">
+                            <svg class="w-7 h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span>No Foto</span>
                         </div>
                     @endif
                 </div>
-                <div class="flex-1 min-w-0 pr-12 sm:pr-16">
-                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900 truncate">{{ $order->customer->name ?? 'Pelanggan Workshop' }}</h2>
-                    <p class="text-xs sm:text-sm font-semibold text-slate-600 truncate mt-0.5">{{ $order->shoe_brand ?? '-' }} {{ $order->shoe_model ?? '' }}</p>
-                    <p class="text-[11px] text-slate-400 font-mono mt-0.5">{{ $order->shoe_color ?? '-' }}</p>
+                <div class="flex-1 min-w-0 pr-14 sm:pr-16">
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">{{ $order->customer_name ?: ($order->customer->name ?? 'Pelanggan Workshop') }}</h2>
+                    <p class="text-sm font-semibold text-slate-600 mt-1">{{ $order->shoe_brand ?? '-' }} {{ $order->shoe_type ?: ($order->shoe_model ?? '') }}</p>
+                    <p class="text-xs text-slate-400 font-mono mt-1">{{ $order->shoe_color ?? '-' }}</p>
                     
                     {{-- Priority / Warranty Tag --}}
-                    <div class="flex gap-1.5 mt-2 flex-wrap">
+                    <div class="flex gap-2 mt-2.5 flex-wrap">
                         @if($order->is_warranty)
-                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
                                 🛡️ Garansi
                             </span>
                         @endif
                         @if($order->priority && $order->priority !== 'normal')
-                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-800 border border-rose-300 uppercase">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 uppercase">
                                 🔥 {{ $order->priority }}
                             </span>
                         @endif
@@ -70,42 +71,145 @@
                 </div>
 
                 {{-- Shoe Size Extra Big Badge (Brand Colors) --}}
-                <div class="absolute top-14 right-3.5 sm:top-14 sm:right-4 bg-gradient-to-br from-[#22AF85] to-teal-700 text-white w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex flex-col items-center justify-center shadow-md">
-                    <span class="text-[8px] font-bold uppercase tracking-wider text-emerald-100">Size</span>
-                    <span class="text-lg sm:text-xl font-black leading-none">{{ $order->shoe_size ?? '-' }}</span>
+                <div class="absolute top-16 right-4 sm:top-16 sm:right-5 bg-gradient-to-br from-[#22AF85] to-teal-700 text-white w-13 h-13 sm:w-15 sm:h-15 rounded-2xl flex flex-col items-center justify-center shadow-lg" style="width:52px;height:52px">
+                    <span class="text-[8px] font-bold uppercase tracking-wider text-emerald-100 mb-0.5">Size</span>
+                    <span class="text-xl font-black leading-none">{{ $order->shoe_size ?? '-' }}</span>
                 </div>
             </div>
 
             {{-- Service Details --}}
-            <div class="mt-4 pt-3.5 border-t border-slate-100">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Layanan / Treatment SPK:</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            <div class="mt-5 pt-4 border-t border-slate-100">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-4 rounded-full bg-[#22AF85]"></span>
+                        <p class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Layanan & Treatment SPK</p>
+                    </div>
+                    <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60">
+                        {{ $order->workOrderServices->count() }} Jasa
+                    </span>
+                </div>
+
+                <div class="space-y-3">
                     @forelse($order->workOrderServices as $svc)
-                        <div class="flex items-center justify-between text-xs bg-slate-50 px-3 py-2 rounded-xl border border-slate-200/80">
-                            <span class="font-bold text-slate-700 truncate mr-2">{{ $svc->service_name }}</span>
-                            <span class="text-[9px] font-black px-2 py-0.5 rounded-md bg-[#22AF85]/15 text-[#22AF85] uppercase whitespace-nowrap">{{ $svc->category_name }}</span>
+                        <div class="bg-slate-50/90 hover:bg-slate-50 border border-slate-200/90 rounded-2xl p-4 transition-all shadow-2xs">
+                            {{-- Header Service: Name + Category & Badge --}}
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-start gap-3 min-w-0">
+                                    <div class="w-8 h-8 rounded-xl bg-[#22AF85]/10 text-[#22AF85] flex items-center justify-center shrink-0 mt-0.5 border border-[#22AF85]/20">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="min-w-0 pt-0.5">
+                                        <h4 class="text-sm font-extrabold text-slate-800 leading-snug break-words">
+                                            {{ $svc->service_name }}
+                                        </h4>
+                                        @if($svc->is_cx_additional)
+                                            <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 mt-1.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300">
+                                                <span>⚡ Layanan Tambahan (CX)</span>
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-black px-3 py-1.5 rounded-xl bg-[#22AF85]/10 text-[#22AF85] border border-[#22AF85]/20 uppercase whitespace-nowrap shrink-0 shadow-2xs leading-none">
+                                    {{ $svc->category_label }}
+                                </span>
+                            </div>
+
+                            {{-- Sub-Item Detail Jasa (Jika Ada) --}}
+                            @if(!empty($svc->parsed_details) && count($svc->parsed_details) > 0)
+                                <div class="mt-3 pt-3 border-t border-slate-200/60">
+                                    <div class="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">
+                                        <svg class="w-3 h-3 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                        <span>Rincian & Instruksi Jasa:</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($svc->parsed_details as $detail)
+                                            <div class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white px-3 py-1.5 rounded-xl border border-slate-200/90 shadow-2xs">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-[#22AF85] shrink-0"></span>
+                                                <span class="leading-snug">{{ $detail }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @empty
-                        <p class="text-xs text-slate-400 italic">Tidak ada rincian jasa khusus.</p>
+                        <div class="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 text-sm italic">
+                            Tidak ada rincian jasa khusus.
+                        </div>
                     @endforelse
                 </div>
             </div>
 
-            {{-- Technician Notes / Catatan Gudang --}}
-            @if($order->technician_notes || $order->warehouse_qc_notes)
-                <div class="mt-3.5 bg-amber-50/80 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 p-3.5 rounded-b-2xl border-t border-amber-200">
-                    <p class="text-[10px] font-black text-amber-900 uppercase tracking-widest">📝 Catatan Gudang / Instruksi Khusus:</p>
-                    <p class="text-xs font-bold text-amber-950 mt-1 leading-snug">
-                        {{ $order->technician_notes ?: $order->warehouse_qc_notes }}
-                    </p>
+            {{-- Technician Notes / Catatan Gudang & Assessment --}}
+            @php
+                $techNote = trim($order->technician_notes ?? '');
+                $qcNote = trim($order->warehouse_qc_notes ?? '');
+                $hasNotes = !empty($techNote) || !empty($qcNote);
+                $isSameNote = $techNote !== '' && $qcNote !== '' && (strtolower($techNote) === strtolower($qcNote));
+            @endphp
+
+            @if($hasNotes)
+                <div class="mt-5 bg-gradient-to-br from-amber-50 to-amber-50/50 border-l-[5px] border-l-amber-500 border border-amber-200/80 rounded-2xl p-4 sm:p-5 shadow-sm">
+                    {{-- Header --}}
+                    <div class="flex items-center justify-between mb-3.5">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                </svg>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-[11px] font-black text-amber-900 uppercase tracking-wider leading-tight">Catatan Gudang & Assessment</p>
+                                <p class="text-[10px] font-semibold text-amber-700 mt-0.5">Instruksi Khusus Teknisi Workshop</p>
+                            </div>
+                        </div>
+                        <span class="text-[9px] font-black px-2.5 py-1 rounded-full bg-amber-500 text-white uppercase tracking-wider shrink-0 shadow-sm">
+                            PENTING
+                        </span>
+                    </div>
+
+                    {{-- Note Content Box --}}
+                    @if($isSameNote || (!empty($techNote) && empty($qcNote)))
+                        <div class="bg-white rounded-xl p-4 border border-amber-200 shadow-xs">
+                            <p class="text-sm font-bold text-amber-950 leading-relaxed break-words">
+                                {{ $techNote }}
+                            </p>
+                        </div>
+                    @elseif(empty($techNote) && !empty($qcNote))
+                        <div class="bg-white rounded-xl p-4 border border-amber-200 shadow-xs">
+                            <p class="text-sm font-bold text-amber-950 leading-relaxed break-words">
+                                {{ $qcNote }}
+                            </p>
+                        </div>
+                    @else
+                        {{-- Keduanya ada dan berbeda isinya --}}
+                        <div class="space-y-3">
+                            <div class="bg-white rounded-xl p-4 border border-amber-200 shadow-xs">
+                                <span class="text-[10px] font-black text-amber-700 uppercase tracking-wider block mb-1.5">📋 Catatan Gudang / Teknisi:</span>
+                                <p class="text-sm font-bold text-amber-950 leading-relaxed break-words">
+                                    {{ $techNote }}
+                                </p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 border border-amber-200 shadow-xs">
+                                <span class="text-[10px] font-black text-amber-700 uppercase tracking-wider block mb-1.5">🔍 Catatan QC Gudang:</span>
+                                <p class="text-sm font-bold text-amber-950 leading-relaxed break-words">
+                                    {{ $qcNote }}
+                                </p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @endif
         </div>
 
         {{-- Section Title --}}
-        <div class="flex items-center justify-between px-1 pt-1">
-            <h3 class="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-[#22AF85]"></span>
+        <div class="flex items-center justify-between px-1">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#22AF85]"></span>
                 <span>Stasiun Pengerjaan Produksi</span>
             </h3>
             <span class="text-[10px] font-bold text-slate-400">Tekan tombol untuk aksi</span>

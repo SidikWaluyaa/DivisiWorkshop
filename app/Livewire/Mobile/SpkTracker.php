@@ -47,7 +47,7 @@ class SpkTracker extends Component
 
     public function getOrderProperty()
     {
-        return WorkOrder::with(['customer', 'workOrderServices', 'photos', 'logs.user'])
+        return WorkOrder::with(['customer', 'workOrderServices.service', 'photos', 'logs.user'])
             ->findOrFail($this->orderId);
     }
 
