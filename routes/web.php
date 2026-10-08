@@ -633,7 +633,6 @@ Route::middleware('auth')->group(function () {
         Route::post('finance/invoices/store', [App\Http\Controllers\FinanceController::class, 'storeInvoice'])->name('finance.invoices.store');
         Route::get('finance/invoices/{invoice}', [App\Http\Controllers\FinanceController::class, 'showInvoice'])->name('finance.invoices.show');
         Route::post('finance/invoices/{invoice}/payment', [App\Http\Controllers\FinanceController::class, 'storeInvoicePayment'])->name('finance.invoices.payment');
-        Route::post('finance/invoices/{invoice}/refund', [App\Http\Controllers\FinanceController::class, 'storeInvoiceRefund'])->name('finance.invoices.refund');
         Route::post('finance/invoices/{invoice}/shipping', [App\Http\Controllers\FinanceController::class, 'updateInvoiceShipping'])->name('finance.invoices.update-shipping');
         Route::post('finance/invoices/{invoice}/estimasi', [App\Http\Controllers\FinanceController::class, 'updateEstimasi'])->name('finance.invoices.update-estimasi');
         Route::delete('finance/invoices/{invoice}', [App\Http\Controllers\FinanceController::class, 'deleteInvoice'])->name('finance.invoices.delete');

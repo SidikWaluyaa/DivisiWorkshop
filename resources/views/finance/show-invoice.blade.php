@@ -100,34 +100,6 @@
                     </div>
                 </div>
 
-                {{-- Smart Overpayment Alert Banner --}}
-                @if($invoice->has_overpayment)
-                <div class="bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-amber-500/15 border-2 border-amber-400/50 rounded-[2.5rem] p-8 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden backdrop-blur-md">
-                    <div class="flex items-center gap-6">
-                        <div class="w-16 h-16 rounded-[1.5rem] bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-amber-500/30 shrink-0">
-                            ⚠️
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 px-3 py-1 rounded-lg">Terdeteksi Lebih Bayar</span>
-                                <span class="text-[10px] font-bold text-gray-500 italic">Penyesuaian Layanan / Kelebihan Transfer</span>
-                            </div>
-                            <div class="text-3xl font-black text-gray-900 tracking-tight mt-1 tabular-nums">
-                                Rp {{ number_format($invoice->overpaid_amount, 0, ',', '.') }}
-                            </div>
-                            <p class="text-xs text-gray-600 font-medium mt-1 leading-relaxed">
-                                Total transfer masuk (Gross: <b>Rp {{ number_format($invoice->gross_paid_amount, 0, ',', '.') }}</b>) melebihi total tagihan (<b>Rp {{ number_format($invoice->total_bill, 0, ',', '.') }}</b>). Segera proses pengembalian dana ke pelanggan atau alokasikan sebagai kompensasi.
-                            </p>
-                        </div>
-                    </div>
-                    <button @click="$dispatch('open-refund-modal', { amount: {{ $invoice->overpaid_amount }} })"
-                            class="px-8 py-4 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-rose-500/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 whitespace-nowrap">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                        <span>PROSES REFUND / KOMPENSASI</span>
-                    </button>
-                </div>
-                @endif
-
                 {{-- SPK Segment Analysis --}}
                 <div class="space-y-6">
                     <div class="flex justify-between items-center pr-2">
@@ -231,18 +203,15 @@
                             $isVerified = $payment->verified;
                             $verification = $payment->verification;
                             $mutation = $verification?->mutation;
-                            $isRefund = $payment->is_refund;
                         @endphp
-                        <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl overflow-hidden relative {{ $isRefund ? 'border-l-4 border-l-rose-500 bg-rose-50/10' : ($isVerified ? 'border-l-4 border-l-emerald-400' : 'border-l-4 border-l-amber-400') }}">
+                        <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-2xl overflow-hidden relative {{ $isVerified ? 'border-l-4 border-l-emerald-400' : 'border-l-4 border-l-amber-400' }}">
                             <div class="flex flex-col md:flex-row justify-between gap-6">
                                 {{-- Payment Info --}}
                                 <div class="flex-1">
                                     <div class="flex items-center justify-between gap-3 mb-4">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner {{ $isRefund ? 'bg-rose-100 text-rose-600' : ($isVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600') }}">
-                                                @if($isRefund)
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                                                @elseif($isVerified)
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner {{ $isVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }}">
+                                                @if($isVerified)
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                                                 @else
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -250,30 +219,21 @@
                                             </div>
                                             <div>
                                                 <div class="flex items-center gap-2">
-                                                    <div class="text-xl font-black {{ $isRefund ? 'text-rose-600' : 'text-gray-900' }} italic tabular-nums tracking-tighter">
-                                                        {{ $isRefund ? '- ' : '' }}Rp {{ number_format($payment->amount, 0, ',', '.') }}
-                                                    </div>
+                                                    <div class="text-xl font-black text-gray-900 italic tabular-nums tracking-tighter">Rp {{ number_format($payment->amount, 0, ',', '.') }}</div>
                                                     @if($payment->type == 'ONGKIR')
                                                         <span class="bg-blue-100 text-blue-600 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest italic">ONGKIR</span>
                                                     @elseif($payment->type == 'TAMBAH_JASA')
                                                         <span class="bg-purple-100 text-purple-600 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest italic">TAMBAH JASA</span>
                                                     @elseif($payment->type == 'OTO')
                                                         <span class="bg-pink-100 text-pink-600 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest italic">OTO</span>
-                                                    @elseif($payment->type == 'REFUND')
-                                                        <span class="bg-rose-100 text-rose-700 text-[8px] font-black px-2.5 py-0.5 rounded uppercase tracking-widest italic flex items-center gap-1">↩️ REFUND DANA</span>
-                                                    @elseif($payment->type == 'KOMPENSASI')
-                                                        <span class="bg-amber-100 text-amber-800 text-[8px] font-black px-2.5 py-0.5 rounded uppercase tracking-widest italic flex items-center gap-1">🏷️ KOMPENSASI WORKSHOP</span>
-                                                    @elseif($payment->type == 'DISKON_PENYESUAIAN')
-                                                        <span class="bg-purple-100 text-purple-700 text-[8px] font-black px-2.5 py-0.5 rounded uppercase tracking-widest italic flex items-center gap-1">💸 DISKON PENYESUAIAN</span>
                                                     @endif
                                                 </div>
                                                 <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic">{{ $payment->payment_date->format('d M Y') }} • oleh {{ $payment->creator->name ?? '-' }}</div>
                                             </div>
                                         </div>
 
-                                        {{-- Actions for Payments --}}
+                                        {{-- Actions for All Payments (Verified or Unverified) --}}
                                         <div class="flex gap-2">
-                                            @if(!$isRefund)
                                             <button @click="$dispatch('open-edit-payment', { 
                                                 id: {{ $payment->id }}, 
                                                 amount: {{ $payment->amount }}, 
@@ -283,8 +243,7 @@
                                             })" class="w-8 h-8 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-blue-500 hover:border-blue-100 transition-all flex items-center justify-center shadow-sm">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                             </button>
-                                            @endif
-                                            <form action="{{ route('finance.invoice-payments.delete', $payment->id) }}" method="POST" onsubmit="return confirm('Hapus {{ $isRefund ? 'riwayat refund' : 'riwayat pembayaran' }} ini?')">
+                                            <form action="{{ route('finance.invoice-payments.delete', $payment->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat pembayaran ini?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="w-8 h-8 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 transition-all flex items-center justify-center shadow-sm">
@@ -295,38 +254,13 @@
                                     </div>
 
                                     @if($payment->notes)
-                                        <div class="text-xs text-gray-600 italic bg-gray-50/80 rounded-xl px-4 py-2 inline-block border border-gray-100">
-                                            📝 {{ $payment->notes }}
-                                        </div>
-                                    @endif
-                                    
-                                    @if($isRefund && ($payment->refund_bank_name || $payment->refund_account_number))
-                                        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-600 bg-rose-50/50 border border-rose-100 rounded-xl px-4 py-2">
-                                            <span class="font-black text-rose-700 text-[10px] uppercase tracking-wider">Rekening Tujuan:</span>
-                                            <span class="font-bold text-gray-800">{{ $payment->refund_bank_name }}</span>
-                                            <span class="font-mono text-gray-700">{{ $payment->refund_account_number }}</span>
-                                            @if($payment->refund_account_name)
-                                                <span class="text-gray-500 italic">(a.n {{ $payment->refund_account_name }})</span>
-                                            @endif
-                                        </div>
+                                        <div class="text-xs text-gray-500 italic bg-gray-50 rounded-xl px-4 py-2 inline-block">📝 {{ $payment->notes }}</div>
                                     @endif
                                 </div>
 
                                 {{-- Verification / Mutation Status --}}
-                                <div class="md:min-w-[280px] p-6 rounded-[2rem] border {{ $isRefund ? 'bg-rose-50/40 border-rose-100' : ($isVerified ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100') }}">
-                                    @if($isRefund)
-                                        <div class="flex items-center gap-2 mb-3">
-                                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                                            <span class="text-[10px] font-black text-rose-700 uppercase tracking-[0.2em] italic">Penyesuaian / Refund Disetujui</span>
-                                        </div>
-                                        <p class="text-[10px] text-gray-600 italic font-bold leading-relaxed mb-3">Transaksi ini mengurangi total terbayar pada invoice ini secara otomatis.</p>
-                                        @if($payment->proof_image)
-                                            <a href="{{ asset($payment->proof_image) }}" target="_blank" class="inline-flex items-center gap-2 text-[10px] font-black text-rose-600 hover:text-rose-700 uppercase tracking-wider bg-white px-3 py-2 rounded-xl border border-rose-200 shadow-sm transition-all hover:scale-105">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                Lihat Bukti Transfer Keluar
-                                            </a>
-                                        @endif
-                                    @elseif($isVerified && $mutation)
+                                <div class="md:min-w-[280px] p-6 rounded-[2rem] border {{ $isVerified ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100' }}">
+                                    @if($isVerified && $mutation)
                                         <div class="flex items-center gap-2 mb-3">
                                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                                             <span class="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] italic">Terverifikasi</span>
@@ -403,7 +337,7 @@
 
                         <div class="pt-4 border-t border-white/10 flex justify-between items-center group/total">
                             <span class="text-[10px] font-black text-[#FFC232] uppercase tracking-widest italic">Total Tagihan</span>
-                            <span class="text-xl font-black text-[#FFC232] italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->total_bill, 0, ',', '.') }}</span>
+                            <span class="text-xl font-black text-[#FFC232] italic tabular-nums tracking-tighter">Rp {{ number_format($invoice->total_amount + $invoice->shipping_cost - $invoice->discount, 0, ',', '.') }}</span>
                         </div>
                         
                         {{-- Logistical Update Module --}}
@@ -456,35 +390,14 @@
                         </form>
                     </div>
 
-                    {{-- Breakdown Pembayaran Kotor, Refund, & Bersih --}}
-                    <div class="mb-8 bg-white/5 backdrop-blur-md p-5 sm:p-6 rounded-[2rem] border border-white/10 shadow-inner space-y-3.5">
-                        <div class="flex justify-between items-center gap-2">
-                            <span class="text-[10px] font-black text-white/50 uppercase tracking-widest italic shrink-0">Total Masuk (Gross)</span>
-                            <span class="text-sm font-black text-white/95 italic tabular-nums whitespace-nowrap">Rp&nbsp;{{ number_format($invoice->gross_paid_amount, 0, ',', '.') }}</span>
-                        </div>
-                        @if($invoice->paid_unique_code_amount > 0)
-                        <div class="flex justify-between items-center gap-2 text-amber-300/80 -mt-1 pl-2 border-l-2 border-amber-400/40">
-                            <span class="text-[9px] font-black uppercase tracking-wider italic flex items-center gap-1.5 shrink-0">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Termasuk Kode Unik
-                            </span>
-                            <span class="text-xs font-black italic tabular-nums whitespace-nowrap">+ Rp&nbsp;{{ number_format($invoice->paid_unique_code_amount, 0, ',', '.') }}</span>
-                        </div>
-                        @endif
-                        @if($invoice->total_refund_amount > 0)
-                        <div class="flex justify-between items-center gap-2 text-rose-400 pl-2 border-l-2 border-rose-500/40">
-                            <span class="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5 shrink-0">
-                                <span>↩️</span> Pengembalian / Refund
-                            </span>
-                            <span class="text-sm font-black italic tabular-nums whitespace-nowrap">- Rp&nbsp;{{ number_format($invoice->total_refund_amount, 0, ',', '.') }}</span>
-                        </div>
-                        @endif
-                        <div class="pt-3 border-t border-white/10 flex justify-between items-end gap-2">
-                            <div class="flex flex-col shrink-0">
-                                <span class="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic">Terbayar Bersih</span>
-                                <span class="text-[8px] font-bold text-emerald-500/60 uppercase tracking-wider italic">(Net Amount)</span>
-                            </div>
-                            <div class="text-right whitespace-nowrap">
-                                <span class="text-xl sm:text-2xl font-black text-emerald-400 italic tracking-tighter tabular-nums leading-none drop-shadow-[0_2px_8px_rgba(52,211,153,0.25)]">Rp&nbsp;{{ number_format($invoice->net_paid_amount, 0, ',', '.') }}</span>
+                    <div class="space-y-4 mb-10">
+                        <div class="flex justify-between items-end">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[10px] font-black text-[#1B8A68] uppercase tracking-[0.3em] italic">Total Terbayar</span>
+                                @php
+                                    $totalInputted = $invoice->invoicePayments->filter(fn($p) => $p->is_verified)->sum('amount');
+                                @endphp
+                                <span class="text-3xl font-black text-[#1B8A68] italic tracking-tighter tabular-nums leading-none">Rp {{ number_format($totalInputted, 0, ',', '.') }}</span>
                             </div>
                         </div>
                     </div>
@@ -493,29 +406,22 @@
                         <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] mb-2 block italic">Sisa Tagihan Akhir</span>
                         @php
                             $relevantCode = $invoice->status !== 'Lunas' ? ($invoice->final_unique_code ?? 0) : 0;
-                            $totalOutstanding = $invoice->remaining_balance + $relevantCode;
+                            $totalBill = $invoice->total_amount + $invoice->shipping_cost - $invoice->discount;
+                            $realRemaining = $totalBill - $totalInputted;
+                            $totalOutstanding = $realRemaining + $relevantCode;
                         @endphp
-                        <div class="text-4xl font-black {{ $invoice->status === 'Lunas' ? 'text-emerald-400' : 'text-[#FFC232]' }} italic tracking-tighter leading-none tabular-nums shadow-amber-500/20 drop-shadow-lg mb-2">
+                        <div class="text-4xl font-black text-[#FFC232] italic tracking-tighter leading-none tabular-nums shadow-amber-500/20 drop-shadow-lg mb-2">
                             Rp {{ number_format($totalOutstanding, 0, ',', '.') }}
                         </div>
-                        <p class="text-[10px] font-bold text-white/20 italic mb-8">(Pokok: Rp {{ number_format($invoice->remaining_balance, 0, ',', '.') }} + Unik: {{ $relevantCode }})</p>
+                        <p class="text-[10px] font-bold text-white/20 italic mb-8">(Pokok: Rp {{ number_format($realRemaining, 0, ',', '.') }} + Unik: {{ $relevantCode }})</p>
                         
-                        <div class="space-y-3">
-                            @if($invoice->remaining_balance > 0)
-                                <button @click="$dispatch('open-payment-modal')" class="w-full bg-[#1B8A68] hover:bg-emerald-600 text-white font-black italic tracking-widest text-sm py-4 rounded-2xl shadow-xl shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 relative overflow-hidden group/pay">
-                                    <div class="absolute inset-0 bg-white/20 -translate-x-full group-hover/pay:animate-[shimmer_1s_infinite]"></div>
-                                    <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                                    <span class="relative z-10">CATAT PEMBAYARAN</span>
-                                </button>
-                            @endif
-
-                            {{-- Tombol Catat Refund / Kompensasi --}}
-                            <button @click="$dispatch('open-refund-modal', { amount: {{ $invoice->overpaid_amount > 0 ? $invoice->overpaid_amount : 0 }} })" 
-                                    class="w-full {{ $invoice->has_overpayment ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-rose-500/30 animate-pulse' : 'bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30' }} font-black italic tracking-wider text-xs py-3.5 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                <span>{{ $invoice->has_overpayment ? 'PROSES REFUND (LEBIH BAYAR)' : 'CATAT REFUND / KOMPENSASI' }}</span>
+                        @if($invoice->remaining_balance > 0)
+                            <button @click="$dispatch('open-payment-modal')" class="w-full bg-[#1B8A68] hover:bg-emerald-600 text-white font-black italic tracking-widest text-sm py-4 rounded-2xl shadow-xl shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 relative overflow-hidden group/pay">
+                                <div class="absolute inset-0 bg-white/20 -translate-x-full group-hover/pay:animate-[shimmer_1s_infinite]"></div>
+                                <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                <span class="relative z-10">CATAT PEMBAYARAN</span>
                             </button>
-                        </div>
+                        @endif
                     </div>
                 </div>
 
@@ -885,160 +791,6 @@ aria-labelledby="modal-title-edit" role="dialog" aria-modal="true">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                         SIMPAN PERUBAHAN
                     </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-{{-- Refund / Compensation Modal --}}
-<div x-data="{ 
-    openRefund: false,
-    refundAmount: {{ $invoice->overpaid_amount > 0 ? $invoice->overpaid_amount : 0 }},
-    refundType: 'REFUND',
-    bankName: '',
-    accountNumber: '',
-    accountName: '',
-    notes: '{{ $invoice->has_overpayment ? 'Pengembalian selisih penurunan harga SPK di lapangan' : '' }}'
-}" 
-@open-refund-modal.window="openRefund = true; if($event.detail && $event.detail.amount) refundAmount = $event.detail.amount"
-x-show="openRefund" 
-class="fixed inset-0 z-[100] overflow-y-auto" 
-style="display: none;"
-aria-labelledby="modal-refund-title" role="dialog" aria-modal="true">
-    
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div x-show="openRefund" 
-             x-transition:enter="ease-out duration-300" 
-             x-transition:enter-start="opacity-0" 
-             x-transition:enter-end="opacity-100" 
-             x-transition:leave="ease-in duration-200" 
-             x-transition:leave-start="opacity-100" 
-             x-transition:leave-end="opacity-0" 
-             class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity" 
-             @click="openRefund = false" aria-hidden="true"></div>
-
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-        <div x-show="openRefund" 
-             x-transition:enter="ease-out duration-300" 
-             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
-             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
-             x-transition:leave="ease-in duration-200" 
-             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
-             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
-             class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full border border-gray-100">
-            
-            <form action="{{ route('finance.invoices.refund', $invoice->id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="bg-gradient-to-br from-rose-950 via-gray-900 to-gray-900 px-8 py-6 border-b border-rose-900/30 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-rose-500/10 mix-blend-overlay"></div>
-                    <div class="flex justify-between items-center relative z-10">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-                                <h3 class="text-2xl font-black text-white italic tracking-tighter uppercase" id="modal-refund-title">Catat Refund / Kompensasi</h3>
-                            </div>
-                            <p class="text-[10px] font-black text-rose-400 uppercase tracking-[0.3em] mt-1">Invoice {{ $invoice->invoice_number }}</p>
-                        </div>
-                        <button type="button" @click="openRefund = false" class="text-white/50 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-colors">
-                            <span class="sr-only">Tutup</span>
-                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="px-8 py-8 space-y-6 bg-[#F8FAFC]">
-                    @if($invoice->has_overpayment)
-                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] font-black uppercase text-amber-700 tracking-wider">Kelebihan Bayar Terdeteksi</span>
-                            <p class="text-xs text-amber-800 font-bold">Selisih uang masuk: Rp {{ number_format($invoice->overpaid_amount, 0, ',', '.') }}</p>
-                        </div>
-                        <button type="button" @click="refundAmount = {{ $invoice->overpaid_amount }}" class="text-[10px] font-black uppercase bg-amber-500 text-white px-3 py-1.5 rounded-xl hover:bg-amber-600 transition-colors">Gunakan Penuh</button>
-                    </div>
-                    @endif
-
-                    <!-- Amount Input -->
-                    <div>
-                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Nominal Pengembalian / Kompensasi</label>
-                        <div class="relative group">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500 font-black italic">Rp</span>
-                            <input type="number" name="amount" x-model="refundAmount" required min="1"
-                                class="w-full pl-12 pr-4 py-4 bg-white border-2 border-rose-200 focus:border-rose-500 rounded-2xl text-2xl font-black italic tracking-tighter focus:ring-2 focus:ring-rose-500/20 transition-all shadow-sm text-gray-900">
-                        </div>
-                    </div>
-
-                    <!-- Type & Date -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Kategori Penyesuaian</label>
-                            <select name="refund_type" x-model="refundType" required
-                                class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-xs font-black italic tracking-wider focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all">
-                                <option value="REFUND">REFUND (Transfer Balik Dana)</option>
-                                <option value="KOMPENSASI">KOMPENSASI (Masalah Workshop)</option>
-                                <option value="DISKON_PENYESUAIAN">DISKON PENYESUAIAN (Potongan Khusus)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Tanggal Transaksi</label>
-                            <input type="date" name="payment_date" value="{{ date('Y-m-d') }}" required
-                                class="w-full px-4 py-3 bg-white border-2 border-gray-100 rounded-xl text-xs font-black italic tracking-wider focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all">
-                        </div>
-                    </div>
-
-                    <!-- Destination Bank Info (Only relevant if REFUND) -->
-                    <div class="p-5 bg-white rounded-2xl border border-gray-200/80 space-y-4">
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest italic block">Informasi Rekening Tujuan Transfer Balik</span>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-[9px] font-black text-gray-400 uppercase mb-1">Nama Bank</label>
-                                <input type="text" name="refund_bank_name" placeholder="BCA / Mandiri / BRI"
-                                    class="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-xl text-xs font-bold uppercase focus:ring-1 focus:ring-rose-500 focus:bg-white">
-                            </div>
-                            <div>
-                                <label class="block text-[9px] font-black text-gray-400 uppercase mb-1">Nomor Rekening</label>
-                                <input type="text" name="refund_account_number" placeholder="Nomor Rekening"
-                                    class="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-xl text-xs font-bold focus:ring-1 focus:ring-rose-500 focus:bg-white">
-                            </div>
-                            <div>
-                                <label class="block text-[9px] font-black text-gray-400 uppercase mb-1">Atas Nama (a.n)</label>
-                                <input type="text" name="refund_account_name" placeholder="Nama Pemilik"
-                                    class="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-xl text-xs font-bold uppercase focus:ring-1 focus:ring-rose-500 focus:bg-white">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Notes -->
-                    <div>
-                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Alasan & Keterangan Penurunan Harga / Refund <span class="text-rose-500">*</span></label>
-                        <textarea name="notes" x-model="notes" rows="3" required placeholder="Jelaskan alasan penurunan harga jasa, kendala di lapangan, atau persetujuan refund dengan pelanggan..."
-                            class="w-full p-4 bg-white border-2 border-gray-100 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"></textarea>
-                    </div>
-
-                    <!-- Proof Upload -->
-                    <div>
-                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest italic mb-2">Upload Bukti Transfer Keluar / Struk Refund (Opsional)</label>
-                        <div class="flex items-center justify-center w-full">
-                            <label class="flex flex-col items-center justify-center w-full h-28 border-2 border-rose-200 border-dashed rounded-2xl cursor-pointer bg-white hover:bg-rose-50/30 transition-colors group">
-                                <div class="flex flex-col items-center justify-center pt-3 pb-3">
-                                    <svg class="w-7 h-7 mb-2 text-rose-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                                    <p class="text-[10px] font-black text-gray-500 tracking-widest uppercase italic"><span class="font-bold text-rose-600">Upload</span> Struk Bukti Pengembalian</p>
-                                    <p class="text-[9px] text-gray-400 mt-0.5">PNG, JPG (Max 5MB)</p>
-                                </div>
-                                <input type="file" name="proof_image" class="hidden" accept="image/*" />
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="pt-4 flex gap-3">
-                        <button type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-black italic tracking-widest text-xs py-4 rounded-2xl shadow-xl shadow-rose-600/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
-                            <span>PROSES & SIMPAN PENGEMBALIAN DANA</span>
-                        </button>
-                        <button type="button" @click="openRefund = false" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 font-black italic text-xs uppercase rounded-2xl transition-all">
-                            BATAL
-                        </button>
-                    </div>
                 </div>
             </form>
         </div>

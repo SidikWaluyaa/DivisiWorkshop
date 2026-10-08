@@ -123,66 +123,7 @@ Pada alur penambahan jasa di modul CS / CX / Follow Up Closing maupun Tambah Jas
 
 ---
 
-### 7. Perancangan & Implementasi Sistem Audit Riwayat Refund, Kompensasi, & Diskon Penyesuaian Invoice (Ledger-Based Accounting)
-
-#### Latar Belakang & Identifikasi Kasus Bisnis
-Dalam operasional workshop, sering terjadi kondisi dinamis di lapangan di mana rincian atau harga jasa pada SPK yang telah masuk ke dalam suatu Invoice perlu direvisi atau diturunkan setelah pembayaran telah dilakukan oleh pelanggan.
-- **Contoh Kasus**: Sebuah invoice memiliki total jasa Rp 175.000 dan pelanggan telah melakukan pembayaran lunas Rp 175.000. Di lapangan terjadi kendala teknis sehingga harga jasa disesuaikan turun menjadi Rp 100.000. Akibatnya, tercatat total tagihan Rp 100.000 sedangkan catatan pembayaran masuk adalah Rp 175.000 (terjadi **Kelebihan Bayar / Overpayment sebesar Rp 75.000**).
-- **Tantangan Akuntansi**: Menghapus atau mengubah nominal bukti transfer historis pelanggan (Rp 175.000) adalah pelanggaran prinsip akuntansi audit (dapat merusak rekonsiliasi mutasi bank dan bukti transfer riil).
-- **Solusi Terpilih (Big 4 Standard)**: Mengimplementasikan sistem **Buku Besar Penyesuaian Berbasis Entri Pengurang (*Ledger-Based Contra Entries*)**. Riwayat pembayaran masuk tetap utuh, dan pengembalian dana dicatat sebagai baris transaksi baru bertipe `REFUND`, `KOMPENSASI`, atau `DISKON_PENYESUAIAN` pada `invoice_payments` dengan status otomatis terverifikasi dan lampiran bukti transfer keluar.
-
----
-
-#### Rincian Implementasi Teknis & Arsitektur
-
-1. **Migrasi Database (`invoice_payments`)**:
-   - Dibuat migrasi [`database/migrations/2026_10_08_130000_add_refund_fields_to_invoice_payments_table.php`](file:///c:/laragon/www/SistemWorkshop/database/migrations/2026_10_08_130000_add_refund_fields_to_invoice_payments_table.php).
-   - Menambahkan kolom:
-     - `refund_bank_name` (nullable string): Nama bank tujuan pengembalian dana.
-     - `refund_account_number` (nullable string): Nomor rekening tujuan.
-     - `refund_account_name` (nullable string): Nama pemilik rekening tujuan.
-     - `proof_image` (nullable string): Berkas bukti transfer pengembalian dana / kompensasi.
-
-2. **Model Layer (`InvoicePayment.php` & `Invoice.php`)**:
-   - **`InvoicePayment`**:
-     - Mendaftarkan kolom baru pada properti `$fillable`.
-     - Menambahkan helper `isRefund()` dan accessor `is_refund` untuk mendeteksi transaksi pengurang (`in_array($this->type, ['REFUND', 'KOMPENSASI', 'DISKON_PENYESUAIAN'])`).
-   - **`Invoice`**:
-     - Menambahkan accessor kalkulasi keuangan audit:
-       - `gross_paid_amount`: Total seluruh uang masuk kotor (`amount_total` dari payment normal + `paid_amount` SPK).
-       - `total_refund_amount`: Total seluruh pengurang (`amount_total` dari payment bertipe `REFUND`, `KOMPENSASI`, `DISKON_PENYESUAIAN`).
-       - `net_paid_amount`: Total terbayar bersih (`gross_paid_amount - total_refund_amount`).
-       - `remaining_balance`: Sisa tagihan aktual (`max(0, total_bill - net_paid_amount)`).
-       - `overpaid_amount`: Besaran nominal lebih bayar jika penerimaan kotor/bersih melebihi total tagihan.
-       - `has_overpayment`: Boolean flag reaktif yang mendeteksi apakah invoice mengalami kelebihan bayar.
-     - Memperbarui method `syncFinancials()`: Mengkalkulasi `paid_amount` sebagai nilai bersih (`net paid`) dan secara otomatis memperbarui status invoice ke `'Lunas'` jika tagihan telah tertutup secara bersih tanpa selisih.
-
-3. **Routing & Backend Controller (`FinanceController.php`)**:
-   - Menambahkan rute `POST finance/invoices/{invoice}/refund` dengan name `finance.invoices.refund`.
-   - Menambahkan method `storeInvoiceRefund(Request $request, Invoice $invoice)`:
-     - Validasi ketat nominal, tanggal, tipe penyesuaian, rekening tujuan, dan bukti transfer.
-     - Menangani upload berkas bukti ke direktori `public/payment-proofs`.
-     - Membuat record `InvoicePayment` dengan status `verified = true` (`[Auto Verified by Admin]`).
-     - Mencatat audit log aktivitas pada linimasa setiap SPK terkait (`WorkOrderLog`) dengan aksi `REFUND_PROCESSED`.
-     - Memanggil `$invoice->syncFinancials()` untuk sinkronisasi instan status dan sisa tagihan.
-
-4. **Desain Antarmuka Pengguna & Komponen Reaktif (`show-invoice.blade.php`)**:
-   - **Smart Overpayment Alert Banner**: Tampil secara dinamis di bagian atas jika `$invoice->has_overpayment` bernilai true, menginfokan nominal lebih bayar dengan tombol sorotan *"PROSES REFUND (LEBIH BAYAR)"*.
-   - **Visualisasi Kartu Riwayat Pembayaran**: Baris transaksi refund/kompensasi dibedakan dengan styling aksen merah-rose (`border-l-4 border-l-rose-500`, nominal bertanda `- Rp ...`, badge kategori pengurang, detail bank & no rekening tujuan, serta tombol modal peninjau bukti transfer).
-   - **Rekapitulasi Keuangan Sidebar**: Menampilkan breakdown 3-tingkat yang transparan: Total Kotor Masuk, Pengurang Refund/Kompensasi (-Rp ...), dan Terbayar Bersih (Net).
-   - **Modal Catat Refund / Kompensasi (Alpine.js)**: Modal responsif berdesain premium dengan input nominal (otomatis terisi nominal lebih bayar jika dipicu dari alert banner), pilihan tipe transaksi, tanggal, rekening tujuan, alasan penyesuaian, dan upload file bukti.
-
-5. **Template Cetak Invoice Gabungan (`print-invoice-gabungan.blade.php`)**:
-   - Memperbarui Totals Grid cetak untuk otomatis menampilkan baris *Refund / Penyesuaian* dan *Net Terbayar* ketika terdapat transaksi refund pada invoice, menjaga keseimbangan simetris grid 2-kolom dan menjamin transparansi perhitungan kepada pelanggan.
-
-6. **Pengujian & Verifikasi Kualitas**:
-   - Verifikasi eksekusi migrasi database: Sukses (`add_refund_fields_to_invoice_payments_table`).
-   - Verifikasi isolasi kode unik: Invoice ID #28 dengan kelebihan transfer Rp 143 (kode unik otomatis) terisolasi sempurna pada paid_unique_code_amount = 143, dan has_overpayment = false sehingga tidak memunculkan notifikasi refund palsu.
-   - Pembersihan cache view (`php artisan view:clear`): Sukses tanpa kendala.
-
----
-
-### 8. Rincian Berkas yang Dibuat / Diubah Hari Ini
+### 7. Rincian Berkas yang Dibuat / Diubah Hari Ini
 
 | No. | Nama Berkas | Aksi | Ringkasan Perubahan |
 | :---: | :--- | :---: | :--- |
@@ -190,21 +131,13 @@ Dalam operasional workshop, sering terjadi kondisi dinamis di lapangan di mana r
 | 2 | [`app/Http/Controllers/Admin/OrderController.php`](file:///c:/laragon/www/SistemWorkshop/app/Http/Controllers/Admin/OrderController.php) | `Ubah` | Penambahan validasi (`max:1000`) dan penyimpanan kolom `notes` pada method `addService` & `updateService`, serta pembaruan email otorisasi channel/prioritas ke `finance@workshop.com`. |
 | 3 | [`app/Policies/WorkOrderPolicy.php`](file:///c:/laragon/www/SistemWorkshop/app/Policies/WorkOrderPolicy.php) | `Ubah` | Pembaruan hak akses otorisasi update priority SPK dari `novi@workshop.com` menjadi `finance@workshop.com`. |
 | 4 | [`resources/views/admin/orders/show.blade.php`](file:///c:/laragon/www/SistemWorkshop/resources/views/admin/orders/show.blade.php) | `Ubah` | Pemetaan field `notes` ke `$servicesJson`, tampilan kutipan catatan di bawah nama layanan, input catatan pada form tambah/edit layanan, pembaruan whitelist channel ke `finance@workshop.com`, dan resolusi lint CSS label. |
-| 5 | [`database/migrations/2026_10_08_130000_add_refund_fields_to_invoice_payments_table.php`](file:///c:/laragon/www/SistemWorkshop/database/migrations/2026_10_08_130000_add_refund_fields_to_invoice_payments_table.php) | `Baru` | Migrasi penambahan kolom informasi perbankan dan bukti transfer refund pada tabel `invoice_payments`. |
-| 6 | [`app/Models/InvoicePayment.php`](file:///c:/laragon/www/SistemWorkshop/app/Models/InvoicePayment.php) | `Ubah` | Penambahan `$fillable` fields refund dan method helper `isRefund()` / `is_refund`. |
-| 7 | [`app/Models/Invoice.php`](file:///c:/laragon/www/SistemWorkshop/app/Models/Invoice.php) | `Ubah` | Penambahan accessors akuntansi (gross, refund, net, overpaid, has_overpayment) dan penyempurnaan kalkulasi `syncFinancials()`. |
-| 8 | [`routes/web.php`](file:///c:/laragon/www/SistemWorkshop/routes/web.php) | `Ubah` | Pendaftaran rute POST `finance/invoices/{invoice}/refund`. |
-| 9 | [`app/Http/Controllers/FinanceController.php`](file:///c:/laragon/www/SistemWorkshop/app/Http/Controllers/FinanceController.php) | `Ubah` | Penambahan method `storeInvoiceRefund` lengkap dengan upload berkas, auto-verifikasi, logging SPK timeline, dan sinkronisasi finansial. |
-| 10 | [`resources/views/finance/show-invoice.blade.php`](file:///c:/laragon/www/SistemWorkshop/resources/views/finance/show-invoice.blade.php) | `Ubah` | Penambahan banner overpayment, styling kartu riwayat refund/kompensasi, sidebar rekapitulasi 3-tier, tombol aksi, dan modal pencatatan refund. |
-| 11 | [`resources/views/finance/print-invoice-gabungan.blade.php`](file:///c:/laragon/www/SistemWorkshop/resources/views/finance/print-invoice-gabungan.blade.php) | `Ubah` | Integrasi baris rincian Refund / Penyesuaian dan Net Terbayar pada totals grid invoice cetak/PDF. |
-| 12 | [`laporan_kerja/2026-10/laporan_kerja_08102026.md`](file:///c:/laragon/www/SistemWorkshop/laporan_kerja/2026-10/laporan_kerja_08102026.md) | `Ubah` | Dokumentasi berkala aktivitas harian Kamis, 8 Oktober 2026 merangkum blueprint database brand, sinkronisasi catatan layanan order admin, otorisasi finance, dan sistem audit refund ledger invoice. |
+| 5 | [`laporan_kerja/2026-10/laporan_kerja_08102026.md`](file:///c:/laragon/www/SistemWorkshop/laporan_kerja/2026-10/laporan_kerja_08102026.md) | `Ubah` | Dokumentasi berkala aktivitas harian Kamis, 8 Oktober 2026 merangkum blueprint database brand, sinkronisasi catatan layanan order admin, dan pembaruan otorisasi whitelist finance. |
 
 ---
 
-### 9. Kesimpulan & Status Akhir
+### 8. Kesimpulan & Status Akhir
 
 1. **Blueprint Database Manajemen Brand B2B**: Telah berhasil dirumuskan dengan isolasi penuh (*Full Standalone*) mencakup 12 tabel baru, ERD, dan aturan validasi foto tahapan tanpa menyentuh modul reparasi ritel reguler.
 2. **Penyempurnaan Modul Order Admin**: Catatan / instruksi khusus layanan kini tersinkronisasi dua arah secara seamless antara database `work_order_services.notes`, form penambahan/pengubahan layanan, serta tabel antarmuka detail order admin. Seluruh pengujian kompilasi Blade dan validasi backend dinyatakan **LOLOS (PASS)** dengan standar Big 4.
 3. **Pembaruan Otorisasi Whitelist**: Akses khusus pengubahan channel penjualan SPK dan prioritas dialihkan secara konsisten ke `finance@workshop.com`.
-4. **Sistem Audit Refund, Kompensasi & Diskon Penyesuaian Invoice**: Telah tuntas diimplementasikan secara end-to-end dengan pendekatan buku besar akuntansi (*ledger-based audit trail*). Catatan pembayaran asli tetap terjaga, pencatatan refund transparan lengkap dengan bukti transfer dan rekening tujuan, deteksi kelebihan bayar otomatis, serta rekonsiliasi instan pada tagihan, linimasa SPK, dan cetak invoice. Seluruh komponen teruji dengan baik dan siap digunakan.
 
