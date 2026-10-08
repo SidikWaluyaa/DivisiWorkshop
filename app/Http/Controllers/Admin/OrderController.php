@@ -216,6 +216,7 @@ class OrderController extends Controller
             'custom_service_name' => 'nullable|string|max:255',
             'cost' => 'required|numeric|min:0',
             'service_details' => 'nullable|array',
+            'notes' => 'nullable|string|max:1000',
             'hk_days' => 'nullable|integer|min:0',
             'is_cx_additional' => 'nullable|boolean',
         ]);
@@ -225,6 +226,7 @@ class OrderController extends Controller
         $data = [
             'work_order_id' => $order->id,
             'cost' => $request->cost,
+            'notes' => $request->notes ?? null,
             'created_by' => auth()->id(),
         ];
 
@@ -287,6 +289,7 @@ class OrderController extends Controller
             'category_name' => 'nullable|string|max:255',
             'custom_service_name' => 'nullable|string|max:255',
             'service_details' => 'nullable|array',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         $order = WorkOrder::findOrFail($id);
@@ -299,6 +302,10 @@ class OrderController extends Controller
             'category_name' => $request->category_name ?? $wos->category_name,
             'custom_service_name' => $request->custom_service_name ?? $wos->custom_service_name,
         ];
+
+        if ($request->has('notes')) {
+            $updateData['notes'] = $request->notes;
+        }
 
         if ($request->has('service_details')) {
             $existing = $wos->service_details ?? [];
@@ -584,7 +591,7 @@ class OrderController extends Controller
     {
         // Whitelist emails allowed to edit channel
         $allowedEmails = [
-            'novi@workshop.com',
+            'finance@workshop.com',
             'admincs@workshop.com',
             'admin@workshop.com'
         ];
@@ -828,7 +835,7 @@ class OrderController extends Controller
 
     /**
      * Update priority of a work order (Reguler vs Prioritas).
-     * Restricted strictly to admin@workshop.com and novi@workshop.com.
+     * Restricted strictly to admin@workshop.com and finance@workshop.com.
      */
     public function updatePriority(Request $request, $id)
     {

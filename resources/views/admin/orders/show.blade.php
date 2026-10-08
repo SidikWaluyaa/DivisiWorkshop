@@ -1742,7 +1742,7 @@
                                 </div>
                                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                                     <span class="text-xs font-bold text-gray-400 uppercase">Channel</span>
-                                    @if(in_array(auth()->user()->email, ['novi@workshop.com', 'admincs@workshop.com', 'admin@workshop.com']))
+                                    @if(in_array(auth()->user()->email, ['finance@workshop.com', 'admincs@workshop.com', 'admin@workshop.com']))
                                         <div x-data="channelEditor({ orderId: {{ $order->id }}, initialChannel: '{{ $order->channel }}' })" class="relative flex items-center">
                                             <select @change="updateChannel($el.value)" :disabled="isLoading" class="text-xs font-black rounded-lg bg-white border border-gray-200 py-1 pl-2.5 pr-8 focus:outline-none focus:ring-1 focus:ring-[#22B086] focus:border-[#22B086] cursor-pointer">
                                                 <option value="ONLINE" :selected="channel === 'ONLINE'">ONLINE (CS)</option>
@@ -3573,6 +3573,14 @@
                                 </div>
                             </div>
                             <div class="mt-3">
+                                <label class="text-[10px] font-black text-amber-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                    Catatan NB (Tampil di Print SPK)
+                                </label>
+                                <input type="text" x-model="newNotes" placeholder="Misal: Warna hitam, jahit double..."
+                                       class="w-full rounded-xl border-amber-300/80 bg-amber-50/20 text-sm font-medium focus:border-amber-500 focus:ring-amber-500 shadow-sm">
+                            </div>
+                            <div class="mt-3">
                                 <div class="flex justify-between items-center mb-1">
                                     <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider block">Detail Jasa / Instruksi</label>
                                     <button @click="addDetailRow('add')" type="button" class="text-[10px] font-black text-[#22B086] hover:text-[#1C8D6C] uppercase tracking-widest flex items-center gap-1">
@@ -3638,6 +3646,14 @@
                                                         </template>
                                                     </div>
                                                     <span class="font-bold text-gray-800 text-sm" x-text="svc.name"></span>
+                                                    <template x-if="svc.notes">
+                                                        <div class="mt-1 flex items-center gap-1.5 text-xs text-amber-700/90 font-medium italic">
+                                                            <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                            </svg>
+                                                            <span x-text="'&quot;' + svc.notes + '&quot;'"></span>
+                                                        </div>
+                                                    </template>
                                                     <template x-if="svc.details && svc.details.length > 0">
                                                         <div class="mt-1 space-y-0.5">
                                                             <template x-for="detail in svc.details">
@@ -3750,6 +3766,15 @@
                                                     </div>
                                                 </template>
                                             </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                                Catatan NB (Tampil di Print SPK)
+                                            </label>
+                                            <input type="text" x-model="editNotes" placeholder="Misal: Warna hitam, jahit double..."
+                                                   class="w-full rounded-xl border-amber-300/80 bg-amber-50/20 focus:border-amber-500 focus:ring-amber-500 font-medium text-sm">
                                         </div>
 
                                         <div>
@@ -5073,6 +5098,7 @@
             'category' => $s->category_name ?? ($s->service ? $s->service->category : 'GENERAL'),
             'cost' => $s->cost,
             'details' => array_values(array_filter($details)),
+            'notes' => !empty($s->notes) ? trim($s->notes) : null,
             'creator' => $creatorName,
             'is_additional' => !empty($s->service_details['is_cx_additional']) && $s->service_details['is_cx_additional'],
         ];
@@ -5155,6 +5181,7 @@ function serviceEditor() {
         editName: '',
         editCategory: '',
         editCost: 0,
+        editNotes: '',
         editDetails: [],
 
         // Add form fields
@@ -5163,6 +5190,7 @@ function serviceEditor() {
         newCustomName: '',
         newCost: 0,
         newHkDays: 0,
+        newNotes: '',
         newDetails: [''],
 
         get uniqueCategories() {
@@ -5202,6 +5230,7 @@ function serviceEditor() {
         onCategoryChange() {
             this.newServiceId = '';
             this.newDetails = [''];
+            this.newNotes = '';
             this.newHkDays = 0;
             if (this.selectedCategory === 'custom') {
                 this.newCost = 0;
@@ -5230,6 +5259,7 @@ function serviceEditor() {
             this.newCustomName = '';
             this.newCost = 0;
             this.newHkDays = 0;
+            this.newNotes = '';
             this.newDetails = [''];
             this.isCxMode = false;
         },
@@ -5261,6 +5291,10 @@ function serviceEditor() {
                     is_cx_additional: this.isCxMode
                 };
 
+                if (this.newNotes && this.newNotes.trim()) {
+                    body.notes = this.newNotes.trim();
+                }
+
                 if (this.selectedCategory === 'custom' || this.newServiceId === 'custom') {
                     body.custom_service_name = this.newCustomName;
                     body.service_id = null;
@@ -5290,6 +5324,7 @@ function serviceEditor() {
             this.editName = svc.name;
             this.editCategory = svc.category || 'GENERAL';
             this.editCost = svc.cost;
+            this.editNotes = svc.notes || '';
             this.editDetails = Array.isArray(svc.details) ? [...svc.details] : (svc.details ? [svc.details] : []);
             if (this.editDetails.length === 0) this.editDetails = [''];
             this.showEditModal = true;
@@ -5298,6 +5333,7 @@ function serviceEditor() {
         cancelEdit() {
             this.editingId = null;
             this.editCost = 0;
+            this.editNotes = '';
             this.editDetails = [];
             this.editName = '';
             this.editCategory = '';
@@ -5317,6 +5353,7 @@ function serviceEditor() {
                     cost: this.editCost,
                     category_name: this.editCategory,
                     custom_service_name: this.editName,
+                    notes: this.editNotes ? this.editNotes.trim() : null,
                     service_details: this.editDetails.filter(d => d.trim()),
                 });
                 if (res.success) {
@@ -5325,6 +5362,7 @@ function serviceEditor() {
                     if (svc) {
                         svc.name = this.editName;
                         svc.category = this.editCategory;
+                        svc.notes = this.editNotes ? this.editNotes.trim() : null;
                         svc.details = this.editDetails;
                         svc.cost = this.editCost;
                     }

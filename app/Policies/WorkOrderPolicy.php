@@ -217,6 +217,6 @@ class WorkOrderPolicy
         return $user->isAdmin() 
             || $user->isOwner() 
             || $user->role === 'spv' 
-            || in_array($user->email, ['admin@workshop.com', 'novi@workshop.com']);
+            || in_array($user->email, ['admin@workshop.com', 'finance@workshop.com']);
     }
 }
