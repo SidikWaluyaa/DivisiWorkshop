@@ -17,6 +17,10 @@ class InvoicePayment extends Model
         'verified',
         'type',
         'created_by',
+        'refund_bank_name',
+        'refund_account_number',
+        'refund_account_name',
+        'proof_image',
     ];
 
     protected $casts = [
@@ -55,6 +59,19 @@ class InvoicePayment extends Model
     public function getIsVerifiedAttribute(): bool
     {
         return $this->verified || $this->verification()->exists();
+    }
+
+    /**
+     * Check if this payment is a refund / reduction / compensation.
+     */
+    public function isRefund(): bool
+    {
+        return in_array(strtoupper($this->type ?? ''), ['REFUND', 'KOMPENSASI', 'DISKON_PENYESUAIAN']);
+    }
+
+    public function getIsRefundAttribute(): bool
+    {
+        return $this->isRefund();
     }
 
     /**

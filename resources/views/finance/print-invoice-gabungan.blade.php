@@ -300,13 +300,23 @@
                             <p class="text-sm sm:text-base font-black text-gray-900 italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($shipping, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">DP / Paid</p>
-                            <p class="text-sm sm:text-base font-black text-[#22AF85] italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->paid_amount, 0, ',', '.') }}</p>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">{{ $invoice->total_refund_amount > 0 ? 'Total Terbayar' : 'DP / Paid' }}</p>
+                            <p class="text-sm sm:text-base font-black text-[#22AF85] italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->gross_paid_amount, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1 italic">Discount</p>
                             <p class="text-sm sm:text-base font-black text-red-500 italic tabular-nums leading-none tracking-tighter">- Rp. {{ number_format($discount, 0, ',', '.') }}</p>
                         </div>
+                        @if($invoice->total_refund_amount > 0)
+                        <div class="text-right">
+                            <p class="text-[9px] font-black text-rose-500 uppercase tracking-[0.2em] mb-1 italic">Refund / Penyesuaian</p>
+                            <p class="text-sm sm:text-base font-black text-rose-500 italic tabular-nums leading-none tracking-tighter">- Rp. {{ number_format($invoice->total_refund_amount, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[9px] font-black text-[#22AF85] uppercase tracking-[0.2em] mb-1 italic">Net Terbayar</p>
+                            <p class="text-sm sm:text-base font-black text-[#22AF85] italic tabular-nums leading-none tracking-tighter">Rp. {{ number_format($invoice->net_paid_amount, 0, ',', '.') }}</p>
+                        </div>
+                        @endif
                         
                         {{-- Unique Code Breakdown Removed as per Request (folded into Total Tagihan) --}}
                     </div>

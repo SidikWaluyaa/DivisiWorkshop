@@ -86,11 +86,90 @@ class Invoice extends Model
     }
 
     /**
-     * Calculated remaining balance
+     * Total tagihan akhir (Total Layanan + Ongkir - Diskon)
+     */
+    public function getTotalBillAttribute(): float
+    {
+        return (float) max(0, (float)$this->total_amount + (float)$this->shipping_cost - (float)$this->discount);
+    }
+
+    /**
+     * Calculated remaining balance (pokok)
      */
     public function getRemainingBalanceAttribute()
     {
-        return $this->total_amount + $this->shipping_cost - $this->paid_amount - $this->discount;
+        return max(0, (float)$this->total_amount + (float)$this->shipping_cost - (float)$this->paid_amount - (float)$this->discount);
+    }
+
+    /**
+     * Total pembayaran kotor (Gross Paid) tanpa dikurangi refund.
+     */
+    public function getGrossPaidAmountAttribute(): float
+    {
+        $refundTypes = ['REFUND', 'KOMPENSASI', 'DISKON_PENYESUAIAN'];
+
+        $invoiceGross = (float) $this->invoicePayments()
+            ->where(function($q) {
+                $q->where('verified', true)
+                  ->orWhereHas('verification');
+            })
+            ->whereNotIn('type', $refundTypes)
+            ->sum('amount');
+
+        if ($invoiceGross <= 0 && $this->invoicePayments()->count() === 0) {
+            $invoiceGross = (float) $this->payments()->where('is_verified', true)->sum('amount_total');
+        }
+
+        return $invoiceGross;
+    }
+
+    /**
+     * Total pengembalian / refund / kompensasi yang telah dicatat.
+     */
+    public function getTotalRefundAmountAttribute(): float
+    {
+        $refundTypes = ['REFUND', 'KOMPENSASI', 'DISKON_PENYESUAIAN'];
+
+        return (float) $this->invoicePayments()
+            ->where(function($q) {
+                $q->where('verified', true)
+                  ->orWhereHas('verification');
+            })
+            ->whereIn('type', $refundTypes)
+            ->sum('amount');
+    }
+
+    /**
+     * Total pembayaran bersih (Net Paid = Gross - Refund).
+     */
+    public function getNetPaidAmountAttribute(): float
+    {
+        return max(0, $this->gross_paid_amount - $this->total_refund_amount);
+    }
+
+    /**
+     * Nominal kelebihan bayar yang belum di-refund / dikompensasi.
+     */
+    public function getOverpaidAmountAttribute(): float
+    {
+        $totalBill = $this->total_bill;
+        $grossPaid = $this->gross_paid_amount;
+        $totalRefund = $this->total_refund_amount;
+
+        if ($grossPaid > $totalBill) {
+            $diff = $grossPaid - $totalBill;
+            return (float) max(0, $diff - $totalRefund);
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Boolean penanda apakah invoice mengalami kelebihan bayar aktif.
+     */
+    public function getHasOverpaymentAttribute(): bool
+    {
+        return $this->overpaid_amount > 0;
     }
 
     /**
@@ -153,17 +232,29 @@ class Invoice extends Model
             ')
             ->first();
 
-        // Calculate paid amount from both Invoice level and associated WorkOrders
-        // PERMINTAAN USER: Hapus syarat verifikasi mutasi. Semua pembayaran yang diinput langsung masuk hitungan Lunas (namun pastikan sudah diverifikasi jika via CS).
-        $invoicePaid = $this->payments()->where('is_verified', true)->sum('amount_total');
+        // Calculate paid amount (Net = Gross - Refunds)
+        $refundTypes = ['REFUND', 'KOMPENSASI', 'DISKON_PENYESUAIAN'];
         
+        $hasInvoicePayments = $this->invoicePayments()->exists();
+        if ($hasInvoicePayments) {
+            $invoicePaymentsQuery = $this->invoicePayments()->where(function($q) {
+                $q->where('verified', true)->orWhereHas('verification');
+            });
+
+            $invoiceGross = (float) (clone $invoicePaymentsQuery)->whereNotIn('type', $refundTypes)->sum('amount');
+            $invoiceRefund = (float) (clone $invoicePaymentsQuery)->whereIn('type', $refundTypes)->sum('amount');
+        } else {
+            $invoiceGross = (float) $this->payments()->where('is_verified', true)->sum('amount_total');
+            $invoiceRefund = 0;
+        }
+
         $spkIds = $this->workOrders()->pluck('id');
-        $spkPaid = OrderPayment::whereIn('work_order_id', $spkIds)
-            ->whereNull('invoice_id') // Avoid double counting if a payment is linked to both
+        $spkPaid = (float) OrderPayment::whereIn('work_order_id', $spkIds)
+            ->whereNull('invoice_id')
             ->where('is_verified', true)
             ->sum('amount_total');
 
-        $totalPaid = $invoicePaid + $spkPaid;
+        $totalPaid = max(0, ($invoiceGross + $spkPaid) - $invoiceRefund);
 
         $this->total_amount = $totals->total_amount ?? 0;
         $this->discount = $totals->discount ?? 0;
