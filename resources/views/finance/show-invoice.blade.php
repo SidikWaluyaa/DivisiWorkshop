@@ -457,30 +457,35 @@
                     </div>
 
                     {{-- Breakdown Pembayaran Kotor, Refund, & Bersih --}}
-                    <div class="space-y-4 mb-8 bg-white/5 p-6 rounded-[2rem] border border-white/10">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-black text-white/50 uppercase tracking-widest italic">Total Masuk (Gross)</span>
-                            <span class="text-sm font-black text-white/90 italic tabular-nums">Rp {{ number_format($invoice->gross_paid_amount, 0, ',', '.') }}</span>
+                    <div class="mb-8 bg-white/5 backdrop-blur-md p-5 sm:p-6 rounded-[2rem] border border-white/10 shadow-inner space-y-3.5">
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-[10px] font-black text-white/50 uppercase tracking-widest italic shrink-0">Total Masuk (Gross)</span>
+                            <span class="text-sm font-black text-white/95 italic tabular-nums whitespace-nowrap">Rp&nbsp;{{ number_format($invoice->gross_paid_amount, 0, ',', '.') }}</span>
                         </div>
                         @if($invoice->paid_unique_code_amount > 0)
-                        <div class="flex justify-between items-center text-amber-300/80 -mt-2">
-                            <span class="text-[9px] font-black uppercase tracking-wider italic flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Termasuk Kode Unik
+                        <div class="flex justify-between items-center gap-2 text-amber-300/80 -mt-1 pl-2 border-l-2 border-amber-400/40">
+                            <span class="text-[9px] font-black uppercase tracking-wider italic flex items-center gap-1.5 shrink-0">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Termasuk Kode Unik
                             </span>
-                            <span class="text-xs font-black italic tabular-nums">+ Rp {{ number_format($invoice->paid_unique_code_amount, 0, ',', '.') }}</span>
+                            <span class="text-xs font-black italic tabular-nums whitespace-nowrap">+ Rp&nbsp;{{ number_format($invoice->paid_unique_code_amount, 0, ',', '.') }}</span>
                         </div>
                         @endif
                         @if($invoice->total_refund_amount > 0)
-                        <div class="flex justify-between items-center text-rose-400">
-                            <span class="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
+                        <div class="flex justify-between items-center gap-2 text-rose-400 pl-2 border-l-2 border-rose-500/40">
+                            <span class="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5 shrink-0">
                                 <span>↩️</span> Pengembalian / Refund
                             </span>
-                            <span class="text-sm font-black italic tabular-nums">- Rp {{ number_format($invoice->total_refund_amount, 0, ',', '.') }}</span>
+                            <span class="text-sm font-black italic tabular-nums whitespace-nowrap">- Rp&nbsp;{{ number_format($invoice->total_refund_amount, 0, ',', '.') }}</span>
                         </div>
                         @endif
-                        <div class="pt-3 border-t border-white/10 flex justify-between items-baseline">
-                            <span class="text-[10px] font-black text-[#1B8A68] uppercase tracking-[0.2em] italic">Terbayar Bersih (Net)</span>
-                            <span class="text-2xl font-black text-[#1B8A68] italic tracking-tighter tabular-nums leading-none">Rp {{ number_format($invoice->net_paid_amount, 0, ',', '.') }}</span>
+                        <div class="pt-3 border-t border-white/10 flex justify-between items-end gap-2">
+                            <div class="flex flex-col shrink-0">
+                                <span class="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic">Terbayar Bersih</span>
+                                <span class="text-[8px] font-bold text-emerald-500/60 uppercase tracking-wider italic">(Net Amount)</span>
+                            </div>
+                            <div class="text-right whitespace-nowrap">
+                                <span class="text-xl sm:text-2xl font-black text-emerald-400 italic tracking-tighter tabular-nums leading-none drop-shadow-[0_2px_8px_rgba(52,211,153,0.25)]">Rp&nbsp;{{ number_format($invoice->net_paid_amount, 0, ',', '.') }}</span>
+                            </div>
                         </div>
                     </div>
 
