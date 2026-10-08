@@ -462,6 +462,14 @@
                             <span class="text-[10px] font-black text-white/50 uppercase tracking-widest italic">Total Masuk (Gross)</span>
                             <span class="text-sm font-black text-white/90 italic tabular-nums">Rp {{ number_format($invoice->gross_paid_amount, 0, ',', '.') }}</span>
                         </div>
+                        @if($invoice->paid_unique_code_amount > 0)
+                        <div class="flex justify-between items-center text-amber-300/80 -mt-2">
+                            <span class="text-[9px] font-black uppercase tracking-wider italic flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Termasuk Kode Unik
+                            </span>
+                            <span class="text-xs font-black italic tabular-nums">+ Rp {{ number_format($invoice->paid_unique_code_amount, 0, ',', '.') }}</span>
+                        </div>
+                        @endif
                         @if($invoice->total_refund_amount > 0)
                         <div class="flex justify-between items-center text-rose-400">
                             <span class="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">

@@ -148,17 +148,64 @@ class Invoice extends Model
     }
 
     /**
-     * Nominal kelebihan bayar yang belum di-refund / dikompensasi.
+     * Estimasi total kode unik yang terbayar oleh pelanggan.
+     */
+    public function getPaidUniqueCodeAmountAttribute(): float
+    {
+        $grossPaid = $this->gross_paid_amount;
+        $totalBill = $this->total_bill;
+
+        if ($grossPaid <= $totalBill) {
+            return 0.0;
+        }
+
+        $excess = $grossPaid - $totalBill;
+
+        $finalCode = (float) ($this->final_unique_code ?? 0);
+        $dpCode = (float) ($this->dp_unique_code ?? 0);
+        $bothCodes = $finalCode + $dpCode;
+
+        if ($finalCode > 0 && abs($excess - $finalCode) < 0.01) {
+            return $finalCode;
+        }
+        if ($dpCode > 0 && abs($excess - $dpCode) < 0.01) {
+            return $dpCode;
+        }
+        if ($bothCodes > 0 && abs($excess - $bothCodes) < 0.01) {
+            return $bothCodes;
+        }
+
+        if ($finalCode > 0 && ((int)$excess % 1000) === (int)$finalCode) {
+            return $finalCode;
+        }
+        if ($dpCode > 0 && ((int)$excess % 1000) === (int)$dpCode) {
+            return $dpCode;
+        }
+        if ($bothCodes > 0 && ((int)$excess % 1000) === (int)$bothCodes) {
+            return $bothCodes;
+        }
+
+        if ($excess <= 999 && ($finalCode > 0 || $dpCode > 0)) {
+            return (float) min($excess, max($finalCode, $dpCode));
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Nominal kelebihan bayar yang belum di-refund / dikompensasi (murni kelebihan jasa, mengabaikan kode unik).
      */
     public function getOverpaidAmountAttribute(): float
     {
         $totalBill = $this->total_bill;
         $grossPaid = $this->gross_paid_amount;
         $totalRefund = $this->total_refund_amount;
+        $uniqueCode = $this->paid_unique_code_amount;
 
         if ($grossPaid > $totalBill) {
             $diff = $grossPaid - $totalBill;
-            return (float) max(0, $diff - $totalRefund);
+            $serviceExcess = max(0, $diff - $uniqueCode);
+            return (float) max(0, $serviceExcess - $totalRefund);
         }
 
         return 0.0;

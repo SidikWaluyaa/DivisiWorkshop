@@ -177,7 +177,7 @@ Dalam operasional workshop, sering terjadi kondisi dinamis di lapangan di mana r
 
 6. **Pengujian & Verifikasi Kualitas**:
    - Verifikasi eksekusi migrasi database: Sukses (`add_refund_fields_to_invoice_payments_table`).
-   - Verifikasi model evaluator pada Invoice ID #28: Status `has_overpayment` terdeteksi secara presisi (`true`, overpaid: Rp 143).
+   - Verifikasi isolasi kode unik: Invoice ID #28 dengan kelebihan transfer Rp 143 (kode unik otomatis) terisolasi sempurna pada paid_unique_code_amount = 143, dan has_overpayment = false sehingga tidak memunculkan notifikasi refund palsu.
    - Pembersihan cache view (`php artisan view:clear`): Sukses tanpa kendala.
 
 ---
