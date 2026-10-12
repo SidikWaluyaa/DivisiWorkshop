@@ -284,9 +284,9 @@ class ReceptionService
             $receptionNote = !empty($data['warehouse_qc_notes']) 
                 ? $data['warehouse_qc_notes'] 
                 : ($passed ? null : ($data['reception_rejection_reason'] ?? null));
-            $effectiveTechNotes = !empty($data['technician_notes']) 
-                ? $data['technician_notes'] 
-                : ($receptionNote ?: $order->technician_notes);
+            $effectiveTechNotes = array_key_exists('technician_notes', $data) 
+                ? ($data['technician_notes'] ?: null) 
+                : $order->technician_notes;
 
             $updateData = [
                 // Access customer data via Input names directly or mapped? 
@@ -302,7 +302,7 @@ class ReceptionService
                 
                 'reception_qc_passed' => $passed,
                 'warehouse_qc_status' => $passed ? 'lolos' : 'reject',
-                'warehouse_qc_notes' => $receptionNote ?: ($effectiveTechNotes ?: null),
+                'warehouse_qc_notes' => $receptionNote,
                 'desc_upper' => $data['desc_upper'] ?? null,
                 'desc_sol' => $data['desc_sol'] ?? null,
                 'desc_kondisi_bawaan' => $data['desc_kondisi_bawaan'] ?? null,

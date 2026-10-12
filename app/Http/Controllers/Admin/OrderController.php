@@ -737,7 +737,6 @@ class OrderController extends Controller
 
         $order = WorkOrder::findOrFail($id);
         $order->technician_notes = $request->technician_notes;
-        $order->warehouse_qc_notes = $request->technician_notes;
         $order->save();
 
         // [AUDIT LOG] Record change
