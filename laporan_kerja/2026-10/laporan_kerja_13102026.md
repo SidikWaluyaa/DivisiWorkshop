@@ -259,7 +259,33 @@
 
 ---
 
-## 17. Rencana Tindak Lanjut & Monitoring Operasional
+## 17. Implementasi Multi-Cycle After Service & Dynamic SPK Color Badges (/cx/after-confirmation)
+- **Waktu:** 14:55 WIB
+- **Kebutuhan Pengguna:** 
+  1. Mengakomodasi SPK selesai revisi, klaim garansi, OTO, dan R&D ke antrean Konfirmasi After Service.
+  2. Mendukung siklus konfirmasi 2 kali (After 1 dan After 2 pasca-revisi/OTO).
+  3. Visualisasi warna dinamis pada kolom SPK:
+     - 🟡 **Kuning:** Garansi
+     - 🔴 **Merah:** Revisi
+     - 🟠 **Orange:** OTO
+     - 🔵 **Biru:** R&D
+     - 🟢 **Hijau:** Reguler (Standar)
+  4. Penandaan badge tegas untuk **After 1** dan **After 2**.
+- **Tindakan Implementasi:**
+  1. *Database Migration:* Membuat migrasi [`2026_10_13_150000_add_round_and_stage_type_to_cx_after_confirmations_table.php`](file:///c:/laragon/www/SistemWorkshop/database/migrations/2026_10_13_150000_add_round_and_stage_type_to_cx_after_confirmations_table.php) yang menambahkan kolom `round` (unsignedTinyInteger) dan `stage_type` (string). Melakukan backfill otomatis pada 15 record eksisting.
+  2. *Model:* Memperbarui [`CxAfterConfirmation.php`](file:///c:/laragon/www/SistemWorkshop/app/Models/CxAfterConfirmation.php) dengan accessor styling badge `stage_badge` dan `round_badge`. Mengubah relasi di [`WorkOrder.php`](file:///c:/laragon/www/SistemWorkshop/app/Models/WorkOrder.php) menjadi `hasMany(CxAfterConfirmation::class)`.
+  3. *Service & Otomasi:* Menghapus pembatas tunggal `$exists` di [`CxConfirmationService.php`](file:///c:/laragon/www/SistemWorkshop/app/Services/CxConfirmationService.php). Menghubungkan trigger pembuatan After Ke-2 saat order berpindah dari `REVISI` menuju `SELESAI` di [`WorkflowService.php`](file:///c:/laragon/www/SistemWorkshop/app/Services/WorkflowService.php) dan [`RevisionController.php`](file:///c:/laragon/www/SistemWorkshop/app/Http/Controllers/RevisionController.php).
+  4. *Livewire Component:* Memperbarui [`AfterConfirmationList.php`](file:///c:/laragon/www/SistemWorkshop/app/Livewire/Cx/AfterConfirmationList.php) dengan filter `$stageFilter` (Tipe SPK), filter `$roundFilter` (After 1 / After 2), dan agregasi statistik ringkas.
+  5. *Antarmuka Blade:* Memperbarui [`after-confirmation-list.blade.php`](file:///c:/laragon/www/SistemWorkshop/resources/views/livewire/cx/after-confirmation-list.blade.php):
+     - Menambahkan kartu ringkasan cepat (*Quick Stat Chips*) interaktif di bagian atas.
+     - Menerapkan pewarnaan badge SPK (Kuning, Merah, Orange, Biru, Hijau) serta pill `After 1` dan `After 2`.
+     - Menambahkan rel indikator glow saat baris di-hover sesuai warna tipe SPK.
+     - Memperbarui kotak info pelanggan pada modal edit dengan tag tipe dan ronde after.
+- **Hasil:** Terverifikasi 100% via unit test Livewire dan pengujian pembuatan After Ke-2 tanpa duplikasi.
+
+---
+
+## 18. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -271,5 +297,7 @@
 - [x] Selesai: Perbaikan posisi penjangkaran popover kalender di sisi kanan.
 - [x] Selesai: Dokumentasi resmi sumber data Sepatu Masuk.
 - [x] Selesai: Perbaikan fatal TypeError penambahan jasa kustom pada modal ubah detail barang CS.
+- [x] Selesai: Implementasi Multi-Cycle After Service & Dynamic Color Badges di `/cx/after-confirmation`.
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC di lingkungan produksi.
+
 

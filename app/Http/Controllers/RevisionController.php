@@ -186,6 +186,11 @@ class RevisionController extends Controller
                 $workOrder->is_revising = false;
                 $workOrder->previous_status = null;
                 $workOrder->save();
+
+                // Trigger Konfirmasi After Ke-2 jika target status adalah SELESAI
+                if ($targetStatus === WorkOrderStatus::SELESAI) {
+                    app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder, 'REVISI', 2);
+                }
             });
 
             return redirect()->route('revision.index')->with('success', 'Revisi telah diselesaikan.');

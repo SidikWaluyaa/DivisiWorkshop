@@ -16,6 +16,8 @@ class AfterConfirmationList extends Component
     public $response = '';
     public $startDate = '';
     public $endDate = '';
+    public $stageFilter = '';
+    public $roundFilter = '';
 
     // Modal state
     public $editingId = null;
@@ -27,6 +29,8 @@ class AfterConfirmationList extends Component
         'response' => ['except' => ''],
         'startDate' => ['except' => ''],
         'endDate' => ['except' => ''],
+        'stageFilter' => ['except' => ''],
+        'roundFilter' => ['except' => ''],
     ];
 
     public function updatingSearch()
@@ -49,9 +53,19 @@ class AfterConfirmationList extends Component
         $this->resetPage();
     }
 
+    public function updatingStageFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingRoundFilter()
+    {
+        $this->resetPage();
+    }
+
     public function resetFilters()
     {
-        $this->reset(['search', 'response', 'startDate', 'endDate']);
+        $this->reset(['search', 'response', 'startDate', 'endDate', 'stageFilter', 'roundFilter']);
         $this->resetPage();
     }
 
@@ -110,6 +124,16 @@ class AfterConfirmationList extends Component
             $query->where('response', $this->response);
         }
 
+        // Filter by Stage Type (Garansi, Revisi, OTO, R&D, Reguler)
+        if ($this->stageFilter) {
+            $query->where('stage_type', $this->stageFilter);
+        }
+
+        // Filter by Round (After 1 / After 2)
+        if ($this->roundFilter) {
+            $query->where('round', (int)$this->roundFilter);
+        }
+
         // Search by SPK, Customer Name, or Phone
         if ($this->search) {
             $search = $this->search;
@@ -120,8 +144,19 @@ class AfterConfirmationList extends Component
             });
         }
 
+        $stats = [
+            'total'   => CxAfterConfirmation::count(),
+            'after1'  => CxAfterConfirmation::where('round', 1)->count(),
+            'after2'  => CxAfterConfirmation::where('round', '>=', 2)->count(),
+            'garansi' => CxAfterConfirmation::where('stage_type', 'GARANSI')->count(),
+            'revisi'  => CxAfterConfirmation::where('stage_type', 'REVISI')->count(),
+            'oto'     => CxAfterConfirmation::where('stage_type', 'OTO')->count(),
+            'rnd'     => CxAfterConfirmation::where('stage_type', 'RND')->count(),
+        ];
+
         return view('livewire.cx.after-confirmation-list', [
-            'items' => $query->paginate(20)
+            'items' => $query->paginate(20),
+            'stats' => $stats,
         ]);
     }
 }

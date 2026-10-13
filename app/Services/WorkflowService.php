@@ -33,14 +33,19 @@ class WorkflowService
             $workOrder->current_location = $this->getDefaultLocationForStatus($newStatus);
 
             // Set finished_date if moving to SELESAI
-            if ($newStatus === WorkOrderStatus::SELESAI && is_null($workOrder->finished_date)) {
-                $workOrder->finished_date = now();
-                
-                // Dispatch PDF Generation
-                GeneratePhotoReportJob::dispatch($workOrder);
+            if ($newStatus === WorkOrderStatus::SELESAI) {
+                if (is_null($workOrder->finished_date)) {
+                    $workOrder->finished_date = now();
+                    
+                    // Dispatch PDF Generation
+                    GeneratePhotoReportJob::dispatch($workOrder);
 
-                // TRIGGER: Konfirmasi After Service (Create record immediately upon finish)
-                app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder);
+                    // TRIGGER: Konfirmasi After Service (After 1)
+                    app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder);
+                } elseif ($oldStatusObj === WorkOrderStatus::REVISI || $workOrder->is_revising) {
+                    // TRIGGER: Konfirmasi After Service (After 2 - Pasca Revisi)
+                    app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder, 'REVISI', 2);
+                }
             }
             
             // Trigger Technician Auto-Assignment (FR-1.1, FR-5.1)

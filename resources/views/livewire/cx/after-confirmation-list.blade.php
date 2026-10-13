@@ -1,12 +1,67 @@
 <div>
-    {{-- Header stats could go here if needed to be reactive --}}
+    {{-- Header Quick Stat Chips --}}
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        {{-- Total --}}
+        <div wire:click="$set('stageFilter', '')" class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm cursor-pointer hover:border-emerald-300 transition-all group">
+            <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider block mb-1">Total Konfirmasi</span>
+            <div class="flex items-baseline justify-between">
+                <span class="text-2xl font-black text-gray-900 group-hover:text-emerald-600 transition-colors">{{ $stats['total'] ?? 0 }}</span>
+                <span class="text-[10px] font-bold text-gray-400">Order</span>
+            </div>
+        </div>
+
+        {{-- Garansi (Kuning) --}}
+        <div wire:click="$set('stageFilter', 'GARANSI')" class="bg-amber-50/50 rounded-2xl p-4 border border-amber-200/60 shadow-sm cursor-pointer hover:border-amber-400 transition-all group">
+            <span class="text-[9px] font-black uppercase text-amber-600 tracking-wider block mb-1">Garansi</span>
+            <div class="flex items-baseline justify-between">
+                <span class="text-2xl font-black text-amber-700">{{ $stats['garansi'] ?? 0 }}</span>
+                <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 uppercase">Kuning</span>
+            </div>
+        </div>
+
+        {{-- Revisi (Merah) --}}
+        <div wire:click="$set('stageFilter', 'REVISI')" class="bg-rose-50/50 rounded-2xl p-4 border border-rose-200/60 shadow-sm cursor-pointer hover:border-rose-400 transition-all group">
+            <span class="text-[9px] font-black uppercase text-rose-600 tracking-wider block mb-1">Revisi</span>
+            <div class="flex items-baseline justify-between">
+                <span class="text-2xl font-black text-rose-700">{{ $stats['revisi'] ?? 0 }}</span>
+                <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 uppercase">Merah</span>
+            </div>
+        </div>
+
+        {{-- OTO (Orange) --}}
+        <div wire:click="$set('stageFilter', 'OTO')" class="bg-orange-50/50 rounded-2xl p-4 border border-orange-200/60 shadow-sm cursor-pointer hover:border-orange-400 transition-all group">
+            <span class="text-[9px] font-black uppercase text-orange-600 tracking-wider block mb-1">OTO</span>
+            <div class="flex items-baseline justify-between">
+                <span class="text-2xl font-black text-orange-700">{{ $stats['oto'] ?? 0 }}</span>
+                <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 uppercase">Orange</span>
+            </div>
+        </div>
+
+        {{-- R&D (Biru) --}}
+        <div wire:click="$set('stageFilter', 'RND')" class="bg-blue-50/50 rounded-2xl p-4 border border-blue-200/60 shadow-sm cursor-pointer hover:border-blue-400 transition-all group">
+            <span class="text-[9px] font-black uppercase text-blue-600 tracking-wider block mb-1">R&D</span>
+            <div class="flex items-baseline justify-between">
+                <span class="text-2xl font-black text-blue-700">{{ $stats['rnd'] ?? 0 }}</span>
+                <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 uppercase">Biru</span>
+            </div>
+        </div>
+
+        {{-- After 2 (Purple) --}}
+        <div wire:click="$set('roundFilter', '2')" class="bg-purple-50/50 rounded-2xl p-4 border border-purple-200/60 shadow-sm cursor-pointer hover:border-purple-400 transition-all group">
+            <span class="text-[9px] font-black uppercase text-purple-600 tracking-wider block mb-1">After Ke-2</span>
+            <div class="flex items-baseline justify-between">
+                <span class="text-2xl font-black text-purple-700">{{ $stats['after2'] ?? 0 }}</span>
+                <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 uppercase">Ke-2</span>
+            </div>
+        </div>
+    </div>
     
     {{-- Premium Filters --}}
     <div class="relative bg-white backdrop-blur-2xl rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 mb-8 group overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-br from-[#22AF85]/5 to-[#22AF85]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div class="relative grid grid-cols-1 md:grid-cols-4 gap-5">
-            {{-- Search Bar --}}
-            <div class="relative">
+        <div class="relative grid grid-cols-1 md:grid-cols-6 gap-4">
+            {{-- Search Bar (2 cols on md) --}}
+            <div class="md:col-span-2 relative">
                 <label class="text-[9px] font-black text-gray-400/80 uppercase tracking-[0.2em] ml-2 mb-2 block transition-colors group-hover:text-[#22AF85]">Pencarian</label>
                 <div class="relative flex items-center">
                     <div class="absolute left-4 z-10 text-gray-400">
@@ -20,6 +75,39 @@
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22AF85] opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-3 w-3 bg-[#22AF85]"></span>
                         </span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Tipe SPK (Garansi/Revisi/OTO/RND/Reguler) --}}
+            <div>
+                <label class="text-[9px] font-black text-gray-400/80 uppercase tracking-[0.2em] ml-2 mb-2 block transition-colors group-hover:text-[#22AF85]">Tipe SPK</label>
+                <div class="relative">
+                    <select wire:model.live="stageFilter" class="w-full appearance-none bg-gray-50/50 backdrop-blur-sm border border-gray-100 rounded-2xl px-4 py-3.5 text-sm focus:bg-white focus:ring-4 focus:ring-[#22AF85]/10 focus:border-[#22AF85]/40 transition-all font-bold text-gray-800 cursor-pointer">
+                        <option value="">Semua Tipe</option>
+                        <option value="GARANSI">🟡 Garansi</option>
+                        <option value="REVISI">🔴 Revisi</option>
+                        <option value="OTO">🟠 OTO</option>
+                        <option value="RND">🔵 R&D</option>
+                        <option value="REGULER">🟢 Reguler</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Siklus After (After 1 / After 2) --}}
+            <div>
+                <label class="text-[9px] font-black text-gray-400/80 uppercase tracking-[0.2em] ml-2 mb-2 block transition-colors group-hover:text-[#22AF85]">Siklus After</label>
+                <div class="relative">
+                    <select wire:model.live="roundFilter" class="w-full appearance-none bg-gray-50/50 backdrop-blur-sm border border-gray-100 rounded-2xl px-4 py-3.5 text-sm focus:bg-white focus:ring-4 focus:ring-[#22AF85]/10 focus:border-[#22AF85]/40 transition-all font-bold text-gray-800 cursor-pointer">
+                        <option value="">Semua Siklus</option>
+                        <option value="1">After 1 (Awal)</option>
+                        <option value="2">After 2 (Revisi/Pasca)</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </div>
             </div>
@@ -40,22 +128,25 @@
                 </div>
             </div>
 
-            {{-- Date Range --}}
-            <div class="md:col-span-1">
-                <label class="text-[9px] font-black text-gray-400/80 uppercase tracking-[0.2em] ml-2 mb-2 block transition-colors group-hover:text-[#22AF85]">Rentang Waktu</label>
-                <div class="flex items-center gap-2 bg-gray-50/50 backdrop-blur-sm border border-gray-100 rounded-2xl p-1 focus-within:bg-white focus-within:ring-4 focus-within:ring-[#22AF85]/10 focus-within:border-[#22AF85]/40 transition-all">
-                    <input type="date" wire:model.live="startDate" class="flex-1 bg-transparent border-none px-2 py-2.5 text-xs font-bold text-gray-700 outline-none focus:ring-0">
-                    <span class="text-gray-300 font-black">—</span>
-                    <input type="date" wire:model.live="endDate" class="flex-1 bg-transparent border-none px-2 py-2.5 text-xs font-bold text-gray-700 outline-none focus:ring-0">
-                </div>
-            </div>
-
             {{-- Reset Button --}}
             <div class="flex items-end text-right h-full">
                 <button wire:click="resetFilters" class="w-full h-[52px] bg-white border border-gray-100 hover:border-[#FFC232]/50 hover:bg-[#FFC232]/5 hover:text-[#FFC232] text-gray-500 font-black rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.2em] shadow-sm hover:shadow active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    RESET FILTER
+                    RESET
                 </button>
+            </div>
+        </div>
+
+        {{-- Date Range sub-row --}}
+        <div class="mt-4 pt-4 border-t border-gray-100/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span>Filter Tanggal Masuk:</span>
+            </div>
+            <div class="flex items-center gap-2 bg-gray-50/50 backdrop-blur-sm border border-gray-100 rounded-xl px-3 py-1.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#22AF85]/20">
+                <input type="date" wire:model.live="startDate" class="bg-transparent border-none p-1 text-xs font-bold text-gray-700 outline-none focus:ring-0">
+                <span class="text-gray-300 font-black">—</span>
+                <input type="date" wire:model.live="endDate" class="bg-transparent border-none p-1 text-xs font-bold text-gray-700 outline-none focus:ring-0">
             </div>
         </div>
     </div>
@@ -86,10 +177,14 @@
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @forelse($items as $item)
+                    @php
+                        $stage = $item->stage_badge;
+                        $round = $item->round_badge;
+                    @endphp
                     <tr class="hover:bg-gray-50/80 active:bg-gray-100 transition-colors duration-200 group relative">
                         {{-- Data: Date with Hover indicator rail --}}
                         <td class="px-8 py-5 align-top relative">
-                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#22AF85] opacity-0 group-hover:opacity-100 transition-opacity rounded-r-full"></div>
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 {{ $stage['dot'] }} opacity-0 group-hover:opacity-100 transition-opacity rounded-r-full"></div>
                             
                             <div class="flex flex-col gap-1">
                                 <span class="text-xs font-black text-gray-800">{{ $item->entered_at->format('d M Y') }}</span>
@@ -97,18 +192,46 @@
                             </div>
                         </td>
                         
-                        {{-- Data: Info --}}
+                        {{-- Data: Info SPK & Customer --}}
                         <td class="px-6 py-5 align-top">
-                            <div class="flex flex-col gap-1.5">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-black text-[#22AF85] bg-[#22AF85]/10 px-2 py-0.5 rounded-lg border border-[#22AF85]/20 uppercase tracking-tight">{{ $item->workOrder->spk_number }}</span>
+                            <div class="flex flex-col gap-2">
+                                {{-- Baris 1: Badge SPK & Badge Tipe & Badge After --}}
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    {{-- SPK Number beraksen warna sesuai tipe --}}
+                                    <span class="text-xs font-black px-2.5 py-1 rounded-xl border uppercase tracking-tight {{ $stage['spk_bg'] }}">
+                                        {{ $item->workOrder->spk_number }}
+                                    </span>
+
+                                    {{-- Badge Tipe: Kuning (Garansi), Merah (Revisi), Orange (OTO), Biru (R&D) --}}
+                                    @if(($item->stage_type ?? 'REGULER') !== 'REGULER')
+                                    <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-lg border uppercase tracking-wider {{ $stage['bg'] }} {{ $stage['text'] }} {{ $stage['border'] }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $stage['dot'] }}"></span>
+                                        {{ $stage['label'] }}
+                                    </span>
+                                    @endif
+
+                                    {{-- Badge Siklus: After 1 vs After 2 --}}
+                                    @if((int)$item->round >= 2)
+                                    <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-lg bg-purple-600 text-white shadow-xs uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse"></span>
+                                        After 2
+                                    </span>
+                                    @else
+                                    <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-lg bg-slate-800 text-white shadow-xs uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        After 1
+                                    </span>
+                                    @endif
                                 </div>
-                                <span class="text-sm font-black text-gray-900">{{ $item->workOrder->customer_name }}</span>
-                                <div class="text-xs font-bold text-gray-500 flex items-center gap-1.5 select-all">
-                                    <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                                    {{ $item->workOrder->customer_phone }}
+
+                                <div>
+                                    <span class="text-sm font-black text-gray-900 block leading-tight">{{ $item->workOrder->customer_name }}</span>
+                                    <div class="text-xs font-bold text-gray-500 flex items-center gap-1.5 select-all mt-1">
+                                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                        {{ $item->workOrder->customer_phone }}
+                                    </div>
+                                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 block">{{ $item->workOrder->shoe_brand }} - {{ $item->workOrder->shoe_color }}</span>
                                 </div>
-                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">{{ $item->workOrder->shoe_brand }} - {{ $item->workOrder->shoe_color }}</span>
                             </div>
                         </td>
                         
@@ -206,13 +329,35 @@
         <x-modal-custom x-show="open" @close="open = false" title="📝 Konfirmasi Status">
             <form wire:submit.prevent="save" class="space-y-6">
                 {{-- Detail Pelanggan Info Box --}}
+                @php
+                    $modalItem = $editingId ? App\Models\CxAfterConfirmation::with('workOrder')->find($editingId) : null;
+                @endphp
+                @if($modalItem)
                 <div class="bg-gradient-to-br from-gray-50 to-white rounded-[1.5rem] p-5 border border-gray-200/60 shadow-sm relative overflow-hidden">
                     <div class="absolute -right-4 -top-4 w-24 h-24 bg-[#FFC232]/10 rounded-full blur-xl"></div>
-                    <label class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] block mb-1">Pelanggan</label>
-                    <div class="text-lg font-black text-gray-800 tracking-tight">
-                        {{ $editingId ? App\Models\CxAfterConfirmation::find($editingId)?->workOrder->customer_name : '' }}
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <label class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] block">Data Konfirmasi Pelanggan</label>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider {{ $modalItem->stage_badge['bg'] }} {{ $modalItem->stage_badge['text'] }} {{ $modalItem->stage_badge['border'] }}">
+                                {{ $modalItem->stage_badge['label'] }}
+                            </span>
+                            <span class="text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider {{ $modalItem->round_badge['badge_class'] }}">
+                                {{ $modalItem->round_badge['label'] }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-lg font-black text-gray-900 tracking-tight leading-tight">
+                        {{ $modalItem->workOrder->customer_name }}
+                    </div>
+                    <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-500 font-bold">
+                        <span class="font-black text-[#22AF85]">{{ $modalItem->workOrder->spk_number }}</span>
+                        <span>•</span>
+                        <span>{{ $modalItem->workOrder->customer_phone }}</span>
+                        <span>•</span>
+                        <span class="text-gray-400 uppercase">{{ $modalItem->workOrder->shoe_brand }}</span>
                     </div>
                 </div>
+                @endif
 
                 <div class="grid grid-cols-1 gap-5">
                     {{-- Select Respon --}}

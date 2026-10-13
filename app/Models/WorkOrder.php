@@ -1304,9 +1304,14 @@ class WorkOrder extends Model
         return $this->hasMany(\App\Models\StorageAssignment::class);
     }
 
+    public function cxAfterConfirmations()
+    {
+        return $this->hasMany(CxAfterConfirmation::class)->orderBy('round', 'asc');
+    }
+
     public function cxAfterConfirmation()
     {
-        return $this->hasOne(CxAfterConfirmation::class);
+        return $this->hasOne(CxAfterConfirmation::class)->latestOfMany('round');
     }
 
     public function invoice()
