@@ -4,13 +4,11 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         .flatpickr-calendar {
-            background: rgba(255, 255, 255, 0.98) !important;
-            backdrop-filter: blur(20px) !important;
-            border: 1px solid rgba(229, 231, 235, 0.8) !important;
-            border-radius: 20px !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+            background: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 1.25rem !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
             font-family: inherit !important;
-            padding: 10px !important;
             z-index: 99999 !important;
         }
         .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
@@ -18,7 +16,7 @@
             border-color: #22AF85 !important;
             color: #ffffff !important;
             font-weight: 800 !important;
-            border-radius: 10px !important;
+            border-radius: 8px !important;
         }
         .flatpickr-day.inRange {
             background: rgba(34, 175, 133, 0.12) !important;
@@ -27,7 +25,7 @@
         }
         .flatpickr-day:hover {
             background: rgba(34, 175, 133, 0.15) !important;
-            border-radius: 10px !important;
+            border-radius: 8px !important;
         }
         .flatpickr-months .flatpickr-month {
             color: #1f2937 !important;
@@ -460,11 +458,31 @@
             </table>
         </div>
         
-        @if($items->hasPages())
-        <div class="p-6 border-t border-gray-100/50 bg-gray-50/30">
-            {{ $items->links() }}
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+            {{-- Per Page Dropdown --}}
+            <div class="flex items-center gap-2 text-xs font-bold text-gray-500">
+                <span>Tampilkan</span>
+                <div class="relative">
+                    <select wire:model.live="perPage" class="appearance-none bg-white border border-gray-200 rounded-xl pl-3 pr-8 py-1.5 text-xs font-black text-gray-700 hover:border-[#22AF85]/50 focus:ring-2 focus:ring-[#22AF85]/20 focus:border-[#22AF85] shadow-sm cursor-pointer outline-none transition-all">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+                <span>data per halaman</span>
+            </div>
+
+            {{-- Pagination Links --}}
+            @if($items->hasPages())
+            <div>
+                {{ $items->links() }}
+            </div>
+            @endif
         </div>
-        @endif
     </div>
 
     {{-- Premium Edit Modal --}}

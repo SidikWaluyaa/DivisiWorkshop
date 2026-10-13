@@ -545,7 +545,25 @@
 
 ---
 
-## 28. Rencana Tindak Lanjut & Monitoring Operasional
+## 28. Perbaikan Tampilan Kalender Flatpickr (Tanpa Terpotong) & Penambahan Kontrol Paginasi Dinamis (10, 25, 50, 100)
+- **Waktu:** 16:33 WIB
+- **Latar Belakang & Gejala Masalah:**
+  1. *Kalender Terpotong:* Pada tampilan popover Flatpickr sebelumnya, kolom hari Sabtu (*Sat*) di sisi kanan terpotong oleh batas tepi (*border*) kotak kalender karena adanya padding berlebih pada container calendar internal.
+  2. *Permintaan Paginasi Fleksibel:* Pengguna menginginkan kontrol jumlah baris data yang ditampilkan per halaman dengan opsi standar: **10, 25, 50, 100**.
+- **Tindakan Perbaikan & Implementasi:**
+  1. *Perbaikan CSS Flatpickr (Eliminasi Tampilan Terpotong):*
+     - Menghapus aturan `padding: 10px !important` pada `.flatpickr-calendar` sehingga container kalender presisi 100% dengan lebar kisi 7 hari (`.dayContainer` ~308px).
+     - Menyesuaikan *border-radius* dan bayangan halus (*smooth shadow*) agar seluruh kolom tanggal dari Minggu (*Sun*) hingga Sabtu (*Sat*) tampil utuh tanpa terpotong.
+  2. *Implementasi Kontrol Paginasi (Per-Page Selector 10, 25, 50, 100):*
+     - Menambahkan properti reaktif `$perPage = 25` di `AfterConfirmationList.php` lengkap dengan sinkronisasi URL query string dan auto-reset halaman saat jumlah baris diubah (`updatingPerPage()`).
+     - Menyediakan dropdown modern "Tampilkan [10 | 25 | 50 | 100] data per halaman" pada footer tabel data, berdampingan dengan pagination links.
+- **Hasil Pengujian & Verifikasi:**
+  - Tampilan popover kalender Flatpickr kini terbuka rapi dengan semua 7 kolom hari dan angka tanggal terlihat utuh tanpa terpotong.
+  - Pilihan 10 data menampilkan 10 baris dengan paginasi aktif; pilihan 50 data langsung menampilkan 30 data seluruhnya secara instan.
+
+---
+
+## 29. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -568,7 +586,9 @@
 - [x] Selesai: Retensi permanen riwayat Konfirmasi After Service & penambahan indikator status pengambilan sepatu (Sudah Diambil vs Belum Diambil).
 - [x] Selesai: Penambahan KPI Card Reguler & indikator aktif 7 card Konfirmasi After Service.
 - [x] Selesai: Implementasi Flatpickr Interactive Date Range Picker pada Konfirmasi After Service.
+- [x] Selesai: Perbaikan tampilan kalender Flatpickr (tanpa terpotong) & penambahan kontrol paginasi dinamis (10, 25, 50, 100).
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC dan Konfirmasi After di lingkungan produksi.
+
 
 
 

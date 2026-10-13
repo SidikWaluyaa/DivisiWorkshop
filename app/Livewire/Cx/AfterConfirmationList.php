@@ -19,6 +19,7 @@ class AfterConfirmationList extends Component
     public $stageFilter = '';
     public $roundFilter = '';
     public $pickupFilter = '';
+    public $perPage = 25;
 
     // Modal state
     public $editingId = null;
@@ -33,6 +34,7 @@ class AfterConfirmationList extends Component
         'stageFilter' => ['except' => ''],
         'roundFilter' => ['except' => ''],
         'pickupFilter' => ['except' => ''],
+        'perPage' => ['except' => 25],
     ];
 
     public function updatingSearch()
@@ -66,6 +68,11 @@ class AfterConfirmationList extends Component
     }
 
     public function updatingPickupFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingPerPage()
     {
         $this->resetPage();
     }
@@ -209,7 +216,7 @@ class AfterConfirmationList extends Component
         ];
 
         return view('livewire.cx.after-confirmation-list', [
-            'items' => $query->paginate(20),
+            'items' => $query->paginate((int)$this->perPage),
             'stats' => $stats,
         ]);
     }
