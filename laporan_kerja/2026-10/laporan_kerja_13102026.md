@@ -331,7 +331,34 @@
 
 ---
 
-## 20. Rencana Tindak Lanjut & Monitoring Operasional
+## 20. Penyelarasan Standar Bisnis Multi-Tabel: Garansi, Revisi, dan OTO sebagai After Ke-2 & RND sebagai After Ke-1
+- **Waktu:** 15:30 WIB
+- **Latar Belakang & Analisis Arsitektur Data:**
+  1. *Komparasi Database Multi-Tabel:*
+     - **Revisi:** Merujuk pada tabel `work_order_revisions` dengan kolom `status = 'FINISHED'`. Penyelesaian revisi adalah pengerjaan ulang (rework), sehingga **WAJIB After Ke-2 (`round = 2`, `stage_type = 'REVISI'`)**.
+     - **OTO (One Time Offer):** Merujuk pada tabel `otos` dengan kolom `status = 'COMPLETED'`. Penyelesaian OTO adalah pengerjaan tambahan pasca-order, sehingga **WAJIB After Ke-2 (`round = 2`, `stage_type = 'OTO'`)**.
+     - **Garansi:** Merujuk pada tabel `work_order_warranties` dengan kolom `status = 'FINISHED'` dan nomor SPK Rework `-GR`. Merupakan klaim pengerjaan perbaikan pasca-garansi, sehingga **WAJIB After Ke-2 (`round = 2`, `stage_type = 'GARANSI'`)**.
+     - **R&D (Research & Development):** Penyelesaiannya bersifat normal seperti order reguler pertama kali selesai, sehingga masuk ke **After Ke-1 (`round = 1`, `stage_type = 'RND'`)**.
+- **Tindakan Penyempurnaan:**
+  1. *Service Konfirmasi (`CxConfirmationService.php`):*
+     - Menetapkan default `round = 2` (After 2) otomatis ketika stage yang masuk adalah `GARANSI`, `REVISI`, atau `OTO`.
+     - Memastikan integritas data berurutan: jika suatu order terbit di Round 2 (Revisi / OTO), sistem otomatis memeriksa dan membuatkan record Round 1 (After 1) terlebih dahulu jika belum pernah tercatat.
+  2. *Stasiun Pengerjaan OTO (`OtoStationIndex.php`):*
+     - Menambahkan trigger otomatis pemanggilan `createFromOrder($oto->workOrder, 'OTO', 2)` saat pengerjaan OTO diselesaikan (`completeOto`).
+  3. *Command Sinkronisasi Komprehensif (`SyncCxAfterConfirmationCommand.php`):*
+     - *Bagian 1 (Garansi):* Mengambil seluruh klaim berstatus `FINISHED` dari `work_order_warranties` & SPK berakhiran `-GR`, lalu menyinkronkannya sebagai `round = 2` (GARANSI).
+     - *Bagian 2 (Revisi):* Mengambil seluruh revisi berstatus `FINISHED` dari `work_order_revisions`, memastikan After 1 ada, dan menerbitkan After 2 (REVISI).
+     - *Bagian 3 (OTO):* Mengambil seluruh penawaran OTO berstatus `COMPLETED` dari tabel `otos`, memastikan After 1 ada, dan menerbitkan After 2 (OTO).
+     - *Bagian 4 (RND):* Mengambil SPK dengan kode `RD-` atau prioritas R&D yang sudah tuntas dan menyinkronkannya ke Round 1 (RND).
+     - *Bagian 5 (Validasi & Pembersihan):* Memvalidasi bahwa Round 1 hanya boleh berisi `REGULER` dan `RND`, sedangkan Round 2 hanya berisi `GARANSI`, `REVISI`, dan `OTO`.
+- **Hasil Pengujian & Verifikasi Lokal:**
+  - Eksekusi `php artisan cx:sync-after-confirmation` berhasil dengan rekapitulasi data 100% presisi:
+    - **Round 1 (After 1):** 17 Reguler, 4 R&D.
+    - **Round 2 (After 2):** 1 Garansi (`S-2608-12-0012-GR`), 6 Revisi, 2 OTO (`S-2608-12-0016-SW`, `S-2608-12-0014-SW`).
+
+---
+
+## 21. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -346,6 +373,7 @@
 - [x] Selesai: Implementasi Multi-Cycle After Service & Dynamic Color Badges di `/cx/after-confirmation`.
 - [x] Selesai: Integrasi otomatisasi SPK Garansi (GR), KPI cards adaptif tanggal, dan command sinkronisasi `cx:sync-after-confirmation`.
 - [x] Selesai: Koreksi klasifikasi SPK Garansi (-GR wajib After 2) dan pembersihan label R&D / Reguler.
+- [x] Selesai: Penyelarasan multi-tabel (Revisi FINISHED, OTO COMPLETED, Garansi FINISHED -> After 2; RND -> After 1).
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC di lingkungan produksi.
 
 

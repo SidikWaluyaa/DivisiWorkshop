@@ -47,10 +47,10 @@ class CxConfirmationService
                 ->first();
 
             // Determine target round:
-            // Khusus GARANSI, default-nya adalah After 2 (round = 2) sesuai standar follow-up rework garansi
+            // Sesuai SOP: GARANSI, REVISI, dan OTO adalah After Ke-2 (round = 2)
             if (!is_null($forcedRound)) {
                 $targetRound = $forcedRound;
-            } elseif ($stageType === 'GARANSI') {
+            } elseif (in_array(strtoupper((string)$stageType), ['GARANSI', 'REVISI', 'OTO'])) {
                 $targetRound = 2;
             } elseif ($latest) {
                 $targetRound = (int)$latest->round + 1;
@@ -61,6 +61,19 @@ class CxConfirmationService
             // Cap at round 2 unless specifically forced
             if (is_null($forcedRound) && $latest && (int)$latest->round >= 2) {
                 return null;
+            }
+
+            // Untuk REVISI dan OTO di Round 2, pastikan Round 1 (After 1) sudah ada
+            if ($targetRound >= 2 && !$isGr) {
+                $hasRound1 = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', 1)->exists();
+                if (!$hasRound1) {
+                    CxAfterConfirmation::create([
+                        'work_order_id' => $order->id,
+                        'round'         => 1,
+                        'stage_type'    => $isRnd ? 'RND' : 'REGULER',
+                        'entered_at'    => $order->finished_date ?? $order->entry_date ?? $order->created_at ?? now(),
+                    ]);
+                }
             }
 
             // Prevent creating duplicate records for the exact same round

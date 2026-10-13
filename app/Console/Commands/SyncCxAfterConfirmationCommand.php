@@ -35,51 +35,18 @@ class SyncCxAfterConfirmationCommand extends Command
 
         $syncedGaransiRound2 = 0;
         $syncedRevisiRound2 = 0;
-        $syncedOto = 0;
+        $syncedOtoRound2 = 0;
         $syncedRnd = 0;
-        $updatedStages = 0;
+        $updatedRecords = 0;
 
-        // 1. SINKRONISASI SPK GARANSI (HANYA KODE -GR / GR-, WAJIB AFTER KE-2 / ROUND = 2)
-        $this->info("⏳ 1. Memeriksa SPK Garansi (-GR, round = 2)...");
+        // 1. SINKRONISASI GARANSI (work_order_warranties status = FINISHED -> AFTER 2 / ROUND = 2)
+        $this->info("⏳ 1. Memeriksa tabel work_order_warranties (status = FINISHED) & SPK -GR...");
         
-        // Ambil semua work orders garansi yang sudah SELESAI
-        $garansiOrders = WorkOrder::where(function ($q) {
-            $q->where('spk_number', 'like', '%-GR%')
-              ->orWhere('spk_number', 'like', 'GR-%')
-              ->orWhere('spk_number', 'like', '%-GR');
-        })
-        ->whereIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::DIANTAR, WorkOrderStatus::HISTORY])
-        ->get();
+        $finishedWarranties = WorkOrderWarranty::where('status', 'FINISHED')
+            ->whereNotNull('garansi_spk_number')
+            ->get();
 
-        foreach ($garansiOrders as $order) {
-            $existing = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', 2)->first();
-            if (!$existing) {
-                // Cek apakah ada record round 1 yang keliru terbuat sebelumnya
-                $wrongRound1 = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', 1)->first();
-                if ($wrongRound1) {
-                    $wrongRound1->update([
-                        'round'      => 2,
-                        'stage_type' => 'GARANSI',
-                    ]);
-                    $updatedStages++;
-                } else {
-                    CxAfterConfirmation::create([
-                        'work_order_id' => $order->id,
-                        'round'         => 2,
-                        'stage_type'    => 'GARANSI',
-                        'entered_at'    => $order->finished_date ?? $order->entry_date ?? $order->created_at ?? now(),
-                    ]);
-                    $syncedGaransiRound2++;
-                }
-            } elseif ($existing->stage_type !== 'GARANSI') {
-                $existing->update(['stage_type' => 'GARANSI']);
-                $updatedStages++;
-            }
-        }
-
-        // Cek juga dari tabel work_order_warranties
-        $warranties = WorkOrderWarranty::whereNotNull('garansi_spk_number')->get();
-        foreach ($warranties as $w) {
+        foreach ($finishedWarranties as $w) {
             $reworkWo = WorkOrder::where('spk_number', $w->garansi_spk_number)->first();
             if ($reworkWo) {
                 $existing = CxAfterConfirmation::where('work_order_id', $reworkWo->id)->where('round', 2)->first();
@@ -90,7 +57,7 @@ class SyncCxAfterConfirmationCommand extends Command
                             'round'      => 2,
                             'stage_type' => 'GARANSI',
                         ]);
-                        $updatedStages++;
+                        $updatedRecords++;
                     } else {
                         CxAfterConfirmation::create([
                             'work_order_id' => $reworkWo->id,
@@ -102,13 +69,44 @@ class SyncCxAfterConfirmationCommand extends Command
                     }
                 } elseif ($existing->stage_type !== 'GARANSI') {
                     $existing->update(['stage_type' => 'GARANSI']);
-                    $updatedStages++;
+                    $updatedRecords++;
                 }
             }
         }
 
-        // 2. SINKRONISASI REVISI (TERBITKAN AFTER KE-2)
-        $this->info("⏳ 2. Memeriksa Riwayat Revisi Selesai untuk After Ke-2...");
+        // Pastikan juga semua work orders dengan nomor SPK -GR yang sudah SELESAI masuk ke Round 2 GARANSI
+        $grOrders = WorkOrder::where(function ($q) {
+            $q->where('spk_number', 'like', '%-GR%')
+              ->orWhere('spk_number', 'like', 'GR-%')
+              ->orWhere('spk_number', 'like', '%-GR');
+        })
+        ->whereIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::DIANTAR, WorkOrderStatus::HISTORY])
+        ->get();
+
+        foreach ($grOrders as $gr) {
+            $existing = CxAfterConfirmation::where('work_order_id', $gr->id)->where('round', 2)->first();
+            if (!$existing) {
+                $wrongRound1 = CxAfterConfirmation::where('work_order_id', $gr->id)->where('round', 1)->first();
+                if ($wrongRound1) {
+                    $wrongRound1->update([
+                        'round'      => 2,
+                        'stage_type' => 'GARANSI',
+                    ]);
+                    $updatedRecords++;
+                } else {
+                    CxAfterConfirmation::create([
+                        'work_order_id' => $gr->id,
+                        'round'         => 2,
+                        'stage_type'    => 'GARANSI',
+                        'entered_at'    => $gr->finished_date ?? $gr->entry_date ?? $gr->created_at ?? now(),
+                    ]);
+                    $syncedGaransiRound2++;
+                }
+            }
+        }
+
+        // 2. SINKRONISASI REVISI (work_order_revisions status = FINISHED -> AFTER 2 / ROUND = 2)
+        $this->info("⏳ 2. Memeriksa tabel work_order_revisions (status = FINISHED)...");
         
         $finishedRevisions = WorkOrderRevision::where('status', 'FINISHED')
             ->with('workOrder')
@@ -118,23 +116,20 @@ class SyncCxAfterConfirmationCommand extends Command
             $order = $rev->workOrder;
             if (!$order) continue;
 
-            $isOrderGr = str_contains((string)$order->spk_number, '-GR') || str_contains((string)$order->spk_number, 'GR-');
             $isOrderRnd = str_starts_with((string)$order->spk_number, 'RD-') || in_array(strtoupper(trim((string)$order->priority)), ['R&D', 'RND']);
-            $isOrderOto = !empty($order->has_active_oto);
-            $stage1 = $isOrderGr ? 'GARANSI' : ($isOrderRnd ? 'RND' : ($isOrderOto ? 'OTO' : 'REGULER'));
 
-            // Pastikan After 1 ada
+            // Pastikan After 1 ada (sebagai REGULER atau RND)
             $after1 = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', 1)->first();
             if (!$after1) {
                 $after1 = CxAfterConfirmation::create([
                     'work_order_id' => $order->id,
                     'round'         => 1,
-                    'stage_type'    => $stage1,
+                    'stage_type'    => $isOrderRnd ? 'RND' : 'REGULER',
                     'entered_at'    => $order->finished_date ?? $order->created_at ?? now(),
                 ]);
             }
 
-            // Pastikan After 2 terbit
+            // Pastikan After 2 terbit untuk REVISI
             $after2 = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', 2)->first();
             if (!$after2) {
                 CxAfterConfirmation::create([
@@ -144,33 +139,58 @@ class SyncCxAfterConfirmationCommand extends Command
                     'entered_at'    => $rev->finished_at ?? $rev->updated_at ?? now(),
                 ]);
                 $syncedRevisiRound2++;
+            } else {
+                if ($after2->stage_type !== 'REVISI') {
+                    $after2->update(['stage_type' => 'REVISI']);
+                    $updatedRecords++;
+                }
             }
         }
 
-        // 3. SINKRONISASI SPK OTO
-        $this->info("⏳ 3. Memeriksa SPK OTO (has_active_oto)...");
-        $otoOrders = WorkOrder::where('has_active_oto', 1)
-            ->whereIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::DIANTAR, WorkOrderStatus::HISTORY])
+        // 3. SINKRONISASI OTO (otos status = COMPLETED -> AFTER 2 / ROUND = 2)
+        $this->info("⏳ 3. Memeriksa tabel otos (status = COMPLETED)...");
+        
+        $completedOtos = \App\Models\Oto::where('status', 'COMPLETED')
+            ->with('workOrder')
             ->get();
 
-        foreach ($otoOrders as $order) {
-            $existing = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', 1)->first();
-            if (!$existing) {
-                CxAfterConfirmation::create([
+        foreach ($completedOtos as $oto) {
+            $order = $oto->workOrder;
+            if (!$order) continue;
+
+            $isOrderRnd = str_starts_with((string)$order->spk_number, 'RD-') || in_array(strtoupper(trim((string)$order->priority)), ['R&D', 'RND']);
+
+            // Pastikan After 1 ada (sebagai REGULER atau RND)
+            $after1 = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', 1)->first();
+            if (!$after1) {
+                $after1 = CxAfterConfirmation::create([
                     'work_order_id' => $order->id,
                     'round'         => 1,
-                    'stage_type'    => 'OTO',
+                    'stage_type'    => $isOrderRnd ? 'RND' : 'REGULER',
                     'entered_at'    => $order->finished_date ?? $order->entry_date ?? $order->created_at ?? now(),
                 ]);
-                $syncedOto++;
-            } elseif ($existing->stage_type !== 'OTO' && $existing->stage_type === 'REGULER') {
-                $existing->update(['stage_type' => 'OTO']);
-                $updatedStages++;
+            }
+
+            // Pastikan After 2 terbit untuk OTO
+            $after2 = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', 2)->first();
+            if (!$after2) {
+                CxAfterConfirmation::create([
+                    'work_order_id' => $order->id,
+                    'round'         => 2,
+                    'stage_type'    => 'OTO',
+                    'entered_at'    => $oto->completed_at ?? $oto->updated_at ?? now(),
+                ]);
+                $syncedOtoRound2++;
+            } else {
+                if ($after2->stage_type !== 'OTO' && $after2->stage_type !== 'REVISI') {
+                    $after2->update(['stage_type' => 'OTO']);
+                    $updatedRecords++;
+                }
             }
         }
 
-        // 4. SINKRONISASI SPK R&D
-        $this->info("⏳ 4. Memeriksa SPK R&D (RD-... / priority = R&D / RND)...");
+        // 4. SINKRONISASI R&D (RD-... / priority = R&D / RND -> AFTER 1 / ROUND = 1)
+        $this->info("⏳ 4. Memeriksa SPK R&D (RD-... / priority R&D seperti reguler di round 1)...");
         $rndOrders = WorkOrder::where(function ($q) {
             $q->whereIn('priority', ['R&D', 'RND'])
               ->orWhere('spk_number', 'like', 'RD-%');
@@ -188,14 +208,14 @@ class SyncCxAfterConfirmationCommand extends Command
                     'entered_at'    => $order->finished_date ?? $order->entry_date ?? $order->created_at ?? now(),
                 ]);
                 $syncedRnd++;
-            } elseif ($existing->stage_type !== 'RND' && in_array($existing->stage_type, ['REGULER', 'GARANSI'])) {
+            } elseif ($existing->stage_type !== 'RND') {
                 $existing->update(['stage_type' => 'RND']);
-                $updatedStages++;
+                $updatedRecords++;
             }
         }
 
-        // 5. RAPATKAN DAN KOREKSI DATA EKSISTING
-        $this->info("⏳ 5. Merapikan dan mengoreksi data eksisting...");
+        // 5. RAPATKAN DAN BERSIHKAN DATA EKSISTING
+        $this->info("⏳ 5. Merapikan dan membersihkan data eksisting...");
         $allAfters = CxAfterConfirmation::with('workOrder')->get();
         foreach ($allAfters as $aft) {
             $wo = $aft->workOrder;
@@ -203,34 +223,30 @@ class SyncCxAfterConfirmationCommand extends Command
 
             $isGr = str_contains((string)$wo->spk_number, '-GR') || str_contains((string)$wo->spk_number, 'GR-');
             $isRnd = str_starts_with((string)$wo->spk_number, 'RD-') || in_array(strtoupper(trim((string)$wo->priority)), ['R&D', 'RND']);
-            $isOto = !empty($wo->has_active_oto);
 
-            if ($isGr) {
-                // SPK Garansi WAJIB stage_type = GARANSI dan round = 2
-                if ($aft->stage_type !== 'GARANSI' || (int)$aft->round !== 2) {
+            // Validasi Round 1: HANYA BOLEH REGULER atau RND
+            if ((int)$aft->round === 1) {
+                if ($isGr) {
+                    // SPK -GR tidak boleh di Round 1, harus di Round 2
                     $aft->update([
-                        'stage_type' => 'GARANSI',
                         'round'      => 2,
+                        'stage_type' => 'GARANSI',
                     ]);
-                    $updatedStages++;
+                    $updatedRecords++;
+                } elseif (in_array($aft->stage_type, ['GARANSI', 'REVISI', 'OTO'])) {
+                    // Kembalikan Round 1 ke REGULER atau RND
+                    $aft->update([
+                        'stage_type' => $isRnd ? 'RND' : 'REGULER',
+                    ]);
+                    $updatedRecords++;
                 }
-            } elseif ($aft->stage_type === 'GARANSI' && !$isGr) {
-                // Salah terdeteksi Garansi hanya karena flag is_warranty
-                if ($isRnd) {
-                    $aft->update(['stage_type' => 'RND', 'round' => 1]);
-                } elseif ($isOto) {
-                    $aft->update(['stage_type' => 'OTO', 'round' => 1]);
-                } else {
-                    $aft->update(['stage_type' => 'REGULER', 'round' => 1]);
-                }
-                $updatedStages++;
-            } elseif ($aft->stage_type === 'REGULER') {
-                if ($isRnd) {
-                    $aft->update(['stage_type' => 'RND']);
-                    $updatedStages++;
-                } elseif ($isOto) {
-                    $aft->update(['stage_type' => 'OTO']);
-                    $updatedStages++;
+            }
+
+            // Validasi Round 2: HANYA BOLEH GARANSI, REVISI, atau OTO
+            if ((int)$aft->round === 2) {
+                if ($isGr && $aft->stage_type !== 'GARANSI') {
+                    $aft->update(['stage_type' => 'GARANSI']);
+                    $updatedRecords++;
                 }
             }
         }
@@ -241,10 +257,10 @@ class SyncCxAfterConfirmationCommand extends Command
             ['Kategori Sinkronisasi', 'Jumlah Diproses'],
             [
                 ['SPK Garansi (-GR) Masuk (Round 2 / After 2)', $syncedGaransiRound2],
-                ['After Ke-2 Pasca Revisi Diterbitkan (Round 2)', $syncedRevisiRound2],
-                ['SPK OTO Baru Masuk (Round 1)', $syncedOto],
-                ['SPK R&D Baru Masuk (Round 1)', $syncedRnd],
-                ['Record Eksisting Dikoreksi Label & Round-nya', $updatedStages],
+                ['After Ke-2 Pasca Revisi Selesai (Round 2)', $syncedRevisiRound2],
+                ['After Ke-2 Pasca OTO Completed (Round 2)', $syncedOtoRound2],
+                ['SPK R&D Masuk (Round 1 / After 1)', $syncedRnd],
+                ['Record Eksisting Dikoreksi / Divalidasi', $updatedRecords],
                 ['Total Record cx_after_confirmations Sekarang', CxAfterConfirmation::count()]
             ]
         );
