@@ -235,7 +235,8 @@ Pengujian eksekusi langsung terhadap 162 record order aktif:
 - **Implementasi Teknis:**
   1. **Date Range Picker Modern (Flatpickr):**
      - Mengintegrasikan Flatpickr dengan mode `range`, format tanggal `Y-m-d`, lokalisasi bahasa Indonesia, dan custom CSS bertema gradien Emerald.
-     - Ditampilkan dalam format tombol kalender interaktif (`DD/MM/YYYY s/d DD/MM/YYYY`) yang otomatis menyinkronkan filter Livewire via method `setDateRange()`.
+     - Mengaitkan Flatpickr langsung ke elemen input visual dengan konfigurasi `position: 'auto right'`, sehingga popover kalender muncul tepat di bawah input tanggal di sebelah kanan secara presisi (mengatasi isu kalkulasi posisi `x:0, y:0` pada elemen hidden).
+     - Otomatis menyinkronkan filter Livewire via method `setDateRange()`.
   2. **Backend Service (`WarehouseQcAnalyticsService::getSpkDetails`):**
      - Mengambil seluruh record SPK yang relevan dengan audit QC pada periode aktif: Lolos Murni, Lolos Catatan (dengan rincian upsell jasa), Tolak Gudang, dan Belum Di-QC.
      - Menyediakan metadata lengkap: nomor SPK, nama & nomor telepon pelanggan, brand/tipe sepatu, kode agen CS, status SPK, status QC awal, rincian layanan tambahan, kondisi fisik bawaan, tanggal QC & tanggal masuk, serta petugas pemeriksa.
@@ -247,7 +248,7 @@ Pengujian eksekusi langsung terhadap 162 record order aktif:
      - Kartu banner metrik atas kini dapat diklik (*clickable*) untuk langsung melompat ke tab SPK dengan filter status otomatis.
      - Tabel CS kini dilengkapi tombol aksi untuk langsung membuka daftar SPK milik agen CS terkait.
 - **Hasil Pengujian & Verifikasi:**
-  - Rendering Livewire Component: 100% OK (37.175 karakter HTML).
+  - Rendering Livewire Component: 100% OK (38.164 karakter HTML).
   - Generator ekspor PDF dan Excel tetap stabil dan sinkron.
 
 

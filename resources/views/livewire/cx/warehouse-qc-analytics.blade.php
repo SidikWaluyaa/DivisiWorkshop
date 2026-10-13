@@ -25,6 +25,11 @@
         .flatpickr-day.today {
             border-color: #059669 !important;
         }
+        .flatpickr-calendar.rightMost:before,
+        .flatpickr-calendar.rightMost:after {
+            left: auto !important;
+            right: 24px !important;
+        }
     </style>
 
     {{-- Top Header & Action Controls --}}
@@ -106,16 +111,18 @@
             </button>
         </div>
 
-        {{-- Date Range Picker (Flatpickr Integrated) --}}
+        {{-- Date Range Picker (Flatpickr Integrated anchored to visible element) --}}
         <div class="relative" 
              wire:ignore
              x-data="{
+                picker: null,
                 initPicker() {
-                    flatpickr(this.$refs.rangeInput, {
+                    this.picker = flatpickr(this.$refs.pickerInput, {
                         mode: 'range',
                         dateFormat: 'Y-m-d',
                         defaultDate: ['{{ $startDate }}', '{{ $endDate }}'],
                         locale: 'id',
+                        position: 'auto right',
                         onChange: (selectedDates, dateStr, instance) => {
                             if (selectedDates.length === 2) {
                                 let start = instance.formatDate(selectedDates[0], 'Y-m-d');
@@ -124,23 +131,38 @@
                             }
                         }
                     });
+
+                    this.$watch('$wire.startDate', (val) => {
+                        if (this.picker && val && $wire.endDate) {
+                            this.picker.setDate([val, $wire.endDate], false);
+                        }
+                    });
+                    this.$watch('$wire.endDate', (val) => {
+                        if (this.picker && val && $wire.startDate) {
+                            this.picker.setDate([$wire.startDate, val], false);
+                        }
+                    });
                 }
              }" 
              x-init="initPicker()">
-            <button @click="$refs.rangeInput._flatpickr.open()" 
-                    type="button" 
-                    class="px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-emerald-500 rounded-xl text-xs font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2 shadow-sm transition-all group">
-                <svg class="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span class="font-mono text-emerald-700 dark:text-emerald-400">{{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }}</span>
-                <span class="text-gray-400 font-normal">s/d</span>
-                <span class="font-mono text-emerald-700 dark:text-emerald-400">{{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</span>
-                <svg class="w-3.5 h-3.5 text-gray-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
-            <input x-ref="rangeInput" type="text" class="hidden" />
+            <div class="relative flex items-center">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-600 dark:text-emerald-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <input x-ref="pickerInput" 
+                       type="text" 
+                       readonly
+                       value="{{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}"
+                       title="Klik untuk memilih rentang tanggal kalender"
+                       class="cursor-pointer pl-10 pr-9 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-emerald-500 rounded-xl text-xs font-mono font-bold text-gray-800 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 w-64 text-center transition-all select-none" />
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
         </div>
     </div>
 
