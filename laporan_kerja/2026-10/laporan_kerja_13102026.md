@@ -423,7 +423,35 @@
 
 ---
 
-## 23. Rencana Tindak Lanjut & Monitoring Operasional
+## 23. Perbaikan Hardcoded Teks Blade Siklus After (Penyebab Teks Statis "After 2") Menjadi Dinamis (After 3+)
+- **Waktu:** 15:55 WIB
+- **Latar Belakang & Analisis Masalah:**
+  - Meskipun data pada database dan model telah sukses ter-update menjadi ronde 3 (`round = 3`), pada tampilan antarmuka tabel pengguna baris tersebut masih bertuliskan **"AFTER 2"**.
+  - **Akar Masalah:** Ditemukan bahwa pada file template Blade [`after-confirmation-list.blade.php`](file:///c:/laragon/www/SistemWorkshop/resources/views/livewire/cx/after-confirmation-list.blade.php) baris 215-225 terdapat penulisan teks string statis yang di-hardcode:
+    ```blade
+    @if((int)$item->round >= 2)
+        <span>After 2</span>
+    @else
+        <span>After 1</span>
+    @endif
+    ```
+    Kondisi ini menyebabkan nilai ronde berapapun (round 2, 3, 4, dst.) akan selalu dipaksa menampilkan teks bertuliskan `"After 2"`.
+- **Tindakan Perbaikan:**
+  - Mengubah rendering badge siklus pada baris tabel Blade dari teks statis menjadi pemanggilan accessor dinamis `{{ $item->round_badge['label'] }}` dan kelas dinamis `{{ $item->round_badge['badge_class'] }}`.
+  - Dengan perubahan ini:
+    - Round 1 ➡️ Tampil **`After 1`** (Slate)
+    - Round 2 ➡️ Tampil **`After 2`** (Purple)
+    - Round 3 ➡️ Tampil **`After 3`** (Indigo bold)
+    - Round N ➡️ Tampil **`After N`** dinamis!
+- **Hasil Verifikasi:**
+  - `S-2608-12-0016-SW`:
+    - 13 Oct 2026 14:58 WIB ➡️ **After 3** (Indigo)
+    - 09 Sep 2026 10:57 WIB ➡️ **After 2** (Purple)
+    - 27 Aug 2026 09:55 WIB ➡️ **After 1** (Slate)
+
+---
+
+## 24. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -441,6 +469,7 @@
 - [x] Selesai: Penyelarasan multi-tabel (Revisi FINISHED, OTO COMPLETED, Garansi FINISHED -> After 2; RND -> After 1).
 - [x] Selesai: Dukungan siklus dinamis After 3 (After Ke-3) untuk pengerjaan OTO berulang.
 - [x] Selesai: Penyempurnaan filter Tipe SPK (seluruh riwayat ronde tampil) & auto-resequencing nomor ronde sekuensial.
+- [x] Selesai: Perbaikan rendering badge teks dinamis Blade (menggantikan hardcoded "After 2" dengan `{{ $roundBadge['label'] }}`).
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC di lingkungan produksi.
 
 

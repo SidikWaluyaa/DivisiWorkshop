@@ -211,18 +211,18 @@
                                     </span>
                                     @endif
 
-                                    {{-- Badge Siklus: After 1 vs After 2 --}}
-                                    @if((int)$item->round >= 2)
-                                    <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-lg bg-purple-600 text-white shadow-xs uppercase tracking-wider">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse"></span>
-                                        After 2
+                                    {{-- Badge Siklus: Dinamis (After 1, After 2, After 3, dst.) --}}
+                                    @php
+                                        $roundBadge = $item->round_badge;
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider {{ $roundBadge['badge_class'] }}">
+                                        @if((int)$item->round >= 2)
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse"></span>
+                                        @else
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        @endif
+                                        {{ $roundBadge['label'] }}
                                     </span>
-                                    @else
-                                    <span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-lg bg-slate-800 text-white shadow-xs uppercase tracking-wider">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                                        After 1
-                                    </span>
-                                    @endif
                                 </div>
 
                                 <div>
