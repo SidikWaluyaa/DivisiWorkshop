@@ -32,6 +32,8 @@ class SyncCxAfterConfirmationCommand extends Command
      */
     public function handle()
     {
+        ini_set('memory_limit', '512M');
+
         $this->info("🚀 Memulai Sinkronisasi Konfirmasi After Service...");
 
         $syncedGaransiRound2 = 0;
@@ -261,7 +263,10 @@ class SyncCxAfterConfirmationCommand extends Command
             }
         }
 
-        $allOrdersGroup = CxAfterConfirmation::with('workOrder')
+        $allOrdersGroup = CxAfterConfirmation::select('id', 'work_order_id', 'round', 'stage_type', 'entered_at')
+            ->with(['workOrder' => function ($q) {
+                $q->select('id', 'spk_number', 'priority');
+            }])
             ->orderBy('entered_at', 'asc')
             ->orderBy('id', 'asc')
             ->get()

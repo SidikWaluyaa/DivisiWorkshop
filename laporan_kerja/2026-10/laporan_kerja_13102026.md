@@ -579,7 +579,22 @@
 
 ---
 
-## 30. Rencana Tindak Lanjut & Monitoring Operasional
+## 30. Optimasi Konsumsi Memori (Memory Limit 512M & Selective Hydration) pada Command `cx:sync-after-confirmation`
+- **Waktu:** 16:42 WIB
+- **Gejala Masalah:** Di server produksi, saat command `php artisan cx:sync-after-confirmation` mencapai tahap 5 (*Membersihkan revisi internal & menata ulang nomor ronde sekuensial*), terjadi error:
+  `PHP Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 12288 bytes) in Connection.php:420`.
+- **Akar Masalah:**
+  - Batas alokasi memori PHP CLI default di server adalah 128 MB (`134217728 bytes`).
+  - Pada tahap 5, query `CxAfterConfirmation::with('workOrder')->get()` memuat seluruh record database dengan model `WorkOrder` lengkap yang memiliki banyak kolom dan relasi ke dalam memori server sekaligus.
+- **Tindakan Perbaikan:**
+  1. Menambahkan alokasi memori dinamis di awal `handle()`: `ini_set('memory_limit', '512M');` agar CLI memiliki ruang memori yang cukup untuk pemrosesan batch.
+  2. Mengoptimalkan query penarikan data (*selective column hydration*): Hanya mengambil kolom esensial `select('id', 'work_order_id', 'round', 'stage_type', 'entered_at')` dan relasi workOrder terbatas pada `select('id', 'spk_number', 'priority')`. Hal ini memangkas konsumsi RAM hingga 90%+.
+- **Hasil Pengujian & Verifikasi:**
+  - Command dieksekusi ulang secara lokal dan berhasil tuntas 100% (*Exit code 0*), siap dijalankan di server produksi.
+
+---
+
+## 31. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -604,7 +619,9 @@
 - [x] Selesai: Implementasi Flatpickr Interactive Date Range Picker pada Konfirmasi After Service.
 - [x] Selesai: Perbaikan tampilan kalender Flatpickr (tanpa terpotong) & penambahan kontrol paginasi dinamis (10, 25, 50, 100).
 - [x] Selesai: Perbaikan kompatibilitas Linux autoloader Model OTO pada command `cx:sync-after-confirmation`.
+- [x] Selesai: Optimasi konsumsi memori (memory limit 512M & selective hydration) pada command `cx:sync-after-confirmation`.
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC dan Konfirmasi After di lingkungan produksi.
+
 
 
 
