@@ -4,6 +4,7 @@ namespace App\Services\Cx;
 
 use App\Models\WorkOrder;
 use App\Models\User;
+use App\Enums\WorkOrderStatus;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
@@ -22,8 +23,10 @@ class WarehouseQcAnalyticsService
         $startStr = $startDate->copy()->startOfDay()->toDateTimeString();
         $endStr = $endDate->copy()->endOfDay()->toDateTimeString();
 
-        // 1. Fetch Entered Work Orders strictly within entry_date
-        $enteredOrders = WorkOrder::whereBetween('entry_date', [$startStr, $endStr])
+        // 1. Fetch Entered Work Orders strictly within entry_date (Excluding SPK_PENDING, matching Warehouse Dashboard)
+        $enteredOrders = WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$startStr, $endStr])
+            ->where('status', '!=', WorkOrderStatus::SPK_PENDING)
             ->get([
                 'id', 
                 'spk_number', 
@@ -34,15 +37,12 @@ class WarehouseQcAnalyticsService
                 'warehouse_qc_status', 
                 'warehouse_qc_notes', 
                 'warehouse_qc_at',
-                'desc_kondisi_bawaan',
                 'suggested_services'
             ]);
 
-        // 2. Fetch QC Processed Work Orders within warehouse_qc_at
-        $qcOrders = WorkOrder::with(['cxIssues' => function ($q) {
-                $q->where('source', 'GUDANG');
-            }])
-            ->whereNotNull('warehouse_qc_status')
+        // 2. Fetch QC Processed Work Orders within warehouse_qc_at period
+        $qcOrders = WorkOrder::whereNotNull('warehouse_qc_status')
+            ->where('warehouse_qc_status', '!=', '')
             ->whereBetween('warehouse_qc_at', [$startStr, $endStr])
             ->get([
                 'id', 
@@ -54,11 +54,27 @@ class WarehouseQcAnalyticsService
                 'warehouse_qc_at', 
                 'entry_date', 
                 'created_at',
-                'desc_kondisi_bawaan',
                 'suggested_services'
             ]);
 
-        // 3. Calculate Summary Banner Metrics using unified classification
+        // 3. Fetch Pending QC Work Orders (entry_date in period, status DITERIMA, QC status null/empty)
+        $pendingQcOrders = WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$startStr, $endStr])
+            ->where('status', WorkOrderStatus::DITERIMA)
+            ->where(function ($q) {
+                $q->whereNull('warehouse_qc_status')
+                  ->orWhere('warehouse_qc_status', '');
+            })
+            ->get([
+                'id', 
+                'spk_number', 
+                'cs_code', 
+                'status',
+                'entry_date', 
+                'created_at'
+            ]);
+
+        // 4. Calculate Summary Banner Metrics using unified classification
         $totalMasuk = $enteredOrders->count();
         
         $totalLolos = 0;
@@ -77,7 +93,7 @@ class WarehouseQcAnalyticsService
         }
 
         $totalQc = $totalLolos + $totalLolosCatatan + $totalTolak;
-        $belumQc = max(0, $totalMasuk - $totalQc);
+        $belumQc = $pendingQcOrders->count();
 
         $pctLolos = $totalQc > 0 ? round(($totalLolos / $totalQc) * 100, 2) : 0;
         $pctLolosCatatan = $totalQc > 0 ? round(($totalLolosCatatan / $totalQc) * 100, 2) : 0;
@@ -95,10 +111,10 @@ class WarehouseQcAnalyticsService
             'belum_qc' => $belumQc,
         ];
 
-        // 4. Build CS QC Contribution Table
-        $csTable = $this->buildCsContributionTable($enteredOrders, $qcOrders);
+        // 5. Build CS QC Contribution Table
+        $csTable = $this->buildCsContributionTable($enteredOrders, $qcOrders, $pendingQcOrders);
 
-        // 5. Build Daily QC Before Table
+        // 6. Build Daily QC Before Table
         $dailyTable = $this->buildDailyQcTable($startDate, $endDate, $enteredOrders, $qcOrders);
 
         return [
@@ -121,32 +137,22 @@ class WarehouseQcAnalyticsService
     public function classifyQcOrder($order): string
     {
         $rawStatus = strtolower((string)$order->warehouse_qc_status);
-        $statusVal = is_object($order->status) ? $order->status->value : (string)$order->status;
 
-        // 1. Check if this is an active unresolved rejection from Warehouse QC
+        // 1. Tolak: QC reject directly from Warehouse Reception
         if ($rawStatus === 'reject') {
-            $hasOpenIssue = $order->relationLoaded('cxIssues') 
-                ? $order->cxIssues->where('status', 'OPEN')->where('source', 'GUDANG')->isNotEmpty()
-                : false;
-
-            if (in_array($statusVal, ['CX_FOLLOWUP', 'HOLD_FOR_CX']) || $hasOpenIssue) {
-                return 'tolak';
-            }
+            return 'tolak';
         }
 
-        // 2. Check for condition notes or suggested services
-        $hasSpecialNotes = !empty(trim((string)$order->desc_kondisi_bawaan))
-            || (!empty($order->suggested_services) && is_array($order->suggested_services) && count($order->suggested_services) > 0);
+        // 2. Lolos Catatan: Passed QC with additional suggested upsell services
+        $hasSuggestedServices = !empty($order->suggested_services) 
+            && is_array($order->suggested_services) 
+            && count($order->suggested_services) > 0;
 
-        // 3. A warehouse reject that was resolved and proceeded to work counts as lolos_catatan
-        if ($rawStatus === 'reject') {
+        if ($hasSuggestedServices) {
             return 'lolos_catatan';
         }
 
-        if ($hasSpecialNotes) {
-            return 'lolos_catatan';
-        }
-
+        // 3. Lolos: Clean pass without extra recommendations
         return 'lolos';
     }
 
@@ -172,7 +178,7 @@ class WarehouseQcAnalyticsService
     /**
      * Build CS Contribution Table.
      */
-    protected function buildCsContributionTable($enteredOrders, $qcOrders): array
+    protected function buildCsContributionTable($enteredOrders, $qcOrders, $pendingQcOrders): array
     {
         // Get all configured CS Users with cs_code
         $csUsers = User::whereNotNull('cs_code')
@@ -219,11 +225,19 @@ class WarehouseQcAnalyticsService
             }
         }
 
+        // Group Pending QC Orders by CS Code
+        $pendingByCs = [];
+        foreach ($pendingQcOrders as $order) {
+            $code = $this->extractCsCode($order);
+            $pendingByCs[$code] = ($pendingByCs[$code] ?? 0) + 1;
+        }
+
         // Combine all distinct CS codes
         $allCodes = array_unique(array_merge(
             array_keys($csMap),
             array_keys($enteredByCs),
-            array_keys($qcByCs)
+            array_keys($qcByCs),
+            array_keys($pendingByCs)
         ));
 
         $rows = [];
@@ -244,7 +258,7 @@ class WarehouseQcAnalyticsService
             $tolak = $qcByCs[$code]['tolak'] ?? 0;
 
             $terQc = $lolos + $lolosCatatan + $tolak;
-            $blmQc = max(0, $masuk - $terQc);
+            $blmQc = $pendingByCs[$code] ?? 0;
 
             $pctLolos = $terQc > 0 ? round(($lolos / $terQc) * 100, 2) : 0;
             $pctLolosCatatan = $terQc > 0 ? round(($lolosCatatan / $terQc) * 100, 2) : 0;
@@ -253,7 +267,7 @@ class WarehouseQcAnalyticsService
             $pctBlmQc = $masuk > 0 ? round(($blmQc / $masuk) * 100, 2) : 0;
 
             // Only add rows that have at least some activity or are valid CS users
-            if ($masuk > 0 || $terQc > 0 || isset($csMap[$code])) {
+            if ($masuk > 0 || $terQc > 0 || $blmQc > 0 || isset($csMap[$code])) {
                 $rows[] = [
                     'code' => $code,
                     'name' => $name,

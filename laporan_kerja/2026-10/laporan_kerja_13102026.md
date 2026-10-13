@@ -206,6 +206,28 @@ Pengujian eksekusi langsung terhadap 162 record order aktif:
   - Script test verifikasi (`test_service_v2.php`) lolos 100% tanpa error.
   - Generator berkas ekspor PDF (`13.929 bytes`) dan Excel (`51 baris`) berjalan lancar dan sinkron.
 
+### 4.8 Penyelarasan Metrik QC Awal dengan Standar Pusat Kendali Gudang (`/warehouse/dashboard`)
+- **Waktu:** 09:53 WIB
+- **Analisis Mendalam 3 Temuan User:**
+  1. **Sepatu Masuk (400 vs 279 Pasang):**
+     - Di Pusat Kendali Gudang (`warehouse/dashboard` Card 1: *1. Sepatu Masuk (Before)*), angka yang tercatat resmi adalah **279 Pasang**.
+     - Hal ini karena query resmi mengecualikan status `WorkOrderStatus::SPK_PENDING` (`where('status', '!=', WorkOrderStatus::SPK_PENDING)`). Status `SPK_PENDING` adalah SPK yang baru dibuat oleh CS namun fisiknya belum diserahkan/diterima oleh petugas gudang.
+     - **Tindakan:** Menambahkan filter `where('status', '!=', WorkOrderStatus::SPK_PENDING)` pada query `$enteredOrders` di `WarehouseQcAnalyticsService`, sehingga angkanya selaras 100% menjadi 279 pasang.
+  2. **Jumlah Tolak (2 Pasang):**
+     - Di Pusat Kendali Gudang (`warehouse/dashboard` Card 3: *3. SPK Tertahan (QC Reject)*), tercatat tepat **2 Pasang** (Gagal Penerimaan Awal).
+     - Status reject ini murni berasal dari pemeriksaan awal fisik oleh petugas gudang penerimaan (`warehouse_qc_status = 'reject'`), bukan berasal dari kendala pengerjaan teknis di workshop.
+     - **Tindakan:** Memastikan `classifyQcOrder()` mengklasifikasikan `warehouse_qc_status = 'reject'` sebagai `tolak` (2 pasang).
+  3. **Lolos dengan Catatan vs Lolos Murni:**
+     - Karena form input penerimaan gudang mewajibkan (*required*) pengisian deskripsi kondisi bawaan (`desc_kondisi_bawaan`), maka seluruh order terisi deskripsi bawaan.
+     - Sesuai wawancara kerja (`/grill-me`), **Lolos Catatan** didefinisikan sebagai order lolos yang memiliki **rekomendasi layanan tambahan / upsell dari gudang (`suggested_services`)** (~39 unit di rekapan), sedangkan order lainnya (~236 unit) merupakan **Lolos** murni tanpa catatan.
+  4. **Belum Di-QC (Sisa Antrean QC Awal):**
+     - Metrik ini bukan lagi hasil pengurangan matematis (`total_masuk - total_qc`), melainkan dihitung secara presisi dari order dalam periode aktif yang statusnya masih `WorkOrderStatus::DITERIMA` dan belum dilakukan pemeriksaan QC awal (`warehouse_qc_status IS NULL / kosong`).
+     - Pada tabel CS, kolom `blm_qc` juga secara akurat mengelompokkan order berstatus `DITERIMA` yang belum di-QC berdasarkan kode masing-masing CS.
+- **Hasil Verifikasi:**
+  - Script test verifikasi (`test_service_v2.php`) lolos 100% dengan alokasi Lolos murni dan Lolos Catatan yang presisi.
+  - Generator ekspor Excel dan PDF tetap berfungsi sempurna.
+
+
 
 
 
