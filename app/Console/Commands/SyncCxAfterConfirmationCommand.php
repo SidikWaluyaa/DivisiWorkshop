@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderWarranty;
 use App\Models\WorkOrderRevision;
+use App\Models\OTO;
 use App\Models\CxAfterConfirmation;
 use App\Enums\WorkOrderStatus;
 use Carbon\Carbon;
@@ -160,7 +161,7 @@ class SyncCxAfterConfirmationCommand extends Command
         // 3. SINKRONISASI OTO (otos status = COMPLETED -> AFTER 2, AFTER 3, dst.)
         $this->info("⏳ 3. Memeriksa tabel otos (status = COMPLETED)...");
         
-        $otosByOrder = \App\Models\Oto::where('status', 'COMPLETED')
+        $otosByOrder = OTO::where('status', 'COMPLETED')
             ->orderBy('completed_at', 'asc')
             ->with('workOrder')
             ->get()

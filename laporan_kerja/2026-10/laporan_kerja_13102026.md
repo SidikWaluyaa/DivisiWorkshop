@@ -563,7 +563,23 @@
 
 ---
 
-## 29. Rencana Tindak Lanjut & Monitoring Operasional
+## 29. Perbaikan Kompatibilitas Linux Autoloader Model OTO pada Command `cx:sync-after-confirmation`
+- **Waktu:** 16:40 WIB
+- **Gejala Masalah:** Saat perintah `php artisan cx:sync-after-confirmation` dieksekusi di server Linux produksi (`root@shoeworkshop:/www/wwwroot/info.shoeworkshop.id/DivisiWorkshop`), muncul pesan kesalahan:
+  `Class "App\Models\Oto" not found in SyncCxAfterConfirmationCommand.php line 163`.
+- **Akar Masalah:**
+  - File sistem Linux bersifat *case-sensitive* (membedakan huruf besar dan kecil).
+  - Nama file model Eloquent di direktori `app/Models/` adalah `OTO.php` dan nama class-nya adalah `class OTO extends Model` (huruf kapital seluruhnya).
+  - Pada baris 163 di file command sebelumnya terpanggil `\App\Models\Oto::` (huruf kecil `to`), sehingga autoloader PHP di Linux gagal menemukan berkasnya.
+- **Tindakan Perbaikan:**
+  1. Menambahkan import resmi `use App\Models\OTO;` di bagian header `SyncCxAfterConfirmationCommand.php`.
+  2. Mengganti pemanggilan `\App\Models\Oto::where('status', 'COMPLETED')` menjadi `OTO::where('status', 'COMPLETED')`.
+- **Hasil Pengujian & Verifikasi:**
+  - Menjalankan `php artisan cx:sync-after-confirmation` lokal dan berhasil 100% tanpa error (*Exit code 0*), seluruh 5 tahapan sinkronisasi selesai diproses.
+
+---
+
+## 30. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -587,7 +603,9 @@
 - [x] Selesai: Penambahan KPI Card Reguler & indikator aktif 7 card Konfirmasi After Service.
 - [x] Selesai: Implementasi Flatpickr Interactive Date Range Picker pada Konfirmasi After Service.
 - [x] Selesai: Perbaikan tampilan kalender Flatpickr (tanpa terpotong) & penambahan kontrol paginasi dinamis (10, 25, 50, 100).
+- [x] Selesai: Perbaikan kompatibilitas Linux autoloader Model OTO pada command `cx:sync-after-confirmation`.
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC dan Konfirmasi After di lingkungan produksi.
+
 
 
 
