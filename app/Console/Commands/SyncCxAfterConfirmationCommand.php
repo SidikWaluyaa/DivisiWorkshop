@@ -105,10 +105,15 @@ class SyncCxAfterConfirmationCommand extends Command
             }
         }
 
-        // 2. SINKRONISASI REVISI (work_order_revisions status = FINISHED -> AFTER 2, AFTER 3, dst.)
-        $this->info("⏳ 2. Memeriksa tabel work_order_revisions (status = FINISHED)...");
+        // 2. SINKRONISASI REVISI (HANYA DARI SELESAI / FINISH, BUKAN QC / PRODUCTION)
+        $this->info("⏳ 2. Memeriksa tabel work_order_revisions (status = FINISHED & origin = SELESAI)...");
         
         $revisionsByOrder = WorkOrderRevision::where('status', 'FINISHED')
+            ->where(function ($q) {
+                $q->whereNull('origin_status')
+                  ->orWhere('origin_status', 'SELESAI')
+                  ->orWhere('origin_status', '');
+            })
             ->orderBy('finished_at', 'asc')
             ->with('workOrder')
             ->get()
@@ -131,7 +136,7 @@ class SyncCxAfterConfirmationCommand extends Command
                 ]);
             }
 
-            // Daftarkan setiap revisi yang selesai secara sekuensial (Round 2, Round 3, dst.)
+            // Daftarkan setiap revisi dari Finish yang selesai secara sekuensial (Round 2, Round 3, dst.)
             foreach ($revisions as $idx => $rev) {
                 $revRound = 2 + $idx;
                 $existing = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', $revRound)->first();
@@ -234,8 +239,27 @@ class SyncCxAfterConfirmationCommand extends Command
             }
         }
 
-        // 5. RAPATKAN, URUTKAN NOMOR RONDE SECARA SEKUENSIAL, DAN BERSIHKAN DATA
-        $this->info("⏳ 5. Menata ulang nomor ronde sekuensial (After 1, After 2, After 3, dst.) per SPK...");
+        // 5. RAPATKAN, BERSIHKAN REVISI INTERNAL (QC/PRODUCTION), DAN URUTKAN NOMOR RONDE
+        $this->info("⏳ 5. Membersihkan revisi internal (QC/Production) & menata ulang nomor ronde sekuensial...");
+        
+        // Hapus record REVISI yang bukan berasal dari Selesai/Finish (revisi internal QC/Production)
+        $allRevisis = CxAfterConfirmation::where('stage_type', 'REVISI')->get();
+        foreach ($allRevisis as $revRecord) {
+            $hasFinishRev = WorkOrderRevision::where('work_order_id', $revRecord->work_order_id)
+                ->where('status', 'FINISHED')
+                ->where(function ($q) {
+                    $q->whereNull('origin_status')
+                      ->orWhere('origin_status', 'SELESAI')
+                      ->orWhere('origin_status', '');
+                })
+                ->exists();
+
+            if (!$hasFinishRev) {
+                $revRecord->delete();
+                $updatedRecords++;
+            }
+        }
+
         $allOrdersGroup = CxAfterConfirmation::with('workOrder')
             ->orderBy('entered_at', 'asc')
             ->orderBy('id', 'asc')

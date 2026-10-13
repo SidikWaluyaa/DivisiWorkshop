@@ -451,7 +451,30 @@
 
 ---
 
-## 24. Rencana Tindak Lanjut & Monitoring Operasional
+## 24. Pembatasan Ketat Revisi After Service: Hanya Mengambil Revisi yang Berasal dari Selesai/Finish (Eksklusi Revisi Internal QC & Produksi)
+- **Waktu:** 16:05 WIB
+- **Latar Belakang & Analisis Proses Bisnis:**
+  1. *Perbedaan Mendasar Jenis Revisi:*
+     - **Revisi Internal (QC / Produksi / Preparation):** Merupakan proses *rework* internal bengkel sebelum sepatu dinyatakan selesai. Pelanggan belum menerima sepatu dan tidak mengetahui reject internal ini. Karenanya, revisi internal ini **TIDAK BOLEH** masuk ke Konfirmasi After Service CS.
+     - **Revisi Pasca-Selesai (Sumber: SELESAI / FINISH):** Merupakan revisi yang diajukan setelah sepatu selesai (misal komplain saat barang sudah di rak selesai / penyerahan). Hanya jenis revisi inilah yang **WAJIB** masuk ke **Konfirmasi After Service (After 2)** setelah perbaikannya tuntas dikerjakan (`status = 'FINISHED'`).
+  2. *Anomali Sebelumnya:* Seluruh record revisi berstatus `FINISHED` sempat disinkronkan tanpa memfilter kolom `origin_status`, sehingga order revisi QC/Produksi (seperti `S-2608-12-0012-SW`, `S-2608-12-0003-SW`, dll.) salah masuk ke antrean Konfirmasi After.
+- **Tindakan Perbaikan:**
+  1. *Pengendali Revisi (`RevisionController.php` & `WorkflowService.php`):*
+     - Membatasi pemicu pembuatan Konfirmasi After Ke-2 (`createFromOrder($workOrder, 'REVISI', 2)`): Hanya dipicu jika revisi berasal dari status SELESAI (`origin_status === 'SELESAI'` atau `origin_status IS NULL / ''`).
+  2. *Artisan Command Sinkronisasi (`SyncCxAfterConfirmationCommand.php`):*
+     - Di Section 2: Memperketat query sinkronisasi revisi hanya untuk revisi dengan `status = 'FINISHED'` dan `origin_status` bernilai `NULL`, `''`, atau `'SELESAI'`.
+     - Di Section 5: Secara otomatis menghapus (*purge*) seluruh baris `cx_after_confirmations` berlabel `REVISI` yang berasal dari revisi internal (QC, Produksi, Preparation).
+- **Hasil Pengujian & Verifikasi:**
+  - Hanya 1 SPK yang sah masuk sebagai **REVISI (After 2)**, yaitu:
+    - **`S-2608-12-0019-SW`**:
+      - Waktu Selesai Revisi: `13 Oct 2026 15:55 WIB`
+      - Sumber: `SELESAI` (Valid 100% sesuai tab Riwayat Selesai di Dashboard Revisi)
+      - Round: **After 2** (🔴 REVISI)
+  - Seluruh SPK revisi internal QC / Produksi telah bersih dari antrean After Confirmation.
+
+---
+
+## 25. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -470,6 +493,7 @@
 - [x] Selesai: Dukungan siklus dinamis After 3 (After Ke-3) untuk pengerjaan OTO berulang.
 - [x] Selesai: Penyempurnaan filter Tipe SPK (seluruh riwayat ronde tampil) & auto-resequencing nomor ronde sekuensial.
 - [x] Selesai: Perbaikan rendering badge teks dinamis Blade (menggantikan hardcoded "After 2" dengan `{{ $roundBadge['label'] }}`).
+- [x] Selesai: Pembatasan ketat Revisi After Service hanya dari sumber Selesai/Finish (eksklusi revisi internal QC & Produksi).
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC di lingkungan produksi.
 
 

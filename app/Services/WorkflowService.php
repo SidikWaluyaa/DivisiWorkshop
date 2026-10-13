@@ -44,7 +44,19 @@ class WorkflowService
                     app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder);
                 } elseif ($oldStatusObj === WorkOrderStatus::REVISI || $workOrder->is_revising) {
                     // TRIGGER: Konfirmasi After Service (After 2 - Pasca Revisi)
-                    app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder, 'REVISI', 2);
+                    // HANYA dipicu jika revisi berasal dari tahapan SELESAI/Finish (bukan QC/Production internal)
+                    $hasFinishRevision = \App\Models\WorkOrderRevision::where('work_order_id', $workOrder->id)
+                        ->where(function($q) {
+                            $q->whereNull('origin_status')
+                              ->orWhere('origin_status', 'SELESAI')
+                              ->orWhere('origin_status', '');
+                        })
+                        ->whereNotIn('origin_status', ['PRODUCTION', 'QC', 'PREPARATION'])
+                        ->exists();
+
+                    if ($hasFinishRevision) {
+                        app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder, 'REVISI', 2);
+                    }
                 }
             }
             

@@ -187,8 +187,8 @@ class RevisionController extends Controller
                 $workOrder->previous_status = null;
                 $workOrder->save();
 
-                // Trigger Konfirmasi After Ke-2 jika target status adalah SELESAI
-                if ($targetStatus === WorkOrderStatus::SELESAI) {
+                // Trigger Konfirmasi After Ke-2 HANYA jika target status adalah SELESAI dan berasal dari SELESAI (bukan QC/Production)
+                if ($targetStatus === WorkOrderStatus::SELESAI && (empty($revision->origin_status) || $revision->origin_status === 'SELESAI')) {
                     app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder, 'REVISI', 2);
                 }
             });
