@@ -303,7 +303,35 @@
 
 ---
 
-## 19. Rencana Tindak Lanjut & Monitoring Operasional
+## 19. Koreksi Klasifikasi SPK Garansi (-GR Wajib After Ke-2) & Normalisasi Stage Tipe SPK (R&D vs Reguler)
+- **Waktu:** 15:20 WIB
+- **Latar Belakang & Analisis Masalah:**
+  1. *Salah Klasifikasi Badge GARANSI:* SPK reguler yang memiliki fasilitas proteksi garansi (`is_warranty = 1`, misal: `S-2608-14-0023-SW`) dan SPK uji coba R&D (`RD-2610-01-0001-SW`, `RD-2610-01-0002-SW`) sempat salah terdeteksi sebagai stage `GARANSI` akibat pengecekan `!empty($order->is_warranty)`.
+  2. *Ketentuan Bisnis Standar Rework Garansi:*
+     - Badge **GARANSI** (Kuning) hanya diperuntukkan bagi SPK klaim perbaikan garansi yang nomor SPK-nya mengandung kode **`-GR`** atau **`GR-`**.
+     - Pengerjaan klaim garansi merupakan rework tindak lanjut, sehingga siklus after-nya **WAJIB After Ke-2 (`round = 2` / After 2)**, bukan After 1.
+     - SPK dengan awalan **`RD-`** atau berprioritas R&D/RND diklasifikasikan sebagai **`RND`** (Biru, After 1).
+     - SPK standar (`S-...-SW`) diklasifikasikan sebagai **`REGULER`** (Hijau, After 1).
+- **Tindakan Perbaikan:**
+  1. *Perbaikan Service (`CxConfirmationService.php`):*
+     - Memperketat deteksi: Stage `'GARANSI'` hanya aktif bila `str_contains($spk, '-GR')` atau `str_contains($spk, 'GR-')`.
+     - Menetapkan default `round = 2` (After 2) otomatis untuk semua SPK Garansi.
+     - Menambahkan deteksi awalan `'RD-'` sebagai stage `'RND'` (Round 1).
+  2. *Perbaikan Modul Garansi (`Warranty/Index.php`):*
+     - Mengubah pemanggilan `createFromOrder($reworkWo, 'GARANSI', 2)` saat SPK GR diterbitkan/diselesaikan ke Finish.
+  3. *Perbaikan & Penyempurnaan Command Sinkronisasi (`SyncCxAfterConfirmationCommand.php`):*
+     - Section 1: Hanya mengambil SPK berakhiran/mengandung `-GR` dan mendaftarkannya sebagai `round = 2` (After 2).
+     - Section 5: Melakukan *auto-healing/cleanup* pada record `cx_after_confirmations` yang salah label; SPK `RD-` otomatis diubah ke `RND` (After 1), SPK reguler dikembalikan ke `REGULER` (After 1), dan SPK `-GR` dipastikan berada di `GARANSI` (After 2).
+- **Hasil:**
+  - Terverifikasi 100% pada eksekusi perintah `php artisan cx:sync-after-confirmation`:
+    - `RD-2610-01-0001-SW` -> Stage: **RND** (Biru) | Round: 1 (**After 1**).
+    - `RD-2610-01-0002-SW` -> Stage: **RND** (Biru) | Round: 1 (**After 1**).
+    - `S-2608-12-0012-GR` -> Stage: **GARANSI** (Kuning) | Round: 2 (**After 2**).
+    - `S-2608-14-0023-SW` -> Stage: **REGULER** (Hijau) | Round: 1 (**After 1**).
+
+---
+
+## 20. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -317,6 +345,7 @@
 - [x] Selesai: Perbaikan fatal TypeError penambahan jasa kustom pada modal ubah detail barang CS.
 - [x] Selesai: Implementasi Multi-Cycle After Service & Dynamic Color Badges di `/cx/after-confirmation`.
 - [x] Selesai: Integrasi otomatisasi SPK Garansi (GR), KPI cards adaptif tanggal, dan command sinkronisasi `cx:sync-after-confirmation`.
+- [x] Selesai: Koreksi klasifikasi SPK Garansi (-GR wajib After 2) dan pembersihan label R&D / Reguler.
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC di lingkungan produksi.
 
 

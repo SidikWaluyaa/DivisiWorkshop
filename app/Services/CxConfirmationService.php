@@ -20,13 +20,43 @@ class CxConfirmationService
     public function createFromOrder(WorkOrder $order, ?string $forcedStage = null, ?int $forcedRound = null): ?CxAfterConfirmation
     {
         try {
+            $spk = (string)$order->spk_number;
+            $isGr = str_contains($spk, '-GR') || str_contains($spk, 'GR-');
+            $isRnd = str_starts_with($spk, 'RD-') || in_array(strtoupper(trim((string)$order->priority)), ['R&D', 'RND']);
+            $isOto = !empty($order->has_active_oto);
+
+            // Determine stage_type
+            $stageType = $forcedStage;
+            if (!$stageType) {
+                if ($isGr) {
+                    $stageType = 'GARANSI';
+                } elseif ($isRnd) {
+                    $stageType = 'RND';
+                } elseif (!empty($order->is_revising)) {
+                    $stageType = 'REVISI';
+                } elseif ($isOto) {
+                    $stageType = 'OTO';
+                } else {
+                    $stageType = 'REGULER';
+                }
+            }
+
             // Find latest after record for this work order
             $latest = CxAfterConfirmation::where('work_order_id', $order->id)
                 ->orderBy('round', 'desc')
                 ->first();
 
-            // Determine target round
-            $targetRound = $forcedRound ?? ($latest ? ((int)$latest->round + 1) : 1);
+            // Determine target round:
+            // Khusus GARANSI, default-nya adalah After 2 (round = 2) sesuai standar follow-up rework garansi
+            if (!is_null($forcedRound)) {
+                $targetRound = $forcedRound;
+            } elseif ($stageType === 'GARANSI') {
+                $targetRound = 2;
+            } elseif ($latest) {
+                $targetRound = (int)$latest->round + 1;
+            } else {
+                $targetRound = 1;
+            }
 
             // Cap at round 2 unless specifically forced
             if (is_null($forcedRound) && $latest && (int)$latest->round >= 2) {
@@ -40,22 +70,6 @@ class CxConfirmationService
 
             if ($duplicateCheck) {
                 return $duplicateCheck;
-            }
-
-            // Determine stage_type
-            $stageType = $forcedStage;
-            if (!$stageType) {
-                if (!empty($order->is_warranty) || str_contains((string)$order->spk_number, '-GR') || str_contains((string)$order->category_spk, 'Garansi')) {
-                    $stageType = 'GARANSI';
-                } elseif (in_array(strtoupper(trim((string)$order->priority)), ['R&D', 'RND'])) {
-                    $stageType = 'RND';
-                } elseif (!empty($order->is_revising) || $targetRound >= 2) {
-                    $stageType = 'REVISI';
-                } elseif (!empty($order->has_active_oto)) {
-                    $stageType = 'OTO';
-                } else {
-                    $stageType = 'REGULER';
-                }
             }
 
             $record = CxAfterConfirmation::create([
