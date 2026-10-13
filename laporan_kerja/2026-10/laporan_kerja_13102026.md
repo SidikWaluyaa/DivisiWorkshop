@@ -358,7 +358,40 @@
 
 ---
 
-## 21. Rencana Tindak Lanjut & Monitoring Operasional
+## 21. Implementasi Siklus Dinamis After Ke-3 (After 3+) untuk Multi-OTO & Penjelasan Lokasi After 1 Reguler
+- **Waktu:** 15:42 WIB
+- **Latar Belakang & Analisis Permasalahan:**
+  1. *Kenapa After 1 (Reguler) Tidak Tampak di Screenshot Pengguna?*
+     - Data After 1 untuk SPK tersebut sebenarnya ada dan lengkap di database:
+       - `S-2608-12-0014-SW`: After 1 (REGULER) masuk pada `09 Sep 2026 10:46 WIB` (berada di bawah baris 10:57 WIB karena urutan waktu menurun).
+       - `S-2608-12-0016-SW`: After 1 (REGULER) masuk pada `27 Aug 2026 09:55 WIB` (berada di halaman/tanggal Agustus).
+     - Saat pengguna memfilter dengan chip **"OTO"** (`stageFilter = 'OTO'`), baris After 1 tidak muncul karena stage After 1 adalah `REGULER`.
+  2. *Dukungan After Ke-3 (After 3+):*
+     - Dalam operasional nyata, sebuah SPK dapat memiliki lebih dari 1 kali OTO atau Revisi yang selesai di tanggal berbeda (contoh: SPK `S-2608-12-0014-SW` memiliki OTO Deep Clean ke-1 tuntas 09 Sep 2026 dan OTO Deep Clean ke-2 tuntas 17 Sep 2026).
+     - Sebelumnya sistem membatasi ronde maksimal hanya sampai 2 (`cap at round 2`), sehingga OTO kedua tidak memiliki antrean konfirmasi tindak lanjut.
+- **Tindakan Perbaikan & Peningkatan:**
+  1. *Model (`CxAfterConfirmation.php`):*
+     - Memperbarui accessor `round_badge` agar mendukung dinamis `After 3`, `After 4`, dst. dengan styling premium (Indigo/Purple, font-black).
+  2. *Service (`CxConfirmationService.php`):*
+     - Menghapus pembatas statis round 2. Jika suatu order telah memiliki After 2 dan mendapatkan pengerjaan selesai baru, sistem otomatis menerbitkan `After 3` (`round = 3`), `After 4`, dst.
+  3. *Command Sinkronisasi (`SyncCxAfterConfirmationCommand.php`):*
+     - Mengelompokkan OTO dan Revisi per order secara sekuensial berdasarkan waktu selesai (`completed_at` / `finished_at` ascending).
+     - OTO/Revisi ke-1 diterbitkan sebagai **Round 2 (After 2)**, dan OTO/Revisi berikutnya otomatis diterbitkan sebagai **Round 3 (After 3)**, dst.
+  4. *Blade & Filter (`after-confirmation-list.blade.php`):*
+     - Menambahkan opsi `After 3 (OTO 2x/Lanjutan)` pada dropdown filter siklus after.
+- **Hasil Pengujian & Verifikasi:**
+  - `S-2608-12-0014-SW`:
+    - After 1: 09 Sep 2026 10:46 WIB (REGULER)
+    - After 2: 09 Sep 2026 11:24 WIB (OTO - Paket 1)
+    - After 3: 17 Sep 2026 15:10 WIB (OTO - Paket 2)
+  - `S-2608-12-0016-SW`:
+    - After 1: 27 Aug 2026 09:55 WIB (REGULER)
+    - After 2: 09 Sep 2026 10:57 WIB (OTO - Paket 1)
+    - After 3: 13 Oct 2026 14:58 WIB (OTO - Paket 2)
+
+---
+
+## 22. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -374,6 +407,7 @@
 - [x] Selesai: Integrasi otomatisasi SPK Garansi (GR), KPI cards adaptif tanggal, dan command sinkronisasi `cx:sync-after-confirmation`.
 - [x] Selesai: Koreksi klasifikasi SPK Garansi (-GR wajib After 2) dan pembersihan label R&D / Reguler.
 - [x] Selesai: Penyelarasan multi-tabel (Revisi FINISHED, OTO COMPLETED, Garansi FINISHED -> After 2; RND -> After 1).
+- [x] Selesai: Dukungan siklus dinamis After 3 (After Ke-3) untuk pengerjaan OTO berulang.
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC di lingkungan produksi.
 
 

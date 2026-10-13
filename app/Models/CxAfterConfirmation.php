@@ -79,11 +79,21 @@ class CxAfterConfirmation extends Model
     }
 
     /**
-     * Get style tokens for round badge (After 1 vs After 2)
+     * Get style tokens for round badge (After 1, After 2, After 3+)
      */
     public function getRoundBadgeAttribute(): array
     {
-        if ((int)$this->round >= 2) {
+        $round = (int)($this->round ?? 1);
+
+        if ($round >= 3) {
+            return [
+                'label' => 'After ' . $round,
+                'badge_class' => 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 font-black',
+                'indicator' => (string)$round,
+            ];
+        }
+
+        if ($round === 2) {
             return [
                 'label' => 'After 2',
                 'badge_class' => 'bg-purple-600 text-white shadow-sm shadow-purple-500/20 font-black',

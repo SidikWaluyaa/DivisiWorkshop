@@ -105,15 +105,17 @@ class SyncCxAfterConfirmationCommand extends Command
             }
         }
 
-        // 2. SINKRONISASI REVISI (work_order_revisions status = FINISHED -> AFTER 2 / ROUND = 2)
+        // 2. SINKRONISASI REVISI (work_order_revisions status = FINISHED -> AFTER 2, AFTER 3, dst.)
         $this->info("⏳ 2. Memeriksa tabel work_order_revisions (status = FINISHED)...");
         
-        $finishedRevisions = WorkOrderRevision::where('status', 'FINISHED')
+        $revisionsByOrder = WorkOrderRevision::where('status', 'FINISHED')
+            ->orderBy('finished_at', 'asc')
             ->with('workOrder')
-            ->get();
+            ->get()
+            ->groupBy('work_order_id');
 
-        foreach ($finishedRevisions as $rev) {
-            $order = $rev->workOrder;
+        foreach ($revisionsByOrder as $woId => $revisions) {
+            $order = $revisions->first()?->workOrder;
             if (!$order) continue;
 
             $isOrderRnd = str_starts_with((string)$order->spk_number, 'RD-') || in_array(strtoupper(trim((string)$order->priority)), ['R&D', 'RND']);
@@ -129,33 +131,38 @@ class SyncCxAfterConfirmationCommand extends Command
                 ]);
             }
 
-            // Pastikan After 2 terbit untuk REVISI
-            $after2 = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', 2)->first();
-            if (!$after2) {
-                CxAfterConfirmation::create([
-                    'work_order_id' => $order->id,
-                    'round'         => 2,
-                    'stage_type'    => 'REVISI',
-                    'entered_at'    => $rev->finished_at ?? $rev->updated_at ?? now(),
-                ]);
-                $syncedRevisiRound2++;
-            } else {
-                if ($after2->stage_type !== 'REVISI') {
-                    $after2->update(['stage_type' => 'REVISI']);
-                    $updatedRecords++;
+            // Daftarkan setiap revisi yang selesai secara sekuensial (Round 2, Round 3, dst.)
+            foreach ($revisions as $idx => $rev) {
+                $revRound = 2 + $idx;
+                $existing = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', $revRound)->first();
+                if (!$existing) {
+                    CxAfterConfirmation::create([
+                        'work_order_id' => $order->id,
+                        'round'         => $revRound,
+                        'stage_type'    => 'REVISI',
+                        'entered_at'    => $rev->finished_at ?? $rev->updated_at ?? now(),
+                    ]);
+                    $syncedRevisiRound2++;
+                } else {
+                    if ($existing->stage_type !== 'REVISI') {
+                        $existing->update(['stage_type' => 'REVISI']);
+                        $updatedRecords++;
+                    }
                 }
             }
         }
 
-        // 3. SINKRONISASI OTO (otos status = COMPLETED -> AFTER 2 / ROUND = 2)
+        // 3. SINKRONISASI OTO (otos status = COMPLETED -> AFTER 2, AFTER 3, dst.)
         $this->info("⏳ 3. Memeriksa tabel otos (status = COMPLETED)...");
         
-        $completedOtos = \App\Models\Oto::where('status', 'COMPLETED')
+        $otosByOrder = \App\Models\Oto::where('status', 'COMPLETED')
+            ->orderBy('completed_at', 'asc')
             ->with('workOrder')
-            ->get();
+            ->get()
+            ->groupBy('work_order_id');
 
-        foreach ($completedOtos as $oto) {
-            $order = $oto->workOrder;
+        foreach ($otosByOrder as $woId => $otos) {
+            $order = $otos->first()?->workOrder;
             if (!$order) continue;
 
             $isOrderRnd = str_starts_with((string)$order->spk_number, 'RD-') || in_array(strtoupper(trim((string)$order->priority)), ['R&D', 'RND']);
@@ -171,20 +178,33 @@ class SyncCxAfterConfirmationCommand extends Command
                 ]);
             }
 
-            // Pastikan After 2 terbit untuk OTO
-            $after2 = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', 2)->first();
-            if (!$after2) {
-                CxAfterConfirmation::create([
-                    'work_order_id' => $order->id,
-                    'round'         => 2,
-                    'stage_type'    => 'OTO',
-                    'entered_at'    => $oto->completed_at ?? $oto->updated_at ?? now(),
-                ]);
-                $syncedOtoRound2++;
-            } else {
-                if ($after2->stage_type !== 'OTO' && $after2->stage_type !== 'REVISI') {
-                    $after2->update(['stage_type' => 'OTO']);
-                    $updatedRecords++;
+            // Cari ronde tertinggi yang sudah terpakai selain OTO (misal jika ada Revisi sebelumnya)
+            $baseRound = 2;
+            $maxNonOto = CxAfterConfirmation::where('work_order_id', $order->id)
+                ->where('stage_type', '!=', 'OTO')
+                ->where('round', '>=', 2)
+                ->max('round');
+            if ($maxNonOto) {
+                $baseRound = $maxNonOto + 1;
+            }
+
+            // Daftarkan setiap paket OTO yang selesai secara sekuensial (Round 2, Round 3, dst.)
+            foreach ($otos as $idx => $oto) {
+                $otoRound = $baseRound + $idx;
+                $existing = CxAfterConfirmation::where('work_order_id', $order->id)->where('round', $otoRound)->first();
+                if (!$existing) {
+                    CxAfterConfirmation::create([
+                        'work_order_id' => $order->id,
+                        'round'         => $otoRound,
+                        'stage_type'    => 'OTO',
+                        'entered_at'    => $oto->completed_at ?? $oto->updated_at ?? now(),
+                    ]);
+                    $syncedOtoRound2++;
+                } else {
+                    if ($existing->stage_type !== 'OTO') {
+                        $existing->update(['stage_type' => 'OTO']);
+                        $updatedRecords++;
+                    }
                 }
             }
         }

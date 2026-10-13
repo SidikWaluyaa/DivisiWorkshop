@@ -47,19 +47,20 @@ class CxConfirmationService
                 ->first();
 
             // Determine target round:
-            // Sesuai SOP: GARANSI, REVISI, dan OTO adalah After Ke-2 (round = 2)
+            // Sesuai SOP: GARANSI, REVISI, dan OTO minimal adalah After Ke-2 (round = 2).
+            // Jika sudah ada After sebelumnya (misal OTO ke-2, Revisi ke-2), otomatis naik ke After 3, 4, dst.
             if (!is_null($forcedRound)) {
                 $targetRound = $forcedRound;
-            } elseif (in_array(strtoupper((string)$stageType), ['GARANSI', 'REVISI', 'OTO'])) {
-                $targetRound = 2;
             } elseif ($latest) {
                 $targetRound = (int)$latest->round + 1;
+            } elseif (in_array(strtoupper((string)$stageType), ['GARANSI', 'REVISI', 'OTO'])) {
+                $targetRound = 2;
             } else {
                 $targetRound = 1;
             }
 
-            // Cap at round 2 unless specifically forced
-            if (is_null($forcedRound) && $latest && (int)$latest->round >= 2) {
+            // Batasi hanya jika sudah melampaui batas wajar (misal round > 10)
+            if (is_null($forcedRound) && $latest && (int)$latest->round >= 10) {
                 return null;
             }
 
