@@ -227,6 +227,30 @@ Pengujian eksekusi langsung terhadap 162 record order aktif:
   - Script test verifikasi (`test_service_v2.php`) lolos 100% dengan alokasi Lolos murni dan Lolos Catatan yang presisi.
   - Generator ekspor Excel dan PDF tetap berfungsi sempurna.
 
+### 4.9 Integrasi Flatpickr Interactive Date Range Picker & Fitur Rincian Data SPK QC
+- **Waktu:** 10:08 WIB
+- **Latar Belakang Permintaan:**
+  1. Penggantian input tanggal terpisah (`startDate` s/d `endDate`) menjadi sistem **Date Range Picker** interaktif terpadu yang lebih dinamis dan fleksibel.
+  2. Penambahan kemampuan eksplorasi **Rincian Data SPK** langsung pada dashboard QC Awal (`/cx/warehouse-qc`).
+- **Implementasi Teknis:**
+  1. **Date Range Picker Modern (Flatpickr):**
+     - Mengintegrasikan Flatpickr dengan mode `range`, format tanggal `Y-m-d`, lokalisasi bahasa Indonesia, dan custom CSS bertema gradien Emerald.
+     - Ditampilkan dalam format tombol kalender interaktif (`DD/MM/YYYY s/d DD/MM/YYYY`) yang otomatis menyinkronkan filter Livewire via method `setDateRange()`.
+  2. **Backend Service (`WarehouseQcAnalyticsService::getSpkDetails`):**
+     - Mengambil seluruh record SPK yang relevan dengan audit QC pada periode aktif: Lolos Murni, Lolos Catatan (dengan rincian upsell jasa), Tolak Gudang, dan Belum Di-QC.
+     - Menyediakan metadata lengkap: nomor SPK, nama & nomor telepon pelanggan, brand/tipe sepatu, kode agen CS, status SPK, status QC awal, rincian layanan tambahan, kondisi fisik bawaan, tanggal QC & tanggal masuk, serta petugas pemeriksa.
+  3. **Antarmuka Pengguna Tab ke-3 ("Rincian Data SPK"):**
+     - Dilengkapi pill status filter (*Semua, Lolos Murni, Lolos Catatan, Tolak, Belum Di-QC*) dengan badge jumlah unit real-time.
+     - Dilengkapi input pencarian cepat (pencarian instan no SPK, pelanggan, telepon, brand).
+     - Dilengkapi filter dropdown per Agen CS.
+     - Paginasi data yang responsif dan fleksibel.
+     - Kartu banner metrik atas kini dapat diklik (*clickable*) untuk langsung melompat ke tab SPK dengan filter status otomatis.
+     - Tabel CS kini dilengkapi tombol aksi untuk langsung membuka daftar SPK milik agen CS terkait.
+- **Hasil Pengujian & Verifikasi:**
+  - Rendering Livewire Component: 100% OK (37.175 karakter HTML).
+  - Generator ekspor PDF dan Excel tetap stabil dan sinkron.
+
+
 
 
 

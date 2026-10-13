@@ -13,17 +13,26 @@ class WarehouseQcAnalytics extends Component
     public $endDate = '';
     public $preset = 'this_month';
 
-    // Active Tab: 'both', 'cs', 'daily'
-    public $activeTab = 'both';
+    // Active Tab: 'cs', 'daily', 'spk'
+    public $activeTab = 'cs';
 
     // Search Filter for CS table
     public $searchCs = '';
+
+    // SPK Detail Filters & Pagination
+    public $spkStatusFilter = 'all'; // 'all', 'lolos', 'lolos_catatan', 'tolak', 'belum_qc'
+    public $spkSearch = '';
+    public $spkCsFilter = '';
+    public $spkPage = 1;
+    public $spkPerPage = 15;
 
     protected $queryString = [
         'startDate' => ['except' => '', 'as' => 'start'],
         'endDate' => ['except' => '', 'as' => 'end'],
         'preset' => ['except' => 'this_month', 'as' => 'p'],
-        'activeTab' => ['except' => 'both', 'as' => 'tab'],
+        'activeTab' => ['except' => 'cs', 'as' => 'tab'],
+        'spkStatusFilter' => ['except' => 'all', 'as' => 'spk_status'],
+        'spkCsFilter' => ['except' => '', 'as' => 'cs'],
     ];
 
     public function mount()
@@ -59,26 +68,88 @@ class WarehouseQcAnalytics extends Component
                 $this->endDate = Carbon::now()->format('Y-m-d');
                 break;
             case 'custom':
-                // Retain current dates
                 break;
         }
+        $this->spkPage = 1;
+    }
+
+    public function setDateRange($start, $end)
+    {
+        $this->startDate = $start;
+        $this->endDate = $end;
+        $this->preset = 'custom';
+        $this->spkPage = 1;
     }
 
     public function updatedStartDate()
     {
         $this->preset = 'custom';
+        $this->spkPage = 1;
     }
 
     public function updatedEndDate()
     {
         $this->preset = 'custom';
+        $this->spkPage = 1;
+    }
+
+    public function updatedSpkStatusFilter()
+    {
+        $this->spkPage = 1;
+    }
+
+    public function updatedSpkSearch()
+    {
+        $this->spkPage = 1;
+    }
+
+    public function updatedSpkCsFilter()
+    {
+        $this->spkPage = 1;
+    }
+
+    public function filterSpkByStatus($status)
+    {
+        $this->activeTab = 'spk';
+        $this->spkStatusFilter = $status;
+        $this->spkPage = 1;
+    }
+
+    public function filterSpkByCs($csCode)
+    {
+        $this->activeTab = 'spk';
+        $this->spkCsFilter = $csCode;
+        $this->spkPage = 1;
+    }
+
+    public function gotoSpkPage($page)
+    {
+        $this->spkPage = max(1, (int)$page);
+    }
+
+    public function nextSpkPage($maxPages)
+    {
+        if ($this->spkPage < $maxPages) {
+            $this->spkPage++;
+        }
+    }
+
+    public function previousSpkPage()
+    {
+        if ($this->spkPage > 1) {
+            $this->spkPage--;
+        }
     }
 
     public function resetFilters()
     {
         $this->setPreset('this_month');
         $this->searchCs = '';
-        $this->activeTab = 'both';
+        $this->activeTab = 'cs';
+        $this->spkStatusFilter = 'all';
+        $this->spkSearch = '';
+        $this->spkCsFilter = '';
+        $this->spkPage = 1;
     }
 
     public function render()
@@ -92,7 +163,8 @@ class WarehouseQcAnalytics extends Component
             $end = $temp;
         }
 
-        $analytics = app(WarehouseQcAnalyticsService::class)->getAnalytics($start, $end);
+        $service = app(WarehouseQcAnalyticsService::class);
+        $analytics = $service->getAnalytics($start, $end);
 
         // Filter CS Table rows if search query is provided
         if (!empty($this->searchCs)) {
@@ -107,6 +179,68 @@ class WarehouseQcAnalytics extends Component
             ));
         }
 
+        // Fetch detailed SPK list
+        $allSpk = $service->getSpkDetails($start, $end);
+
+        // Calculate count for each status badge
+        $spkCounts = [
+            'all' => count($allSpk),
+            'lolos' => 0,
+            'lolos_catatan' => 0,
+            'tolak' => 0,
+            'belum_qc' => 0,
+        ];
+        $distinctCs = [];
+
+        foreach ($allSpk as $item) {
+            $cls = $item['classification'] ?? 'other';
+            if (isset($spkCounts[$cls])) {
+                $spkCounts[$cls]++;
+            }
+            if (!empty($item['cs_code'])) {
+                $distinctCs[$item['cs_code']] = true;
+            }
+        }
+        ksort($distinctCs);
+
+        // Apply filters to SPK list
+        $filteredSpk = array_filter($allSpk, function ($item) {
+            // Status filter
+            if ($this->spkStatusFilter !== 'all' && $item['classification'] !== $this->spkStatusFilter) {
+                return false;
+            }
+
+            // CS filter
+            if (!empty($this->spkCsFilter) && $item['cs_code'] !== $this->spkCsFilter) {
+                return false;
+            }
+
+            // Search query
+            if (!empty($this->spkSearch)) {
+                $q = strtolower(trim($this->spkSearch));
+                $match = str_contains(strtolower($item['spk_number']), $q)
+                    || str_contains(strtolower($item['customer_name']), $q)
+                    || str_contains(strtolower($item['customer_phone']), $q)
+                    || str_contains(strtolower($item['brand_type']), $q)
+                    || str_contains(strtolower($item['cs_code']), $q);
+                if (!$match) return false;
+            }
+
+            return true;
+        });
+
+        $filteredSpk = array_values($filteredSpk);
+        $totalFiltered = count($filteredSpk);
+        $totalPages = max(1, (int)ceil($totalFiltered / $this->spkPerPage));
+
+        if ($this->spkPage > $totalPages) {
+            $this->spkPage = $totalPages;
+        }
+
+        // Paginate slice
+        $offset = ($this->spkPage - 1) * $this->spkPerPage;
+        $paginatedSpk = array_slice($filteredSpk, $offset, $this->spkPerPage);
+
         return view('livewire.cx.warehouse-qc-analytics', [
             'analytics' => $analytics,
             'startDate' => $this->startDate,
@@ -114,6 +248,11 @@ class WarehouseQcAnalytics extends Component
             'preset' => $this->preset,
             'activeTab' => $this->activeTab,
             'searchCs' => $this->searchCs,
+            'paginatedSpk' => $paginatedSpk,
+            'totalSpkFiltered' => $totalFiltered,
+            'spkCounts' => $spkCounts,
+            'totalPages' => $totalPages,
+            'distinctCs' => array_keys($distinctCs),
         ])->layout('layouts.app');
     }
 }

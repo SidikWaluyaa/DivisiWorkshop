@@ -411,4 +411,129 @@ class WarehouseQcAnalyticsService
             'total' => $totalRow,
         ];
     }
+
+    /**
+     * Get detailed SPK records for the period (both QC processed & pending QC).
+     */
+    public function getSpkDetails(Carbon $startDate, Carbon $endDate): array
+    {
+        $startStr = $startDate->copy()->startOfDay()->toDateTimeString();
+        $endStr = $endDate->copy()->endOfDay()->toDateTimeString();
+
+        $userMap = User::pluck('name', 'id')->toArray();
+
+        // 1. QC Processed Orders
+        $qcOrders = WorkOrder::whereNotNull('warehouse_qc_status')
+            ->where('warehouse_qc_status', '!=', '')
+            ->whereBetween('warehouse_qc_at', [$startStr, $endStr])
+            ->get([
+                'id',
+                'spk_number',
+                'customer_name',
+                'customer_phone',
+                'shoe_brand',
+                'shoe_type',
+                'category',
+                'cs_code',
+                'status',
+                'entry_date',
+                'warehouse_qc_status',
+                'warehouse_qc_notes',
+                'warehouse_qc_at',
+                'warehouse_qc_by',
+                'suggested_services',
+                'desc_kondisi_bawaan',
+            ]);
+
+        // 2. Pending QC Orders
+        $pendingQcOrders = WorkOrder::whereNotNull('entry_date')
+            ->whereBetween('entry_date', [$startStr, $endStr])
+            ->where('status', WorkOrderStatus::DITERIMA)
+            ->where(function ($q) {
+                $q->whereNull('warehouse_qc_status')
+                  ->orWhere('warehouse_qc_status', '');
+            })
+            ->get([
+                'id',
+                'spk_number',
+                'customer_name',
+                'customer_phone',
+                'shoe_brand',
+                'shoe_type',
+                'category',
+                'cs_code',
+                'status',
+                'entry_date',
+                'warehouse_qc_status',
+                'warehouse_qc_notes',
+                'warehouse_qc_at',
+                'warehouse_qc_by',
+                'suggested_services',
+                'desc_kondisi_bawaan',
+            ]);
+
+        $list = [];
+
+        foreach ($qcOrders as $o) {
+            $classification = $this->classifyQcOrder($o);
+            $csCode = $this->extractCsCode($o);
+            $inspector = $userMap[$o->warehouse_qc_by] ?? 'Petugas Gudang';
+
+            $list[] = [
+                'id' => $o->id,
+                'spk_number' => $o->spk_number,
+                'customer_name' => $o->customer_name ?: 'Pelanggan',
+                'customer_phone' => $o->customer_phone ?: '-',
+                'brand_type' => trim(($o->shoe_brand ?: '') . ' ' . ($o->shoe_type ?: '')) ?: '-',
+                'cs_code' => $csCode,
+                'status_spk' => is_object($o->status) ? $o->status->value : (string)$o->status,
+                'classification' => $classification, // 'lolos', 'lolos_catatan', 'tolak'
+                'entry_date' => $o->entry_date ? Carbon::parse($o->entry_date)->format('d M Y H:i') : '-',
+                'qc_date' => $o->warehouse_qc_at ? Carbon::parse($o->warehouse_qc_at)->format('d M Y H:i') : '-',
+                'inspector' => $inspector,
+                'suggested_services' => is_array($o->suggested_services) ? $o->suggested_services : [],
+                'desc_kondisi_bawaan' => $o->desc_kondisi_bawaan ?: '',
+                'warehouse_qc_notes' => $o->warehouse_qc_notes ?: '',
+            ];
+        }
+
+        foreach ($pendingQcOrders as $o) {
+            $csCode = $this->extractCsCode($o);
+            $list[] = [
+                'id' => $o->id,
+                'spk_number' => $o->spk_number,
+                'customer_name' => $o->customer_name ?: 'Pelanggan',
+                'customer_phone' => $o->customer_phone ?: '-',
+                'brand_type' => trim(($o->shoe_brand ?: '') . ' ' . ($o->shoe_type ?: '')) ?: '-',
+                'cs_code' => $csCode,
+                'status_spk' => is_object($o->status) ? $o->status->value : (string)$o->status,
+                'classification' => 'belum_qc',
+                'entry_date' => $o->entry_date ? Carbon::parse($o->entry_date)->format('d M Y H:i') : '-',
+                'qc_date' => '-',
+                'inspector' => '-',
+                'suggested_services' => [],
+                'desc_kondisi_bawaan' => '',
+                'warehouse_qc_notes' => '',
+            ];
+        }
+
+        // Sort: tolak first, then belum_qc, then lolos_catatan, then lolos; within group by qc_date/entry_date desc
+        usort($list, function ($a, $b) {
+            $priority = [
+                'tolak' => 1,
+                'belum_qc' => 2,
+                'lolos_catatan' => 3,
+                'lolos' => 4,
+            ];
+            $pA = $priority[$a['classification']] ?? 5;
+            $pB = $priority[$b['classification']] ?? 5;
+            if ($pA !== $pB) {
+                return $pA <=> $pB;
+            }
+            return $b['id'] <=> $a['id'];
+        });
+
+        return $list;
+    }
 }
+
