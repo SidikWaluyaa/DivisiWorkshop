@@ -155,6 +155,7 @@ class User extends Authenticatable
                 'cx.overdue',
                 'cx.warranty-claims',
                 'cx.verified-addresses',
+                'cx.warehouse-qc',
                 'admin.complaints',
                 'complaints',
             ],
@@ -174,6 +175,7 @@ class User extends Authenticatable
                 'finance.dashboard',
                 'cx',
                 'cx.dashboard',
+                'cx.warehouse-qc',
             ],
             'hr' => [
                 'dashboard',

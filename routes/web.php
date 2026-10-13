@@ -520,6 +520,11 @@ Route::middleware('auth')->group(function () {
             Route::get('/verified-addresses', \App\Livewire\Cx\AddressVerificationList::class)->name('verified-addresses');
             Route::get('/verified-addresses/print-report', [App\Http\Controllers\CustomerExperienceController::class, 'printVerifiedAddressesReport'])->name('verified-addresses.print-report');
             Route::get('/verified-addresses/print-bulk-labels', [App\Http\Controllers\CustomerExperienceController::class, 'printBulkShippingLabels'])->name('verified-addresses.print-bulk-labels');
+
+            // Warehouse QC Analytics (NEW)
+            Route::get('/warehouse-qc', \App\Livewire\Cx\WarehouseQcAnalytics::class)->name('warehouse-qc');
+            Route::get('/warehouse-qc/export-excel', [App\Http\Controllers\CxWarehouseQcExportController::class, 'exportExcel'])->name('warehouse-qc.export-excel');
+            Route::get('/warehouse-qc/export-pdf', [App\Http\Controllers\CxWarehouseQcExportController::class, 'exportPdf'])->name('warehouse-qc.export-pdf');
         });
     });
 

@@ -962,6 +962,19 @@
         </a>
         @endif
 
+        {{-- CX Warehouse QC Analytics --}}
+        @if(Auth::user()->hasAccess('cx.warehouse-qc'))
+        <a href="{{ route('cx.warehouse-qc') }}" 
+           class="nav-item {{ request()->routeIs('cx.warehouse-qc*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative border border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/15"
+           :class="sidebarCollapsed ? 'justify-center' : ''">
+            <svg class="nav-icon flex-shrink-0 text-emerald-400 group-hover:text-emerald-300 transition-colors" :class="sidebarCollapsed ? 'w-6 h-6' : 'w-5 h-5'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-emerald-400 font-bold tracking-tight">Analisis QC Awal</span>
+            <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Analisis QC Awal</span>
+        </a>
+        @endif
+
         @if(Auth::user()->hasAccess('admin.complaints'))
         <a href="{{ route('admin.complaints.index') }}" 
            class="nav-item {{ request()->routeIs('admin.complaints.*') ? 'active' : '' }} flex items-center px-3 py-3 rounded-lg group relative"
