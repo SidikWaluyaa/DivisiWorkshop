@@ -391,7 +391,39 @@
 
 ---
 
-## 22. Rencana Tindak Lanjut & Monitoring Operasional
+## 22. Penyempurnaan Filter Tipe SPK (Histori Utuh Siklus SPK) & Auto-Resequencing Ronde Sekuensial (After 1, After 2, After 3)
+- **Waktu:** 15:50 WIB
+- **Latar Belakang & Analisis Permasalahan:**
+  1. *Filter Tipe SPK Menghilangkan Baris After 1:*
+     - Sebelumnya filter `stageFilter = 'OTO'` menyaring per-baris (`where('stage_type', 'OTO')`). Akibatnya, baris After 1 dari SPK tersebut (yang berlabel `REGULER`) hilang dari tampilan saat filter OTO aktif.
+     - Kebutuhan tim operasional: Saat memfilter OTO/Revisi/Garansi, sistem harus menampilkan **seluruh siklus ronde (After 1 Reguler, After 2 OTO/Revisi/Garansi, After 3 OTO ke-2)** dari SPK tersebut agar histori order dapat dilihat secara utuh.
+  2. *Anomali Ronde Kembar (Dua Baris After 2 pada SPK yang Sama):*
+     - Di server produksi, record pengerjaan OTO kedua sempat tersimpan dengan nilai `round = 2` sebelum pembaruan kode.
+     - Perlu mekanisme *Auto-Resequencing Healing* pada command sinkronisasi agar seluruh record suatu SPK diurutkan berdasarkan tanggal masuk (`entered_at asc`) dan dinomori secara sekuensial yang presisi (Round 1, Round 2, Round 3, dst.).
+- **Tindakan Penyempurnaan:**
+  1. *Relasi Model (`WorkOrder.php`):*
+     - Menambahkan relasi `public function afterConfirmations() { return $this->hasMany(\App\Models\CxAfterConfirmation::class); }`.
+  2. *Livewire Component (`AfterConfirmationList.php`):*
+     - Memperbarui filter `stageFilter`: Menggunakan `whereHas('workOrder.afterConfirmations', ...)` sehingga saat memfilter Tipe SPK (OTO/Revisi/Garansi), seluruh baris siklus (After 1 Reguler awal, After 2, After 3) milik SPK tersebut langsung tampil bersamaan.
+  3. *Auto-Resequencing di Artisan Command (`SyncCxAfterConfirmationCommand.php`):*
+     - Menambahkan logika penataan ulang nomor ronde sekuensial per SPK di Section 5:
+       - Mengelompokkan record per `work_order_id` dan mengurutkan berdasarkan `entered_at asc, id asc`.
+       - Record ke-1 otomatis dinomori `round = 1` (`REGULER` / `RND`).
+       - Record ke-2 otomatis dinomori `round = 2` (`OTO` / `REVISI` / `GARANSI`).
+       - Record ke-3 otomatis dinomori `round = 3` (`OTO` / `REVISI`).
+- **Hasil Pengujian & Verifikasi:**
+  - Simulasi pencarian `S-2608-12-0016-SW` dengan filter Tipe SPK: OTO:
+    1. 13 Oct 2026 14:58 WIB | SPK: `S-2608-12-0016-SW` | Stage: **OTO** | Round: **After 3**
+    2. 09 Sep 2026 10:57 WIB | SPK: `S-2608-12-0016-SW` | Stage: **OTO** | Round: **After 2**
+    3. 27 Aug 2026 09:55 WIB | SPK: `S-2608-12-0016-SW` | Stage: **REGULER** | Round: **After 1**
+  - Simulasi pencarian `S-2608-12-0014-SW` dengan filter Tipe SPK: OTO:
+    1. 17 Sep 2026 15:10 WIB | SPK: `S-2608-12-0014-SW` | Stage: **OTO** | Round: **After 3**
+    2. 09 Sep 2026 11:24 WIB | SPK: `S-2608-12-0014-SW` | Stage: **OTO** | Round: **After 2**
+    3. 09 Sep 2026 10:46 WIB | SPK: `S-2608-12-0014-SW` | Stage: **REGULER** | Round: **After 1**
+
+---
+
+## 23. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -408,6 +440,7 @@
 - [x] Selesai: Koreksi klasifikasi SPK Garansi (-GR wajib After 2) dan pembersihan label R&D / Reguler.
 - [x] Selesai: Penyelarasan multi-tabel (Revisi FINISHED, OTO COMPLETED, Garansi FINISHED -> After 2; RND -> After 1).
 - [x] Selesai: Dukungan siklus dinamis After 3 (After Ke-3) untuk pengerjaan OTO berulang.
+- [x] Selesai: Penyempurnaan filter Tipe SPK (seluruh riwayat ronde tampil) & auto-resequencing nomor ronde sekuensial.
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC di lingkungan produksi.
 
 

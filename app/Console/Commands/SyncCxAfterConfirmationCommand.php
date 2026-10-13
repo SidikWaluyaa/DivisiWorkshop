@@ -234,38 +234,40 @@ class SyncCxAfterConfirmationCommand extends Command
             }
         }
 
-        // 5. RAPATKAN DAN BERSIHKAN DATA EKSISTING
-        $this->info("⏳ 5. Merapikan dan membersihkan data eksisting...");
-        $allAfters = CxAfterConfirmation::with('workOrder')->get();
-        foreach ($allAfters as $aft) {
-            $wo = $aft->workOrder;
+        // 5. RAPATKAN, URUTKAN NOMOR RONDE SECARA SEKUENSIAL, DAN BERSIHKAN DATA
+        $this->info("⏳ 5. Menata ulang nomor ronde sekuensial (After 1, After 2, After 3, dst.) per SPK...");
+        $allOrdersGroup = CxAfterConfirmation::with('workOrder')
+            ->orderBy('entered_at', 'asc')
+            ->orderBy('id', 'asc')
+            ->get()
+            ->groupBy('work_order_id');
+
+        foreach ($allOrdersGroup as $woId => $records) {
+            $wo = $records->first()?->workOrder;
             if (!$wo) continue;
 
             $isGr = str_contains((string)$wo->spk_number, '-GR') || str_contains((string)$wo->spk_number, 'GR-');
             $isRnd = str_starts_with((string)$wo->spk_number, 'RD-') || in_array(strtoupper(trim((string)$wo->priority)), ['R&D', 'RND']);
 
-            // Validasi Round 1: HANYA BOLEH REGULER atau RND
-            if ((int)$aft->round === 1) {
-                if ($isGr) {
-                    // SPK -GR tidak boleh di Round 1, harus di Round 2
-                    $aft->update([
-                        'round'      => 2,
-                        'stage_type' => 'GARANSI',
-                    ]);
-                    $updatedRecords++;
-                } elseif (in_array($aft->stage_type, ['GARANSI', 'REVISI', 'OTO'])) {
-                    // Kembalikan Round 1 ke REGULER atau RND
-                    $aft->update([
-                        'stage_type' => $isRnd ? 'RND' : 'REGULER',
-                    ]);
-                    $updatedRecords++;
-                }
-            }
+            // Jika ini SPK Garansi Rework (-GR), mulai dari round 2
+            $startRound = $isGr ? 2 : 1;
 
-            // Validasi Round 2: HANYA BOLEH GARANSI, REVISI, atau OTO
-            if ((int)$aft->round === 2) {
-                if ($isGr && $aft->stage_type !== 'GARANSI') {
-                    $aft->update(['stage_type' => 'GARANSI']);
+            foreach ($records as $seqIdx => $record) {
+                $targetRound = $startRound + $seqIdx;
+
+                // Tentukan stage yang benar jika round 1
+                $targetStage = $record->stage_type;
+                if ($targetRound === 1) {
+                    $targetStage = $isRnd ? 'RND' : 'REGULER';
+                } elseif ($isGr) {
+                    $targetStage = 'GARANSI';
+                }
+
+                if ((int)$record->round !== $targetRound || $record->stage_type !== $targetStage) {
+                    $record->update([
+                        'round'      => $targetRound,
+                        'stage_type' => $targetStage,
+                    ]);
                     $updatedRecords++;
                 }
             }

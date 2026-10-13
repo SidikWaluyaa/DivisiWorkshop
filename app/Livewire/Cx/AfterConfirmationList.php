@@ -125,8 +125,19 @@ class AfterConfirmationList extends Component
         }
 
         // Filter by Stage Type (Garansi, Revisi, OTO, R&D, Reguler)
+        // Menampilkan seluruh siklus pengerjaan (After 1 Reguler, After 2 OTO/Revisi/Garansi, dst.) milik SPK terkait
         if ($this->stageFilter) {
-            $query->where('stage_type', $this->stageFilter);
+            $stage = strtoupper(trim($this->stageFilter));
+            if ($stage === 'REGULER') {
+                $query->where('stage_type', 'REGULER')
+                      ->whereDoesntHave('workOrder.afterConfirmations', function ($q) {
+                          $q->whereIn('stage_type', ['GARANSI', 'REVISI', 'OTO']);
+                      });
+            } else {
+                $query->whereHas('workOrder.afterConfirmations', function ($q) use ($stage) {
+                    $q->where('stage_type', $stage);
+                });
+            }
         }
 
         // Filter by Round (After 1 / After 2)

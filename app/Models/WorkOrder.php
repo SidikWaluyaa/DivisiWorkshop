@@ -2104,5 +2104,13 @@ class WorkOrder extends Model
               ->orWhere('spk_number', 'like', 'RD-%');
         });
     }
+
+    /**
+     * Relasi ke Konfirmasi After Service (bisa banyak ronde: After 1, After 2, After 3, dst.)
+     */
+    public function afterConfirmations()
+    {
+        return $this->hasMany(\App\Models\CxAfterConfirmation::class);
+    }
 }
 
