@@ -243,7 +243,23 @@
 
 ---
 
-## 16. Rencana Tindak Lanjut & Monitoring Operasional
+## 16. Perbaikan Fatal TypeError (int + string) pada Modal Ubah Detail Barang CS
+- **Waktu:** 13:54 WIB
+- **Gejala Masalah:** Saat CS mengedit item pada detail lead (`/cs/leads/{id}`) dan menambahkan Jasa Kustom atau mengetikkan nilai harga, terjadi crash internal server error `500` dengan pesan: `TypeError: Unsupported operand types: int + string` di file `vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:559` yang dipicu dari `resources/views/livewire/cs/lead-detail-manager.blade.php:1795`.
+- **Akar Masalah:**
+  - Pada template Blade, total nilai item dihitung menggunakan formula:
+    `$editTotal = collect($editingData['custom_service_prices'] ?? [])->sum() + collect($editingData['custom_services'] ?? [])->sum('price');`
+  - Di PHP 8.2+, fungsi `sum()` bawaan Laravel Collection menginisialisasi akumulator dari integer `0`.
+  - Ketika input harga berupa string kosong `""` (saat form baru ditambahkan atau sedang diketik melalui `wire:model.live`), operasi `0 + ""` dilarang ketat di PHP 8.2 dan melempar `TypeError: Unsupported operand types: int + string`.
+- **Tindakan Perbaikan:**
+  1. Memperbarui kalkulasi `$editTotal` di [`lead-detail-manager.blade.php`](file:///c:/laragon/www/SistemWorkshop/resources/views/livewire/cs/lead-detail-manager.blade.php) dengan closure aman (*defensive float casting*) yang membersihkan string dan memvalidasi `is_numeric()` sebelum dijumlahkan.
+  2. Mengamankan perhitungan total sebelum diskon dan diskon promo di ringkasan SPK lead dari potensi tipe data string/null.
+  3. Memperbarui kalkulasi `serviceSubtotal` pada modal serah terima di [`handover.blade.php`](file:///c:/laragon/www/SistemWorkshop/resources/views/cs/leads/partials/modals/handover.blade.php) agar terlindungi dari hal serupa.
+- **Hasil:** Modal Ubah Detail Barang CS kini berjalan lancar dan responsif secara real-time saat menambah Jasa Kustom maupun mengedit harga tanpa terjadi error.
+
+---
+
+## 17. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -254,4 +270,6 @@
 - [x] Selesai: Implementasi Tab Rincian Data SPK beserta filter dan paginasinya.
 - [x] Selesai: Perbaikan posisi penjangkaran popover kalender di sisi kanan.
 - [x] Selesai: Dokumentasi resmi sumber data Sepatu Masuk.
+- [x] Selesai: Perbaikan fatal TypeError penambahan jasa kustom pada modal ubah detail barang CS.
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC di lingkungan produksi.
+

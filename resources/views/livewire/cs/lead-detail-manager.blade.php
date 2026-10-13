@@ -679,11 +679,14 @@
                                             
                                             <div class="flex justify-between items-center text-sm">
                                                 <span class="text-slate-400 font-bold">Total Sebelum Diskon</span>
-                                                <span class="font-black text-white">Rp {{ number_format($lead->spk->items->sum(fn($i) => $i->original_price ?: $i->item_total_price), 0, ',', '.') }}</span>
+                                                <span class="font-black text-white">Rp {{ number_format($lead->spk->items->sum(fn($i) => (float)($i->original_price ?: $i->item_total_price)), 0, ',', '.') }}</span>
                                             </div>
                                             
                                             @php 
-                                                $totalDiscount = $lead->spk->items->sum('discount_amount') ?: (($lead->spk->items->sum('item_total_price') > $lead->spk->total_price) ? ($lead->spk->items->sum('item_total_price') - $lead->spk->total_price) : 0);
+                                                $spkItemsTotal = (float)$lead->spk->items->sum(fn($i) => (float)($i->item_total_price ?? 0));
+                                                $spkDiscountSum = (float)$lead->spk->items->sum(fn($i) => (float)($i->discount_amount ?? 0));
+                                                $spkTotalPrice = (float)($lead->spk->total_price ?? 0);
+                                                $totalDiscount = $spkDiscountSum ?: (($spkItemsTotal > $spkTotalPrice) ? ($spkItemsTotal - $spkTotalPrice) : 0);
                                             @endphp
                                             @if($totalDiscount > 0)
                                                 <div class="flex justify-between items-center text-sm">
@@ -1793,7 +1796,20 @@
                 <div class="p-10 border-t border-slate-100 bg-white flex flex-col md:flex-row justify-between items-center gap-8">
                     <div>
                         @php 
-                            $editTotal = collect($editingData['custom_service_prices'] ?? [])->sum() + collect($editingData['custom_services'] ?? [])->sum('price');
+                            $editCustomPrices = collect($editingData['custom_service_prices'] ?? [])->sum(function ($p) {
+                                if (is_numeric($p)) return (float) $p;
+                                $clean = preg_replace('/[^\d.]/', '', (string)$p);
+                                return is_numeric($clean) && $clean !== '' ? (float) $clean : 0;
+                            });
+
+                            $editCustomServices = collect($editingData['custom_services'] ?? [])->sum(function ($cs) {
+                                $price = is_array($cs) ? ($cs['price'] ?? 0) : (is_object($cs) ? ($cs->price ?? 0) : 0);
+                                if (is_numeric($price)) return (float) $price;
+                                $clean = preg_replace('/[^\d.]/', '', (string)$price);
+                                return is_numeric($clean) && $clean !== '' ? (float) $clean : 0;
+                            });
+
+                            $editTotal = $editCustomPrices + $editCustomServices;
                         @endphp
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">Total Nilai Item</p>
                         <p class="text-4xl font-black text-emerald-600 font-display tracking-tighter">Rp {{ number_format($editTotal, 0, ',', '.') }}</p>

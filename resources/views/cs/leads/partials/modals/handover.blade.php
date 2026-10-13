@@ -163,7 +163,12 @@
                                         </div>
                                         {{-- Service Subtotal --}}
                                         @php
-                                            $serviceSubtotal = collect($spkItem->services ?? [])->sum('price');
+                                            $serviceSubtotal = collect($spkItem->services ?? [])->sum(function ($s) {
+                                                $price = is_array($s) ? ($s['price'] ?? 0) : (is_object($s) ? ($s->price ?? 0) : 0);
+                                                if (is_numeric($price)) return (float) $price;
+                                                $clean = preg_replace('/[^\d.]/', '', (string)$price);
+                                                return is_numeric($clean) && $clean !== '' ? (float) $clean : 0;
+                                            });
                                         @endphp
                                         <div class="pt-4 border-t border-dashed border-gray-200 flex justify-between items-center">
                                             <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Subtotal Jasa</span>
