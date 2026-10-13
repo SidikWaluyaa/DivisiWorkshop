@@ -474,7 +474,33 @@
 
 ---
 
-## 25. Rencana Tindak Lanjut & Monitoring Operasional
+## 25. Retensi Permanen Riwayat Konfirmasi After Service & Penambahan Indikator Status Pengambilan Sepatu (Sudah Diambil vs Belum Diambil)
+- **Waktu:** 16:15 WIB
+- **Latar Belakang & Kebutuhan Operasional:**
+  - Pertanyaan alur operasional: Apakah pesanan yang sepatunya sudah diambil oleh pelanggan (`taken_date` terisi / proses Handover selesai) harus dihapus atau dihilangkan dari menu **Konfirmasi After Service**?
+  - Keputusan bisnis (*best practice* & konsultasi): **Data tetap dipertahankan secara permanen** di Konfirmasi After Service agar riwayat respon pelanggan (*feedback*, tingkat kepuasan, keluhan, dan catatan follow-up CS) tidak hilang dan dapat ditinjau kapan saja.
+  - Untuk memberikan kejelasan konteks saat PIC CX menghubungi pelanggan (misal: apakah menanyakan kepuasan saat dipakai jalan vs mengingatkan pengambilan sepatu), sistem melengkapi data dengan indikator status pengambilan fisik sepatu.
+- **Tindakan Implementasi:**
+  1. *Badge Status Pengambilan di Tabel Utama (`after-confirmation-list.blade.php`):*
+     - Menambahkan badge status di samping informasi merk sepatu:
+       - **`📦 Sudah Diambil (d M Y)`**: Latar hijau lembut (`bg-emerald-50 text-emerald-700 border-emerald-200`) jika `work_orders.taken_date` telah terisi. Tooltip menampilkan tanggal & jam pengambilan lengkap.
+       - **`🏠 Belum Diambil`**: Latar amber hangat (`bg-amber-50 text-amber-700 border-amber-200`) jika sepatu masih menunggu diambil di rak selesai gudang.
+  2. *Dropdown Filter Status Pengambilan Terpadu:*
+     - Menambahkan filter dropdown baru pada barisan pencarian:
+       - `Semua Status` (Default: Menampilkan seluruh riwayat lengkap).
+       - `🏠 Belum Diambil` (Menyaring order yang belum diambil untuk prioritas follow-up harian).
+       - `📦 Sudah Diambil` (Menyaring order yang sudah diserahkan ke pelanggan).
+     - Mengadaptasi layout grid pencarian menjadi 12 kolom responsif (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-12`).
+  3. *Informasi Status Pengambilan pada Modal Tindakan Konfirmasi:*
+     - Menambahkan baris informasi khusus di dalam modal pencatatan respon: Menampilkan status pengambilan beserta waktu rinci (`d M Y, H:i WIB`) sehingga PIC CX langsung mengetahui konteks fisik sepatu sebelum menyimpan respon pelanggan.
+- **Hasil Pengujian & Verifikasi:**
+  - Filter `taken` menghasilkan 3 record yang sudah diambil (contoh: `S-2608-12-0012-SW` diambil 15 Aug 2026).
+  - Filter `not_taken` menghasilkan 27 record yang belum diambil.
+  - Reset filter dan filter kombinasi (Tipe SPK + Siklus + Pengambilan) berjalan presisi dan reaktif tanpa reload.
+
+---
+
+## 26. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -494,7 +520,9 @@
 - [x] Selesai: Penyempurnaan filter Tipe SPK (seluruh riwayat ronde tampil) & auto-resequencing nomor ronde sekuensial.
 - [x] Selesai: Perbaikan rendering badge teks dinamis Blade (menggantikan hardcoded "After 2" dengan `{{ $roundBadge['label'] }}`).
 - [x] Selesai: Pembatasan ketat Revisi After Service hanya dari sumber Selesai/Finish (eksklusi revisi internal QC & Produksi).
-- [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC di lingkungan produksi.
+- [x] Selesai: Retensi permanen riwayat Konfirmasi After Service & penambahan indikator status pengambilan sepatu (Sudah Diambil vs Belum Diambil).
+- [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC dan Konfirmasi After di lingkungan produksi.
+
 
 
 

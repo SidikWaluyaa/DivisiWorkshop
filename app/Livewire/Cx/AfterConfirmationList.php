@@ -18,6 +18,7 @@ class AfterConfirmationList extends Component
     public $endDate = '';
     public $stageFilter = '';
     public $roundFilter = '';
+    public $pickupFilter = '';
 
     // Modal state
     public $editingId = null;
@@ -31,6 +32,7 @@ class AfterConfirmationList extends Component
         'endDate' => ['except' => ''],
         'stageFilter' => ['except' => ''],
         'roundFilter' => ['except' => ''],
+        'pickupFilter' => ['except' => ''],
     ];
 
     public function updatingSearch()
@@ -63,9 +65,14 @@ class AfterConfirmationList extends Component
         $this->resetPage();
     }
 
+    public function updatingPickupFilter()
+    {
+        $this->resetPage();
+    }
+
     public function resetFilters()
     {
-        $this->reset(['search', 'response', 'startDate', 'endDate', 'stageFilter', 'roundFilter']);
+        $this->reset(['search', 'response', 'startDate', 'endDate', 'stageFilter', 'roundFilter', 'pickupFilter']);
         $this->resetPage();
     }
 
@@ -143,6 +150,17 @@ class AfterConfirmationList extends Component
         // Filter by Round (After 1 / After 2)
         if ($this->roundFilter) {
             $query->where('round', (int)$this->roundFilter);
+        }
+
+        // Filter by Pickup Status (Sudah Diambil / Belum Diambil)
+        if ($this->pickupFilter === 'taken') {
+            $query->whereHas('workOrder', function ($q) {
+                $q->whereNotNull('taken_date');
+            });
+        } elseif ($this->pickupFilter === 'not_taken') {
+            $query->whereHas('workOrder', function ($q) {
+                $q->whereNull('taken_date');
+            });
         }
 
         // Search by SPK, Customer Name, or Phone
