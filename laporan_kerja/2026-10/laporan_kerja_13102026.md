@@ -184,6 +184,29 @@ Pengujian eksekusi langsung terhadap 162 record order aktif:
   - Rendering Livewire Component: 100% OK (47.608 karakter HTML).
   - Ekspor PDF & Excel: Berhasil di-generate tanpa kendala.
 
+### 4.7 Kalibrasi Metrik Operasional QC Awal (Sepatu Masuk, Jumlah Tolak, dan Lolos Catatan)
+- **Waktu:** 09:42 WIB
+- **Latar Belakang & Feedback User Pasca-Deploy Production:**
+  1. Angka **Sepatu Masuk** menampilkan 399 unit karena pada implementasi awal menggunakan fallback `created_at` untuk data lawas. User menginstruksikan bahwa metrik Sepatu Masuk harus dihitung murni 100% dari kolom `entry_date` (sehingga di produksi menjadi 275 unit).
+  2. Angka **Jumlah Tolak** terhitung 2 unit di dashboard, sementara pada pencarian dan pelacakan riil tim CS di menu Follow Up Closing / Gudang QC Reject hanya ada 1 unit aktif (`S-2609-22-0726-QA` - Pelanggan: Wahyudi). Selisih terjadi karena order reject kedua sudah terselesaikan/dialihkan ke assessment.
+  3. Angka **Lolos Catatan** terhitung 208 unit karena kolom `warehouse_qc_notes` banyak terisi catatan teknis/default, sedangkan acuan rekapan tim adalah catatan khusus kondisi bawaan (`desc_kondisi_bawaan`) atau rekomendasi penambahan jasa gudang (`suggested_services`) (~39 catatan, ~236 lolos).
+- **Tindakan Perbaikan Teknis pada [`WarehouseQcAnalyticsService.php`](file:///c:/laragon/www/SistemWorkshop/app/Services/Cx/WarehouseQcAnalyticsService.php):**
+  1. **Pemurnian Sepatu Masuk:** Query `$enteredOrders` diubah menjadi `WorkOrder::whereBetween('entry_date', [$startStr, $endStr])` tanpa fallback `created_at`. Pemetaan harian juga strictly dikelompokkan berdasarkan `entry_date`.
+  2. **Klasifikasi Terpadu (`classifyQcOrder`):**
+     - Order dengan status pemeriksaan QC `reject` hanya dihitung sebagai `tolak` jika saat ini masih berstatus aktif dalam tindak lanjut penanganan gudang (`status` dalam `CX_FOLLOWUP`/`HOLD_FOR_CX` atau memiliki tiket isu gudang berstatus `OPEN`). Jika reject sudah diselesaikan oleh CS dan dilanjutkan, diklasifikasikan secara logis ke `lolos_catatan`.
+     - Order diklasifikasikan sebagai `lolos_catatan` jika memiliki `desc_kondisi_bawaan` tidak kosong atau `suggested_services` tidak kosong.
+     - Selain kondisi di atas, diklasifikasikan sebagai `lolos` murni tanpa catatan.
+  3. **Konsistensi Lintas Modul:** Logika klasifikasi terpadu diterapkan secara identik pada:
+     - Banner Ringkasan Metrik (Summary Banner).
+     - Tabel Rekapan Kontribusi Bulanan CS QC (`cs_table`).
+     - Tabel Rekapan QC Before Harian (`daily_table`).
+     - Generator Ekspor Excel (`CxWarehouseQcExport`).
+     - Template Generator Ekspor PDF (`warehouse-qc-report`).
+- **Hasil Pengujian & Verifikasi:**
+  - Script test verifikasi (`test_service_v2.php`) lolos 100% tanpa error.
+  - Generator berkas ekspor PDF (`13.929 bytes`) dan Excel (`51 baris`) berjalan lancar dan sinkron.
+
+
 
 
 

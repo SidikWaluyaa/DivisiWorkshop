@@ -22,39 +22,62 @@ class WarehouseQcAnalyticsService
         $startStr = $startDate->copy()->startOfDay()->toDateTimeString();
         $endStr = $endDate->copy()->endOfDay()->toDateTimeString();
 
-        // 1. Fetch Entered Work Orders within period
-        $enteredOrders = WorkOrder::where(function ($q) use ($startStr, $endStr) {
-            $q->whereBetween('entry_date', [$startStr, $endStr])
-              ->orWhere(function ($sub) use ($startStr, $endStr) {
-                  $sub->whereNull('entry_date')
-                      ->whereBetween('created_at', [$startStr, $endStr]);
-              });
-        })->get(['id', 'spk_number', 'cs_code', 'entry_date', 'created_at', 'warehouse_qc_status', 'warehouse_qc_notes', 'warehouse_qc_at']);
+        // 1. Fetch Entered Work Orders strictly within entry_date
+        $enteredOrders = WorkOrder::whereBetween('entry_date', [$startStr, $endStr])
+            ->get([
+                'id', 
+                'spk_number', 
+                'cs_code', 
+                'status',
+                'entry_date', 
+                'created_at', 
+                'warehouse_qc_status', 
+                'warehouse_qc_notes', 
+                'warehouse_qc_at',
+                'desc_kondisi_bawaan',
+                'suggested_services'
+            ]);
 
-        // 2. Fetch QC Processed Work Orders within period
-        $qcOrders = WorkOrder::whereNotNull('warehouse_qc_status')
+        // 2. Fetch QC Processed Work Orders within warehouse_qc_at
+        $qcOrders = WorkOrder::with(['cxIssues' => function ($q) {
+                $q->where('source', 'GUDANG');
+            }])
+            ->whereNotNull('warehouse_qc_status')
             ->whereBetween('warehouse_qc_at', [$startStr, $endStr])
-            ->get(['id', 'spk_number', 'cs_code', 'warehouse_qc_status', 'warehouse_qc_notes', 'warehouse_qc_at', 'entry_date', 'created_at']);
+            ->get([
+                'id', 
+                'spk_number', 
+                'cs_code', 
+                'status',
+                'warehouse_qc_status', 
+                'warehouse_qc_notes', 
+                'warehouse_qc_at', 
+                'entry_date', 
+                'created_at',
+                'desc_kondisi_bawaan',
+                'suggested_services'
+            ]);
 
-        // 3. Calculate Summary Banner Metrics
+        // 3. Calculate Summary Banner Metrics using unified classification
         $totalMasuk = $enteredOrders->count();
         
-        $totalLolos = $qcOrders->filter(function ($order) {
-            return strtolower((string)$order->warehouse_qc_status) === 'lolos' 
-                && empty(trim((string)$order->warehouse_qc_notes));
-        })->count();
+        $totalLolos = 0;
+        $totalLolosCatatan = 0;
+        $totalTolak = 0;
 
-        $totalLolosCatatan = $qcOrders->filter(function ($order) {
-            return strtolower((string)$order->warehouse_qc_status) === 'lolos' 
-                && !empty(trim((string)$order->warehouse_qc_notes));
-        })->count();
-
-        $totalTolak = $qcOrders->filter(function ($order) {
-            return strtolower((string)$order->warehouse_qc_status) === 'reject';
-        })->count();
+        foreach ($qcOrders as $order) {
+            $class = $this->classifyQcOrder($order);
+            if ($class === 'lolos') {
+                $totalLolos++;
+            } elseif ($class === 'lolos_catatan') {
+                $totalLolosCatatan++;
+            } elseif ($class === 'tolak') {
+                $totalTolak++;
+            }
+        }
 
         $totalQc = $totalLolos + $totalLolosCatatan + $totalTolak;
-        $belumQc = $totalMasuk - $totalQc;
+        $belumQc = max(0, $totalMasuk - $totalQc);
 
         $pctLolos = $totalQc > 0 ? round(($totalLolos / $totalQc) * 100, 2) : 0;
         $pctLolosCatatan = $totalQc > 0 ? round(($totalLolosCatatan / $totalQc) * 100, 2) : 0;
@@ -89,6 +112,42 @@ class WarehouseQcAnalyticsService
                 'end_formatted' => $endDate->translatedFormat('d F Y'),
             ],
         ];
+    }
+
+    /**
+     * Unified classifier for QC Work Order.
+     * Returns: 'tolak', 'lolos_catatan', or 'lolos'.
+     */
+    public function classifyQcOrder($order): string
+    {
+        $rawStatus = strtolower((string)$order->warehouse_qc_status);
+        $statusVal = is_object($order->status) ? $order->status->value : (string)$order->status;
+
+        // 1. Check if this is an active unresolved rejection from Warehouse QC
+        if ($rawStatus === 'reject') {
+            $hasOpenIssue = $order->relationLoaded('cxIssues') 
+                ? $order->cxIssues->where('status', 'OPEN')->where('source', 'GUDANG')->isNotEmpty()
+                : false;
+
+            if (in_array($statusVal, ['CX_FOLLOWUP', 'HOLD_FOR_CX']) || $hasOpenIssue) {
+                return 'tolak';
+            }
+        }
+
+        // 2. Check for condition notes or suggested services
+        $hasSpecialNotes = !empty(trim((string)$order->desc_kondisi_bawaan))
+            || (!empty($order->suggested_services) && is_array($order->suggested_services) && count($order->suggested_services) > 0);
+
+        // 3. A warehouse reject that was resolved and proceeded to work counts as lolos_catatan
+        if ($rawStatus === 'reject') {
+            return 'lolos_catatan';
+        }
+
+        if ($hasSpecialNotes) {
+            return 'lolos_catatan';
+        }
+
+        return 'lolos';
     }
 
     /**
@@ -138,7 +197,7 @@ class WarehouseQcAnalyticsService
             $enteredByCs[$code] = ($enteredByCs[$code] ?? 0) + 1;
         }
 
-        // Group QC Orders by CS Code and Status
+        // Group QC Orders by CS Code and Status using unified classification
         $qcByCs = [];
         foreach ($qcOrders as $order) {
             $code = $this->extractCsCode($order);
@@ -150,16 +209,12 @@ class WarehouseQcAnalyticsService
                 ];
             }
 
-            $status = strtolower((string)$order->warehouse_qc_status);
-            $hasNotes = !empty(trim((string)$order->warehouse_qc_notes));
-
-            if ($status === 'lolos') {
-                if ($hasNotes) {
-                    $qcByCs[$code]['lolos_catatan']++;
-                } else {
-                    $qcByCs[$code]['lolos']++;
-                }
-            } elseif ($status === 'reject') {
+            $class = $this->classifyQcOrder($order);
+            if ($class === 'lolos') {
+                $qcByCs[$code]['lolos']++;
+            } elseif ($class === 'lolos_catatan') {
+                $qcByCs[$code]['lolos_catatan']++;
+            } elseif ($class === 'tolak') {
                 $qcByCs[$code]['tolak']++;
             }
         }
@@ -259,15 +314,16 @@ class WarehouseQcAnalyticsService
      */
     protected function buildDailyQcTable(Carbon $startDate, Carbon $endDate, $enteredOrders, $qcOrders): array
     {
-        // Map entered orders by date Y-m-d
+        // Map entered orders strictly by entry_date Y-m-d
         $enteredByDate = [];
         foreach ($enteredOrders as $order) {
-            $dt = $order->entry_date ? Carbon::parse($order->entry_date) : Carbon::parse($order->created_at);
+            if (!$order->entry_date) continue;
+            $dt = Carbon::parse($order->entry_date);
             $dStr = $dt->format('Y-m-d');
             $enteredByDate[$dStr] = ($enteredByDate[$dStr] ?? 0) + 1;
         }
 
-        // Map QC orders by date Y-m-d
+        // Map QC orders by warehouse_qc_at date Y-m-d using unified classification
         $qcByDate = [];
         foreach ($qcOrders as $order) {
             if (!$order->warehouse_qc_at) continue;
@@ -280,16 +336,12 @@ class WarehouseQcAnalyticsService
                 ];
             }
 
-            $status = strtolower((string)$order->warehouse_qc_status);
-            $hasNotes = !empty(trim((string)$order->warehouse_qc_notes));
-
-            if ($status === 'lolos') {
-                if ($hasNotes) {
-                    $qcByDate[$dStr]['lolos_catatan']++;
-                } else {
-                    $qcByDate[$dStr]['lolos']++;
-                }
-            } elseif ($status === 'reject') {
+            $class = $this->classifyQcOrder($order);
+            if ($class === 'lolos') {
+                $qcByDate[$dStr]['lolos']++;
+            } elseif ($class === 'lolos_catatan') {
+                $qcByDate[$dStr]['lolos_catatan']++;
+            } elseif ($class === 'tolak') {
                 $qcByDate[$dStr]['tolak']++;
             }
         }
