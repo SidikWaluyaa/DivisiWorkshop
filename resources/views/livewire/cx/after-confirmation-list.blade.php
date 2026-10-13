@@ -1,17 +1,29 @@
 <div>
-    {{-- Header Quick Stat Chips --}}
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        {{-- Total --}}
-        <div wire:click="$set('stageFilter', '')" class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm cursor-pointer hover:border-emerald-300 transition-all group">
+    {{-- Header Quick Stat Chips (7 Cards: Total Keseluruhan, Reguler, Garansi, Revisi, OTO, R&D, After Ke-2+) --}}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+        {{-- Total (Keseluruhan) --}}
+        <div wire:click="setStageQuickFilter('')" 
+             class="bg-white rounded-2xl p-4 border transition-all cursor-pointer group shadow-sm hover:shadow {{ empty($stageFilter) && empty($roundFilter) ? 'border-gray-900 ring-2 ring-gray-900/10' : 'border-gray-100 hover:border-gray-300' }}">
             <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider block mb-1">Total Konfirmasi</span>
             <div class="flex items-baseline justify-between">
                 <span class="text-2xl font-black text-gray-900 group-hover:text-emerald-600 transition-colors">{{ $stats['total'] ?? 0 }}</span>
-                <span class="text-[10px] font-bold text-gray-400">Order</span>
+                <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 uppercase">Semua</span>
+            </div>
+        </div>
+
+        {{-- Reguler (Hijau) --}}
+        <div wire:click="setStageQuickFilter('REGULER')" 
+             class="bg-emerald-50/50 rounded-2xl p-4 border transition-all cursor-pointer group shadow-sm hover:shadow {{ $stageFilter === 'REGULER' ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-emerald-200/60 hover:border-emerald-400' }}">
+            <span class="text-[9px] font-black uppercase text-emerald-600 tracking-wider block mb-1">Reguler</span>
+            <div class="flex items-baseline justify-between">
+                <span class="text-2xl font-black text-emerald-700">{{ $stats['reguler'] ?? 0 }}</span>
+                <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase">Hijau</span>
             </div>
         </div>
 
         {{-- Garansi (Kuning) --}}
-        <div wire:click="$set('stageFilter', 'GARANSI')" class="bg-amber-50/50 rounded-2xl p-4 border border-amber-200/60 shadow-sm cursor-pointer hover:border-amber-400 transition-all group">
+        <div wire:click="setStageQuickFilter('GARANSI')" 
+             class="bg-amber-50/50 rounded-2xl p-4 border transition-all cursor-pointer group shadow-sm hover:shadow {{ $stageFilter === 'GARANSI' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-amber-200/60 hover:border-amber-400' }}">
             <span class="text-[9px] font-black uppercase text-amber-600 tracking-wider block mb-1">Garansi</span>
             <div class="flex items-baseline justify-between">
                 <span class="text-2xl font-black text-amber-700">{{ $stats['garansi'] ?? 0 }}</span>
@@ -20,7 +32,8 @@
         </div>
 
         {{-- Revisi (Merah) --}}
-        <div wire:click="$set('stageFilter', 'REVISI')" class="bg-rose-50/50 rounded-2xl p-4 border border-rose-200/60 shadow-sm cursor-pointer hover:border-rose-400 transition-all group">
+        <div wire:click="setStageQuickFilter('REVISI')" 
+             class="bg-rose-50/50 rounded-2xl p-4 border transition-all cursor-pointer group shadow-sm hover:shadow {{ $stageFilter === 'REVISI' ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-rose-200/60 hover:border-rose-400' }}">
             <span class="text-[9px] font-black uppercase text-rose-600 tracking-wider block mb-1">Revisi</span>
             <div class="flex items-baseline justify-between">
                 <span class="text-2xl font-black text-rose-700">{{ $stats['revisi'] ?? 0 }}</span>
@@ -29,7 +42,8 @@
         </div>
 
         {{-- OTO (Orange) --}}
-        <div wire:click="$set('stageFilter', 'OTO')" class="bg-orange-50/50 rounded-2xl p-4 border border-orange-200/60 shadow-sm cursor-pointer hover:border-orange-400 transition-all group">
+        <div wire:click="setStageQuickFilter('OTO')" 
+             class="bg-orange-50/50 rounded-2xl p-4 border transition-all cursor-pointer group shadow-sm hover:shadow {{ $stageFilter === 'OTO' ? 'border-orange-500 ring-2 ring-orange-500/20' : 'border-orange-200/60 hover:border-orange-400' }}">
             <span class="text-[9px] font-black uppercase text-orange-600 tracking-wider block mb-1">OTO</span>
             <div class="flex items-baseline justify-between">
                 <span class="text-2xl font-black text-orange-700">{{ $stats['oto'] ?? 0 }}</span>
@@ -38,7 +52,8 @@
         </div>
 
         {{-- R&D (Biru) --}}
-        <div wire:click="$set('stageFilter', 'RND')" class="bg-blue-50/50 rounded-2xl p-4 border border-blue-200/60 shadow-sm cursor-pointer hover:border-blue-400 transition-all group">
+        <div wire:click="setStageQuickFilter('RND')" 
+             class="bg-blue-50/50 rounded-2xl p-4 border transition-all cursor-pointer group shadow-sm hover:shadow {{ $stageFilter === 'RND' ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-blue-200/60 hover:border-blue-400' }}">
             <span class="text-[9px] font-black uppercase text-blue-600 tracking-wider block mb-1">R&D</span>
             <div class="flex items-baseline justify-between">
                 <span class="text-2xl font-black text-blue-700">{{ $stats['rnd'] ?? 0 }}</span>
@@ -46,12 +61,13 @@
             </div>
         </div>
 
-        {{-- After 2 (Purple) --}}
-        <div wire:click="$set('roundFilter', '2')" class="bg-purple-50/50 rounded-2xl p-4 border border-purple-200/60 shadow-sm cursor-pointer hover:border-purple-400 transition-all group">
-            <span class="text-[9px] font-black uppercase text-purple-600 tracking-wider block mb-1">After Ke-2</span>
+        {{-- After Ke-2+ (Ungu) --}}
+        <div wire:click="setRoundQuickFilter('2+')" 
+             class="bg-purple-50/50 rounded-2xl p-4 border transition-all cursor-pointer group shadow-sm hover:shadow {{ in_array($roundFilter, ['2', '2+']) ? 'border-purple-500 ring-2 ring-purple-500/20' : 'border-purple-200/60 hover:border-purple-400' }}">
+            <span class="text-[9px] font-black uppercase text-purple-600 tracking-wider block mb-1">After Ke-2+</span>
             <div class="flex items-baseline justify-between">
                 <span class="text-2xl font-black text-purple-700">{{ $stats['after2'] ?? 0 }}</span>
-                <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 uppercase">Ke-2</span>
+                <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 uppercase">Lanjutan</span>
             </div>
         </div>
     </div>
@@ -106,6 +122,7 @@
                         <option value="1">After 1 (Awal)</option>
                         <option value="2">After 2 (Revisi/Pasca)</option>
                         <option value="3">After 3 (OTO 2x/Lanjutan)</option>
+                        <option value="2+">After 2+ (Semua Lanjutan)</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>

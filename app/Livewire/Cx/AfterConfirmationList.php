@@ -76,6 +76,20 @@ class AfterConfirmationList extends Component
         $this->resetPage();
     }
 
+    public function setStageQuickFilter($stage = '')
+    {
+        $this->stageFilter = $stage;
+        $this->roundFilter = '';
+        $this->resetPage();
+    }
+
+    public function setRoundQuickFilter($round = '')
+    {
+        $this->roundFilter = $round;
+        $this->stageFilter = '';
+        $this->resetPage();
+    }
+
     public function edit($id)
     {
         $item = CxAfterConfirmation::findOrFail($id);
@@ -136,10 +150,7 @@ class AfterConfirmationList extends Component
         if ($this->stageFilter) {
             $stage = strtoupper(trim($this->stageFilter));
             if ($stage === 'REGULER') {
-                $query->where('stage_type', 'REGULER')
-                      ->whereDoesntHave('workOrder.afterConfirmations', function ($q) {
-                          $q->whereIn('stage_type', ['GARANSI', 'REVISI', 'OTO']);
-                      });
+                $query->where('stage_type', 'REGULER');
             } else {
                 $query->whereHas('workOrder.afterConfirmations', function ($q) use ($stage) {
                     $q->where('stage_type', $stage);
@@ -147,9 +158,13 @@ class AfterConfirmationList extends Component
             }
         }
 
-        // Filter by Round (After 1 / After 2)
+        // Filter by Round (After 1 / After 2 / After 3 / After 2+)
         if ($this->roundFilter) {
-            $query->where('round', (int)$this->roundFilter);
+            if ($this->roundFilter === '2+') {
+                $query->where('round', '>=', 2);
+            } else {
+                $query->where('round', (int)$this->roundFilter);
+            }
         }
 
         // Filter by Pickup Status (Sudah Diambil / Belum Diambil)
@@ -186,6 +201,7 @@ class AfterConfirmationList extends Component
             'total'   => (clone $statsBase)->count(),
             'after1'  => (clone $statsBase)->where('round', 1)->count(),
             'after2'  => (clone $statsBase)->where('round', '>=', 2)->count(),
+            'reguler' => (clone $statsBase)->where('stage_type', 'REGULER')->count(),
             'garansi' => (clone $statsBase)->where('stage_type', 'GARANSI')->count(),
             'revisi'  => (clone $statsBase)->where('stage_type', 'REVISI')->count(),
             'oto'     => (clone $statsBase)->where('stage_type', 'OTO')->count(),

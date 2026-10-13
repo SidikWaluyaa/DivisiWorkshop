@@ -500,7 +500,33 @@
 
 ---
 
-## 26. Rencana Tindak Lanjut & Monitoring Operasional
+## 26. Penambahan KPI Card Reguler & Indikator Aktif 7 Card Konfirmasi After Service
+- **Waktu:** 16:23 WIB
+- **Latar Belakang & Kebutuhan Pengguna:**
+  - Sebelumnya di jajaran kartu KPI atas baru menampilkan 6 kartu (*Total Konfirmasi, Garansi, Revisi, OTO, R&D, After Ke-2*).
+  - Tipe pengerjaan **Reguler** (yang merupakan porsi terbesar order, ~20 order) belum memiliki kartu indikator tersendiri.
+  - Pengguna meminta agar data **Reguler** ditampilkan secara eksplisit bersanding dengan tipe pengerjaan lainnya dan kartu Total berfungsi sebagai ringkasan **Keseluruhan**.
+- **Tindakan Implementasi:**
+  1. *Susunan 7 Kartu KPI Responsif (`lg:grid-cols-7`):*
+     - **Total Konfirmasi (30)**: Ringkasan seluruh order (*badge* abu-abu `SEMUA`).
+     - **Reguler (20)**: Card hijau emerald baru (`bg-emerald-50/50 text-emerald-700` dengan *badge* `HIJAU`).
+     - **Garansi (1)**: Card kuning amber (`bg-amber-50/50 text-amber-700` dengan *badge* `KUNING`).
+     - **Revisi (1)**: Card merah rose (`bg-rose-50/50 text-rose-700` dengan *badge* `MERAH`).
+     - **OTO (4)**: Card orange (`bg-orange-50/50 text-orange-700` dengan *badge* `ORANGE`).
+     - **R&D (4)**: Card biru (`bg-blue-50/50 text-blue-700` dengan *badge* `BIRU`).
+     - **After Ke-2+ (9)**: Card ungu (`bg-purple-50/50 text-purple-700` dengan *badge* `LANJUTAN`).
+  2. *Indikator Kartu Aktif & Quick Filter Method:*
+     - Setiap kartu kini memiliki *ring indicator* dan border tegas saat aktif (misal saat memfilter Reguler, kartu Reguler menyala dengan `ring-2 ring-emerald-500/20`).
+     - Menambahkan method Livewire `setStageQuickFilter()` dan `setRoundQuickFilter()` sehingga saat kartu diklik, filter lain yang tidak relevan di-reset otomatis tanpa bentrok.
+     - Mendukung filter `2+` (After Ke-2 dan seterusnya) pada query dan dropdown Siklus After.
+- **Hasil Pengujian & Verifikasi:**
+  - Seluruh 7 kartu dapat diklik langsung untuk filter cepat.
+  - Total Keseluruhan (30) = Reguler (20) + Garansi (1) + Revisi (1) + OTO (4) + R&D (4).
+  - Siklus After 2+ (9) = Garansi (1) + Revisi (1) + OTO (4) + OTO 2x (3). Seluruh metrik akurat 100%.
+
+---
+
+## 27. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -521,7 +547,9 @@
 - [x] Selesai: Perbaikan rendering badge teks dinamis Blade (menggantikan hardcoded "After 2" dengan `{{ $roundBadge['label'] }}`).
 - [x] Selesai: Pembatasan ketat Revisi After Service hanya dari sumber Selesai/Finish (eksklusi revisi internal QC & Produksi).
 - [x] Selesai: Retensi permanen riwayat Konfirmasi After Service & penambahan indikator status pengambilan sepatu (Sudah Diambil vs Belum Diambil).
+- [x] Selesai: Penambahan KPI Card Reguler & indikator aktif 7 card Konfirmasi After Service.
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC dan Konfirmasi After di lingkungan produksi.
+
 
 
 
