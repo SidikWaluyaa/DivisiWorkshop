@@ -1,4 +1,43 @@
 <div>
+    {{-- Flatpickr Styles & Scripts --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        .flatpickr-calendar {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(229, 231, 235, 0.8) !important;
+            border-radius: 20px !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+            font-family: inherit !important;
+            padding: 10px !important;
+            z-index: 99999 !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+            background: #22AF85 !important;
+            border-color: #22AF85 !important;
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            border-radius: 10px !important;
+        }
+        .flatpickr-day.inRange {
+            background: rgba(34, 175, 133, 0.12) !important;
+            border-color: transparent !important;
+            box-shadow: -5px 0 0 rgba(34, 175, 133, 0.12), 5px 0 0 rgba(34, 175, 133, 0.12) !important;
+        }
+        .flatpickr-day:hover {
+            background: rgba(34, 175, 133, 0.15) !important;
+            border-radius: 10px !important;
+        }
+        .flatpickr-months .flatpickr-month {
+            color: #1f2937 !important;
+            font-weight: 800 !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            font-weight: 800 !important;
+        }
+    </style>
+
     {{-- Header Quick Stat Chips (7 Cards: Total Keseluruhan, Reguler, Garansi, Revisi, OTO, R&D, After Ke-2+) --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
         {{-- Total (Keseluruhan) --}}
@@ -170,16 +209,79 @@
             </div>
         </div>
 
-        {{-- Date Range sub-row --}}
-        <div class="mt-4 pt-4 border-t border-gray-100/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {{-- Date Range sub-row (Flatpickr Range Picker) --}}
+        <div class="mt-4 pt-4 border-t border-gray-100/80 flex flex-col sm:flex-row items-center justify-between gap-4"
+             wire:ignore
+             x-data="{
+                fp: null,
+                initFlatpickr() {
+                    this.fp = flatpickr(this.$refs.datePicker, {
+                        mode: 'range',
+                        dateFormat: 'Y-m-d',
+                        altInput: true,
+                        altFormat: 'd M Y',
+                        altInputClass: 'w-full bg-gray-50/70 hover:bg-white focus:bg-white border border-gray-200/80 hover:border-[#22AF85]/50 focus:border-[#22AF85] rounded-xl px-4 py-2.5 text-xs font-bold text-gray-800 outline-none cursor-pointer shadow-sm text-center min-w-[260px] transition-all',
+                        defaultDate: [@js($startDate), @js($endDate)],
+                        position: 'auto right',
+                        locale: {
+                            rangeSeparator: ' s/d '
+                        },
+                        onChange: (selectedDates, dateStr, instance) => {
+                            if (selectedDates.length === 2) {
+                                let start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                                let end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                                $wire.set('startDate', start);
+                                $wire.set('endDate', end);
+                            } else if (selectedDates.length === 0) {
+                                $wire.set('startDate', '');
+                                $wire.set('endDate', '');
+                            }
+                        }
+                    });
+
+                    this.$watch('$wire.startDate', (val) => {
+                        if (this.fp) {
+                            if (!val) {
+                                this.fp.clear();
+                            } else if ($wire.endDate) {
+                                this.fp.setDate([val, $wire.endDate], false);
+                            }
+                        }
+                    });
+                    this.$watch('$wire.endDate', (val) => {
+                        if (this.fp && val && $wire.startDate) {
+                            this.fp.setDate([$wire.startDate, val], false);
+                        }
+                    });
+                }
+             }"
+             x-init="initFlatpickr()">
             <div class="flex items-center gap-2 text-xs font-bold text-gray-400">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <span>Filter Tanggal Masuk:</span>
+                <svg class="w-4 h-4 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="text-gray-600 font-extrabold">Filter Rentang Tanggal:</span>
+                @if($startDate && $endDate)
+                    <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+                        Aktif
+                    </span>
+                @endif
             </div>
-            <div class="flex items-center gap-2 bg-gray-50/50 backdrop-blur-sm border border-gray-100 rounded-xl px-3 py-1.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#22AF85]/20">
-                <input type="date" wire:model.live="startDate" class="bg-transparent border-none p-1 text-xs font-bold text-gray-700 outline-none focus:ring-0">
-                <span class="text-gray-300 font-black">—</span>
-                <input type="date" wire:model.live="endDate" class="bg-transparent border-none p-1 text-xs font-bold text-gray-700 outline-none focus:ring-0">
+
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative flex-1 sm:flex-initial">
+                    <input x-ref="datePicker" type="text" readonly
+                           placeholder="Pilih Rentang Tanggal...">
+                </div>
+
+                @if($startDate || $endDate)
+                <button type="button" 
+                        wire:click="$set('startDate', ''); $set('endDate', '');"
+                        @click="if(fp) { fp.clear(); }"
+                        class="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-500 rounded-xl border border-rose-200 transition-all flex items-center gap-1 active:scale-95 shadow-sm"
+                        title="Hapus Filter Tanggal">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <span>Reset</span>
+                </button>
+                @endif
             </div>
         </div>
     </div>
