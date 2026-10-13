@@ -45,7 +45,7 @@ class CxConfirmationService
             // Determine stage_type
             $stageType = $forcedStage;
             if (!$stageType) {
-                if (!empty($order->is_warranty)) {
+                if (!empty($order->is_warranty) || str_contains((string)$order->spk_number, '-GR') || str_contains((string)$order->category_spk, 'Garansi')) {
                     $stageType = 'GARANSI';
                 } elseif (in_array(strtoupper(trim((string)$order->priority)), ['R&D', 'RND'])) {
                     $stageType = 'RND';

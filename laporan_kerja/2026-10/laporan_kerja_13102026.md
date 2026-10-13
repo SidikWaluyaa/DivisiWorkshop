@@ -285,7 +285,25 @@
 
 ---
 
-## 18. Rencana Tindak Lanjut & Monitoring Operasional
+## 18. Integrasi Otomatisasi SPK Garansi (GR), Dynamic Date Filter KPI Cards, dan Command Sinkronisasi After Service
+- **Waktu:** 15:10 WIB
+- **Latar Belakang & Analisis Server Produksi:**
+  1. *Kartu Ringkasan KPI:* Di server produksi menampilkan total sepanjang masa (*all-time* ~7819 order) padahal user sedang memfilter rentang tanggal tertentu (misal: 01/10/2026 - 13/10/2026).
+  2. *SPK Garansi (GR) Belum Masuk:* SPK rework klaim garansi (berakhiran `-GR`) dibuat langsung melalui `WorkOrder::create(...)` di modul Garansi tanpa melalui event `WorkflowService`, sehingga tidak memicu `CxConfirmationService`.
+  3. *Data Historis Belum Lengkap:* Record pengerjaan selesai garansi, revisi selesai (After 2), dan OTO yang ada di database produksi sebelum update hari ini belum masuk ke tabel `cx_after_confirmations`.
+- **Tindakan Penyelesaian:**
+  1. *Dynamic Date Filter KPI:* Memperbarui query `$statsBase` di [`AfterConfirmationList.php`](file:///c:/laragon/www/SistemWorkshop/app/Livewire/Cx/AfterConfirmationList.php) agar kartu ringkasan KPI di atas otomatis mengikuti rentang filter tanggal aktif (`startDate` s/d `endDate`).
+  2. *Deteksi SPK GR & Trigger Modul Garansi:*
+     - Memperbarui [`CxConfirmationService.php`](file:///c:/laragon/www/SistemWorkshop/app/Services/CxConfirmationService.php) agar otomatis mengenali pola nomor SPK mengandung `-GR` atau kategori Garansi sebagai stage `'GARANSI'`.
+     - Memperbarui method `syncToFinish()` di [`app/Livewire/Warranty/Index.php`](file:///c:/laragon/www/SistemWorkshop/app/Livewire/Warranty/Index.php) untuk otomatis memicu `createFromOrder($reworkWo, 'GARANSI', 1)` saat SPK garansi dibuat/diselesaikan.
+  3. *Command Sinkronisasi Otomatis:*
+     - Membuat Artisan command baru: [`SyncCxAfterConfirmationCommand.php`](file:///c:/laragon/www/SistemWorkshop/app/Console/Commands/SyncCxAfterConfirmationCommand.php) (`php artisan cx:sync-after-confirmation`).
+     - Command ini menyisir seluruh SPK Garansi (`-GR`), riwayat revisi yang sudah tuntas (`WorkOrderRevision` FINISHED -> After 2), dan SPK OTO, kemudian menyinkronkannya secara aman dan *idempotent* ke tabel `cx_after_confirmations`.
+- **Hasil:** Terverifikasi locally berhasil menyinkronkan SPK Garansi, After Ke-2 Pasca Revisi, dan R&D secara instan.
+
+---
+
+## 19. Rencana Tindak Lanjut & Monitoring Operasional
 - [x] Selesai: Sinkronisasi pembaruan kode dari GitHub `origin/main`.
 - [x] Selesai: Penambahan kolom channel pada API sinkronisasi data.
 - [x] Selesai: Optimasi query API sinkronisasi sub-15ms.
@@ -298,6 +316,8 @@
 - [x] Selesai: Dokumentasi resmi sumber data Sepatu Masuk.
 - [x] Selesai: Perbaikan fatal TypeError penambahan jasa kustom pada modal ubah detail barang CS.
 - [x] Selesai: Implementasi Multi-Cycle After Service & Dynamic Color Badges di `/cx/after-confirmation`.
+- [x] Selesai: Integrasi otomatisasi SPK Garansi (GR), KPI cards adaptif tanggal, dan command sinkronisasi `cx:sync-after-confirmation`.
 - [ ] Monitoring feedback operasional tim CS dan Gudang saat menggunakan dashboard QC di lingkungan produksi.
+
 
 

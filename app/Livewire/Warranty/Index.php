@@ -320,6 +320,11 @@ class Index extends Component
             ]);
         }
 
+        // Otomatis masukkan SPK GR ke antrean Konfirmasi After Service (Stage: GARANSI)
+        if ($reworkWo) {
+            app(\App\Services\CxConfirmationService::class)->createFromOrder($reworkWo, 'GARANSI', 1);
+        }
+
         return redirect()->route('finish.show', $reworkWo->id);
     }
 

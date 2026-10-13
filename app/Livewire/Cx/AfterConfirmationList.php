@@ -144,14 +144,23 @@ class AfterConfirmationList extends Component
             });
         }
 
+        // Dynamic stats filtered by active date range
+        $statsBase = CxAfterConfirmation::query();
+        if ($this->startDate && $this->endDate) {
+            $statsBase->whereBetween('entered_at', [
+                Carbon::parse($this->startDate)->startOfDay(),
+                Carbon::parse($this->endDate)->endOfDay()
+            ]);
+        }
+
         $stats = [
-            'total'   => CxAfterConfirmation::count(),
-            'after1'  => CxAfterConfirmation::where('round', 1)->count(),
-            'after2'  => CxAfterConfirmation::where('round', '>=', 2)->count(),
-            'garansi' => CxAfterConfirmation::where('stage_type', 'GARANSI')->count(),
-            'revisi'  => CxAfterConfirmation::where('stage_type', 'REVISI')->count(),
-            'oto'     => CxAfterConfirmation::where('stage_type', 'OTO')->count(),
-            'rnd'     => CxAfterConfirmation::where('stage_type', 'RND')->count(),
+            'total'   => (clone $statsBase)->count(),
+            'after1'  => (clone $statsBase)->where('round', 1)->count(),
+            'after2'  => (clone $statsBase)->where('round', '>=', 2)->count(),
+            'garansi' => (clone $statsBase)->where('stage_type', 'GARANSI')->count(),
+            'revisi'  => (clone $statsBase)->where('stage_type', 'REVISI')->count(),
+            'oto'     => (clone $statsBase)->where('stage_type', 'OTO')->count(),
+            'rnd'     => (clone $statsBase)->where('stage_type', 'RND')->count(),
         ];
 
         return view('livewire.cx.after-confirmation-list', [
