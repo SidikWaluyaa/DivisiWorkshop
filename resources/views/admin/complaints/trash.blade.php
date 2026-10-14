@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="space-y-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <!-- Page Header -->
         <div class="bg-gradient-to-r from-red-500 via-red-600 to-orange-500 rounded-2xl shadow-xl p-8 text-white">
             <div class="flex items-center justify-between">
