@@ -2487,18 +2487,22 @@
                         {{-- Body: Complaints List --}}
                         <div class="p-6">
                             @if($order->complaints->count() > 0)
-                                <div class="space-y-4">
+                                <div class="space-y-5">
                                     @foreach($order->complaints as $comp)
-                                        <div class="p-4 rounded-2xl border border-slate-200/90 bg-white hover:border-[#22B086]/50 transition-all shadow-xs">
-                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-100">
-                                                <div class="flex items-center gap-2 flex-wrap">
-                                                    <span class="bg-gradient-to-r from-[#22B086] to-[#1C8D6C] text-white text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-lg shadow-2xs">#{{ $comp->id }}</span>
-                                                    <span class="text-xs text-slate-500 font-medium">{{ $comp->created_at->format('d M Y, H:i') }} WIB</span>
-                                                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-lg border bg-slate-50 text-slate-700 border-slate-200">
+                                        <div class="rounded-3xl border border-slate-200/90 bg-white hover:border-[#22B086]/50 transition-all shadow-xs overflow-hidden">
+                                            {{-- Ticket Header Bar --}}
+                                            <div class="p-4 sm:px-5 bg-gradient-to-r from-slate-50 via-white to-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                <div class="flex items-center gap-2.5 flex-wrap">
+                                                    <span class="bg-slate-900 text-white text-[11px] font-mono font-black px-2.5 py-0.5 rounded-lg shadow-2xs">#{{ $comp->id }}</span>
+                                                    <span class="text-xs text-slate-500 font-medium flex items-center gap-1">
+                                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                        {{ $comp->created_at->format('d M Y, H:i') }} WIB
+                                                    </span>
+                                                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-lg border bg-white text-slate-700 border-slate-200 shadow-2xs">
                                                         {{ $comp->category_label }}
                                                     </span>
                                                 </div>
-                                                <div class="flex items-center gap-2.5">
+                                                <div class="flex items-center gap-2">
                                                     @php
                                                         $badgeStyles = [
                                                             'PENDING'  => 'bg-amber-50 text-amber-700 border-amber-200',
@@ -2508,56 +2512,135 @@
                                                         ];
                                                         $bStyle = $badgeStyles[$comp->status] ?? 'bg-slate-50 text-slate-700 border-slate-200';
                                                     @endphp
-                                                    <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border {{ $bStyle }}">
+                                                    <span class="inline-flex items-center gap-1.5 text-[11px] font-black px-3 py-1 rounded-full border {{ $bStyle }}">
+                                                        <span class="w-2 h-2 rounded-full {{ $comp->status === 'RESOLVED' ? 'bg-emerald-500' : ($comp->status === 'PROCESS' ? 'bg-[#22B086]' : ($comp->status === 'REJECTED' ? 'bg-rose-500' : 'bg-amber-500 animate-pulse')) }}"></span>
                                                         {{ $comp->status }}
                                                     </span>
-                                                    <a href="{{ route('admin.complaints.show', $comp->id) }}" target="_blank"
-                                                        class="inline-flex items-center gap-1 text-xs font-bold text-[#22B086] hover:text-[#1C8D6C] hover:underline">
-                                                        <span>Detail</span>
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                                    </a>
                                                 </div>
                                             </div>
 
-                                            <p class="text-xs text-slate-700 leading-relaxed font-medium mb-3">
-                                                {{ $comp->description }}
-                                            </p>
-
-                                            {{-- Photos if any --}}
-                                            @if($comp->photos && count($comp->photos) > 0)
-                                                <div class="flex items-center gap-2 mb-3 overflow-x-auto pb-1">
-                                                    @foreach($comp->photo_urls as $photoUrl)
-                                                        <a href="{{ $photoUrl }}" target="_blank" class="block w-14 h-14 rounded-xl overflow-hidden border border-slate-200 shrink-0 hover:opacity-85 shadow-2xs">
-                                                            <img src="{{ $photoUrl }}" class="w-full h-full object-cover" alt="Bukti Foto">
-                                                        </a>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-
-                                            {{-- Appointment Info Box if scheduled --}}
-                                            @if($comp->appointment_date)
-                                                <div class="p-3.5 bg-indigo-50/60 rounded-2xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                                                    <div class="flex items-center gap-2.5">
-                                                        <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                        </div>
-                                                        <div>
-                                                            <span class="font-bold text-indigo-950 block">
-                                                                Janji Temu: {{ $comp->appointment_date->format('d M Y, H:i') }} WIB
-                                                            </span>
-                                                            <span class="text-slate-600 text-[11px]">
-                                                                {{ $comp->location_label }} {{ $comp->appointment_notes ? '• "' . $comp->appointment_notes . '"' : '' }}
+                                            {{-- Ticket Body Content --}}
+                                            <div class="p-5 sm:p-6 space-y-4">
+                                                {{-- 💬 Isi Keluhan / Komplain Customer Quote Box --}}
+                                                <div class="rounded-2xl bg-gradient-to-r from-amber-50/70 via-slate-50/50 to-white border-l-4 border-amber-400 border-y border-r border-slate-200/80 p-4 sm:p-5 shadow-2xs">
+                                                    <div class="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-amber-100">
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-bold shrink-0">
+                                                                💬
+                                                            </div>
+                                                            <span class="text-[11px] font-black uppercase tracking-wider text-slate-700">
+                                                                Deskripsi Keluhan Pelanggan:
                                                             </span>
                                                         </div>
-                                                    </div>
-                                                    <div>
-                                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $comp->appointment_badge['bg'] }}">
-                                                            <span class="w-1.5 h-1.5 rounded-full {{ $comp->appointment_badge['dot'] }}"></span>
-                                                            {{ $comp->appointment_badge['label'] }}
+                                                        <span class="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md">
+                                                            Customer Voice
                                                         </span>
                                                     </div>
+                                                    <p class="text-sm font-semibold text-slate-800 leading-relaxed italic pl-1">
+                                                        “{{ $comp->description }}”
+                                                    </p>
                                                 </div>
-                                            @endif
+
+                                                {{-- 🛠️ Catatan Workshop / Solusi (If any) --}}
+                                                @if($comp->admin_notes)
+                                                    <div class="rounded-2xl bg-teal-50/40 border-l-4 border-[#22B086] border-y border-r border-teal-100 p-4 shadow-2xs">
+                                                        <div class="flex items-center gap-2 mb-1.5">
+                                                            <span class="text-xs">🛠️</span>
+                                                            <span class="text-[11px] font-black uppercase tracking-wider text-teal-900">
+                                                                Tanggapan &amp; Catatan Workshop:
+                                                            </span>
+                                                        </div>
+                                                        <p class="text-xs font-medium text-slate-700 leading-relaxed pl-1">
+                                                            {{ $comp->admin_notes }}
+                                                        </p>
+                                                    </div>
+                                                @endif
+
+                                                {{-- 📸 Lampiran Foto Bukti --}}
+                                                @if($comp->photos && count($comp->photos) > 0)
+                                                    <div class="pt-1">
+                                                        <div class="flex items-center justify-between gap-2 mb-2">
+                                                            <span class="text-[11px] font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                                                                <svg class="w-4 h-4 text-[#22B086]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                                Lampiran Bukti Foto ({{ count($comp->photos) }} Foto)
+                                                            </span>
+                                                            <span class="text-[10px] text-slate-400 font-medium">Klik foto untuk membuka resolusi penuh</span>
+                                                        </div>
+                                                        <div class="flex items-center gap-3 overflow-x-auto pb-1">
+                                                            @foreach($comp->photo_urls as $idx => $photoUrl)
+                                                                <a href="{{ $photoUrl }}" target="_blank" class="group relative block w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-slate-200 shrink-0 hover:border-[#22B086] transition-all shadow-2xs hover:shadow-md">
+                                                                    <img src="{{ $photoUrl }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" alt="Bukti Foto {{ $idx + 1 }}">
+                                                                    <div class="absolute inset-0 bg-slate-900/35 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                                                        <svg class="w-5 h-5 drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
+                                                                    </div>
+                                                                </a>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                {{-- 📅 Agenda Janji Temu Pelanggan --}}
+                                                @if($comp->appointment_date)
+                                                    <div class="p-4 bg-gradient-to-r from-indigo-50/70 via-indigo-50/40 to-white rounded-2xl border border-indigo-100/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                                                        <div class="flex items-start sm:items-center gap-3">
+                                                            <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/20 shrink-0 mt-0.5 sm:mt-0">
+                                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                            </div>
+                                                            <div>
+                                                                <div class="flex items-center gap-2 flex-wrap">
+                                                                    <span class="text-xs font-black text-indigo-950">
+                                                                        Janji Temu: {{ $comp->appointment_date->format('d M Y, H:i') }} WIB
+                                                                    </span>
+                                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $comp->appointment_badge['bg'] }}">
+                                                                        <span class="w-1.5 h-1.5 rounded-full {{ $comp->appointment_badge['dot'] }}"></span>
+                                                                        {{ $comp->appointment_badge['label'] }}
+                                                                    </span>
+                                                                </div>
+                                                                <p class="text-xs text-slate-600 font-medium mt-0.5">
+                                                                    <span class="font-bold text-slate-800">{{ $comp->location_label }}</span>
+                                                                    @if($comp->appointment_notes)
+                                                                        <span class="text-slate-400 mx-1">•</span> Catatan: "{{ $comp->appointment_notes }}"
+                                                                    @endif
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                {{-- ⚡ Quick Action Footer Bar --}}
+                                                <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                    <div class="text-xs text-slate-500 font-medium flex items-center gap-2">
+                                                        <span class="text-slate-400">Status Penanganan:</span>
+                                                        <span class="font-bold text-slate-800">{{ $comp->status }}</span>
+                                                    </div>
+                                                    
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        @php
+                                                            $cleanPhone = preg_replace('/[^0-9]/', '', $comp->customer_phone);
+                                                            if (str_starts_with($cleanPhone, '0')) {
+                                                                $cleanPhone = '62' . substr($cleanPhone, 1);
+                                                            }
+                                                            $waText = "Halo Kak {$comp->customer_name}, kami dari Shoe Workshop terkait keluhan pada SPK #{$order->spk_number}";
+                                                            if ($comp->appointment_date) {
+                                                                $waText .= " dan jadwal temu pada " . $comp->appointment_date->format('d/m/Y H:i') . " WIB.";
+                                                            }
+                                                        @endphp
+                                                        @if($cleanPhone && strlen($cleanPhone) >= 9)
+                                                            <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode($waText) }}" target="_blank"
+                                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all shadow-2xs active:scale-95">
+                                                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.071.376-.043.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824z"/></svg>
+                                                                <span>Chat WA Customer</span>
+                                                            </a>
+                                                        @endif
+
+                                                        <a href="{{ route('admin.complaints.show', $comp->id) }}" target="_blank"
+                                                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-[#22B086] hover:bg-[#1C8D6C] shadow-sm shadow-[#22B086]/20 transition-all active:scale-95">
+                                                            <span>Detail &amp; Tindak Lanjut</span>
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     @endforeach
                                 </div>
