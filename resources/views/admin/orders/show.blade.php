@@ -2450,36 +2450,36 @@
                 <div class="lg:col-span-2 space-y-8">
 
                     {{-- 🚨 Keluhan & Janji Temu Pelanggan (Internal Complaints Hub) --}}
-                    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden transition-all" x-data="{ showComplaintModal: false, hasAppointment: false }">
+                    <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200/80 overflow-hidden transition-all" x-data="{ showComplaintModal: false, hasAppointment: false }">
                         {{-- Header --}}
-                        <div class="px-6 py-4 bg-gradient-to-r from-[#22B086]/5 via-white to-[#FFC232]/10 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#22B086] to-[#1C8D6C] text-white flex items-center justify-center shadow-md shadow-[#22B086]/20 shrink-0">
+                        <div class="px-6 sm:px-8 py-5 bg-gradient-to-r from-slate-50/80 via-white to-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-11 h-11 rounded-2xl bg-[#22B086]/10 text-[#22B086] flex items-center justify-center shadow-xs border border-[#22B086]/20 shrink-0">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                     </svg>
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <h3 class="font-black text-slate-900 text-base tracking-tight">Keluhan &amp; Janji Temu Pelanggan</h3>
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $order->complaints->count() > 0 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600' }}">
+                                        <h3 class="font-black text-slate-900 text-base sm:text-lg tracking-tight">Keluhan &amp; Janji Temu Pelanggan</h3>
+                                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border {{ $order->complaints->count() > 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200' }}">
                                             {{ $order->complaints->count() }} Kasus
                                         </span>
                                     </div>
-                                    <p class="text-xs text-slate-500 font-medium">Catatan komplain pelanggan internal dan agenda temu terkait SPK ini</p>
+                                    <p class="text-xs text-slate-500 font-medium mt-0.5">Catatan komplain pelanggan internal dan agenda temu terkait SPK ini</p>
                                 </div>
                             </div>
                             
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
                                 <button type="button" @click="showComplaintModal = true" 
-                                    class="px-3.5 py-2 bg-gradient-to-r from-[#22B086] to-[#1C8D6C] hover:from-[#1C8D6C] hover:to-[#177257] text-white text-xs font-black rounded-xl shadow-md shadow-[#22B086]/20 transition-all flex items-center gap-1.5 active:scale-95">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#22B086] hover:bg-[#1C8D6C] text-white text-xs font-bold rounded-xl shadow-md shadow-[#22B086]/20 hover:shadow-lg hover:shadow-[#22B086]/30 transition-all active:scale-95 whitespace-nowrap">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                                     <span>Catat Keluhan SPK Ini</span>
                                 </button>
                                 <a href="{{ route('admin.complaints.index') }}" target="_blank"
-                                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 border border-slate-200">
+                                    class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all border border-slate-200 hover:border-slate-300 shadow-2xs whitespace-nowrap">
                                     <span>Buka Modul</span>
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                 </a>
                             </div>
                         </div>
@@ -2489,37 +2489,37 @@
                             @if($order->complaints->count() > 0)
                                 <div class="space-y-4">
                                     @foreach($order->complaints as $comp)
-                                        <div class="p-4 rounded-2xl border border-gray-200 bg-gradient-to-br from-slate-50/50 to-white hover:border-teal-300 transition-all shadow-xs">
-                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 pb-2 border-b border-gray-100">
+                                        <div class="p-4 rounded-2xl border border-slate-200/90 bg-white hover:border-[#22B086]/50 transition-all shadow-xs">
+                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-100">
                                                 <div class="flex items-center gap-2 flex-wrap">
-                                                    <span class="bg-teal-700 text-white text-[10px] font-black px-2 py-0.5 rounded-lg">#{{ $comp->id }}</span>
-                                                    <span class="text-xs text-gray-500 font-semibold">{{ $comp->created_at->format('d M Y, H:i') }} WIB</span>
-                                                    <span class="text-xs font-bold px-2 py-0.5 rounded-md border bg-gray-100 text-gray-700 border-gray-200">
+                                                    <span class="bg-gradient-to-r from-[#22B086] to-[#1C8D6C] text-white text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-lg shadow-2xs">#{{ $comp->id }}</span>
+                                                    <span class="text-xs text-slate-500 font-medium">{{ $comp->created_at->format('d M Y, H:i') }} WIB</span>
+                                                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-lg border bg-slate-50 text-slate-700 border-slate-200">
                                                         {{ $comp->category_label }}
                                                     </span>
                                                 </div>
-                                                <div class="flex items-center gap-2">
+                                                <div class="flex items-center gap-2.5">
                                                     @php
                                                         $badgeStyles = [
-                                                            'PENDING'  => 'bg-amber-100 text-amber-800 border-amber-300',
-                                                            'PROCESS'  => 'bg-teal-100 text-teal-800 border-teal-300',
-                                                            'RESOLVED' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
-                                                            'REJECTED' => 'bg-rose-100 text-rose-800 border-rose-300',
+                                                            'PENDING'  => 'bg-amber-50 text-amber-700 border-amber-200',
+                                                            'PROCESS'  => 'bg-teal-50 text-[#22B086] border-teal-200',
+                                                            'RESOLVED' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                                            'REJECTED' => 'bg-rose-50 text-rose-700 border-rose-200',
                                                         ];
-                                                        $bStyle = $badgeStyles[$comp->status] ?? 'bg-gray-100 text-gray-800 border-gray-300';
+                                                        $bStyle = $badgeStyles[$comp->status] ?? 'bg-slate-50 text-slate-700 border-slate-200';
                                                     @endphp
-                                                    <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full border {{ $bStyle }}">
+                                                    <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border {{ $bStyle }}">
                                                         {{ $comp->status }}
                                                     </span>
                                                     <a href="{{ route('admin.complaints.show', $comp->id) }}" target="_blank"
-                                                        class="text-xs font-bold text-teal-600 hover:text-teal-800 flex items-center gap-0.5">
+                                                        class="inline-flex items-center gap-1 text-xs font-bold text-[#22B086] hover:text-[#1C8D6C] hover:underline">
                                                         <span>Detail</span>
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                                     </a>
                                                 </div>
                                             </div>
 
-                                            <p class="text-xs text-gray-700 leading-relaxed font-medium mb-3">
+                                            <p class="text-xs text-slate-700 leading-relaxed font-medium mb-3">
                                                 {{ $comp->description }}
                                             </p>
 
@@ -2527,7 +2527,7 @@
                                             @if($comp->photos && count($comp->photos) > 0)
                                                 <div class="flex items-center gap-2 mb-3 overflow-x-auto pb-1">
                                                     @foreach($comp->photo_urls as $photoUrl)
-                                                        <a href="{{ $photoUrl }}" target="_blank" class="block w-14 h-14 rounded-lg overflow-hidden border border-gray-200 shrink-0 hover:opacity-80">
+                                                        <a href="{{ $photoUrl }}" target="_blank" class="block w-14 h-14 rounded-xl overflow-hidden border border-slate-200 shrink-0 hover:opacity-85 shadow-2xs">
                                                             <img src="{{ $photoUrl }}" class="w-full h-full object-cover" alt="Bukti Foto">
                                                         </a>
                                                     @endforeach
@@ -2536,20 +2536,22 @@
 
                                             {{-- Appointment Info Box if scheduled --}}
                                             @if($comp->appointment_date)
-                                                <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="text-base">📅</span>
+                                                <div class="p-3.5 bg-indigo-50/60 rounded-2xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                                    <div class="flex items-center gap-2.5">
+                                                        <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                        </div>
                                                         <div>
-                                                            <span class="font-black text-indigo-950 block">
+                                                            <span class="font-bold text-indigo-950 block">
                                                                 Janji Temu: {{ $comp->appointment_date->format('d M Y, H:i') }} WIB
                                                             </span>
-                                                            <span class="text-gray-600 text-[11px]">
+                                                            <span class="text-slate-600 text-[11px]">
                                                                 {{ $comp->location_label }} {{ $comp->appointment_notes ? '• "' . $comp->appointment_notes . '"' : '' }}
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border {{ $comp->appointment_badge['bg'] }}">
+                                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $comp->appointment_badge['bg'] }}">
                                                             <span class="w-1.5 h-1.5 rounded-full {{ $comp->appointment_badge['dot'] }}"></span>
                                                             {{ $comp->appointment_badge['label'] }}
                                                         </span>
@@ -2560,14 +2562,25 @@
                                     @endforeach
                                 </div>
                             @else
-                                <div class="text-center py-6">
-                                    <div class="w-12 h-12 mx-auto rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mb-2">
-                                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
+                                <div class="py-8 px-4 text-center">
+                                    <div class="relative inline-flex items-center justify-center mb-3.5">
+                                        <div class="w-14 h-14 rounded-2xl bg-[#22B086]/10 text-[#22B086] flex items-center justify-center shadow-inner ring-6 ring-[#22B086]/5">
+                                            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
                                     </div>
-                                    <p class="text-sm font-bold text-gray-800">Tidak Ada Keluhan Aktif</p>
-                                    <p class="text-xs text-gray-400 mt-0.5">SPK ini belum memiliki riwayat keluhan atau janji temu yang dicatat.</p>
+                                    <h4 class="text-sm font-black text-slate-800 tracking-tight">Tidak Ada Keluhan Aktif</h4>
+                                    <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
+                                        Pengerjaan SPK ini berjalan lancar tanpa ada keluhan atau agenda janji temu yang dilaporkan customer.
+                                    </p>
+                                    <div class="mt-4">
+                                        <button type="button" @click="showComplaintModal = true" 
+                                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#22B086] bg-[#22B086]/10 hover:bg-[#22B086]/20 transition-all border border-[#22B086]/20 active:scale-95">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                            <span>Catat Keluhan Jika Ada Kendala</span>
+                                        </button>
+                                    </div>
                                 </div>
                             @endif
                         </div>
