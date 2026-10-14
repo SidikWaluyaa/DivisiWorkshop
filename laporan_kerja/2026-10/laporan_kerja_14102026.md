@@ -235,6 +235,12 @@ Berdasarkan evaluasi visual pada halaman `/admin/complaints`, tampilan sebelumny
 - **Empty State Premium**: Merancang ulang tampilan ketika belum ada keluhan dengan ikon centang terverifikasi hijau brand `#22B086`, ring aura halus, tipografi yang menenangkan, serta tombol aksi cepat *dashed-border*.
 - **List Item & Janji Temu**: Desain kartu item keluhan dan janji temu kini memiliki badge yang presisi dan thumbnail foto dengan rounded corners elegan.
 
+#### G. Fitur Kompresi Otomatis Berkas Foto Bukti Keluhan (`ImageHelper::convertToJpg`)
+- **Kompresi Server-Side**: Mengintegrasikan `App\Utils\ImageHelper::convertToJpg()` pada `ComplaintController@store` sehingga berkas foto bukti keluhan otomatis di-*scale down* ke resolusi maksimal 800x800 px dan dikonversi ke format JPEG dengan kualitas 60%.
+- **Efisiensi Penyimpanan**: Mengurangi ukuran file foto dari ~3MB–10MB (ukuran mentah kamera HP) menjadi hanya ~50KB–120KB per foto (penghematan hingga >95%).
+- **Harmonisasi Accessor**: Menyempurnakan accessor `Complaint::photo_urls` agar secara otomatis mengenali dan menyajikan URL foto baik yang tersimpan dengan atau tanpa prefix direktori.
+- **Micro-Copy UI**: Menambahkan indikator badge `Auto-Compress JPG` dan teks penjelasan pada modal input di `/admin/complaints` dan `/admin/orders/show`.
+
 ---
 
 ## 8. Status Repository & Verifikasi Akhir
