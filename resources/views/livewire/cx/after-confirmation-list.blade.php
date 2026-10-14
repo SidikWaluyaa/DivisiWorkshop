@@ -485,6 +485,9 @@
                 {{ $items->links() }}
             </div>
             @endif
+        </div>
+    </div>
+
     {{-- Unified Action Modal (Respon + Accordion OTO / Revisi) --}}
     <div x-data="{
             openAction: false,
@@ -585,11 +588,12 @@
                     $wire.saveAction();
                 }
             }
-         }"
-         x-show="openAction"
-         class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm"
-         style="display: none;"
-         x-cloak>
+         }">
+        <template x-teleport="body">
+            <div x-show="openAction"
+                 class="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm"
+                 style="display: none;"
+                 x-cloak>
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-hidden flex flex-col border border-gray-100" @click.away="openAction = false">
             {{-- Header --}}
             <div class="p-6 pb-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white relative">
@@ -938,6 +942,8 @@
             </div>
         </div>
     </div>
+</template>
+</div>
 
     @script
     <script>
