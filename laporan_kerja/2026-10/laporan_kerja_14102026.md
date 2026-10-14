@@ -241,6 +241,12 @@ Berdasarkan evaluasi visual pada halaman `/admin/complaints`, tampilan sebelumny
 - **Harmonisasi Accessor**: Menyempurnakan accessor `Complaint::photo_urls` agar secara otomatis mengenali dan menyajikan URL foto baik yang tersimpan dengan atau tanpa prefix direktori.
 - **Micro-Copy UI**: Menambahkan indikator badge `Auto-Compress JPG` dan teks penjelasan pada modal input di `/admin/complaints` dan `/admin/orders/show`.
 
+#### H. Transformasi Gaya Modern Ticket Callout pada Detail SPK (`/admin/orders/42`)
+- **Penegasan Konteks Isi Keluhan**: Menghilangkan teks polos menggantung, menggantikannya dengan **Kotak Kutipan Khusus (Quote Callout Bubble)** berlatar gradien amber lembut, border kiri tegas, badge *"Customer Voice"*, dan tipografi tebal bernada kutipan.
+- **Struktur Header Tiket**: Penomoran tiket `#ID` monospaced hitam, timestamp pelaporan dengan ikon jam, badge kategori spesifik, serta status dengan animasi dot indikator.
+- **Lampiran Galeri Foto Berlabel**: Menampilkan judul *"Lampiran Bukti Foto (X Foto)"*, thumbnail foto terbingkai rapi dengan overlay ikon pembesar, dan link pembuka foto penuh.
+- **Quick Action Bar**: Menambahkan tombol cepat *"Chat WA Customer"* (dengan teks otomatis nomor SPK dan jadwal janji temu) serta tombol primer *"Detail & Tindak Lanjut"*.
+
 ---
 
 ## 8. Status Repository & Verifikasi Akhir
