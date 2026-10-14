@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
 use App\Models\WorkOrder;
@@ -114,6 +115,10 @@ class ComplaintController extends Controller
         }
 
         $orders = WorkOrder::query()
+            ->whereNotIn('status', [
+                WorkOrderStatus::SPK_PENDING->value,
+                WorkOrderStatus::BATAL->value,
+            ])
             ->where(function ($query) use ($q) {
                 $query->where('spk_number', 'LIKE', "%{$q}%")
                       ->orWhere('customer_name', 'LIKE', "%{$q}%")
@@ -145,6 +150,13 @@ class ComplaintController extends Controller
         ]);
 
         $workOrder = WorkOrder::findOrFail($request->work_order_id);
+
+        // Guard: SPK_PENDING and BATAL cannot have complaints registered
+        $statusVal = $workOrder->status instanceof WorkOrderStatus ? $workOrder->status->value : $workOrder->status;
+        if (in_array($statusVal, [WorkOrderStatus::SPK_PENDING->value, WorkOrderStatus::BATAL->value])) {
+            return back()->with('error', 'Keluhan tidak dapat dicatat untuk SPK yang masih berstatus Pending CS atau Batal.');
+        }
+
         $customerName = $workOrder->customer_name ?: 'Pelanggan';
         $customerPhone = $workOrder->customer_phone ?: '-';
 

@@ -258,9 +258,48 @@ Berdasarkan evaluasi visual pada halaman `/admin/complaints`, tampilan sebelumny
 
 ---
 
-## 8. Status Repository & Verifikasi Akhir
-- **Status Sintaks & Cache**: `view:clear` berhasil dibersihkan, tanpa error sintaks pada seluruh komponen Blade.
-- **Git Branch**: `main` (Semua perubahan telah di-commit dan di-push ke remote).
+## 8. Pengecualian SPK Berstatus Pending CS & Batal pada Modul Pencatatan Keluhan
+
+### 1. Latar Belakang & Kebutuhan Operasional
+- Pada alur operasional Shoe Workshop, sebuah SPK berstatus `SPK_PENDING` merupakan order baru yang dibuat oleh tim Customer Service (CS) dan barang fisiknya belum masuk proses penerimaan gudang/workshop. Sementara SPK `BATAL` merupakan order yang telah dibatalkan.
+- Keluhan pelanggan serta agenda janji temu teknis workshop hanya relevan untuk SPK yang sudah/sedang aktif diproses di workshop atau SPK yang sudah selesai (`DIKERJAKAN`, `MENUNGGU_QC`, `SIAP_DIAMBIL`, `SELESAI`, dsb.).
+- Memunculkan SPK berstatus `SPK_PENDING` pada live search pemilihan SPK di modal keluhan berisiko menimbulkan salah catat atau duplikasi data komplain pada barang yang belum ada di workshop.
+
+### 2. Implementasi & Perubahan Teknis
+
+#### A. Backend Controller (`app/Http/Controllers/Admin/ComplaintController.php`)
+- **Penyaringan Live Autocomplete (`searchOrders`)**:
+  Menambahkan klausa `whereNotIn` pada query pencarian SPK:
+  ```php
+  ->whereNotIn('status', [
+      WorkOrderStatus::SPK_PENDING->value,
+      WorkOrderStatus::BATAL->value,
+  ])
+  ```
+  Dengan ini, SPK dengan status `SPK_PENDING` dan `BATAL` tidak akan pernah muncul pada dropdown hasil pencarian saat pengguna mengetik nama/nomor SPK di modal catat keluhan.
+- **Guard Validasi Server-Side (`store`)**:
+  Menambahkan pengecekan integritas data sebelum pembuatan record keluhan:
+  ```php
+  $statusVal = $workOrder->status instanceof WorkOrderStatus ? $workOrder->status->value : $workOrder->status;
+  if (in_array($statusVal, [WorkOrderStatus::SPK_PENDING->value, WorkOrderStatus::BATAL->value])) {
+      return back()->with('error', 'Keluhan tidak dapat dicatat untuk SPK yang masih berstatus Pending CS atau Batal.');
+  }
+  ```
+
+#### B. Antarmuka / Views
+- **`resources/views/admin/complaints/index.blade.php`**:
+  - Menambahkan teks panduan mikro (*micro-copy*) di bawah kolom input pencarian SPK:
+    *"Hanya SPK aktif di workshop / selesai yang ditampilkan (SPK Pending CS & Batal dikecualikan)."*
+- **`resources/views/admin/orders/show.blade.php`**:
+  - Menyematkan proteksi kondisi `@if(!$isPendingOrBatal)`.
+  - Jika SPK berstatus `SPK_PENDING` atau `BATAL`, tombol `+ Catat Keluhan SPK Ini` otomatis disembunyikan dan digantikan dengan badge informasi status non-aktif (`SPK Pending CS` / `SPK Batal`).
+  - Pada area riwayat keluhan kosong (*empty state*), tombol cepat mencatat keluhan digantikan dengan keterangan informatif bahwa keluhan hanya dapat dicatat setelah SPK diproses oleh workshop.
+
+---
+
+## 9. Status Repository & Verifikasi Akhir
+- **Status Sintaks & Cache**: `php -l` PASS (tidak ada error sintaks), `php artisan view:clear` berhasil.
+- **Git Branch**: `main` (Perubahan telah di-commit dan siap di-pull ke lingkungan aaPanel).
 
 
 

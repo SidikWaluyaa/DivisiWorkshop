@@ -2470,12 +2470,24 @@
                                 </div>
                             </div>
                             
+                            @php
+                                $statusVal = $order->status instanceof \App\Enums\WorkOrderStatus ? $order->status->value : $order->status;
+                                $isPendingOrBatal = in_array($statusVal, ['SPK_PENDING', 'BATAL']);
+                            @endphp
+
                             <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
-                                <button type="button" @click="showComplaintModal = true" 
-                                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#22B086] hover:bg-[#1C8D6C] text-white text-xs font-bold rounded-xl shadow-md shadow-[#22B086]/20 hover:shadow-lg hover:shadow-[#22B086]/30 transition-all active:scale-95 whitespace-nowrap">
-                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                                    <span>Catat Keluhan SPK Ini</span>
-                                </button>
+                                @if(!$isPendingOrBatal)
+                                    <button type="button" @click="showComplaintModal = true" 
+                                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#22B086] hover:bg-[#1C8D6C] text-white text-xs font-bold rounded-xl shadow-md shadow-[#22B086]/20 hover:shadow-lg hover:shadow-[#22B086]/30 transition-all active:scale-95 whitespace-nowrap">
+                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                        <span>Catat Keluhan SPK Ini</span>
+                                    </button>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-500 rounded-xl text-xs font-bold border border-slate-200" title="Keluhan hanya untuk SPK yang aktif di workshop">
+                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        <span>SPK {{ $order->status instanceof \App\Enums\WorkOrderStatus ? $order->status->label() : $order->status }}</span>
+                                    </span>
+                                @endif
                                 <a href="{{ route('admin.complaints.index') }}" target="_blank"
                                     class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all border border-slate-200 hover:border-slate-300 shadow-2xs whitespace-nowrap">
                                     <span>Buka Modul</span>
@@ -2657,13 +2669,19 @@
                                     <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
                                         Pengerjaan SPK ini berjalan lancar tanpa ada keluhan atau agenda janji temu yang dilaporkan customer.
                                     </p>
-                                    <div class="mt-4">
-                                        <button type="button" @click="showComplaintModal = true" 
-                                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#22B086] bg-[#22B086]/10 hover:bg-[#22B086]/20 transition-all border border-[#22B086]/20 active:scale-95">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                                            <span>Catat Keluhan Jika Ada Kendala</span>
-                                        </button>
-                                    </div>
+                                    @if(!$isPendingOrBatal)
+                                        <div class="mt-4">
+                                            <button type="button" @click="showComplaintModal = true" 
+                                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#22B086] bg-[#22B086]/10 hover:bg-[#22B086]/20 transition-all border border-[#22B086]/20 active:scale-95">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                                <span>Catat Keluhan Jika Ada Kendala</span>
+                                            </button>
+                                        </div>
+                                    @else
+                                        <p class="text-[11px] text-slate-400 mt-2.5 italic">
+                                            SPK berstatus {{ $order->status instanceof \App\Enums\WorkOrderStatus ? $order->status->label() : $order->status }}. Keluhan hanya dapat dicatat setelah SPK diproses oleh workshop.
+                                        </p>
+                                    @endif
                                 </div>
                             @endif
                         </div>
