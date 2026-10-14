@@ -301,8 +301,8 @@ class OtoStationIndex extends Component
                     'description'   => "Seluruh layanan OTO ({$oto->proposed_services}) selesai dikerjakan. Sepatu dipindahkan ke Rak Selesai / Siap Pickup Gudang.",
                 ]);
 
-                // Terbitkan Konfirmasi After Ke-2 untuk OTO (Round 2, Stage OTO)
-                app(\App\Services\CxConfirmationService::class)->createFromOrder($oto->workOrder, 'OTO', 2);
+                // Terbitkan Konfirmasi After untuk OTO (otomatis After 2, After 3, dst.)
+                app(\App\Services\CxConfirmationService::class)->createFromOrder($oto->workOrder, 'OTO');
             }
 
             unset($this->otos);

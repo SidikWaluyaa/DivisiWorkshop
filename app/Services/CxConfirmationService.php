@@ -48,11 +48,24 @@ class CxConfirmationService
 
             // Determine target round:
             // Sesuai SOP: GARANSI, REVISI, dan OTO minimal adalah After Ke-2 (round = 2).
-            // Jika sudah ada After sebelumnya (misal OTO ke-2, Revisi ke-2), otomatis naik ke After 3, 4, dst.
+            // Jika sudah ada After sebelumnya (misal ada Revisi di After 2, lalu OTO selesai), otomatis naik ke After 3, 4, dst.
             if (!is_null($forcedRound)) {
-                $targetRound = $forcedRound;
+                $existingForced = CxAfterConfirmation::where('work_order_id', $order->id)
+                    ->where('round', $forcedRound)
+                    ->first();
+
+                if ($existingForced) {
+                    // Jika stage sama dan record baru saja dibuat dalam 2 menit terakhir (mencegah double-click bersamaan)
+                    if ($existingForced->stage_type === strtoupper($stageType) && $existingForced->created_at?->diffInMinutes(now()) < 2) {
+                        return $existingForced;
+                    }
+                    // Jika ronde tersebut sudah terisi (misal Round 2 adalah REVISI), otomatis naik ke ronde berikutnya!
+                    $targetRound = max((int)($latest?->round ?? 1) + 1, (int)$forcedRound + 1);
+                } else {
+                    $targetRound = $forcedRound;
+                }
             } elseif ($latest) {
-                $targetRound = (int)$latest->round + 1;
+                $targetRound = max((int)$latest->round + 1, in_array(strtoupper((string)$stageType), ['GARANSI', 'REVISI', 'OTO']) ? 2 : 1);
             } elseif (in_array(strtoupper((string)$stageType), ['GARANSI', 'REVISI', 'OTO'])) {
                 $targetRound = 2;
             } else {
@@ -60,7 +73,7 @@ class CxConfirmationService
             }
 
             // Batasi hanya jika sudah melampaui batas wajar (misal round > 10)
-            if (is_null($forcedRound) && $latest && (int)$latest->round >= 10) {
+            if ($latest && (int)$latest->round >= 10) {
                 return null;
             }
 

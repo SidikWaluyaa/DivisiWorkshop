@@ -77,5 +77,24 @@ Tim Customer Experience (CX) saat melakukan panggilan konfirmasi after service m
 
 ---
 
-## 4. Status Repository & Langkah Selanjutnya
-- Seluruh perubahan siap di-commit dan di-push ke branch `main`.
+## 4. Perbaikan Siklus Lanjutan Multi-Cycle (After 2 -> After 3)
+### Permasalahan:
+Pada SPK `S-2608-12-0019-SW` yang telah menyelesaikan siklus **After 2 (Revisi)**, ketika paket **OTO** miliknya diselesaikan di stasiun OTO (`/oto`), record konfirmasi tidak muncul di tabel `/cx/after-confirmation`.
+
+### Akar Masalah (Root Cause):
+1. Pada `OtoStationIndex::completeOto`, pemanggilan `createFromOrder` sebelumnya mengirimkan argumen hardcoded round: `createFromOrder($oto->workOrder, 'OTO', 2)`.
+2. Di dalam `CxConfirmationService::createFromOrder`, pengecekan duplikasi `where('round', $targetRound)->first()` mendeteksi bahwa Round 2 sudah ada (karena telah terisi oleh siklus Revisi). Akibatnya, method mengembalikan record lama dan membatalkan pembuatan ronde baru.
+
+### Solusi & Implementasi:
+1. **Penyempurnaan `CxConfirmationService`**:
+   - Menambahkan logika dinamis: Jika ronde yang diminta (`forcedRound` / 2) sudah terisi oleh ronde siklus sebelumnya (misal Round 2 adalah Revisi), sistem secara otomatis mengeskalasikan ke ronde berikutnya: `max($latest->round + 1, $forcedRound + 1)` (sehingga otomatis menjadi **Round 3 / After 3**).
+2. **Pembaruan `OtoStationIndex`**:
+   - Memanggil `createFromOrder($oto->workOrder, 'OTO')` secara luwes tanpa memaksakan angka 2, sehingga jika After 2 sudah terpakai oleh Revisi/Garansi, sistem secara otomatis menempatkan OTO ke After 3.
+3. **Hasil Verifikasi SPK `S-2608-12-0019-SW`**:
+   - Record After 3 (Stage `OTO`, Entered: 14 Oct 2026 10:02 WIB) berhasil diterbitkan dan langsung tampil di halaman `/cx/after-confirmation`.
+
+---
+
+## 5. Status Repository & Langkah Selanjutnya
+- Seluruh berkas siap di-commit dan di-push ke remote repository `origin/main`.
+
