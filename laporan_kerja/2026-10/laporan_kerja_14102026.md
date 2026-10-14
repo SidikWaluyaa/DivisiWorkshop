@@ -247,6 +247,14 @@ Berdasarkan evaluasi visual pada halaman `/admin/complaints`, tampilan sebelumny
 - **Lampiran Galeri Foto Berlabel**: Menampilkan judul *"Lampiran Bukti Foto (X Foto)"*, thumbnail foto terbingkai rapi dengan overlay ikon pembesar, dan link pembuka foto penuh.
 - **Quick Action Bar**: Menambahkan tombol cepat *"Chat WA Customer"* (dengan teks otomatis nomor SPK dan jadwal janji temu) serta tombol primer *"Detail & Tindak Lanjut"*.
 
+#### I. Redesign Total Halaman Detail Keluhan (`/admin/complaints/{id}`) & Eliminasi Widget Balas Keluhan
+- **Eliminasi Total Widget Balas Keluhan**: Menghapus seluruh container chat mock WhatsApp, tombol template konfirmasi/selesai, serta script preview pesan yang sebelumnya tidak efektif dan memakan ruang layar.
+- **Pintasan Praktis Baru**: Menyediakan kartu pintasan ringkas di sidebar berupa tombol langsung *"Hubungi Customer via WhatsApp"* (membuka link WA resmi dengan format template pesan otomatis no SPK & tanggal temu) serta *"Buka Halaman Detail SPK"*.
+- **Executive Clean Hero Header**: Menghadirkan header berlatar putih dengan subtle glow `#22B086`, tiket badge, status pill kontras, info customer, serta tombol navigasi cepat.
+- **Customer Voice Quote Bubble & Foto Galeri**: Mengadopsi format quote bubble amber untuk isi keluhan, kartu meta kategori & tanggal yang bersih, serta galeri foto berbingkai modern dengan efek hover zoom.
+- **Modernisasi Kartu Janji Temu & SPK**: Mengubah kartu janji temu yang sebelumnya gelap menjadi kartu berlatar terang dengan aksen indigo lembut, serta merapikan riwayat pengerjaan teknisi pada kartu info SPK.
+- **Sidebar Form Update**: Pemilihan status penanganan kini menggunakan radio button beraksen warna tegas dengan indikator dot, form input janji temu bergaris bersih, dan tombol hapus keluhan yang aman.
+
 ---
 
 ## 8. Status Repository & Verifikasi Akhir
