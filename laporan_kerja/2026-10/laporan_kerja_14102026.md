@@ -225,14 +225,15 @@ Berdasarkan evaluasi visual pada halaman `/admin/complaints`, tampilan sebelumny
 - **Detail Modal & Quick Actions**:
   - Modal quick preview janji temu dengan integrasi langsung tautan chat WhatsApp ke nomor handphone customer.
 
-#### D. Detail Keluhan (`/admin/complaints/show`) & SPK (`/admin/orders/show`)
-- Harmonisasi warna header, kartu agenda temu, tombol update status, dan modal internal dengan aksen `#22B086` dan `#FFC232`.
+#### E. Perbaikan Margin & Container Padding (`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`)
+- Menambahkan container pembungkus standar pada `index.blade.php`, `show.blade.php`, dan `trash.blade.php`.
+- Memberikan *breathing room* horizontal yang proporsional sehingga elemen header, kartu metrik, tab switcher, dan tabel tidak lagi menempel/berdempetan dengan sidebar di sebelah kiri dan tepi layar di sebelah kanan, serta tetap elegan dan terpusat rapi di layar lebar.
 
 ---
 
 ## 8. Status Repository & Verifikasi Akhir
 - **Status Sintaks & Cache**: `view:clear` berhasil dibersihkan, tanpa error sintaks pada seluruh komponen Blade.
-- **Git Branch**: `main` (Perubahan siap untuk di-commit dan di-push).
+- **Git Branch**: `main` (Semua perubahan telah di-commit dan di-push ke remote).
 
 
 
