@@ -3,17 +3,19 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Content: Complaint Info & Photos -->
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <div class="p-6 bg-gradient-to-r from-teal-500 via-teal-600 to-orange-500 text-white flex justify-between items-center">
-                    <h3 class="text-xl font-black flex items-center gap-2">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div class="p-6 bg-gradient-to-r from-[#22B086] to-[#1C8D6C] text-white flex justify-between items-center">
+                    <h3 class="text-lg font-black flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center border border-white/20">
+                            <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
                         Detail Keluhan #{{ $complaint->id }}
                     </h3>
-                    <a href="{{ route('admin.complaints.index') }}" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1">
+                    <a href="{{ route('admin.complaints.index') }}" class="px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border border-white/20 shadow-2xs">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                        Kembali
+                        <span>Kembali</span>
                     </a>
                 </div>
                 
@@ -21,25 +23,25 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         @php
                             $categoryConfig = [
-                                'QUALITY' => ['bg' => 'from-purple-400 to-purple-500', 'icon' => '🔍', 'label' => 'Kualitas'],
-                                'DAMAGE' => ['bg' => 'from-red-400 to-red-500', 'icon' => '⚠️', 'label' => 'Kerusakan'],
-                                'LATE' => ['bg' => 'from-yellow-400 to-yellow-500', 'icon' => '⏰', 'label' => 'Terlambat'],
-                                'SERVICE' => ['bg' => 'from-blue-400 to-blue-500', 'icon' => '💬', 'label' => 'Layanan'],
-                                'OTHER' => ['bg' => 'from-gray-400 to-gray-500', 'icon' => '📌', 'label' => 'Lainnya'],
+                                'QUALITY' => ['bg' => 'from-purple-500 to-indigo-600', 'icon' => '🔍', 'label' => 'Kualitas Hasil'],
+                                'DAMAGE'  => ['bg' => 'from-rose-500 to-red-600', 'icon' => '⚠️', 'label' => 'Kerusakan'],
+                                'LATE'    => ['bg' => 'from-amber-500 to-orange-600', 'icon' => '⏰', 'label' => 'Keterlambatan'],
+                                'SERVICE' => ['bg' => 'from-sky-500 to-blue-600', 'icon' => '💬', 'label' => 'Pelayanan CS'],
+                                'OTHER'   => ['bg' => 'from-slate-500 to-gray-600', 'icon' => '📌', 'label' => 'Lainnya'],
                             ];
                             $catConfig = $categoryConfig[$complaint->category] ?? $categoryConfig['OTHER'];
                         @endphp
-                        <div class="bg-gradient-to-br {{ $catConfig['bg'] }} p-4 rounded-xl text-white shadow-lg">
-                            <p class="text-xs font-bold uppercase tracking-wider opacity-90 mb-1">Kategori</p>
-                            <p class="font-black text-lg flex items-center gap-2">
-                                <span class="text-2xl">{{ $catConfig['icon'] }}</span>
+                        <div class="bg-gradient-to-br {{ $catConfig['bg'] }} p-4 rounded-2xl text-white shadow-sm">
+                            <p class="text-[10px] font-black uppercase tracking-wider opacity-90 mb-1">Kategori Masalah</p>
+                            <p class="font-black text-base flex items-center gap-2">
+                                <span class="text-xl">{{ $catConfig['icon'] }}</span>
                                 {{ $catConfig['label'] }}
                             </p>
                         </div>
-                        <div class="bg-gradient-to-br from-teal-400 to-teal-500 p-4 rounded-xl text-white shadow-lg">
-                            <p class="text-xs font-bold uppercase tracking-wider opacity-90 mb-1">Tanggal Masuk</p>
-                            <p class="font-black text-lg">{{ $complaint->created_at->format('d M Y') }}</p>
-                            <p class="text-xs opacity-90">{{ $complaint->created_at->format('H:i:s') }}</p>
+                        <div class="bg-gradient-to-br from-[#22B086] to-[#1C8D6C] p-4 rounded-2xl text-white shadow-sm">
+                            <p class="text-[10px] font-black uppercase tracking-wider opacity-90 mb-1">Tanggal Masuk</p>
+                            <p class="font-black text-base">{{ $complaint->created_at->format('d M Y') }}</p>
+                            <p class="text-[11px] opacity-90 font-medium">{{ $complaint->created_at->format('H:i:s') }} WIB</p>
                         </div>
                     </div>
 
@@ -69,16 +71,16 @@
             </div>
 
             <!-- Appointment Card -->
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <div class="p-6 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white flex items-center justify-between">
-                    <h3 class="text-xl font-black flex items-center gap-2">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div class="p-6 bg-gradient-to-r from-indigo-700 to-indigo-800 text-white flex items-center justify-between">
+                    <h3 class="text-base font-black flex items-center gap-2.5">
+                        <svg class="h-5 w-5 text-indigo-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                         Agenda Janji Temu Pelanggan
                     </h3>
                     @if($complaint->appointment_date)
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black {{ $complaint->appointment_badge['bg'] }} shadow-sm">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black {{ $complaint->appointment_badge['bg'] }} shadow-xs">
                             <span class="w-2 h-2 rounded-full {{ $complaint->appointment_badge['dot'] }}"></span>
                             {{ $complaint->appointment_badge['label'] }}
                         </span>
@@ -88,43 +90,43 @@
                 <div class="p-6">
                     @if($complaint->appointment_date)
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div class="bg-indigo-50/70 p-4 rounded-xl border border-indigo-100">
-                                <p class="text-indigo-700 text-xs font-bold uppercase mb-1">Tanggal & Waktu</p>
-                                <p class="font-black text-gray-900 text-base">{{ $complaint->appointment_date->format('d M Y') }}</p>
+                            <div class="bg-indigo-50/70 p-4 rounded-2xl border border-indigo-100">
+                                <p class="text-indigo-700 text-[10px] font-black uppercase mb-1">Tanggal &amp; Waktu</p>
+                                <p class="font-black text-slate-900 text-sm">{{ $complaint->appointment_date->format('d M Y') }}</p>
                                 <p class="text-xs text-indigo-600 font-bold mt-0.5">{{ $complaint->appointment_date->format('H:i') }} WIB</p>
                             </div>
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <p class="text-slate-500 text-xs font-bold uppercase mb-1">Lokasi Pertemuan</p>
-                                <p class="font-black text-gray-900 text-base">{{ $complaint->location_label }}</p>
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                <p class="text-slate-500 text-[10px] font-black uppercase mb-1">Lokasi Pertemuan</p>
+                                <p class="font-black text-slate-900 text-sm">{{ $complaint->location_label }}</p>
                             </div>
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <p class="text-slate-500 text-xs font-bold uppercase mb-1">Status Janji</p>
-                                <p class="font-black text-gray-900 text-base">{{ $complaint->appointment_status }}</p>
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                <p class="text-slate-500 text-[10px] font-black uppercase mb-1">Status Janji</p>
+                                <p class="font-black text-slate-900 text-sm">{{ $complaint->appointment_status }}</p>
                             </div>
                         </div>
 
                         @if($complaint->appointment_notes)
-                            <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 text-xs text-amber-900">
+                            <div class="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 text-xs text-amber-900">
                                 <span class="font-black block uppercase tracking-wider mb-1 text-amber-800">Catatan Janji Temu:</span>
                                 <p class="leading-relaxed">{{ $complaint->appointment_notes }}</p>
                             </div>
                         @endif
                     @else
-                        <div class="text-center py-6 text-gray-400">
-                            <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="text-center py-6 text-slate-400">
+                            <svg class="w-10 h-10 mx-auto mb-2 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
-                            <p class="text-sm font-bold text-gray-600">Belum ada janji temu yang dijadwalkan</p>
-                            <p class="text-xs text-gray-400 mt-0.5">Anda dapat menjadwalkan janji temu melalui form di panel sebelah kanan.</p>
+                            <p class="text-xs font-bold text-slate-700">Belum ada janji temu yang dijadwalkan</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Anda dapat menjadwalkan janji temu melalui form di panel sebelah kanan.</p>
                         </div>
                     @endif
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <div class="p-6 bg-gradient-to-r from-teal-500 to-orange-500 text-white">
-                    <h3 class="text-xl font-black flex items-center gap-2">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div class="p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+                    <h3 class="text-base font-black flex items-center gap-2">
+                        <svg class="h-5 w-5 text-[#FFC232]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                         Info Pesanan: {{ $complaint->workOrder ? $complaint->workOrder->spk_number : 'No SPK' }}
@@ -132,26 +134,26 @@
                 </div>
                 
                 <div class="p-6">
-                    <div class="grid grid-cols-2 gap-4 text-sm mb-4">
-                        <div class="bg-gray-50 p-3 rounded-lg">
-                            <p class="text-gray-500 text-xs font-bold uppercase mb-1">Pelanggan</p>
-                            <p class="font-bold text-gray-900">{{ $complaint->workOrder ? $complaint->workOrder->customer_name : $complaint->customer_name }}</p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $complaint->customer_phone }}</p>
+                    <div class="grid grid-cols-2 gap-4 text-xs mb-4">
+                        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/70">
+                            <p class="text-slate-400 text-[10px] font-black uppercase mb-1">Pelanggan</p>
+                            <p class="font-bold text-slate-900 text-sm">{{ $complaint->workOrder ? $complaint->workOrder->customer_name : $complaint->customer_name }}</p>
+                            <p class="text-xs text-slate-500 mt-1">📱 {{ $complaint->customer_phone }}</p>
                         </div>
-                        <div class="bg-gray-50 p-3 rounded-lg">
-                            <p class="text-gray-500 text-xs font-bold uppercase mb-1">Sepatu</p>
-                            <p class="font-bold text-gray-900">{{ $complaint->workOrder ? $complaint->workOrder->shoe_brand : '-' }}</p>
-                            <p class="text-xs text-gray-500">{{ $complaint->workOrder ? $complaint->workOrder->shoe_color : '-' }}</p>
+                        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/70">
+                            <p class="text-slate-400 text-[10px] font-black uppercase mb-1">Sepatu</p>
+                            <p class="font-bold text-slate-900 text-sm">{{ $complaint->workOrder ? $complaint->workOrder->shoe_brand : '-' }}</p>
+                            <p class="text-xs text-slate-500 mt-1">{{ $complaint->workOrder ? $complaint->workOrder->shoe_color : '-' }}</p>
                         </div>
                     </div>
 
                     @if($complaint->workOrder && $complaint->workOrder->services)
-                    <div class="pt-4 border-t border-gray-100">
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Layanan Dikerjakan</p>
+                    <div class="pt-4 border-t border-slate-100">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2.5">Layanan Dikerjakan</p>
                         <div class="flex flex-wrap gap-2">
                             @foreach($complaint->workOrder->services as $service)
-                                <span class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-teal-50 to-teal-100 border border-teal-200 rounded-lg text-xs font-bold text-teal-700">
-                                    <svg class="h-3 w-3 text-teal-500 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <span class="inline-flex items-center px-3 py-1 bg-[#22B086]/10 border border-[#22B086]/25 rounded-xl text-xs font-bold text-[#166534]">
+                                    <svg class="h-3 w-3 text-[#22B086] mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                                     </svg>
                                     {{ $service->name }}
@@ -162,64 +164,64 @@
                     @endif
                     
                     @if($complaint->workOrder)
-                    <div class="mt-4 pt-4 border-t border-gray-100">
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Riwayat Teknisi</p>
+                    <div class="mt-4 pt-4 border-t border-slate-100">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Riwayat Teknisi</p>
                         
                         <div class="space-y-2">
                              {{-- Main Technician --}}
                              @if($complaint->workOrder->technicianProduction)
-                                <div class="flex items-center bg-gradient-to-r from-orange-50 to-orange-100 p-2 rounded-lg border border-orange-200">
-                                    <div class="h-8 w-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-black text-xs mr-3 shadow-sm">
+                                <div class="flex items-center bg-amber-50/60 p-2.5 rounded-2xl border border-amber-200/80">
+                                    <div class="h-8 w-8 rounded-xl bg-[#FFC232] flex items-center justify-center text-slate-900 font-black text-xs mr-3 shadow-2xs">
                                         {{ substr($complaint->workOrder->technicianProduction->name, 0, 2) }}
                                     </div>
                                     <div>
-                                        <p class="text-xs text-orange-700 font-bold uppercase">Teknisi Utama</p>
-                                        <p class="text-sm font-bold text-orange-900">{{ $complaint->workOrder->technicianProduction->name }}</p>
+                                        <p class="text-[10px] text-amber-800 font-black uppercase">Teknisi Utama</p>
+                                        <p class="text-xs font-bold text-slate-900">{{ $complaint->workOrder->technicianProduction->name }}</p>
                                     </div>
                                 </div>
                             @endif
 
                             {{-- Sol Technician --}}
                             @if($complaint->workOrder->prodSolBy)
-                                <div class="flex items-center bg-gray-50 p-2 rounded-lg border border-gray-200">
-                                    <div class="h-8 w-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-xs mr-3">
+                                <div class="flex items-center bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+                                    <div class="h-8 w-8 rounded-xl bg-slate-300 flex items-center justify-center text-slate-700 font-bold text-xs mr-3">
                                         {{ substr($complaint->workOrder->prodSolBy->name, 0, 2) }}
                                     </div>
                                     <div>
-                                        <p class="text-xs text-gray-500 font-bold uppercase">Sol</p>
-                                        <p class="text-sm font-medium text-gray-700">{{ $complaint->workOrder->prodSolBy->name }}</p>
+                                        <p class="text-[10px] text-slate-400 font-black uppercase">Sol</p>
+                                        <p class="text-xs font-bold text-slate-800">{{ $complaint->workOrder->prodSolBy->name }}</p>
                                     </div>
                                 </div>
                             @endif
 
                             {{-- Upper Technician --}}
                             @if($complaint->workOrder->prodUpperBy)
-                                <div class="flex items-center bg-gray-50 p-2 rounded-lg border border-gray-200">
-                                    <div class="h-8 w-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-xs mr-3">
+                                <div class="flex items-center bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+                                    <div class="h-8 w-8 rounded-xl bg-slate-300 flex items-center justify-center text-slate-700 font-bold text-xs mr-3">
                                         {{ substr($complaint->workOrder->prodUpperBy->name, 0, 2) }}
                                     </div>
                                     <div>
-                                        <p class="text-xs text-gray-500 font-bold uppercase">Upper</p>
-                                        <p class="text-sm font-medium text-gray-700">{{ $complaint->workOrder->prodUpperBy->name }}</p>
+                                        <p class="text-[10px] text-slate-400 font-black uppercase">Upper</p>
+                                        <p class="text-xs font-bold text-slate-800">{{ $complaint->workOrder->prodUpperBy->name }}</p>
                                     </div>
                                 </div>
                             @endif
 
                             {{-- Cleaning/Treatment Technician --}}
                             @if($complaint->workOrder->prodCleaningBy)
-                                <div class="flex items-center bg-gray-50 p-2 rounded-lg border border-gray-200">
-                                    <div class="h-8 w-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-xs mr-3">
+                                <div class="flex items-center bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+                                    <div class="h-8 w-8 rounded-xl bg-slate-300 flex items-center justify-center text-slate-700 font-bold text-xs mr-3">
                                         {{ substr($complaint->workOrder->prodCleaningBy->name, 0, 2) }}
                                     </div>
                                     <div>
-                                        <p class="text-xs text-gray-500 font-bold uppercase">Cleaning/Treatment</p>
-                                        <p class="text-sm font-medium text-gray-700">{{ $complaint->workOrder->prodCleaningBy->name }}</p>
+                                        <p class="text-[10px] text-slate-400 font-black uppercase">Cleaning/Treatment</p>
+                                        <p class="text-xs font-bold text-slate-800">{{ $complaint->workOrder->prodCleaningBy->name }}</p>
                                     </div>
                                 </div>
                             @endif
                             
                             @if(!$complaint->workOrder->technicianProduction && !$complaint->workOrder->prodSolBy && !$complaint->workOrder->prodUpperBy && !$complaint->workOrder->prodCleaningBy)
-                                <span class="text-sm text-gray-400 italic">Belum ada data teknisi.</span>
+                                <span class="text-xs text-slate-400 italic">Belum ada data teknisi.</span>
                             @endif
                         </div>
                     </div>
@@ -231,14 +233,14 @@
         <!-- Sidebar: Actions -->
         <div class="space-y-6">
             <!-- Update Status & Appointment -->
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
-                <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <div class="bg-gradient-to-br from-teal-500 to-orange-500 p-2 rounded-lg">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <div class="bg-[#22B086] text-white p-1.5 rounded-lg shadow-2xs">
                         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
                     </div>
-                    Update Status & Janji Temu
+                    Update Status &amp; Janji Temu
                 </h3>
                 
                 <form action="{{ route('admin.complaints.update', $complaint) }}" method="POST" class="space-y-4">
@@ -310,8 +312,8 @@
                         <textarea name="admin_notes" rows="3" class="w-full text-sm border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50" placeholder="Tambahkan catatan internal...">{{ $complaint->admin_notes }}</textarea>
                     </div>
 
-                    <button type="submit" class="w-full py-2.5 px-4 bg-gradient-to-r from-teal-500 to-orange-500 hover:from-teal-600 hover:to-orange-600 text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <button type="submit" class="w-full py-2.5 px-4 bg-gradient-to-r from-[#22B086] to-[#1C8D6C] hover:from-[#1C8D6C] hover:to-[#177257] text-white rounded-xl text-xs font-black shadow-md shadow-[#22B086]/25 hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-[0.98]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                         <span>Simpan Perubahan</span>
                     </button>
                 </form>
