@@ -817,11 +817,21 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
-                                        Foto Bukti / Pendukung (Opsional)
-                                    </label>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-xs font-black text-slate-700 uppercase tracking-wider">
+                                            Foto Bukti / Pendukung (Opsional)
+                                        </label>
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-[#22B086] bg-[#22B086]/10 px-2 py-0.5 rounded-md">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                            Auto-Compress JPG
+                                        </span>
+                                    </div>
                                     <input type="file" name="photos[]" multiple accept="image/*"
-                                        class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#22B086]/10 file:text-[#22B086] hover:file:bg-[#22B086]/20 border border-slate-200 rounded-xl p-1 bg-white">
+                                        class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#22B086]/10 file:text-[#22B086] hover:file:bg-[#22B086]/20 border border-slate-200 rounded-xl p-1 bg-white cursor-pointer">
+                                    <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        Ukuran foto otomatis diperkecil &amp; dioptimasi ke resolusi 800px untuk hemat ruang penyimpanan.
+                                    </p>
                                 </div>
                             </div>
 

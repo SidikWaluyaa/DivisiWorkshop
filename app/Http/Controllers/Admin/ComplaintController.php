@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Complaint;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
+use App\Utils\ImageHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -147,11 +148,20 @@ class ComplaintController extends Controller
         $customerName = $workOrder->customer_name ?: 'Pelanggan';
         $customerPhone = $workOrder->customer_phone ?: '-';
 
-        // Process photos
+        // Process & compress photos (Auto-resize to max 800x800 & 60% quality JPEG)
         $photoPaths = [];
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $file) {
-                $photoPaths[] = $file->store('complaints', 'public');
+                if ($file->isValid()) {
+                    try {
+                        $compressedPath = ImageHelper::convertToJpg($file, 'complaints');
+                        // Remove leading 'storage/' to maintain relative disk path
+                        $photoPaths[] = preg_replace('#^storage/#', '', $compressedPath);
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::warning("Complaint photo compression fallback: " . $e->getMessage());
+                        $photoPaths[] = $file->store('complaints', 'public');
+                    }
+                }
             }
         }
 

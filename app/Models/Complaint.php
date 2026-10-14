@@ -118,7 +118,12 @@ class Complaint extends Model
                 return $path;
             }
 
-            return asset('storage/' . $path);
+            $cleanPath = ltrim($path, '/');
+            if (str_starts_with($cleanPath, 'storage/')) {
+                return asset($cleanPath);
+            }
+
+            return asset('storage/' . $cleanPath);
         }, $this->photos);
     }
 }
