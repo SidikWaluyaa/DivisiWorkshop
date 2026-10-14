@@ -297,9 +297,61 @@ Berdasarkan evaluasi visual pada halaman `/admin/complaints`, tampilan sebelumny
 
 ---
 
-## 9. Status Repository & Verifikasi Akhir
-- **Status Sintaks & Cache**: `php -l` PASS (tidak ada error sintaks), `php artisan view:clear` berhasil.
+---
+
+## 9. Penyatuan Kolom Tindakan Konfirmasi After Service Menjadi 1 Tombol & Unified Modal (Respon + Accordion OTO / Revisi)
+
+### 1. Latar Belakang & Kebutuhan Operasional
+- Pada halaman `/cx/after-confirmation`, kolom **TINDAKAN** di setiap baris tabel sebelumnya memiliki 3 tombol terpisah (`✨ OTO`, `🛠️ REVISI`, dan `✏️` Edit Respon). Hal ini membuat baris tabel padat, rentan memicu salah klik, dan memecah proses kerja tim Customer Experience (CX).
+- Tim CX sering kali perlu mencatat respon kepuasan sekaligus menawarkan paket promo (OTO) jika customer puas, atau mengajukan perbaikan teknis (Revisi) jika customer komplain/kurang puas.
+- Diperlukan solusi terpadu di mana kolom tindakan cukup berupa **1 tombol tunggal bertuliskan `Tindakan` (tanpa icon)** yang membuka **Unified Action Modal** yang mampu mengeksekusi penyimpanan respon dan OTO/Revisi secara berbarengan (*simultaneous save*) dalam satu kali klik.
+
+### 2. Implementasi Teknis & Arsitektur
+
+#### A. Backend & Livewire Component (`app/Livewire/Cx/AfterConfirmationList.php`)
+- **State Baru**:
+  - `public $selectedActionType = 'none';` (`'none'`, `'oto'`, `'revision'`).
+- **Method Pembuka Modal Terpadu (`openActionModal`)**:
+  - Membuka modal terpadu sekaligus memuat relasi `workOrder` dan `confirmation`, menginisialisasi state OTO dan Revisi, serta me-reset validasi.
+  - Tetap menyediakan alias `edit($id)` untuk kompatibilitas.
+- **Penyimpanan Terpadu Atomik (`saveAction`)**:
+  - Menggabungkan validasi respon kepuasan, validasi OTO (minimal 1 layanan & alasan OTO), serta validasi pengajuan revisi (alasan minimal 5 karakter & foto kompresi).
+  - Mengeksekusi seluruh operasi di dalam satu `DB::transaction`:
+    1. Memperbarui status respon, catatan, PIC penanggung jawab, dan timestamp kontak pada `CxAfterConfirmation`.
+    2. Jika opsi OTO aktif: membuat record `OTO`, soft reserve material via `MaterialReservationService`, dan mencatat riwayat audit pada `WorkOrderLog`.
+    3. Jika opsi Revisi aktif: memperbarui status SPK ke `REVISI` via `WorkflowService`, mengompresi foto bukti kendala via `ImageHelper::convertToJpg`, dan mencatat riwayat pada `WorkOrderRevision`.
+    4. Menutup modal terpadu dan menampilkan notifikasi sukses yang informatif.
+
+#### B. Antarmuka / Views (`resources/views/livewire/cx/after-confirmation-list.blade.php`)
+- **Tombol Kolom Tindakan pada Baris Tabel**:
+  - Menggantikan 3 tombol terpisah menjadi 1 button tunggal elegan tanpa icon bertuliskan:
+    ```blade
+    <button type="button" 
+            wire:click="openActionModal({{ $item->id }})" 
+            title="Tindakan Konfirmasi Pelanggan"
+            class="px-4 py-2 bg-white hover:bg-[#22AF85] text-slate-700 hover:text-white border border-slate-200 hover:border-[#22AF85] rounded-xl text-xs font-bold transition-all shadow-2xs hover:shadow-md active:scale-95 whitespace-nowrap">
+        Tindakan
+    </button>
+    ```
+- **Unified Action Modal**:
+  - Menggantikan 3 modal terpisah (`x-modal-custom`, modal OTO, dan modal Revisi) menjadi 1 modal terpadu berdesain executive modern (`#22AF85` tosca & slate dark header):
+    - **Header**: Informasi SPK, nama customer, nomor telepon, brand sepatu, dan status pengambilan sepatu.
+    - **Seksi 1 (Utama)**: Form Respon Kepuasan Pelanggan (dropdown status respon + input catatan).
+    - **Seksi 2 (Accordion Saling Eksklusif)**: 3 Segmented cards:
+      1. `📝 Hanya Catat Respon` (default, tanpa aksi tambahan).
+      2. `✨ Tawarkan OTO` (membuka katalog layanan promo OTO, pencarian, harga normal & promo, HK, masa berlaku, dan toggle auto WhatsApp).
+      3. `🛠️ Ajukan Revisi` (membuka textarea deskripsi kendala teknis + upload multiple foto bukti komplain).
+    - **Seksi 3 (Footer Submit Dinamis)**:
+      - Label tombol menyesuaikan konteks: *"Simpan Respon"*, *"Simpan Respon & Buat OTO ✨"*, atau *"Simpan Respon & Ajukan Revisi 🛠️"*.
+      - Indikator loading spinner saat data sedang disimpan.
+
+---
+
+## 10. Status Repository & Verifikasi Akhir
+- **Status Sintaks & Cache**: `php -l` PASS (tidak ada error sintaks), `php artisan view:clear` berhasil dibersihkan.
+- **Pengujian Livewire Unit Test**: Test `openActionModal` dan `saveAction` PASS 100%.
 - **Git Branch**: `main` (Perubahan telah di-commit dan siap di-pull ke lingkungan aaPanel).
+
 
 
 
