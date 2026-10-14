@@ -229,6 +229,12 @@ Berdasarkan evaluasi visual pada halaman `/admin/complaints`, tampilan sebelumny
 - Menambahkan container pembungkus standar pada `index.blade.php`, `show.blade.php`, dan `trash.blade.php`.
 - Memberikan *breathing room* horizontal yang proporsional sehingga elemen header, kartu metrik, tab switcher, dan tabel tidak lagi menempel/berdempetan dengan sidebar di sebelah kiri dan tepi layar di sebelah kanan, serta tetap elegan dan terpusat rapi di layar lebar.
 
+#### F. Revamp Kartu Keluhan & Janji Temu pada Detail SPK (`/admin/orders/show`)
+- **Pembersihan Gradien Header**: Menghapus gradien kuning-hijau yang terputus tidak rapi di sisi kanan, menggantikannya dengan header profesional berlatar belakang `from-slate-50/80 via-white to-slate-50/50` dengan border `slate-100` halus.
+- **Perbaikan Wrapping Tombol Aksi**: Menambahkan `whitespace-nowrap shrink-0` pada tombol `Catat Keluhan SPK Ini` dan `Buka Modul` sehingga teks tombol tidak lagi patah/terpotong menjadi dua baris pada layar sempit/responsif.
+- **Empty State Premium**: Merancang ulang tampilan ketika belum ada keluhan dengan ikon centang terverifikasi hijau brand `#22B086`, ring aura halus, tipografi yang menenangkan, serta tombol aksi cepat *dashed-border*.
+- **List Item & Janji Temu**: Desain kartu item keluhan dan janji temu kini memiliki badge yang presisi dan thumbnail foto dengan rounded corners elegan.
+
 ---
 
 ## 8. Status Repository & Verifikasi Akhir
