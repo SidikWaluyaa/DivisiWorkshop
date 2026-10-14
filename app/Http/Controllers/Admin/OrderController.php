@@ -37,6 +37,7 @@ class OrderController extends Controller
             'otos.creator',
             'lead',
             'rndProgresses.user',
+            'complaints',
         ])->findOrFail($id);
 
         // All available services for the "add service" dropdown

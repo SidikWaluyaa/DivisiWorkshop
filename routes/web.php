@@ -185,6 +185,7 @@ Route::middleware('auth')->group(function () {
             Route::get('complaints/trash', [ComplaintController::class, 'trash'])->name('complaints.trash');
             Route::post('complaints/{id}/restore', [ComplaintController::class, 'restore'])->name('complaints.restore');
             Route::delete('complaints/{id}/force-delete', [ComplaintController::class, 'forceDelete'])->name('complaints.force-delete');
+            Route::get('complaints/search-orders', [ComplaintController::class, 'searchOrders'])->name('complaints.search-orders');
             Route::resource('complaints', ComplaintController::class);
             Route::post('complaints/{complaint}/api-reply', [ComplaintController::class, 'apiReply'])->name('complaints.api_reply');
         });

@@ -2449,6 +2449,234 @@
                 {{-- RIGHT COLUMN: Items & Services (Span 2) --}}
                 <div class="lg:col-span-2 space-y-8">
 
+                    {{-- 🚨 Keluhan & Janji Temu Pelanggan (Internal Complaints Hub) --}}
+                    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden transition-all" x-data="{ showComplaintModal: false, hasAppointment: false }">
+                        {{-- Header --}}
+                        <div class="px-6 py-4 bg-gradient-to-r from-teal-50 via-white to-orange-50/50 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-black text-gray-900 text-base tracking-tight">Keluhan &amp; Janji Temu Pelanggan</h3>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $order->complaints->count() > 0 ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-600' }}">
+                                            {{ $order->complaints->count() }} Kasus
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 font-medium">Catatan komplain pelanggan internal dan agenda temu terkait SPK ini</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="showComplaintModal = true" 
+                                    class="px-3.5 py-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white text-xs font-black rounded-xl shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5 active:scale-95">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                    <span>+ Catat Keluhan SPK Ini</span>
+                                </button>
+                                <a href="{{ route('admin.complaints.index') }}" target="_blank"
+                                    class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-1">
+                                    <span>Buka Modul</span>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        {{-- Body: Complaints List --}}
+                        <div class="p-6">
+                            @if($order->complaints->count() > 0)
+                                <div class="space-y-4">
+                                    @foreach($order->complaints as $comp)
+                                        <div class="p-4 rounded-2xl border border-gray-200 bg-gradient-to-br from-slate-50/50 to-white hover:border-teal-300 transition-all shadow-xs">
+                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 pb-2 border-b border-gray-100">
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <span class="bg-teal-700 text-white text-[10px] font-black px-2 py-0.5 rounded-lg">#{{ $comp->id }}</span>
+                                                    <span class="text-xs text-gray-500 font-semibold">{{ $comp->created_at->format('d M Y, H:i') }} WIB</span>
+                                                    <span class="text-xs font-bold px-2 py-0.5 rounded-md border bg-gray-100 text-gray-700 border-gray-200">
+                                                        {{ $comp->category_label }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    @php
+                                                        $badgeStyles = [
+                                                            'PENDING'  => 'bg-amber-100 text-amber-800 border-amber-300',
+                                                            'PROCESS'  => 'bg-teal-100 text-teal-800 border-teal-300',
+                                                            'RESOLVED' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                                                            'REJECTED' => 'bg-rose-100 text-rose-800 border-rose-300',
+                                                        ];
+                                                        $bStyle = $badgeStyles[$comp->status] ?? 'bg-gray-100 text-gray-800 border-gray-300';
+                                                    @endphp
+                                                    <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full border {{ $bStyle }}">
+                                                        {{ $comp->status }}
+                                                    </span>
+                                                    <a href="{{ route('admin.complaints.show', $comp->id) }}" target="_blank"
+                                                        class="text-xs font-bold text-teal-600 hover:text-teal-800 flex items-center gap-0.5">
+                                                        <span>Detail</span>
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <p class="text-xs text-gray-700 leading-relaxed font-medium mb-3">
+                                                {{ $comp->description }}
+                                            </p>
+
+                                            {{-- Photos if any --}}
+                                            @if($comp->photos && count($comp->photos) > 0)
+                                                <div class="flex items-center gap-2 mb-3 overflow-x-auto pb-1">
+                                                    @foreach($comp->photo_urls as $photoUrl)
+                                                        <a href="{{ $photoUrl }}" target="_blank" class="block w-14 h-14 rounded-lg overflow-hidden border border-gray-200 shrink-0 hover:opacity-80">
+                                                            <img src="{{ $photoUrl }}" class="w-full h-full object-cover" alt="Bukti Foto">
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+
+                                            {{-- Appointment Info Box if scheduled --}}
+                                            @if($comp->appointment_date)
+                                                <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-base">📅</span>
+                                                        <div>
+                                                            <span class="font-black text-indigo-950 block">
+                                                                Janji Temu: {{ $comp->appointment_date->format('d M Y, H:i') }} WIB
+                                                            </span>
+                                                            <span class="text-gray-600 text-[11px]">
+                                                                {{ $comp->location_label }} {{ $comp->appointment_notes ? '• "' . $comp->appointment_notes . '"' : '' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border {{ $comp->appointment_badge['bg'] }}">
+                                                            <span class="w-1.5 h-1.5 rounded-full {{ $comp->appointment_badge['dot'] }}"></span>
+                                                            {{ $comp->appointment_badge['label'] }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-6">
+                                    <div class="w-12 h-12 mx-auto rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mb-2">
+                                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm font-bold text-gray-800">Tidak Ada Keluhan Aktif</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">SPK ini belum memiliki riwayat keluhan atau janji temu yang dicatat.</p>
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Modal Catat Keluhan Khusus SPK Ini --}}
+                        <div x-show="showComplaintModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                <div x-show="showComplaintModal" 
+                                    x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" 
+                                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" 
+                                    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+                                    @click="showComplaintModal = false"></div>
+
+                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                                <div x-show="showComplaintModal" 
+                                    x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                                    class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
+                                    
+                                    <form action="{{ route('admin.complaints.store') }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <input type="hidden" name="work_order_id" value="{{ $order->id }}">
+                                        
+                                        <div class="bg-gradient-to-r from-teal-600 to-orange-500 p-5 text-white flex items-center justify-between">
+                                            <div>
+                                                <h4 class="text-lg font-black">Catat Keluhan SPK {{ $order->spk_number }}</h4>
+                                                <p class="text-white/80 text-xs font-medium">Customer: {{ $order->customer_name }} ({{ $order->customer_phone }})</p>
+                                            </div>
+                                            <button type="button" @click="showComplaintModal = false" class="text-white/80 hover:text-white">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+
+                                        <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                                            <div>
+                                                <label class="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1">
+                                                    Kategori Keluhan <span class="text-rose-500">*</span>
+                                                </label>
+                                                <select name="category" required class="w-full text-xs border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white font-medium py-2.5">
+                                                    <option value="">-- Pilih Kategori --</option>
+                                                    <option value="QUALITY">🔍 Kualitas Hasil Reparasi</option>
+                                                    <option value="LATE">⏰ Keterlambatan Pengerjaan</option>
+                                                    <option value="SERVICE">💬 Pelayanan CS / Workshop</option>
+                                                    <option value="DAMAGE">⚠️ Kerusakan Produk / Sepatu</option>
+                                                    <option value="OTHER">📌 Lainnya</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1">
+                                                    Deskripsi Keluhan <span class="text-rose-500">*</span>
+                                                </label>
+                                                <textarea name="description" rows="3" required
+                                                    placeholder="Jelaskan detail komplain dari customer..."
+                                                    class="w-full text-xs border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 p-2.5"></textarea>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1">
+                                                    Foto Bukti (Opsional)
+                                                </label>
+                                                <input type="file" name="photos[]" multiple accept="image/*"
+                                                    class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-gray-200 rounded-xl p-1 bg-white">
+                                            </div>
+
+                                            <div class="pt-2 border-t border-gray-100 space-y-2">
+                                                <div class="flex items-center justify-between p-2.5 bg-indigo-50/60 rounded-xl border border-indigo-100">
+                                                    <span class="text-xs font-bold text-indigo-900">Jadwalkan Janji Temu?</span>
+                                                    <input type="checkbox" x-model="hasAppointment" class="w-4 h-4 text-indigo-600 rounded">
+                                                </div>
+
+                                                <div x-show="hasAppointment" x-transition class="space-y-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                                                    <div>
+                                                        <label class="block text-[11px] font-bold text-gray-700 mb-1">Tanggal & Waktu</label>
+                                                        <input type="datetime-local" name="appointment_date" :required="hasAppointment" class="w-full text-xs border-gray-300 rounded-xl py-2 bg-white">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[11px] font-bold text-gray-700 mb-1">Lokasi</label>
+                                                        <select name="appointment_location" :required="hasAppointment" class="w-full text-xs border-gray-300 rounded-xl py-2 bg-white">
+                                                            <option value="WORKSHOP">🏢 Di Workshop</option>
+                                                            <option value="CALL">📞 Telepon / Call</option>
+                                                            <option value="VISIT">🏠 Kunjungan</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[11px] font-bold text-gray-700 mb-1">Catatan Temu</label>
+                                                        <input type="text" name="appointment_notes" placeholder="Catatan pertemuan..." class="w-full text-xs border-gray-300 rounded-xl py-2 bg-white">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2">
+                                            <button type="button" @click="showComplaintModal = false" class="px-4 py-2 bg-white text-gray-700 text-xs font-bold rounded-xl border border-gray-200">
+                                                Batal
+                                            </button>
+                                            <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black rounded-xl shadow-md shadow-teal-600/20">
+                                                Simpan Keluhan
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Invoice & Penagihan Section (UI/UX PRO MAX) --}}
                     @if($order->invoice)
                     <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-950/40 border border-slate-100 dark:border-slate-800 overflow-hidden transition-all" x-data="{ editOngkirModal: false }">

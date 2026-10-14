@@ -113,7 +113,78 @@ Saat revisi teknik untuk SPK `S-2608-12-0016-SW` diselesaikan di workshop (`/rev
 
 ---
 
-## 6. Status Repository & Langkah Selanjutnya
+---
+
+## 6. Transformasi Sistem Keluhan Internal & Kalender Janji Temu Pelanggan (`/admin/complaints`)
+
+### 1. Latar Belakang & Kebutuhan Bisnis
+Halaman `/admin/complaints` sebelumnya dirancang untuk publik (customer-facing form) yang sudah tidak digunakan. Modul ini ditransformasi secara total menjadi **Pusat Manajemen Keluhan Internal & Agenda Janji Temu Pelanggan** dengan kapabilitas:
+1. **Pencatatan Keluhan Manual Internal**: Form modal dengan pencarian SPK live-search (`searchOrders`), validasi kategori, deskripsi detail, dan upload multi-foto bukti.
+2. **Jadwal Janji Temu Customer**: Pengaturan tanggal & waktu pertemuan, pilihan lokasi (`WORKSHOP`, `CALL`, `VISIT`), status janji temu (`SCHEDULED`, `COMPLETED`, `CANCELLED`), serta catatan pertemuan.
+3. **Tab Switcher & Kalender Interaktif**:
+   - **Tab 1 — 📋 Daftar Keluhan**: Tabel daftar keluhan lengkap dengan filter pencarian, status, kategori, indikator janji temu, dan tombol aksi detail/hapus.
+   - **Tab 2 — 📅 Kalender Janji Temu**: Grid bulanan interaktif berbasis Alpine.js dengan navigasi bulan/tahun, penanda hari ini, chip janji temu per tanggal, modal quick preview dengan tautan langsung ke WhatsApp customer, serta daftar agenda mendatang.
+4. **Integrasi ke Detail SPK (`/admin/orders/show`)**:
+   - Menampilkan kartu khusus **🚨 Keluhan & Janji Temu Pelanggan** pada SPK terkait.
+   - Tombol pintasan **`+ Catat Keluhan SPK Ini`** dengan modal yang langsung terisi data SPK dan customer secara otomatis tanpa perlu mencari manual.
+
+---
+
+### 2. Berkas yang Dibuat & Dimodifikasi
+
+#### A. Database & Model
+- **`database/migrations/2026_10_14_104500_add_appointment_fields_to_complaints_table.php`**:
+  - Kolom baru: `appointment_date` (`dateTime`), `appointment_location` (`string`), `appointment_status` (`string`), `appointment_notes` (`text`).
+- **`app/Models/Complaint.php`**:
+  - Menambahkan kolom baru ke `$fillable` dan `$casts`.
+  - Accessor `getAppointmentBadgeAttribute()`: Badge status terformat (label, background, dot indicator, icon).
+  - Accessor `getLocationLabelAttribute()`: Label lokasi yang manusiawi (🏢 Di Workshop, 📞 Telepon / Call, 🏠 Kunjungan).
+  - Accessor `getCategoryLabelAttribute()`: Label kategori keluhan dalam bahasa Indonesia.
+- **`app/Models/WorkOrder.php`**:
+  - Relasi `complaints()` (`hasMany(Complaint::class)`).
+
+#### B. Routing & Controller
+- **`routes/web.php`**:
+  - Menambahkan endpoint `GET admin/complaints/search-orders` (`admin.complaints.search-orders`).
+- **`app/Http/Controllers/Admin/ComplaintController.php`**:
+  - `index()`: Memuat ringkasan status keluhan, filter dinamis (status, kategori, appointment_filter, search), pengelompokan data event kalender (`$calendarEvents`) dalam format JSON siap pakai untuk grid Alpine, serta daftar agenda janji temu mendatang (`$upcomingAppointments`).
+  - `searchOrders()`: Endpoint live autocomplete untuk mencari SPK berdasarkan nomor SPK, nama pelanggan, nomor telepon, dan merk/tipe sepatu.
+  - `store()`: Validasi data keluhan internal, upload berkas foto ke storage publik, insert record `Complaint`, dan pencatatan riwayat otomatis ke `WorkOrderLog`.
+  - `update()`: Memperbarui status penanganan, catatan admin, serta jadwal dan status janji temu pelanggan dengan pencatatan audit log perubahan.
+- **`app/Http/Controllers/Admin/OrderController.php`**:
+  - Eager load relasi `'complaints'` pada method `show($id)`.
+
+#### C. Antarmuka / Views (Blade & Alpine.js)
+- **`resources/views/admin/complaints/index.blade.php`**:
+  - Header gradient modern dengan tombol aksi `+ Catat Keluhan Baru` dan `Sampah`.
+  - 6 Kartu ringkasan metrik (Pending, Diproses, Selesai, Ditolak, Janji Temu, Total Kasus).
+  - Tab Switcher (Daftar Keluhan vs Kalender Janji Temu).
+  - Filter pencarian terintegrasi: No SPK, nama, no HP, kategori, status, dan filter janji temu.
+  - Tabel keluhan dengan badge status janji temu dan tautan ke SPK.
+  - Grid Kalender Bulanan Interaktif berbasis Alpine.js dengan switcher bulan, legend warna, cell event chips, dan modal quick preview dengan shortcut chat WhatsApp.
+  - Modal internal pembuatan keluhan dengan live search SPK dan collapsible form jadwal janji temu.
+- **`resources/views/admin/complaints/show.blade.php`**:
+  - Kartu khusus Informasi Agenda Janji Temu Pelanggan.
+  - Form pembaharuan jadwal dan status janji temu pada sidebar.
+- **`resources/views/admin/orders/show.blade.php`**:
+  - Kartu riwayat keluhan dan agenda temu khusus untuk SPK aktif.
+  - Modal shortcut `+ Catat Keluhan SPK Ini` yang sudah terisi data SPK otomatis.
+
+---
+
+### 3. Hasil Pengujian & Verifikasi
+1. **Sintaksis PHP**:
+   - `php -l app/Http/Controllers/Admin/ComplaintController.php` -> No syntax errors detected.
+   - `php -l app/Models/Complaint.php` -> No syntax errors detected.
+   - `php -l app/Models/WorkOrder.php` -> No syntax errors detected.
+2. **Daftar Route**:
+   - `admin.complaints.index`, `admin.complaints.store`, `admin.complaints.search-orders`, `admin.complaints.show`, `admin.complaints.update`, `admin.complaints.destroy` terdaftar rapi tanpa konflik.
+3. **Pengujian Fungsional DB & Eloquent**:
+   - Pembuatan record keluhan internal dengan tanggal dan lokasi janji temu teruji 100% PASS via script bootstrap internal. Relasi `WorkOrder::complaints()` berjalan mulus.
+
+---
+
+## 7. Status Repository & Langkah Selanjutnya
 - Seluruh berkas siap di-commit dan di-push ke remote repository `origin/main`.
 
 

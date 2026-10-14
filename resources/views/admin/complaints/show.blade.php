@@ -68,13 +68,66 @@
                 </div>
             </div>
 
+            <!-- Appointment Card -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                <div class="p-6 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white flex items-center justify-between">
+                    <h3 class="text-xl font-black flex items-center gap-2">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        Agenda Janji Temu Pelanggan
+                    </h3>
+                    @if($complaint->appointment_date)
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black {{ $complaint->appointment_badge['bg'] }} shadow-sm">
+                            <span class="w-2 h-2 rounded-full {{ $complaint->appointment_badge['dot'] }}"></span>
+                            {{ $complaint->appointment_badge['label'] }}
+                        </span>
+                    @endif
+                </div>
+
+                <div class="p-6">
+                    @if($complaint->appointment_date)
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div class="bg-indigo-50/70 p-4 rounded-xl border border-indigo-100">
+                                <p class="text-indigo-700 text-xs font-bold uppercase mb-1">Tanggal & Waktu</p>
+                                <p class="font-black text-gray-900 text-base">{{ $complaint->appointment_date->format('d M Y') }}</p>
+                                <p class="text-xs text-indigo-600 font-bold mt-0.5">{{ $complaint->appointment_date->format('H:i') }} WIB</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <p class="text-slate-500 text-xs font-bold uppercase mb-1">Lokasi Pertemuan</p>
+                                <p class="font-black text-gray-900 text-base">{{ $complaint->location_label }}</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <p class="text-slate-500 text-xs font-bold uppercase mb-1">Status Janji</p>
+                                <p class="font-black text-gray-900 text-base">{{ $complaint->appointment_status }}</p>
+                            </div>
+                        </div>
+
+                        @if($complaint->appointment_notes)
+                            <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 text-xs text-amber-900">
+                                <span class="font-black block uppercase tracking-wider mb-1 text-amber-800">Catatan Janji Temu:</span>
+                                <p class="leading-relaxed">{{ $complaint->appointment_notes }}</p>
+                            </div>
+                        @endif
+                    @else
+                        <div class="text-center py-6 text-gray-400">
+                            <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <p class="text-sm font-bold text-gray-600">Belum ada janji temu yang dijadwalkan</p>
+                            <p class="text-xs text-gray-400 mt-0.5">Anda dapat menjadwalkan janji temu melalui form di panel sebelah kanan.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                 <div class="p-6 bg-gradient-to-r from-teal-500 to-orange-500 text-white">
                     <h3 class="text-xl font-black flex items-center gap-2">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
-                        Info Pesanan: {{ $complaint->workOrder->spk_number }}
+                        Info Pesanan: {{ $complaint->workOrder ? $complaint->workOrder->spk_number : 'No SPK' }}
                     </h3>
                 </div>
                 
@@ -82,16 +135,17 @@
                     <div class="grid grid-cols-2 gap-4 text-sm mb-4">
                         <div class="bg-gray-50 p-3 rounded-lg">
                             <p class="text-gray-500 text-xs font-bold uppercase mb-1">Pelanggan</p>
-                            <p class="font-bold text-gray-900">{{ $complaint->workOrder->customer_name }}</p>
+                            <p class="font-bold text-gray-900">{{ $complaint->workOrder ? $complaint->workOrder->customer_name : $complaint->customer_name }}</p>
                             <p class="text-xs text-gray-500 mt-1">{{ $complaint->customer_phone }}</p>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg">
                             <p class="text-gray-500 text-xs font-bold uppercase mb-1">Sepatu</p>
-                            <p class="font-bold text-gray-900">{{ $complaint->workOrder->shoe_brand }}</p>
-                            <p class="text-xs text-gray-500">{{ $complaint->workOrder->shoe_color }}</p>
+                            <p class="font-bold text-gray-900">{{ $complaint->workOrder ? $complaint->workOrder->shoe_brand : '-' }}</p>
+                            <p class="text-xs text-gray-500">{{ $complaint->workOrder ? $complaint->workOrder->shoe_color : '-' }}</p>
                         </div>
                     </div>
 
+                    @if($complaint->workOrder && $complaint->workOrder->services)
                     <div class="pt-4 border-t border-gray-100">
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Layanan Dikerjakan</p>
                         <div class="flex flex-wrap gap-2">
@@ -105,7 +159,9 @@
                             @endforeach
                         </div>
                     </div>
+                    @endif
                     
+                    @if($complaint->workOrder)
                     <div class="mt-4 pt-4 border-t border-gray-100">
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Riwayat Teknisi</p>
                         
@@ -167,13 +223,14 @@
                             @endif
                         </div>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>
 
         <!-- Sidebar: Actions -->
         <div class="space-y-6">
-            <!-- Update Status -->
+            <!-- Update Status & Appointment -->
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
                 <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <div class="bg-gradient-to-br from-teal-500 to-orange-500 p-2 rounded-lg">
@@ -181,31 +238,71 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
                     </div>
-                    Update Status Keluhan
+                    Update Status & Janji Temu
                 </h3>
                 
                 <form action="{{ route('admin.complaints.update', $complaint) }}" method="POST" class="space-y-4">
                     @csrf
                     @method('PUT')
                     
-                    <div class="grid grid-cols-2 gap-2">
-                        @php
-                            $statusStyles = [
-                                'PENDING' => ['bg' => 'bg-orange-50', 'text' => 'text-orange-700', 'border' => 'border-orange-300', 'ring' => 'ring-orange-500', 'icon' => '🟠'],
-                                'PROCESS' => ['bg' => 'bg-teal-50', 'text' => 'text-teal-700', 'border' => 'border-teal-300', 'ring' => 'ring-teal-500', 'icon' => '🔵'],
-                                'RESOLVED' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700', 'border' => 'border-emerald-300', 'ring' => 'ring-emerald-500', 'icon' => '🟢'],
-                                'REJECTED' => ['bg' => 'bg-red-50', 'text' => 'text-red-700', 'border' => 'border-red-300', 'ring' => 'ring-red-500', 'icon' => '🔴'],
-                            ];
-                        @endphp
-                        @foreach($statusStyles as $status => $style)
-                            <label class="cursor-pointer relative">
-                                <input type="radio" name="status" value="{{ $status }}" class="peer sr-only" {{ $complaint->status == $status ? 'checked' : '' }}>
-                                <div class="px-3 py-2.5 rounded-xl border-2 {{ $style['bg'] }} {{ $style['text'] }} {{ $style['border'] }} text-xs font-bold text-center peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:{{ $style['ring'] }} transition-all opacity-60 peer-checked:opacity-100 hover:opacity-80 peer-checked:shadow-md flex items-center justify-center gap-1.5">
-                                    <span>{{ $style['icon'] }}</span>
-                                    {{ $status }}
-                                </div>
-                            </label>
-                        @endforeach
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Status Penanganan</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            @php
+                                $statusStyles = [
+                                    'PENDING' => ['bg' => 'bg-orange-50', 'text' => 'text-orange-700', 'border' => 'border-orange-300', 'ring' => 'ring-orange-500', 'icon' => '🟠'],
+                                    'PROCESS' => ['bg' => 'bg-teal-50', 'text' => 'text-teal-700', 'border' => 'border-teal-300', 'ring' => 'ring-teal-500', 'icon' => '🔵'],
+                                    'RESOLVED' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700', 'border' => 'border-emerald-300', 'ring' => 'ring-emerald-500', 'icon' => '🟢'],
+                                    'REJECTED' => ['bg' => 'bg-red-50', 'text' => 'text-red-700', 'border' => 'border-red-300', 'ring' => 'ring-red-500', 'icon' => '🔴'],
+                                ];
+                            @endphp
+                            @foreach($statusStyles as $status => $style)
+                                <label class="cursor-pointer relative">
+                                    <input type="radio" name="status" value="{{ $status }}" class="peer sr-only" {{ $complaint->status == $status ? 'checked' : '' }}>
+                                    <div class="px-3 py-2.5 rounded-xl border-2 {{ $style['bg'] }} {{ $style['text'] }} {{ $style['border'] }} text-xs font-bold text-center peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:{{ $style['ring'] }} transition-all opacity-60 peer-checked:opacity-100 hover:opacity-80 peer-checked:shadow-md flex items-center justify-center gap-1.5">
+                                        <span>{{ $style['icon'] }}</span>
+                                        {{ $status }}
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Appointment Section in Update -->
+                    <div class="pt-3 border-t border-gray-100 space-y-3">
+                        <label class="text-xs font-bold text-indigo-700 uppercase tracking-wider block">📅 Jadwal Janji Temu</label>
+                        
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-600 block mb-1">Tanggal & Waktu</label>
+                            <input type="datetime-local" name="appointment_date" 
+                                value="{{ $complaint->appointment_date ? $complaint->appointment_date->format('Y-m-d\TH:i') : '' }}"
+                                class="w-full text-xs border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[11px] font-semibold text-gray-600 block mb-1">Lokasi</label>
+                                <select name="appointment_location" class="w-full text-xs border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50">
+                                    <option value="WORKSHOP" {{ $complaint->appointment_location === 'WORKSHOP' ? 'selected' : '' }}>🏢 Workshop</option>
+                                    <option value="CALL" {{ $complaint->appointment_location === 'CALL' ? 'selected' : '' }}>📞 Call / WA</option>
+                                    <option value="VISIT" {{ $complaint->appointment_location === 'VISIT' ? 'selected' : '' }}>🏠 Kunjungan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-semibold text-gray-600 block mb-1">Status Janji</label>
+                                <select name="appointment_status" class="w-full text-xs border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50">
+                                    <option value="SCHEDULED" {{ $complaint->appointment_status === 'SCHEDULED' ? 'selected' : '' }}>⏰ Terjadwal</option>
+                                    <option value="COMPLETED" {{ $complaint->appointment_status === 'COMPLETED' ? 'selected' : '' }}>✅ Selesai</option>
+                                    <option value="CANCELLED" {{ $complaint->appointment_status === 'CANCELLED' ? 'selected' : '' }}>❌ Dibatalkan</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-600 block mb-1">Catatan Temu</label>
+                            <input type="text" name="appointment_notes" value="{{ $complaint->appointment_notes }}" placeholder="Misal: Customer membawa sepatu ke workshop"
+                                class="w-full text-xs border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50">
+                        </div>
                     </div>
 
                     <div>

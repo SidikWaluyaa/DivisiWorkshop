@@ -31,15 +31,73 @@ class Complaint extends Model
         'photos',
         'status',
         'admin_notes',
+        'appointment_date',
+        'appointment_location',
+        'appointment_status',
+        'appointment_notes',
     ];
 
     protected $casts = [
         'photos' => 'array',
+        'appointment_date' => 'datetime',
     ];
 
     public function workOrder()
     {
         return $this->belongsTo(WorkOrder::class);
+    }
+
+    /**
+     * Get human-friendly appointment status badge configuration
+     */
+    public function getAppointmentBadgeAttribute(): array
+    {
+        return match($this->appointment_status) {
+            'COMPLETED' => [
+                'label' => 'Selesai Bertemu',
+                'bg'    => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                'dot'   => 'bg-emerald-500',
+                'icon'  => '✅',
+            ],
+            'CANCELLED' => [
+                'label' => 'Janji Dibatalkan',
+                'bg'    => 'bg-rose-50 text-rose-700 border-rose-200',
+                'dot'   => 'bg-rose-500',
+                'icon'  => '❌',
+            ],
+            default => [
+                'label' => 'Dijadwalkan',
+                'bg'    => 'bg-amber-50 text-amber-700 border-amber-200',
+                'dot'   => 'bg-amber-500',
+                'icon'  => '⏰',
+            ],
+        };
+    }
+
+    /**
+     * Get appointment location readable label
+     */
+    public function getLocationLabelAttribute(): string
+    {
+        return match($this->appointment_location) {
+            'CALL'  => '📞 Telepon / Video Call',
+            'VISIT' => '🏠 Kunjungan Pelanggan',
+            default => '🏢 Di Workshop',
+        };
+    }
+
+    /**
+     * Get human-readable category label
+     */
+    public function getCategoryLabelAttribute(): string
+    {
+        return match($this->category) {
+            'QUALITY' => 'Kualitas Hasil',
+            'LATE'    => 'Keterlambatan',
+            'SERVICE' => 'Pelayanan',
+            'DAMAGE'  => 'Kerusakan',
+            default   => 'Lainnya',
+        };
     }
 
     /**
