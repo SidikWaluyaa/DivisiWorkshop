@@ -95,6 +95,25 @@ Pada SPK `S-2608-12-0019-SW` yang telah menyelesaikan siklus **After 2 (Revisi)*
 
 ---
 
-## 5. Status Repository & Langkah Selanjutnya
+## 5. Eliminasi Double Trigger Penyelesaian Revisi (After 4 & After 5 Ganda)
+### Permasalahan:
+Saat revisi teknik untuk SPK `S-2608-12-0016-SW` diselesaikan di workshop (`/revision`), sistem menerbitkan dua record konfirmasi sekaligus dalam detik yang sama: **After 4 (REVISI)** dan **After 5 (REVISI)**.
+
+### Akar Masalah (Root Cause):
+1. **Pemanggilan Ganda**: Pada `RevisionController::complete`, method memanggil `$this->workflowService->updateStatus($workOrder, $targetStatus)`. Di dalam `WorkflowService::updateStatus` sudah terdapat trigger otomatis pemanggilan `createFromOrder` untuk pasca-revisi (`REVISI`). Namun, tepat di baris berikutnya pada `RevisionController`, terdapat pemanggilan kedua secara eksplisit ke `createFromOrder`.
+2. Akibatnya, pada detik yang sama (`10:15:06 WIB`), sistem memproses pembuatan ronde dua kali beruntun sehingga tercipta After 4 dan After 5.
+
+### Solusi & Implementasi:
+1. **Hapus Pemanggilan Redundan di `RevisionController`**:
+   - Menghapus pemanggilan duplikat `createFromOrder` di `RevisionController::complete` karena telah ditangani secara terpusat oleh `WorkflowService::updateStatus`.
+2. **Proteksi Debounce Cepat di `CxConfirmationService`**:
+   - Menambahkan pengecekan: jika record terbaru (`latest`) untuk SPK tersebut memiliki `stage_type` yang sama dan dibuat dalam rentang 2 menit terakhir, sistem langsung mengembalikan record yang ada dan menolak pembuatan record baru.
+3. **Pembersihan Data Duplikat**:
+   - Record duplikat (ID 37 / After 5) untuk SPK `S-2608-12-0016-SW` telah dihapus dari database, menyisakan After 4 sebagai siklus yang valid.
+
+---
+
+## 6. Status Repository & Langkah Selanjutnya
 - Seluruh berkas siap di-commit dan di-push ke remote repository `origin/main`.
+
 

@@ -55,7 +55,7 @@ class WorkflowService
                         ->exists();
 
                     if ($hasFinishRevision) {
-                        app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder, 'REVISI', 2);
+                        app(\App\Services\CxConfirmationService::class)->createFromOrder($workOrder, 'REVISI');
                     }
                 }
             }

@@ -46,6 +46,12 @@ class CxConfirmationService
                 ->orderBy('round', 'desc')
                 ->first();
 
+            // Proteksi Duplikasi Cepat (Debounce): Jika record terakhir SPK ini memiliki tipe stage yang sama
+            // dan baru saja dibuat dalam rentang 2 menit terakhir, kembalikan record tersebut (mencegah trigger ganda).
+            if ($latest && $latest->stage_type === strtoupper($stageType) && $latest->created_at?->diffInMinutes(now()) < 2) {
+                return $latest;
+            }
+
             // Determine target round:
             // Sesuai SOP: GARANSI, REVISI, dan OTO minimal adalah After Ke-2 (round = 2).
             // Jika sudah ada After sebelumnya (misal ada Revisi di After 2, lalu OTO selesai), otomatis naik ke After 3, 4, dst.
@@ -55,10 +61,6 @@ class CxConfirmationService
                     ->first();
 
                 if ($existingForced) {
-                    // Jika stage sama dan record baru saja dibuat dalam 2 menit terakhir (mencegah double-click bersamaan)
-                    if ($existingForced->stage_type === strtoupper($stageType) && $existingForced->created_at?->diffInMinutes(now()) < 2) {
-                        return $existingForced;
-                    }
                     // Jika ronde tersebut sudah terisi (misal Round 2 adalah REVISI), otomatis naik ke ronde berikutnya!
                     $targetRound = max((int)($latest?->round ?? 1) + 1, (int)$forcedRound + 1);
                 } else {
