@@ -4,13 +4,25 @@ namespace App\Livewire\Cx;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\CxAfterConfirmation;
+use App\Models\WorkOrder;
+use App\Models\WorkOrderRevision;
+use App\Models\OTO;
+use App\Models\Service;
+use App\Models\WorkOrderLog;
+use App\Enums\WorkOrderStatus;
+use App\Services\WorkflowService;
+use App\Services\MaterialReservationService;
+use App\Utils\ImageHelper;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class AfterConfirmationList extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     public $search = '';
     public $response = '';
@@ -21,10 +33,20 @@ class AfterConfirmationList extends Component
     public $pickupFilter = '';
     public $perPage = 25;
 
-    // Modal state
+    // Modal Edit Respon state
     public $editingId = null;
     public $editingResponse = '';
     public $editingNotes = '';
+
+    // Modal OTO state
+    public $otoWoId = null;
+    public $otoWorkOrder = null;
+
+    // Modal Revisi state
+    public $revisionWoId = null;
+    public $revisionWorkOrder = null;
+    public $revisionDescription = '';
+    public $revisionPhotos = [];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -134,6 +156,195 @@ class AfterConfirmationList extends Component
         $this->dispatch('notify', ['message' => 'Data konfirmasi berhasil diperbarui.']);
     }
 
+    public function openOtoModal($workOrderId)
+    {
+        $this->otoWoId = $workOrderId;
+        $this->otoWorkOrder = WorkOrder::findOrFail($workOrderId);
+        $this->dispatch('close-edit-modal');
+        $this->dispatch('open-oto-modal', [
+            'workOrder' => [
+                'id' => $this->otoWorkOrder->id,
+                'spk_number' => $this->otoWorkOrder->spk_number,
+                'customer_name' => $this->otoWorkOrder->customer_name,
+                'customer_phone' => $this->otoWorkOrder->customer_phone,
+                'shoe_brand' => $this->otoWorkOrder->shoe_brand,
+            ]
+        ]);
+    }
+
+    public function submitOto($data)
+    {
+        if (!$this->otoWoId) {
+            $this->dispatch('notify', ['message' => 'Data Work Order tidak ditemukan.']);
+            return;
+        }
+
+        $workOrder = WorkOrder::findOrFail($this->otoWoId);
+
+        if ($workOrder->status !== WorkOrderStatus::SELESAI) {
+            $this->dispatch('notify', ['message' => 'Order harus dalam status SELESAI untuk membuat OTO.']);
+            return;
+        }
+
+        $services = $data['services'] ?? [];
+        if (empty($services)) {
+            $this->dispatch('notify', ['message' => 'Pilih minimal satu layanan OTO.']);
+            return;
+        }
+
+        $description = trim($data['description'] ?? '');
+        if (!$description) {
+            $this->dispatch('notify', ['message' => 'Alasan penawaran OTO wajib diisi.']);
+            return;
+        }
+
+        try {
+            DB::transaction(function() use ($data, $workOrder, $description, $services) {
+                $serviceNames = [];
+                $totalNormal = 0;
+                $totalOTO = 0;
+                $totalOtoHk = 0;
+
+                foreach ($services as $serviceData) {
+                    $service = Service::findOrFail($serviceData['id']);
+                    $serviceNames[] = $service->name;
+                    $totalNormal += (float) ($serviceData['normal_price'] ?? $service->price);
+                    $totalOTO += (float) ($serviceData['oto_price'] ?? $service->price);
+                    $totalOtoHk += (int) ($serviceData['hk_days'] ?? 0);
+                }
+
+                $totalDiscount = $totalNormal - $totalOTO;
+                $discountPercent = $totalNormal > 0 ? ($totalDiscount / $totalNormal) * 100 : 0;
+                $formatPrice = fn($val) => 'Rp. ' . number_format((float)$val, 0, ',', '.');
+                $validDays = max((int) ($data['valid_days'] ?? 5), 1);
+
+                $oto = OTO::create([
+                    'work_order_id' => $workOrder->id,
+                    'spk_number' => $workOrder->spk_number,
+                    'customer_name' => $workOrder->customer_name,
+                    'customer_phone' => $workOrder->customer_phone,
+                    'title' => 'Penawaran Jasa Tambahan untuk ' . $workOrder->customer_name,
+                    'description' => $description,
+                    'oto_type' => 'UPSELL',
+                    'proposed_services' => implode(', ', $serviceNames),
+                    'total_normal_price' => $formatPrice($totalNormal),
+                    'total_oto_price' => $formatPrice($totalOTO),
+                    'total_discount' => $formatPrice($totalDiscount),
+                    'discount_percent' => round($discountPercent, 2),
+                    'estimated_days' => $totalOtoHk,
+                    'valid_until' => now()->addDays($validDays),
+                    'status' => 'PENDING_CX',
+                    'dp_required' => $formatPrice($totalOTO * 0.5),
+                    'send_automation' => !empty($data['send_automation']),
+                    'created_by' => Auth::id(),
+                ]);
+
+                // Soft reserve materials
+                app(MaterialReservationService::class)->softReserveForOTO($oto);
+
+                // Keep has_active_oto as false so the SPK remains visible in Gudang Selesai
+                $workOrder->update([
+                    'has_active_oto' => false,
+                ]);
+
+                // Work order audit log
+                WorkOrderLog::create([
+                    'work_order_id' => $workOrder->id,
+                    'user_id' => Auth::id(),
+                    'step' => $workOrder->status instanceof WorkOrderStatus ? $workOrder->status->value : $workOrder->status,
+                    'action' => 'OTO_CREATED',
+                    'description' => "Penawaran OTO dibuat dari Konfirmasi After: " . implode(', ', $serviceNames) . " (Harga OTO: " . $formatPrice($totalOTO) . ", Diskon: " . round($discountPercent) . "%)"
+                ]);
+            });
+
+            $this->otoWoId = null;
+            $this->otoWorkOrder = null;
+            $this->dispatch('close-oto-modal');
+            $this->dispatch('notify', ['message' => 'Penawaran OTO berhasil dibuat dan masuk ke Kolam Antrean CX.']);
+
+        } catch (\Exception $e) {
+            $this->dispatch('notify', ['message' => 'Gagal membuat OTO: ' . $e->getMessage()]);
+        }
+    }
+
+    public function openRevisionModal($workOrderId)
+    {
+        $this->revisionWoId = $workOrderId;
+        $this->revisionWorkOrder = WorkOrder::findOrFail($workOrderId);
+        $this->revisionDescription = '';
+        $this->revisionPhotos = [];
+        $this->resetValidation();
+        $this->dispatch('close-edit-modal');
+        $this->dispatch('open-revision-modal');
+    }
+
+    public function submitRevision()
+    {
+        $this->validate([
+            'revisionDescription' => 'required|string|min:5',
+            'revisionPhotos.*' => 'nullable|image|max:5120',
+        ], [
+            'revisionDescription.required' => 'Deskripsi masalah / alasan revisi wajib diisi.',
+            'revisionDescription.min' => 'Deskripsi minimal 5 karakter.',
+            'revisionPhotos.*.image' => 'File harus berupa gambar.',
+            'revisionPhotos.*.max' => 'Ukuran gambar maksimal 5MB.',
+        ]);
+
+        if (!$this->revisionWoId) {
+            $this->dispatch('notify', ['message' => 'Data Work Order tidak ditemukan.']);
+            return;
+        }
+
+        $workOrder = WorkOrder::findOrFail($this->revisionWoId);
+
+        try {
+            DB::transaction(function () use ($workOrder) {
+                // 1. Move WorkOrder status to REVISI
+                app(WorkflowService::class)->updateStatus(
+                    $workOrder,
+                    WorkOrderStatus::REVISI,
+                    'Mengajukan revisi teknik dari Konfirmasi After: ' . $this->revisionDescription,
+                    Auth::id()
+                );
+
+                // 2. Handle Multiple Photo Uploads with ImageHelper compression
+                $photoPaths = [];
+                if (!empty($this->revisionPhotos)) {
+                    $photoArray = is_array($this->revisionPhotos) ? $this->revisionPhotos : [$this->revisionPhotos];
+                    foreach ($photoArray as $index => $photo) {
+                        if ($photo instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                            $filename = 'REV_REQ_' . $workOrder->spk_number . '_' . time() . '_' . $index;
+                            $path = ImageHelper::convertToJpg($photo, 'photos/qc_reject', $filename);
+                            $photoPaths[] = $path;
+                        }
+                    }
+                }
+
+                // 3. Create Revision Record with origin_status = 'SELESAI'
+                WorkOrderRevision::create([
+                    'work_order_id' => $workOrder->id,
+                    'description' => $this->revisionDescription,
+                    'photo_path' => $photoPaths[0] ?? null,
+                    'photo_paths' => $photoPaths,
+                    'origin_status' => 'SELESAI',
+                    'status' => 'OPEN',
+                    'created_by' => Auth::id(),
+                ]);
+            });
+
+            $this->revisionDescription = '';
+            $this->revisionPhotos = [];
+            $this->revisionWoId = null;
+            $this->revisionWorkOrder = null;
+
+            $this->dispatch('close-revision-modal');
+            $this->dispatch('notify', ['message' => 'Revisi teknik berhasil diajukan dan masuk ke antrean workshop.']);
+
+        } catch (\Exception $e) {
+            $this->dispatch('notify', ['message' => 'Gagal mengajukan revisi: ' . $e->getMessage()]);
+        }
+    }
+
     public function render()
     {
         $query = CxAfterConfirmation::with(['workOrder', 'pic'])
@@ -218,6 +429,7 @@ class AfterConfirmationList extends Component
         return view('livewire.cx.after-confirmation-list', [
             'items' => $query->paginate((int)$this->perPage),
             'stats' => $stats,
+            'availableOtoServices' => Service::where('category', 'OTO')->get(),
         ]);
     }
 }
