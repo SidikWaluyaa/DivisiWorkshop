@@ -142,7 +142,7 @@
 
                         {{-- Admin Notes / Tanggapan Workshop if any --}}
                         @if($complaint->admin_notes)
-                            <div class="rounded-2xl bg-teal-50/40 border-l-4 border-[#22B086] border-y border-r border-teal-100 p-5 shadow-2xs">
+                            <div class="rounded-2xl bg-teal-50/40 border-y border-r border-teal-100 border-l-4 border-l-[#22B086] p-5 shadow-2xs">
                                 <div class="flex items-center gap-2 mb-2">
                                     <span class="text-sm">🛠️</span>
                                     <span class="text-xs font-black uppercase tracking-wider text-teal-900">
@@ -443,7 +443,7 @@
 
                         <!-- Appointment Fields -->
                         <div class="pt-3 border-t border-slate-100 space-y-3">
-                            <label class="text-xs font-black text-indigo-900 uppercase tracking-wider block flex items-center gap-1.5">
+                            <label class="text-xs font-black text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
                                 <span>📅</span> Jadwal Janji Temu
                             </label>
                             

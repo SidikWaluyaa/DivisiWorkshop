@@ -2555,7 +2555,7 @@
 
                                                 {{-- 🛠️ Catatan Workshop / Solusi (If any) --}}
                                                 @if($comp->admin_notes)
-                                                    <div class="rounded-2xl bg-teal-50/40 border-l-4 border-[#22B086] border-y border-r border-teal-100 p-4 shadow-2xs">
+                                                    <div class="rounded-2xl bg-teal-50/40 border-y border-r border-teal-100 border-l-4 border-l-[#22B086] p-4 shadow-2xs">
                                                         <div class="flex items-center gap-2 mb-1.5">
                                                             <span class="text-xs">🛠️</span>
                                                             <span class="text-[11px] font-black uppercase tracking-wider text-teal-900">
