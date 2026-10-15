@@ -314,7 +314,7 @@
                         $stage = $item->stage_badge;
                         $round = $item->round_badge;
                     @endphp
-                    <tr class="hover:bg-gray-50/80 active:bg-gray-100 transition-colors duration-200 group relative">
+                    <tr class="hover:bg-gray-50/80 active:bg-gray-100 transition-colors duration-200 group relative hover:z-40 focus-within:z-40">
                         {{-- Data: Date with Hover indicator rail --}}
                         <td class="px-8 py-5 align-top relative">
                             <div class="absolute left-0 top-0 bottom-0 w-1.5 {{ $stage['dot'] }} opacity-0 group-hover:opacity-100 transition-opacity rounded-r-full"></div>
@@ -326,7 +326,7 @@
                         </td>
                         
                         {{-- Data: Info SPK & Customer --}}
-                        <td class="px-6 py-5 align-top">
+                        <td class="px-6 py-5 align-top relative group-hover:z-50">
                             <div class="flex flex-col gap-2">
                                 {{-- Baris 1: Badge SPK & Badge Tipe & Badge After --}}
                                 <div class="flex flex-wrap items-center gap-1.5">
@@ -409,7 +409,7 @@
                                             }
                                         @endphp
 
-                                        <div class="relative group/oto inline-block">
+                                        <div class="relative group/oto inline-block hover:z-50">
                                             <span class="inline-flex items-center gap-1.5 text-[9.5px] font-black px-2.5 py-0.5 rounded-lg border uppercase tracking-wider cursor-help transition-all duration-200 {{ $otoBadge['bg'] }} {{ $otoBadge['text'] }} {{ $otoBadge['border'] }}">
                                                 <span class="relative flex h-2 w-2">
                                                     @if($isProspect)
@@ -420,9 +420,12 @@
                                                 <span>{{ $otoBadge['label'] }}</span>
                                             </span>
 
-                                            {{-- Tooltip Hover Elegan (Fixed Min-Width 320px & 2-Col Pricing Grid) --}}
-                                            <div class="pointer-events-none opacity-0 group-hover/oto:opacity-100 transition-all duration-200 transform translate-y-1 group-hover/oto:translate-y-0 absolute left-0 top-full mt-2 z-[999] bg-white rounded-2xl shadow-2xl border border-slate-200/90 text-slate-800 p-4 ring-1 ring-black/5 whitespace-normal"
-                                                 style="width: 320px !important; min-width: 320px !important; max-width: 340px !important;">
+                                            {{-- Tooltip Hover Elegan (Fixed Min-Width 320px, Smart Stacking & 2-Col Pricing Grid) --}}
+                                            @php
+                                                $isLastRows = ($loop->iteration > ($loop->count - 3)) && ($loop->count > 2);
+                                            @endphp
+                                            <div class="pointer-events-none opacity-0 group-hover/oto:opacity-100 group-hover/oto:pointer-events-auto transition-all duration-200 transform translate-y-1 group-hover/oto:translate-y-0 absolute left-0 {{ $isLastRows ? 'bottom-full mb-2.5' : 'top-full mt-2.5' }} bg-white rounded-2xl shadow-2xl border border-slate-200/90 text-slate-800 p-4 ring-1 ring-black/5 whitespace-normal"
+                                                 style="width: 320px !important; min-width: 320px !important; max-width: 340px !important; z-index: 99999 !important;">
                                                 
                                                 {{-- Accent Top Bar --}}
                                                 <div class="h-1 w-full rounded-full {{ $isProspect ? 'bg-gradient-to-r from-amber-400 to-amber-500' : ($isAccepted ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : ($isCompleted ? 'bg-gradient-to-r from-teal-400 to-teal-500' : 'bg-slate-300')) }} mb-3"></div>

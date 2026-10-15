@@ -11,7 +11,7 @@
 
 | Parameter Metrik | Nilai / Capaian | Keterangan & Standar Kualitas |
 |:---|:---:|:---|
-| **Total Poin Pekerjaan Terperinci** | **11 Poin Kerja** | Rincian aktivitas penomoran angka lengkap (*granular task breakdown*) |
+| **Total Poin Pekerjaan Terperinci** | **12 Poin Kerja** | Rincian aktivitas penomoran angka lengkap (*granular task breakdown*) |
 | **Status Sinkronisasi Git** | **100% Up-to-Date** | Siap pull ke aaPanel production |
 | **Status Validasi Blade & PHP** | **100% PASS** | Zero syntax error, view cache terkompilasi bersih |
 | **Efisiensi Database** | **0 N+1 Query** | Relasi `workOrder.latestOto` di-eager load secara optimal |
@@ -85,6 +85,18 @@
      - Kolom kiri: **Harga Promo OTO** dengan angka tebal berwarna hijau emerald.
      - Kolom kanan: **Harga Normal** (coret abu-abu) disertai persentase penghematan diskon (merah rose halus).
    - Menjalankan `npm run build` dan `php artisan view:clear` untuk memastikan asset CSS/JS terkompilasi sempurna ke direktori `public/build`.
+
+12. **Perbaikan Masalah Pemotongan Baris Tabel (Stacking Context Elevation & Smart Placement)**
+   - Mengatasi fenomena di mana bagian bawah kartu tooltip terpotong oleh baris tabel di bawahnya (*covered by next sibling <tr>*).
+   - Menganalisis penyebab CSS: baris tabel berikutnya (`<tr>`) yang memiliki `position: relative` dirender belakangan dalam pohon DOM sehingga menimpa (*paints on top of*) elemen melayang dari baris sebelumnya.
+   - Menerapkan elevasi *z-index* saat hover:
+     - Menambahkan `hover:z-40 focus-within:z-40` pada elemen `<tr>`.
+     - Menambahkan `relative group-hover:z-50` pada elemen `<td>` Detail SPK & Customer.
+     - Menambahkan `hover:z-50` pada kontainer badge `group/oto`.
+   - Mengimplementasikan *Smart Placement*:
+     - Untuk baris-baris awal dan tengah, tooltip membuka ke bawah (`top-full mt-2.5`).
+     - Untuk 2 baris terbawah tabel (`$isLastRows`), tooltip secara otomatis membuka ke atas (`bottom-full mb-2.5`) guna mencegah terpotong oleh batas kontainer overflow tabel.
+   - Mengubah `pointer-events-none` menjadi `group-hover/oto:pointer-events-auto` saat hover aktif sehingga pengguna dapat berinteraksi atau membaca konten tanpa kehilangan fokus hover.
 
 ---
 
