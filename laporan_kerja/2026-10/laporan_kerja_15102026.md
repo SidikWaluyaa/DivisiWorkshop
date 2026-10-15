@@ -11,7 +11,7 @@
 
 | Parameter Metrik | Nilai / Capaian | Keterangan & Standar Kualitas |
 |:---|:---:|:---|
-| **Total Poin Pekerjaan Terperinci** | **9 Poin Kerja** | Rincian aktivitas penomoran angka lengkap (*granular task breakdown*) |
+| **Total Poin Pekerjaan Terperinci** | **10 Poin Kerja** | Rincian aktivitas penomoran angka lengkap (*granular task breakdown*) |
 | **Status Sinkronisasi Git** | **100% Up-to-Date** | Siap pull ke aaPanel production |
 | **Status Validasi Blade & PHP** | **100% PASS** | Zero syntax error, view cache terkompilasi bersih |
 | **Efisiensi Database** | **0 N+1 Query** | Relasi `workOrder.latestOto` di-eager load secara optimal |
@@ -65,4 +65,17 @@
    - Menjalankan pengujian relasi Eloquent melalui runner script lokal.
    - Terverifikasi data SPK `S-2608-12-0016-SW` berhasil memuat relasi OTO (`status: COMPLETED`, `proposed_services: Deep Clean`, `total_oto_price: Rp. 75.000`) secara instan dan bebas error.
 
+10. **Redesain Tooltip Hover Penawaran OTO (SaaS Luxury Light Aesthetics)**
+   - Mengatasi masalah teks terpotong (*text-wrapping/truncation*) pada header tooltip lama yang terlalu sempit.
+   - Mengubah tema tooltip dari dark box sempit menjadi kartu melayang putih modern (*glassmorphic card*) berukuran proporsional (`w-[310px]`) yang selaras dengan tema utama dashboard.
+   - Menambahkan pointer panah segitiga (*arrow indicator*) di bagian atas yang mengarah tepat ke badge OTO.
+   - Memperbaiki hierarki tipografi:
+     - Judul header `✨ Detail Penawaran OTO` tampil utuh tanpa terpotong.
+     - Status OTO berada dalam badge pill beraksen warna status.
+     - Layanan yang ditawarkan dipisahkan ke dalam kontainer beraksen abu-abu halus (*subtle rounded box*).
+     - Harga promo OTO ditampilkan dengan jelas pada badge hijau emerald dengan spasi proporsional.
+     - Harga normal dicoret (*line-through*) dengan kontras teks abu-abu yang nyaman dibaca.
+     - Informasi masa berlaku dilengkapi ikon kalender dan badge amber.
+
 ---
+
