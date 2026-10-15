@@ -11,7 +11,7 @@
 
 | Parameter Metrik | Nilai / Capaian | Keterangan & Standar Kualitas |
 |:---|:---:|:---|
-| **Total Poin Pekerjaan Terperinci** | **13 Poin Kerja** | Rincian aktivitas penomoran angka lengkap (*granular task breakdown*) |
+| **Total Poin Pekerjaan Terperinci** | **14 Poin Kerja** | Rincian aktivitas penomoran angka lengkap (*granular task breakdown*) |
 | **Status Sinkronisasi Git** | **100% Up-to-Date** | Siap pull ke aaPanel production |
 | **Status Validasi Blade & PHP** | **100% PASS** | Zero syntax error, view cache terkompilasi bersih |
 | **Efisiensi Database** | **0 N+1 Query** | Relasi `workOrder.latestOto` di-eager load secara optimal |
@@ -107,6 +107,15 @@
      - Mengunci batas horizontal agar tidak meluap ke luar layar jendela (`window.innerWidth`).
    - Menerapkan micro-animation Alpine `scale-95` ke `scale-100` dengan backdrop blur `bg-white/95 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)]`.
    - **Hasil**: Kartu popover 100% independen dari pohon DOM tabel, bebas dari pembatasan `overflow-x: auto`, `overflow-hidden`, atau pemotongan baris tabel manapun.
+
+14. **Otorisasi Khusus Kelola Layanan SPK untuk `fr@workshop.com` (Granular Policy Standard)**
+   - Menyepakati kebutuhan akses melalui proses interview `/grill-me` agar email `fr@workshop.com` dapat mengelola jasa (Tambah, Edit, dan Hapus) pada halaman detail SPK `/admin/orders/{id}`.
+   - Menambahkan method policy baru `manageServices(User $user)` pada `app/Policies/WorkOrderPolicy.php`:
+     - Mengizinkan peran Admin, Owner, dan secara spesifik akun `fr@workshop.com`.
+     - Membatasi hak akses secara granular agar `fr@workshop.com` hanya dapat mengelola Layanan & Harga, sementara fungsi berisiko tinggi (seperti pembatalan order, bypass stasiun, atau perubahan status teknisi) tetap aman terkunci untuk Administrator utama.
+   - Memperbarui controller `app/Http/Controllers/Admin/OrderController.php` pada method `addService`, `updateService`, dan `removeService` agar menggunakan otorisasi `$this->authorize('manageServices', WorkOrder::class)`.
+   - Menyesuaikan tampilan Blade `resources/views/admin/orders/show.blade.php` pada tombol "Tambah", "Tambah Jasa (CX)", serta aksi "Edit" dan "Hapus" layanan per baris tabel dengan direktif `@can('manageServices', \App\Models\WorkOrder::class)`.
+   - Menguji validasi otorisasi Gate: Admin (`PASS`), Teknisi Reguler (`DENIED`), dan `fr@workshop.com` (`ALLOWED/PASS`).
 
 ---
 

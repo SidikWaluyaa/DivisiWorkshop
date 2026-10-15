@@ -209,7 +209,7 @@ class OrderController extends Controller
      */
     public function addService(Request $request, $id)
     {
-        $this->authorize('manageOrder', WorkOrder::class);
+        $this->authorize('manageServices', WorkOrder::class);
 
         $request->validate([
             'service_id' => 'nullable|exists:services,id',
@@ -283,7 +283,7 @@ class OrderController extends Controller
      */
     public function updateService(Request $request, $id, $serviceId)
     {
-        $this->authorize('manageOrder', WorkOrder::class);
+        $this->authorize('manageServices', WorkOrder::class);
 
         $request->validate([
             'cost' => 'required|numeric|min:0',
@@ -343,7 +343,7 @@ class OrderController extends Controller
      */
     public function removeService($id, $serviceId)
     {
-        $this->authorize('manageOrder', WorkOrder::class);
+        $this->authorize('manageServices', WorkOrder::class);
 
         $order = WorkOrder::findOrFail($id);
         $wos = WorkOrderService::where('work_order_id', $order->id)

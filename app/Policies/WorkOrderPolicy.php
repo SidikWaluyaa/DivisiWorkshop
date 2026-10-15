@@ -202,6 +202,16 @@ class WorkOrderPolicy
     }
 
     /**
+     * Determine if the user can manage services on work orders (Add, Edit, Remove services).
+     */
+    public function manageServices(User $user)
+    {
+        return $user->isAdmin() 
+            || $user->isOwner() 
+            || in_array($user->email, ['fr@workshop.com']);
+    }
+
+    /**
      * Determine if the user can update the SPK description.
      */
     public function updateSpkDescription(User $user)

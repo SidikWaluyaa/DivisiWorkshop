@@ -3854,7 +3854,7 @@
                                 <p class="text-gray-500 text-xs mt-0.5">Klik biaya untuk mengedit • Kelola layanan order</p>
                             </div>
                             <div class="flex items-center gap-3">
-                                @can('manageOrder', \App\Models\WorkOrder::class)
+                                @can('manageServices', \App\Models\WorkOrder::class)
                                 <div class="flex gap-2">
                                     <button @click="if(showAddForm && !isCxMode) { showAddForm = false } else { isCxMode = false; showAddForm = true }" 
                                             class="flex items-center gap-1.5 px-3 py-1.5 bg-[#22B086] hover:bg-[#1C8D6C] text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-emerald-200 hover:-translate-y-0.5">
@@ -4024,7 +4024,7 @@
                                             </span>
                                         </td>
                                         <td class="px-4 py-5 text-center">
-                                            @can('manageOrder', \App\Models\WorkOrder::class)
+                                            @can('manageServices', \App\Models\WorkOrder::class)
                                             <div class="flex items-center justify-center gap-1">
                                                 <button @click="startEdit(svc)" :disabled="isLoading"
                                                         class="p-1.5 text-gray-400 hover:text-[#22B086] hover:bg-emerald-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
