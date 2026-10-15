@@ -409,8 +409,26 @@
                                             }
                                         @endphp
 
-                                        <div class="relative group/oto inline-block hover:z-50">
-                                            <span class="inline-flex items-center gap-1.5 text-[9.5px] font-black px-2.5 py-0.5 rounded-lg border uppercase tracking-wider cursor-help transition-all duration-200 {{ $otoBadge['bg'] }} {{ $otoBadge['text'] }} {{ $otoBadge['border'] }}">
+                                        <div x-data="{
+                                                showTooltip: false,
+                                                coords: { top: 0, left: 0 },
+                                                updatePos(el) {
+                                                    let rect = el.getBoundingClientRect();
+                                                    let cardHeight = 220;
+                                                    let spaceBelow = window.innerHeight - rect.bottom;
+                                                    let top = (spaceBelow < cardHeight && rect.top > cardHeight)
+                                                        ? (rect.top - cardHeight - 8)
+                                                        : (rect.bottom + 8);
+                                                    let left = Math.max(16, Math.min(rect.left, window.innerWidth - 336));
+                                                    this.coords = { top, left };
+                                                }
+                                             }"
+                                             class="inline-block relative">
+                                            
+                                            {{-- Trigger Badge --}}
+                                            <span @mouseenter="updatePos($el); showTooltip = true"
+                                                  @mouseleave="showTooltip = false"
+                                                  class="inline-flex items-center gap-1.5 text-[9.5px] font-black px-2.5 py-0.5 rounded-lg border uppercase tracking-wider cursor-pointer transition-all duration-200 select-none {{ $otoBadge['bg'] }} {{ $otoBadge['text'] }} {{ $otoBadge['border'] }}">
                                                 <span class="relative flex h-2 w-2">
                                                     @if($isProspect)
                                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -420,63 +438,73 @@
                                                 <span>{{ $otoBadge['label'] }}</span>
                                             </span>
 
-                                            {{-- Tooltip Hover Elegan (Fixed Min-Width 320px, Smart Stacking & 2-Col Pricing Grid) --}}
-                                            @php
-                                                $isLastRows = ($loop->iteration > ($loop->count - 3)) && ($loop->count > 2);
-                                            @endphp
-                                            <div class="pointer-events-none opacity-0 group-hover/oto:opacity-100 group-hover/oto:pointer-events-auto transition-all duration-200 transform translate-y-1 group-hover/oto:translate-y-0 absolute left-0 {{ $isLastRows ? 'bottom-full mb-2.5' : 'top-full mt-2.5' }} bg-white rounded-2xl shadow-2xl border border-slate-200/90 text-slate-800 p-4 ring-1 ring-black/5 whitespace-normal"
-                                                 style="width: 320px !important; min-width: 320px !important; max-width: 340px !important; z-index: 99999 !important;">
-                                                
-                                                {{-- Accent Top Bar --}}
-                                                <div class="h-1 w-full rounded-full {{ $isProspect ? 'bg-gradient-to-r from-amber-400 to-amber-500' : ($isAccepted ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : ($isCompleted ? 'bg-gradient-to-r from-teal-400 to-teal-500' : 'bg-slate-300')) }} mb-3"></div>
+                                            {{-- Teleported Popover Card (Outside Table, Never Clipped) --}}
+                                            <template x-teleport="body">
+                                                <div x-show="showTooltip"
+                                                     x-transition:enter="transition ease-out duration-150"
+                                                     x-transition:enter-start="opacity-0 scale-95"
+                                                     x-transition:enter-end="opacity-100 scale-100"
+                                                     x-transition:leave="transition ease-in duration-100"
+                                                     x-transition:leave-start="opacity-100 scale-100"
+                                                     x-transition:leave-end="opacity-0 scale-95"
+                                                     @mouseenter="showTooltip = true"
+                                                     @mouseleave="showTooltip = false"
+                                                     :style="`position: fixed; top: ${coords.top}px; left: ${coords.left}px; width: 320px; z-index: 99999;`"
+                                                     class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-200/90 text-slate-800 p-4 ring-1 ring-black/5 whitespace-normal pointer-events-auto"
+                                                     style="display: none;"
+                                                     x-cloak>
+                                                    
+                                                    {{-- Accent Top Bar --}}
+                                                    <div class="h-1 w-full rounded-full {{ $isProspect ? 'bg-gradient-to-r from-amber-400 to-amber-500' : ($isAccepted ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : ($isCompleted ? 'bg-gradient-to-r from-teal-400 to-teal-500' : 'bg-slate-300')) }} mb-3"></div>
 
-                                                {{-- Header --}}
-                                                <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
-                                                    <div class="flex items-center gap-1.5">
-                                                        <span class="text-sm">✨</span>
-                                                        <span class="font-black text-xs text-slate-900 tracking-tight whitespace-nowrap">Detail Penawaran OTO</span>
+                                                    {{-- Header --}}
+                                                    <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="text-sm">✨</span>
+                                                            <span class="font-black text-xs text-slate-900 tracking-tight whitespace-nowrap">Detail Penawaran OTO</span>
+                                                        </div>
+                                                        <span class="text-[9.5px] font-black px-2 py-0.5 rounded-lg border uppercase tracking-wider whitespace-nowrap {{ $otoBadge['bg'] }} {{ $otoBadge['text'] }} {{ $otoBadge['border'] }}">
+                                                            {{ $oto->status }}
+                                                        </span>
                                                     </div>
-                                                    <span class="text-[9.5px] font-black px-2 py-0.5 rounded-lg border uppercase tracking-wider whitespace-nowrap {{ $otoBadge['bg'] }} {{ $otoBadge['text'] }} {{ $otoBadge['border'] }}">
-                                                        {{ $oto->status }}
-                                                    </span>
-                                                </div>
 
-                                                {{-- Layanan Box --}}
-                                                <div class="bg-slate-50/90 rounded-xl p-2.5 border border-slate-100 mb-3">
-                                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Layanan Ditawarkan</span>
-                                                    <span class="text-xs font-black text-slate-900 block leading-snug">{{ $oto->proposed_services ?: '-' }}</span>
-                                                </div>
-
-                                                {{-- Pricing Grid (2 Kolom Bersih) --}}
-                                                <div class="grid grid-cols-2 gap-2 p-2.5 bg-slate-50/60 rounded-xl border border-slate-100 mb-3">
-                                                    <div>
-                                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">Harga Promo OTO</span>
-                                                        <span class="text-xs font-black text-emerald-600 block">{{ $oto->total_oto_price }}</span>
+                                                    {{-- Layanan Box --}}
+                                                    <div class="bg-slate-50/90 rounded-xl p-2.5 border border-slate-100 mb-3">
+                                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Layanan Ditawarkan</span>
+                                                        <span class="text-xs font-black text-slate-900 block leading-snug">{{ $oto->proposed_services ?: '-' }}</span>
                                                     </div>
-                                                    @if($oto->total_normal_price && $oto->total_normal_price !== $oto->total_oto_price)
-                                                    <div class="border-l border-slate-200/80 pl-2">
-                                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">Harga Normal</span>
-                                                        <span class="text-xs font-bold text-slate-400 line-through block">{{ $oto->total_normal_price }}</span>
-                                                        @if($oto->discount_percent > 0)
-                                                            <span class="text-[9px] font-black text-rose-500 block leading-none mt-0.5">Hemat {{ round($oto->discount_percent) }}%</span>
+
+                                                    {{-- Pricing Grid (2 Kolom Bersih) --}}
+                                                    <div class="grid grid-cols-2 gap-2 p-2.5 bg-slate-50/60 rounded-xl border border-slate-100 mb-3">
+                                                        <div>
+                                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">Harga Promo OTO</span>
+                                                            <span class="text-xs font-black text-emerald-600 block">{{ $oto->total_oto_price }}</span>
+                                                        </div>
+                                                        @if($oto->total_normal_price && $oto->total_normal_price !== $oto->total_oto_price)
+                                                        <div class="border-l border-slate-200/80 pl-2">
+                                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">Harga Normal</span>
+                                                            <span class="text-xs font-bold text-slate-400 line-through block">{{ $oto->total_normal_price }}</span>
+                                                            @if($oto->discount_percent > 0)
+                                                                <span class="text-[9px] font-black text-rose-500 block leading-none mt-0.5">Hemat {{ round($oto->discount_percent) }}%</span>
+                                                            @endif
+                                                        </div>
                                                         @endif
+                                                    </div>
+
+                                                    {{-- Masa Berlaku Bar --}}
+                                                    @if($oto->valid_until)
+                                                    <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+                                                        <span class="text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-wider">
+                                                            <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                            Masa Berlaku
+                                                        </span>
+                                                        <span class="text-[10px] font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
+                                                            s/d {{ $oto->valid_until->format('d M Y') }}
+                                                        </span>
                                                     </div>
                                                     @endif
                                                 </div>
-
-                                                {{-- Masa Berlaku Bar --}}
-                                                @if($oto->valid_until)
-                                                <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
-                                                    <span class="text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-wider">
-                                                        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                        Masa Berlaku
-                                                    </span>
-                                                    <span class="text-[10px] font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
-                                                        s/d {{ $oto->valid_until->format('d M Y') }}
-                                                    </span>
-                                                </div>
-                                                @endif
-                                            </div>
+                                            </template>
                                         </div>
                                     @endif
                                 </div>

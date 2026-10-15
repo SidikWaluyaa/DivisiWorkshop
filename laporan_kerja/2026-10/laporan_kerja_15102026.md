@@ -11,7 +11,7 @@
 
 | Parameter Metrik | Nilai / Capaian | Keterangan & Standar Kualitas |
 |:---|:---:|:---|
-| **Total Poin Pekerjaan Terperinci** | **12 Poin Kerja** | Rincian aktivitas penomoran angka lengkap (*granular task breakdown*) |
+| **Total Poin Pekerjaan Terperinci** | **13 Poin Kerja** | Rincian aktivitas penomoran angka lengkap (*granular task breakdown*) |
 | **Status Sinkronisasi Git** | **100% Up-to-Date** | Siap pull ke aaPanel production |
 | **Status Validasi Blade & PHP** | **100% PASS** | Zero syntax error, view cache terkompilasi bersih |
 | **Efisiensi Database** | **0 N+1 Query** | Relasi `workOrder.latestOto` di-eager load secara optimal |
@@ -97,6 +97,16 @@
      - Untuk baris-baris awal dan tengah, tooltip membuka ke bawah (`top-full mt-2.5`).
      - Untuk 2 baris terbawah tabel (`$isLastRows`), tooltip secara otomatis membuka ke atas (`bottom-full mb-2.5`) guna mencegah terpotong oleh batas kontainer overflow tabel.
    - Mengubah `pointer-events-none` menjadi `group-hover/oto:pointer-events-auto` saat hover aktif sehingga pengguna dapat berinteraksi atau membaca konten tanpa kehilangan fokus hover.
+
+13. **Implementasi Teleportasi Popover ke Body (Alpine.js x-teleport="body" — UI/UX Pro Max Standard)**
+   - Mengatasi akar masalah terpotongnya tooltip oleh container overflow tabel (`div.overflow-x-auto`) ketika tabel hanya memiliki sedikit baris (misal 1 atau 2 baris data).
+   - Memindahkan rendering kartu popover secara dinamis langsung ke `<body>` menggunakan `x-teleport="body"` saat hover diaktifkan.
+   - Menghitung koordinat posisi layar absolut secara real-time via `getBoundingClientRect()`:
+     - Mengukur posisi badge pemicu secara presisi.
+     - Melakukan auto-flip cerdas: jika ruang di bawah badge kurang dari 220px, popover otomatis terbuka ke atas.
+     - Mengunci batas horizontal agar tidak meluap ke luar layar jendela (`window.innerWidth`).
+   - Menerapkan micro-animation Alpine `scale-95` ke `scale-100` dengan backdrop blur `bg-white/95 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)]`.
+   - **Hasil**: Kartu popover 100% independen dari pohon DOM tabel, bebas dari pembatasan `overflow-x: auto`, `overflow-hidden`, atau pemotongan baris tabel manapun.
 
 ---
 
