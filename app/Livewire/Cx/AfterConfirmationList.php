@@ -122,7 +122,7 @@ class AfterConfirmationList extends Component
 
     public function openActionModal($id)
     {
-        $item = CxAfterConfirmation::with('workOrder')->findOrFail($id);
+        $item = CxAfterConfirmation::with(['workOrder.latestOto', 'pic'])->findOrFail($id);
         $this->editingId = $id;
         $this->editingResponse = $item->response ?? '';
         $this->editingNotes = $item->notes ?? '';
@@ -138,6 +138,8 @@ class AfterConfirmationList extends Component
         $this->revisionPhotos = [];
         $this->resetValidation();
 
+        $latestOto = $item->workOrder->latestOto;
+
         $this->dispatch('open-unified-action-modal', [
             'confirmation' => [
                 'id' => $item->id,
@@ -146,6 +148,17 @@ class AfterConfirmationList extends Component
                 'stage_badge' => $item->stage_badge,
                 'round_badge' => $item->round_badge,
             ],
+            'latestOto' => $latestOto ? [
+                'id' => $latestOto->id,
+                'status' => $latestOto->status,
+                'proposed_services' => $latestOto->proposed_services,
+                'total_oto_price' => $latestOto->total_oto_price,
+                'total_normal_price' => $latestOto->total_normal_price,
+                'total_discount' => $latestOto->total_discount,
+                'discount_percent' => $latestOto->discount_percent,
+                'valid_until' => $latestOto->valid_until ? $latestOto->valid_until->format('d M Y') : null,
+                'description' => $latestOto->description,
+            ] : null,
             'workOrder' => [
                 'id' => $item->workOrder->id,
                 'spk_number' => $item->workOrder->spk_number,
@@ -533,7 +546,7 @@ class AfterConfirmationList extends Component
 
     public function render()
     {
-        $query = CxAfterConfirmation::with(['workOrder', 'pic'])
+        $query = CxAfterConfirmation::with(['workOrder.latestOto', 'pic'])
             ->orderBy('entered_at', 'desc');
 
         // Filter by Date

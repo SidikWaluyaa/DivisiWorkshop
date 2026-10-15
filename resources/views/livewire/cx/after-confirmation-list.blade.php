@@ -355,6 +355,102 @@
                                         @endif
                                         {{ $roundBadge['label'] }}
                                     </span>
+
+                                    {{-- Penanda Ciri Khusus: Penawaran OTO / Prospek OTO --}}
+                                    @if($oto = $item->workOrder->latestOto)
+                                        @php
+                                            $otoStatus = $oto->status;
+                                            $isProspect = in_array($otoStatus, ['PENDING_CX', 'PENDING_CUSTOMER', 'CONTACTED']);
+                                            $isAccepted = in_array($otoStatus, ['ACCEPTED', 'IN_PROGRESS']);
+                                            $isCompleted = $otoStatus === 'COMPLETED';
+                                            $isRejected = $otoStatus === 'REJECTED';
+                                            $isExpired = $otoStatus === 'EXPIRED';
+
+                                            if ($isProspect) {
+                                                $otoBadge = [
+                                                    'bg' => 'bg-amber-500/15 hover:bg-amber-500/25',
+                                                    'text' => 'text-amber-800',
+                                                    'border' => 'border-amber-400/80 shadow-xs shadow-amber-500/10',
+                                                    'dot_solid' => 'bg-amber-500',
+                                                    'label' => '✨ PROSPEK OTO',
+                                                ];
+                                            } elseif ($isAccepted) {
+                                                $otoBadge = [
+                                                    'bg' => 'bg-emerald-500/15 hover:bg-emerald-500/25',
+                                                    'text' => 'text-emerald-800',
+                                                    'border' => 'border-emerald-400/80',
+                                                    'dot_solid' => 'bg-emerald-500',
+                                                    'label' => '✨ OTO DITERIMA',
+                                                ];
+                                            } elseif ($isCompleted) {
+                                                $otoBadge = [
+                                                    'bg' => 'bg-teal-500/15 hover:bg-teal-500/25',
+                                                    'text' => 'text-teal-800',
+                                                    'border' => 'border-teal-400/80',
+                                                    'dot_solid' => 'bg-teal-500',
+                                                    'label' => '✨ OTO SELESAI',
+                                                ];
+                                            } elseif ($isRejected) {
+                                                $otoBadge = [
+                                                    'bg' => 'bg-slate-100 hover:bg-slate-200/80',
+                                                    'text' => 'text-slate-600',
+                                                    'border' => 'border-slate-300',
+                                                    'dot_solid' => 'bg-slate-400',
+                                                    'label' => 'OTO DITOLAK',
+                                                ];
+                                            } else {
+                                                $otoBadge = [
+                                                    'bg' => 'bg-rose-50 hover:bg-rose-100',
+                                                    'text' => 'text-rose-700',
+                                                    'border' => 'border-rose-200',
+                                                    'dot_solid' => 'bg-rose-400',
+                                                    'label' => 'OTO EXPIRED',
+                                                ];
+                                            }
+                                        @endphp
+
+                                        <div class="relative group/oto inline-block">
+                                            <span class="inline-flex items-center gap-1.5 text-[9.5px] font-black px-2.5 py-0.5 rounded-lg border uppercase tracking-wider cursor-help transition-all duration-200 {{ $otoBadge['bg'] }} {{ $otoBadge['text'] }} {{ $otoBadge['border'] }}">
+                                                <span class="relative flex h-2 w-2">
+                                                    @if($isProspect)
+                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                    @endif
+                                                    <span class="relative inline-flex rounded-full h-2 w-2 {{ $otoBadge['dot_solid'] }}"></span>
+                                                </span>
+                                                <span>{{ $otoBadge['label'] }}</span>
+                                            </span>
+
+                                            {{-- Tooltip Hover Elegan --}}
+                                            <div class="pointer-events-none opacity-0 group-hover/oto:opacity-100 transition-all duration-200 transform translate-y-1 group-hover/oto:translate-y-0 absolute left-0 top-full mt-1.5 z-50 w-72 p-3 bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-xl border border-slate-700/60 text-xs">
+                                                <div class="flex items-center justify-between pb-1.5 border-b border-slate-700/60 mb-2">
+                                                    <span class="font-black text-[10px] tracking-wider text-amber-300 uppercase">Detail Penawaran OTO</span>
+                                                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold uppercase">{{ $oto->status }}</span>
+                                                </div>
+                                                <div class="space-y-1.5 text-[11px]">
+                                                    <div>
+                                                        <span class="text-slate-400 block text-[9.5px] uppercase font-bold tracking-wider">Layanan:</span>
+                                                        <span class="font-bold text-white leading-tight block whitespace-normal">{{ $oto->proposed_services ?: '-' }}</span>
+                                                    </div>
+                                                    <div class="flex items-center justify-between pt-1 border-t border-slate-800">
+                                                        <span class="text-slate-400 text-[10px]">Harga OTO (Promo):</span>
+                                                        <span class="font-black text-emerald-400">{{ $oto->total_oto_price }}</span>
+                                                    </div>
+                                                    @if($oto->total_normal_price && $oto->total_normal_price !== $oto->total_oto_price)
+                                                    <div class="flex items-center justify-between text-[10px]">
+                                                        <span class="text-slate-400">Harga Normal:</span>
+                                                        <span class="text-slate-400 line-through">{{ $oto->total_normal_price }}</span>
+                                                    </div>
+                                                    @endif
+                                                    @if($oto->valid_until)
+                                                    <div class="flex items-center justify-between text-[10px] pt-1 border-t border-slate-800">
+                                                        <span class="text-slate-400">Masa Berlaku:</span>
+                                                        <span class="text-amber-200 font-bold">s/d {{ $oto->valid_until->format('d M Y') }}</span>
+                                                    </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <div>
@@ -493,6 +589,7 @@
             openAction: false,
             workOrder: null,
             confirmation: null,
+            latestOto: null,
             actionType: @entangle('selectedActionType'),
             
             // OTO Local State
@@ -508,6 +605,7 @@
                     let data = event[0] || {};
                     this.workOrder = data.workOrder || null;
                     this.confirmation = data.confirmation || null;
+                    this.latestOto = data.latestOto || null;
                     this.searchOto = '';
                     this.selectedServices = {};
                     this.otoDescription = '';
@@ -634,6 +732,68 @@
 
             {{-- Body Scrollable --}}
             <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-50/40">
+                {{-- BANNER INFORMASI OTO AKTIF / PROSPEK (Jika SPK ini memiliki riwayat/penawaran OTO) --}}
+                <template x-if="latestOto">
+                    <div class="rounded-2xl p-4 border transition-all"
+                         :class="{
+                            'bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-white border-amber-300 shadow-sm text-amber-900': ['PENDING_CX', 'PENDING_CUSTOMER', 'CONTACTED'].includes(latestOto.status),
+                            'bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-white border-emerald-300 shadow-sm text-emerald-900': ['ACCEPTED', 'IN_PROGRESS'].includes(latestOto.status),
+                            'bg-gradient-to-r from-teal-500/15 via-teal-500/5 to-white border-teal-300 shadow-sm text-teal-900': latestOto.status === 'COMPLETED',
+                            'bg-slate-50 border-slate-200 text-slate-700': ['REJECTED', 'EXPIRED'].includes(latestOto.status)
+                         }">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-base shadow-sm font-black"
+                                     :class="{
+                                        'bg-amber-500 text-white shadow-amber-500/30': ['PENDING_CX', 'PENDING_CUSTOMER', 'CONTACTED'].includes(latestOto.status),
+                                        'bg-emerald-500 text-white shadow-emerald-500/30': ['ACCEPTED', 'IN_PROGRESS'].includes(latestOto.status),
+                                        'bg-teal-500 text-white shadow-teal-500/30': latestOto.status === 'COMPLETED',
+                                        'bg-slate-400 text-white': ['REJECTED', 'EXPIRED'].includes(latestOto.status)
+                                     }">
+                                    <span x-show="['PENDING_CX', 'PENDING_CUSTOMER', 'CONTACTED'].includes(latestOto.status)">⚡</span>
+                                    <span x-show="['ACCEPTED', 'IN_PROGRESS'].includes(latestOto.status)">✓</span>
+                                    <span x-show="latestOto.status === 'COMPLETED'">★</span>
+                                    <span x-show="['REJECTED', 'EXPIRED'].includes(latestOto.status)">✕</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-xs font-black uppercase tracking-wider"
+                                              :class="{
+                                                'text-amber-800': ['PENDING_CX', 'PENDING_CUSTOMER', 'CONTACTED'].includes(latestOto.status),
+                                                'text-emerald-800': ['ACCEPTED', 'IN_PROGRESS'].includes(latestOto.status),
+                                                'text-teal-800': latestOto.status === 'COMPLETED',
+                                                'text-slate-700': ['REJECTED', 'EXPIRED'].includes(latestOto.status)
+                                              }"
+                                              x-text="['PENDING_CX', 'PENDING_CUSTOMER', 'CONTACTED'].includes(latestOto.status) ? 'SPK Ini Memiliki Penawaran OTO Aktif (Prospek)' : ('Status OTO Terkini: ' + latestOto.status)">
+                                        </span>
+                                        <span class="text-[9.5px] font-black px-2 py-0.5 rounded-full uppercase"
+                                              :class="{
+                                                'bg-amber-200/80 text-amber-900 border border-amber-300': ['PENDING_CX', 'PENDING_CUSTOMER', 'CONTACTED'].includes(latestOto.status),
+                                                'bg-emerald-100 text-emerald-800 border border-emerald-300': ['ACCEPTED', 'IN_PROGRESS'].includes(latestOto.status),
+                                                'bg-teal-100 text-teal-800 border border-teal-300': latestOto.status === 'COMPLETED',
+                                                'bg-slate-200 text-slate-700 border border-slate-300': ['REJECTED', 'EXPIRED'].includes(latestOto.status)
+                                              }"
+                                              x-text="latestOto.status">
+                                        </span>
+                                    </div>
+                                    <p class="text-xs font-bold text-slate-800">
+                                        Layanan: <span class="text-slate-900 font-extrabold" x-text="latestOto.proposed_services || '-'"></span>
+                                    </p>
+                                    <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600 pt-0.5">
+                                        <span>Harga OTO (Promo): <strong class="text-emerald-600 font-black" x-text="latestOto.total_oto_price"></strong></span>
+                                        <template x-if="latestOto.total_normal_price && latestOto.total_normal_price !== latestOto.total_oto_price">
+                                            <span>Normal: <span class="line-through text-slate-400 font-medium" x-text="latestOto.total_normal_price"></span></span>
+                                        </template>
+                                        <template x-if="latestOto.valid_until">
+                                            <span>Masa Berlaku: <strong class="text-amber-800 font-bold" x-text="'s/d ' + latestOto.valid_until"></strong></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
                 {{-- SEKSI 1: FORM RESPON KEPUASAN (UTAMA) --}}
                 <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
