@@ -420,56 +420,59 @@
                                                 <span>{{ $otoBadge['label'] }}</span>
                                             </span>
 
-                                            {{-- Tooltip Hover Elegan (Light Luxury SaaS Style) --}}
-                                            <div class="pointer-events-none opacity-0 group-hover/oto:opacity-100 transition-all duration-200 transform translate-y-1 group-hover/oto:translate-y-0 absolute left-0 top-full mt-2.5 z-[100] w-[310px] p-4 bg-white/98 backdrop-blur-md text-gray-800 rounded-2xl shadow-2xl border border-gray-100 ring-1 ring-black/5 whitespace-normal">
-                                                {{-- Arrow pointer --}}
-                                                <div class="absolute -top-1.5 left-6 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
+                                            {{-- Tooltip Hover Elegan (Fixed Min-Width 320px & 2-Col Pricing Grid) --}}
+                                            <div class="pointer-events-none opacity-0 group-hover/oto:opacity-100 transition-all duration-200 transform translate-y-1 group-hover/oto:translate-y-0 absolute left-0 top-full mt-2 z-[999] bg-white rounded-2xl shadow-2xl border border-slate-200/90 text-slate-800 p-4 ring-1 ring-black/5 whitespace-normal"
+                                                 style="width: 320px !important; min-width: 320px !important; max-width: 340px !important;">
+                                                
+                                                {{-- Accent Top Bar --}}
+                                                <div class="h-1 w-full rounded-full {{ $isProspect ? 'bg-gradient-to-r from-amber-400 to-amber-500' : ($isAccepted ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : ($isCompleted ? 'bg-gradient-to-r from-teal-400 to-teal-500' : 'bg-slate-300')) }} mb-3"></div>
 
                                                 {{-- Header --}}
-                                                <div class="flex items-center justify-between pb-2.5 border-b border-gray-100 mb-3 relative">
+                                                <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
                                                     <div class="flex items-center gap-1.5">
                                                         <span class="text-sm">✨</span>
-                                                        <span class="font-black text-xs text-gray-900 tracking-tight">Detail Penawaran OTO</span>
+                                                        <span class="font-black text-xs text-slate-900 tracking-tight whitespace-nowrap">Detail Penawaran OTO</span>
                                                     </div>
-                                                    <span class="text-[9.5px] font-black px-2 py-0.5 rounded-lg border uppercase tracking-wider {{ $otoBadge['bg'] }} {{ $otoBadge['text'] }} {{ $otoBadge['border'] }}">
+                                                    <span class="text-[9.5px] font-black px-2 py-0.5 rounded-lg border uppercase tracking-wider whitespace-nowrap {{ $otoBadge['bg'] }} {{ $otoBadge['text'] }} {{ $otoBadge['border'] }}">
                                                         {{ $oto->status }}
                                                     </span>
                                                 </div>
 
                                                 {{-- Layanan Box --}}
-                                                <div class="bg-gray-50/90 rounded-xl p-2.5 border border-gray-100/90 mb-3">
-                                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Layanan Ditawarkan</span>
-                                                    <span class="text-xs font-black text-gray-900 block leading-relaxed">{{ $oto->proposed_services ?: '-' }}</span>
+                                                <div class="bg-slate-50/90 rounded-xl p-2.5 border border-slate-100 mb-3">
+                                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Layanan Ditawarkan</span>
+                                                    <span class="text-xs font-black text-slate-900 block leading-snug">{{ $oto->proposed_services ?: '-' }}</span>
                                                 </div>
 
-                                                {{-- Pricing & Validity Info --}}
-                                                <div class="space-y-2 text-xs">
-                                                    <div class="flex items-center justify-between">
-                                                        <span class="text-[11px] font-bold text-gray-500">Harga Promo OTO:</span>
-                                                        <span class="text-xs font-black text-[#22AF85] bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/80 shadow-2xs">
-                                                            {{ $oto->total_oto_price }}
-                                                        </span>
+                                                {{-- Pricing Grid (2 Kolom Bersih) --}}
+                                                <div class="grid grid-cols-2 gap-2 p-2.5 bg-slate-50/60 rounded-xl border border-slate-100 mb-3">
+                                                    <div>
+                                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">Harga Promo OTO</span>
+                                                        <span class="text-xs font-black text-emerald-600 block">{{ $oto->total_oto_price }}</span>
                                                     </div>
                                                     @if($oto->total_normal_price && $oto->total_normal_price !== $oto->total_oto_price)
-                                                    <div class="flex items-center justify-between">
-                                                        <span class="text-[11px] font-bold text-gray-400">Harga Normal:</span>
-                                                        <span class="text-xs font-bold text-gray-400 line-through">
-                                                            {{ $oto->total_normal_price }}
-                                                        </span>
-                                                    </div>
-                                                    @endif
-                                                    @if($oto->valid_until)
-                                                    <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                                                        <span class="text-[11px] font-bold text-gray-500 flex items-center gap-1">
-                                                            <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                            Masa Berlaku:
-                                                        </span>
-                                                        <span class="text-[11px] font-black text-amber-800 bg-amber-50/80 px-2 py-0.5 rounded-md border border-amber-200/60">
-                                                            s/d {{ $oto->valid_until->format('d M Y') }}
-                                                        </span>
+                                                    <div class="border-l border-slate-200/80 pl-2">
+                                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">Harga Normal</span>
+                                                        <span class="text-xs font-bold text-slate-400 line-through block">{{ $oto->total_normal_price }}</span>
+                                                        @if($oto->discount_percent > 0)
+                                                            <span class="text-[9px] font-black text-rose-500 block leading-none mt-0.5">Hemat {{ round($oto->discount_percent) }}%</span>
+                                                        @endif
                                                     </div>
                                                     @endif
                                                 </div>
+
+                                                {{-- Masa Berlaku Bar --}}
+                                                @if($oto->valid_until)
+                                                <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+                                                    <span class="text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-wider">
+                                                        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                        Masa Berlaku
+                                                    </span>
+                                                    <span class="text-[10px] font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
+                                                        s/d {{ $oto->valid_until->format('d M Y') }}
+                                                    </span>
+                                                </div>
+                                                @endif
                                             </div>
                                         </div>
                                     @endif

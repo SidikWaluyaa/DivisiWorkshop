@@ -11,7 +11,7 @@
 
 | Parameter Metrik | Nilai / Capaian | Keterangan & Standar Kualitas |
 |:---|:---:|:---|
-| **Total Poin Pekerjaan Terperinci** | **10 Poin Kerja** | Rincian aktivitas penomoran angka lengkap (*granular task breakdown*) |
+| **Total Poin Pekerjaan Terperinci** | **11 Poin Kerja** | Rincian aktivitas penomoran angka lengkap (*granular task breakdown*) |
 | **Status Sinkronisasi Git** | **100% Up-to-Date** | Siap pull ke aaPanel production |
 | **Status Validasi Blade & PHP** | **100% PASS** | Zero syntax error, view cache terkompilasi bersih |
 | **Efisiensi Database** | **0 N+1 Query** | Relasi `workOrder.latestOto` di-eager load secara optimal |
@@ -76,6 +76,15 @@
      - Harga promo OTO ditampilkan dengan jelas pada badge hijau emerald dengan spasi proporsional.
      - Harga normal dicoret (*line-through*) dengan kontras teks abu-abu yang nyaman dibaca.
      - Informasi masa berlaku dilengkapi ikon kalender dan badge amber.
+
+11. **Perbaikan Masalah Penyempitan Tooltip (Fixed Min-Width 320px & 2-Col Pricing Grid)**
+   - Mengatasi kendala di mana tooltip menyempit secara vertikal (*squished width*) akibat inheritance konteks tabel `whitespace-nowrap` dan ketiadaan fixed inline min-width.
+   - Menerapkan inline style eksplisit: `style="width: 320px !important; min-width: 320px !important; max-width: 340px !important;"` dan `z-[999]`.
+   - Menghapus CSS pointer panah miring (*clunky rotate-45 arrow*) yang sempat memicu distorsi visual, dan menggantikannya dengan garis aksen warna status (*accent top bar*) bergradien halus di bagian atas kartu.
+   - Merancang ulang tata letak harga menjadi grid 2 kolom simetris:
+     - Kolom kiri: **Harga Promo OTO** dengan angka tebal berwarna hijau emerald.
+     - Kolom kanan: **Harga Normal** (coret abu-abu) disertai persentase penghematan diskon (merah rose halus).
+   - Menjalankan `npm run build` dan `php artisan view:clear` untuk memastikan asset CSS/JS terkompilasi sempurna ke direktori `public/build`.
 
 ---
 
