@@ -660,6 +660,10 @@ class WarehouseDashboardApiService
         return [
             // Status Saat Ini (Snapshot)
             'pending_reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->count(),
+            // SPK dibuat di periode yang sampai sekarang masih SPK_PENDING (belum diterima gudang)
+            'pending_reception_period' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
+                ->whereBetween('created_at', [$start, $end])
+                ->count(),
             'finished_not_stored' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
                 ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
