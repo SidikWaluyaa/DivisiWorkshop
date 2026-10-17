@@ -140,3 +140,50 @@ it('warehouse-summary menambah field SPK periode non-GR, GR, tiba, dan belum tib
         ->assertJsonPath('data.summary.pending_reception_period', 1)
         ->assertJsonPath('data.summary.total_incoming', 5);
 });
+
+it('finance/dashboard menambah chart_data.omset_tagihan_harian yang jumlahnya sama dengan omset_tagihan', function () {
+    // 2 invoice di 5 Sep (satu kena kasus total_service_price = 0), 1 di 25 Sep 23:59:59, 1 Batal, 1 di luar periode
+    $a = insertInvoice('INV-HARIAN-A', '2026-09-05 08:00:00', ['shipping_cost' => 15000]);
+    insertWorkOrder(['invoice_id' => $a, 'total_service_price' => 100000, 'discount' => 10000, 'status' => WorkOrderStatus::PRODUCTION->value]);
+    $b = insertInvoice('INV-HARIAN-B', '2026-09-05 21:00:00', ['shipping_cost' => 20000]);
+    insertWorkOrder(['invoice_id' => $b, 'total_service_price' => 0, 'total_transaksi' => 95000, 'shipping_cost' => 20000, 'discount' => 5000, 'status' => WorkOrderStatus::SELESAI->value]);
+    $c = insertInvoice('INV-HARIAN-C', '2026-09-25 23:59:59');
+    insertWorkOrder(['invoice_id' => $c, 'total_service_price' => 10000, 'status' => WorkOrderStatus::QC->value]);
+    $d = insertInvoice('INV-HARIAN-D', '2026-09-10 10:00:00', ['status' => 'Batal']);
+    insertWorkOrder(['invoice_id' => $d, 'total_service_price' => 40000, 'status' => WorkOrderStatus::SELESAI->value]);
+    $e = insertInvoice('INV-HARIAN-E', '2026-09-26 00:00:01');
+    insertWorkOrder(['invoice_id' => $e, 'total_service_price' => 60000, 'status' => WorkOrderStatus::SELESAI->value]);
+
+    $response = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson('/api/v1/finance/dashboard' . PERIODE);
+    $response->assertOk();
+
+    $harian = $response->json('data.chart_data.omset_tagihan_harian');
+
+    expect($harian)->toHaveCount(25)
+        ->and(array_key_first($harian))->toBe('2026-09-01')
+        ->and(array_key_last($harian))->toBe('2026-09-25')
+        ->and($harian['2026-09-05'])->toEqual(165000)
+        ->and($harian['2026-09-25'])->toEqual(10000)
+        ->and($harian['2026-09-10'])->toEqual(0)
+        ->and(array_sum($harian))->toEqual($response->json('data.metrics.omset_tagihan'))
+        ->and($response->json('data.metrics.omset_tagihan'))->toEqual(175000)
+        // Field chart lama tetap ada dengan panjang yang sama
+        ->and($response->json('data.chart_data.labels'))->toHaveCount(25)
+        ->and($response->json('data.chart_data.cash_inflow'))->toHaveCount(25);
+});
+
+it('warehouse-summary menambah spk_rd_periode; SPK R&D ikut di spk_periode_non_gr dan spk_tiba_periode', function () {
+    insertWorkOrder(['spk_number' => 'RD-2609-10-0001-OL', 'priority' => 'R&D', 'category_spk' => 'RD', 'warehouse_qc_at' => '2026-09-11 09:00:00', 'status' => WorkOrderStatus::PREPARATION->value]);
+    insertWorkOrder(['spk_number' => 'RD-2609-12-0002-OL', 'priority' => 'R&D', 'status' => WorkOrderStatus::SPK_PENDING->value]);
+    insertWorkOrder(['spk_number' => 'S-2609-12-0003-OL', 'warehouse_qc_at' => '2026-09-12 09:00:00', 'status' => WorkOrderStatus::PRODUCTION->value]);
+    // Tidak dihitung: terhapus, di luar periode
+    insertWorkOrder(['spk_number' => 'RD-2609-13-0004-OL', 'deleted_at' => '2026-09-14 00:00:00']);
+    insertWorkOrder(['spk_number' => 'RD-2609-26-0005-OL', 'created_at' => '2026-09-26 00:00:01']);
+
+    $this->withHeader('X-API-KEY', 'test-secret-key')->getJson('/api/v1/warehouse-summary' . PERIODE)
+        ->assertOk()
+        ->assertJsonPath('data.summary.spk_rd_periode', 2)
+        ->assertJsonPath('data.summary.total_incoming', 3)
+        ->assertJsonPath('data.summary.spk_periode_non_gr', 3)
+        ->assertJsonPath('data.summary.spk_tiba_periode', 2);
+});
