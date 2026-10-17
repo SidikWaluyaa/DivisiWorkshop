@@ -863,6 +863,11 @@ class WorkOrder extends Model
         return $this->belongsTo(User::class, 'created_by')->withTrashed();
     }
 
+    public function warehouseQcBy()
+    {
+        return $this->belongsTo(User::class, 'warehouse_qc_by')->withTrashed();
+    }
+
     // ========================================
     // Supply Chain Scopes
     // ========================================

@@ -645,10 +645,14 @@
                 <label class='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2'>Pilih Rak Inbound (Transit) *</label>
                 <select id='storage_rack_id' class='w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-[#22AF85] focus:border-[#22AF85] text-sm font-bold text-gray-900 bg-gray-50/50 transition-all'>
                     <option value=''>-- Pilih Rak --</option>
-                    @if(isset($availableBeforeRacks))
+                    @if(isset($availableBeforeRacks) && $availableBeforeRacks->isNotEmpty())
                         @foreach($availableBeforeRacks as $rack)
+                            @php
+                                $remaining = max(0, ($rack->capacity ?? 0) - ($rack->current_count ?? 0));
+                                $locationText = !empty($rack->location) ? ' (' . $rack->location . ')' : '';
+                            @endphp
                             <option value='{{ $rack->rack_code }}'>
-                                {{ $rack->rack_code }} ({{ $rack->location }}) - Sisa: {{ $rack->capacity - $rack->current_count }}
+                                {{ $rack->rack_code }}{{ $locationText }} - Sisa: {{ $remaining }}
                             </option>
                         @endforeach
                     @else

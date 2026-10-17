@@ -8,6 +8,8 @@ use App\Enums\WorkOrderStatus;
 use App\Models\StorageAssignment;
 use App\Models\StorageRack;
 use App\Models\WorkOrder;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -506,5 +508,216 @@ class ReceptionService
                 $rack->incrementCount();
             }
         }
+    }
+
+    /**
+     * Fetch all optimized data for the Reception dashboard (Inbound, QC & Handover)
+     * Includes full eager loading to completely eliminate N+1 queries.
+     */
+    public function getReceptionIndexData(Request $request, User $user): array
+    {
+        // 1. Determine active tab dynamically
+        $activeTab = $request->get('tab');
+        if (!$activeTab) {
+            if ($request->has('pending_page') || $request->has('pending_search') || $request->has('pending_priority') || $request->has('pending_date_from') || $request->has('pending_date_to')) {
+                $activeTab = 'pending';
+            } elseif ($request->has('processed_page')) {
+                $activeTab = 'processed';
+            } elseif ($request->has('page') || $request->has('search') || $request->has('priority') || $request->has('qc_status') || $request->has('date_from') || $request->has('date_to')) {
+                $activeTab = 'received';
+            } else {
+                $activeTab = 'pending'; // Default tab
+            }
+        }
+
+        // Comprehensive eager loading to eliminate N+1 queries across table rows, mobile cards & photo uploaders
+        $withRelations = [
+            'workOrderServices.service',
+            'creator:id,name,cs_code',
+            'warehouseQcBy:id,name',
+            'storageAssignments.rack',
+            'photos:id,work_order_id,step,file_path',
+        ];
+
+        // 2. Build Query 1: Diterima (Warehouse)
+        $query = WorkOrder::with($withRelations)->where('status', WorkOrderStatus::DITERIMA->value);
+
+        if (!$user->isAdmin() && !$user->isOwner()) {
+            $query->where('warehouse_qc_by', $user->id);
+        }
+
+        if ($request->filled('handler_id') && ($user->isAdmin() || $user->isOwner())) {
+            $query->where('warehouse_qc_by', $request->handler_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('spk_number', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_name', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_phone', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('entry_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('entry_date', '<=', $request->date_to);
+        }
+
+        if ($request->filled('priority')) {
+            if ($request->priority == 'Prioritas') {
+                $query->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
+            } elseif ($request->priority == 'Reguler') {
+                $query->whereIn('priority', ['Reguler', 'Normal']);
+            } else {
+                $query->where('priority', $request->priority);
+            }
+        }
+
+        if ($request->filled('qc_status')) {
+            if ($request->qc_status === 'pending') {
+                $query->whereNull('warehouse_qc_status');
+            } else {
+                $query->where('warehouse_qc_status', $request->qc_status);
+            }
+        }
+
+        if ($activeTab === 'received') {
+            $query->orderByRaw("CASE 
+                WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 1 
+                ELSE 2 
+            END ASC");
+            $orders = $query->orderBy('entry_date', 'asc')
+                            ->paginate(20)
+                            ->appends(array_merge($request->except(['page', 'tab']), ['tab' => 'received']));
+        } else {
+            $ordersCount = $query->count();
+            $orders = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                $ordersCount,
+                20,
+                $request->get('page', 1),
+                ['path' => $request->url(), 'query' => array_merge($request->except(['page', 'tab']), ['tab' => 'received'])]
+            );
+        }
+
+        // 3. Build Query 2: SPK Pending (from CS)
+        $pendingQuery = WorkOrder::with($withRelations)->where('status', WorkOrderStatus::SPK_PENDING->value);
+        
+        if ($request->filled('pending_spk')) {
+            $pendingSpk = trim($request->pending_spk);
+            if (preg_match('/^[A-Z]-\d{4}-\d{2}-\d{4}-[A-Z]+$/i', $pendingSpk)) {
+                $pendingQuery->where('spk_number', strtoupper($pendingSpk));
+            }
+        }
+        
+        if ($request->filled('pending_customer')) {
+            $pendingCustomer = trim($request->pending_customer);
+            $pendingQuery->where(function($q) use ($pendingCustomer) {
+                $q->where('customer_name', 'LIKE', "%{$pendingCustomer}%")
+                  ->orWhere('customer_phone', 'LIKE', "%{$pendingCustomer}%");
+            });
+        }
+        
+        if ($request->filled('pending_date_from')) {
+            $pendingQuery->whereDate('entry_date', '>=', $request->pending_date_from);
+        }
+        
+        if ($request->filled('pending_date_to')) {
+            $pendingQuery->whereDate('entry_date', '<=', $request->pending_date_to);
+        }
+        
+        if ($request->filled('pending_priority')) {
+            if ($request->pending_priority == 'Prioritas') {
+                $pendingQuery->whereIn('priority', ['Prioritas', 'Urgent', 'Express', 'OTO']);
+            } elseif ($request->pending_priority == 'Reguler') {
+                $pendingQuery->whereIn('priority', ['Reguler', 'Normal']);
+            } else {
+                $pendingQuery->where('priority', $request->pending_priority);
+            }
+        }
+        
+        if ($activeTab === 'pending') {
+            $pendingOrders = $pendingQuery->orderBy('created_at', 'desc')
+                                          ->paginate(15, ['*'], 'pending_page')
+                                          ->appends(array_merge($request->except(['pending_page', 'tab']), ['tab' => 'pending']));
+        } else {
+            $pendingCount = $pendingQuery->count();
+            $pendingOrders = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                $pendingCount,
+                15,
+                $request->get('pending_page', 1),
+                ['path' => $request->url(), 'query' => array_merge($request->except(['pending_page', 'tab']), ['tab' => 'pending'])]
+            );
+        }
+
+        // 4. Build Query 3: Processed Orders
+        $processedQuery = WorkOrder::with($withRelations)->whereIn('status', [
+            WorkOrderStatus::ASSESSMENT->value,
+            WorkOrderStatus::WAITING_PAYMENT->value,
+            WorkOrderStatus::CX_FOLLOWUP->value,
+            WorkOrderStatus::PREPARATION->value,
+        ])->whereNotNull('warehouse_qc_status');
+        
+        if ($request->filled('search')) {
+             $search = $request->search;
+             $processedQuery->where(function($q) use ($search) {
+                $q->where('spk_number', 'LIKE', "%{$search}%")
+                  ->orWhere('customer_name', 'LIKE', "%{$search}%");
+             });
+        }
+
+        if ($activeTab === 'processed') {
+            $processedOrders = $processedQuery->orderBy('warehouse_qc_at', 'desc')
+                                              ->paginate(15, ['*'], 'processed_page')
+                                              ->appends(array_merge($request->except(['processed_page', 'tab']), ['tab' => 'processed']));
+        } else {
+            $processedCount = $processedQuery->count();
+            $processedOrders = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                $processedCount,
+                15,
+                $request->get('processed_page', 1),
+                ['path' => $request->url(), 'query' => array_merge($request->except(['processed_page', 'tab']), ['tab' => 'processed'])]
+            );
+        }
+
+        // 5. Fetch required metadata cleanly
+        $accessoryRacks = StorageRack::accessories()
+            ->available()
+            ->orderBy('rack_code')
+            ->get();
+            
+        $availableBeforeRacks = StorageRack::before()
+            ->active()
+            ->orderBy('rack_code')
+            ->get();
+
+        $services = \App\Models\Service::all();
+        $materials = \App\Models\Material::all();
+
+        $csUsers = User::whereNotNull('cs_code')
+            ->where('cs_code', '!=', '')
+            ->where('cs_code', '!=', '-')
+            ->orderBy('cs_code')
+            ->get(['id', 'name', 'cs_code']);
+
+        $handlers = User::where('role', 'gudang')->get(['id', 'name']);
+
+        return [
+            'orders' => $orders,
+            'pendingOrders' => $pendingOrders,
+            'processedOrders' => $processedOrders,
+            'accessoryRacks' => $accessoryRacks,
+            'availableBeforeRacks' => $availableBeforeRacks,
+            'services' => $services,
+            'materials' => $materials,
+            'activeTab' => $activeTab,
+            'csUsers' => $csUsers,
+            'handlers' => $handlers,
+        ];
     }
 }

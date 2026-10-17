@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .box { rx: 12; stroke-width: 1.5; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.04)); }
+      .box-old { fill: #ffffff; stroke: #cbd5e1; }
+      .box-new { fill: #f0fdf4; stroke: #22af85; }
+      .box-core { fill: #eff6ff; stroke: #3b82f6; }
+      .box-db { fill: #fefce8; stroke: #eab308; }
+      .title { font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; font-weight: 800; fill: #0f172a; }
+      .subtitle { font-family: 'Inter', -apple-system, sans-serif; font-size: 10px; font-weight: 700; fill: #64748b; }
+      .desc { font-family: 'Inter', -apple-system, sans-serif; font-size: 9.5px; fill: #334155; }
+      .line { stroke: #64748b; stroke-width: 2; fill: none; stroke-linecap: round; }
+      .line-green { stroke: #22af85; stroke-width: 2.5; fill: none; stroke-linecap: round; }
+      .head-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 900; fill: #065f46; letter-spacing: -0.02em; }
+      .head-sub { font-family: 'Inter', -apple-system, sans-serif; font-size: 11px; fill: #64748b; font-weight: 500; }
+      .tag { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#22af85"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="520" fill="#f8fafc" rx="16"/>
+
+  <!-- Header -->
+  <text x="40" y="42" class="head-title">FLOWCHART: PENYATUAN TERBITKAN SPK &amp; SERAH TERIMA WORKSHOP CS</text>
+  <text x="40" y="62" class="head-sub">Shoe Workshop Enterprise • Alur Cerdas 1-Klik Handover (Non-Breaking Architecture)</text>
+
+  <!-- Section 1: Lead Quo Deal -->
+  <g transform="translate(40, 95)">
+    <rect width="260" height="175" class="box box-core"/>
+    <rect width="260" height="34" fill="#dbeafe" rx="12"/>
+    <rect y="22" width="260" height="12" fill="#dbeafe"/>
+    <text x="16" y="22" class="title" fill="#1e40af">1. LEAD DEAL / QUOTATION</text>
+    <text x="16" y="56" class="desc" font-weight="bold">• Customer setuju penawaran</text>
+    <text x="16" y="74" class="desc">• Status Lead: CLOSING</text>
+    <text x="16" y="92" class="desc">• Data Item: Brand, Model, Warna, Size</text>
+    <text x="16" y="110" class="desc">• Rincian Layanan &amp; Hari Kerja (HK)</text>
+    <text x="16" y="128" class="desc">• Total Biaya &amp; Estimasi Netto</text>
+    <rect x="16" y="142" width="228" height="20" fill="#bfdbfe" rx="6"/>
+    <text x="24" y="156" class="subtitle" font-size="9px" fill="#1e3a8a">Quotation::STATUS_ACCEPTED</text>
+  </g>
+
+  <!-- Connection 1 -> 2 -->
+  <path d="M 300 182 L 360 182" class="line-green" marker-end="url(#arrow-green)"/>
+
+  <!-- Section 2: Smart Unified Modal -->
+  <g transform="translate(360, 95)">
+    <rect width="300" height="175" class="box box-new"/>
+    <rect width="300" height="34" fill="#dcfce7" rx="12"/>
+    <rect y="22" width="300" height="12" fill="#dcfce7"/>
+    <text x="16" y="22" class="title" fill="#065f46">2. MODAL TERPADU FINALISASI SPK</text>
+    <text x="16" y="56" class="desc" font-weight="bold">✓ Auto-fill Kode CS: Auth::user()->cs_code</text>
+    <text x="16" y="74" class="desc">✓ Wariskan Brand, Tipe &amp; Jasa Otomatis</text>
+    <text x="16" y="92" class="desc">✓ Input Pengiriman, Alamat &amp; Pembayaran DP</text>
+    <rect x="16" y="106" width="268" height="56" fill="#ffffff" stroke="#22af85" stroke-width="1.2" rx="8"/>
+    <text x="26" y="124" class="desc" font-weight="bold" fill="#065f46">SMART TOGGLE: autoHandover</text>
+    <text x="26" y="138" class="desc" font-size="8.5px">• ON: Walk-in / Barang Sudah di Workshop</text>
+    <text x="26" y="150" class="desc" font-size="8.5px">• OFF: Ekspedisi Online / Paket Belum Tiba</text>
+  </g>
+
+  <!-- Split Branch from Modal -->
+  <!-- Branch A: autoHandover == true -->
+  <path d="M 660 150 L 730 150 L 730 130 L 760 130" class="line-green" marker-end="url(#arrow-green)"/>
+  <text x="670" y="140" class="tag" fill="#065f46">TOGGLE ON</text>
+
+  <!-- Branch B: autoHandover == false -->
+  <path d="M 660 215 L 730 215 L 730 235 L 760 235" class="line" marker-end="url(#arrow)"/>
+  <text x="670" y="230" class="tag" fill="#64748b">TOGGLE OFF</text>
+
+  <!-- Branch A Box: 1-Click Handover -->
+  <g transform="translate(760, 80)">
+    <rect width="200" height="95" class="box box-new"/>
+    <rect width="200" height="26" fill="#bbf7d0" rx="12"/>
+    <rect y="18" width="200" height="8" fill="#bbf7d0"/>
+    <text x="12" y="18" class="title" font-size="11px" fill="#065f46">MODE 1-KLIK HANDOVER</text>
+    <text x="12" y="44" class="desc" font-weight="bold">• Upload foto referensi (opsional)</text>
+    <text x="12" y="60" class="desc">• 1x Klik: 'Terbitkan &amp; Serahkan'</text>
+    <text x="12" y="78" class="desc">• SPK &amp; WorkOrder terbuat serentak</text>
+  </g>
+
+  <!-- Branch B Box: Regular SPK -->
+  <g transform="translate(760, 195)">
+    <rect width="200" height="85" class="box box-old"/>
+    <rect width="200" height="26" fill="#f1f5f9" rx="12"/>
+    <rect y="18" width="200" height="8" fill="#f1f5f9"/>
+    <text x="12" y="18" class="title" font-size="11px" fill="#475569">MODE SPK REGULER</text>
+    <text x="12" y="44" class="desc">• 1x Klik: 'Terbitkan SPK Saja'</text>
+    <text x="12" y="60" class="desc">• Status menunggu fisik paket tiba</text>
+    <text x="12" y="74" class="desc">• Serah terima dilakukan menyusul</text>
+  </g>
+
+  <!-- Lower Section: Database Atomic Transaction Execution -->
+  <path d="M 860 175 L 860 305 L 500 305" class="line-green"/>
+  <path d="M 860 280 L 860 305" class="line"/>
+  <path d="M 500 305 L 500 330" class="line-green" marker-end="url(#arrow-green)"/>
+
+  <!-- Database Transaction Container -->
+  <g transform="translate(40, 335)">
+    <rect width="920" height="155" class="box box-db"/>
+    <rect width="920" height="34" fill="#fef08a" rx="12"/>
+    <rect y="22" width="920" height="12" fill="#fef08a"/>
+    <text x="20" y="23" class="title" fill="#854d0e">3. EKSEKUSI DATABASE ATOMIK (DB::transaction - 100% AMAN &amp; KONSISTEN)</text>
+
+    <!-- Sub-boxes inside DB -->
+    <g transform="translate(20, 48)">
+      <rect width="200" height="90" fill="#ffffff" stroke="#facc15" rx="8"/>
+      <text x="12" y="20" class="subtitle" fill="#854d0e">TABEL CS SPK</text>
+      <text x="12" y="40" class="desc">cs_spk (Header)</text>
+      <text x="12" y="56" class="desc">cs_spk_items (Items)</text>
+      <text x="12" y="74" class="desc">Relasi Customer sync</text>
+    </g>
+
+    <g transform="translate(240, 48)">
+      <rect width="210" height="90" fill="#ffffff" stroke="#facc15" rx="8"/>
+      <text x="12" y="20" class="subtitle" fill="#854d0e">TABEL WORKSHOP</text>
+      <text x="12" y="40" class="desc">work_orders (SPK_PENDING)</text>
+      <text x="12" y="56" class="desc">work_order_services (Jasa)</text>
+      <text x="12" y="74" class="desc">work_order_photos (Foto)</text>
+    </g>
+
+    <g transform="translate(470, 48)">
+      <rect width="210" height="90" fill="#ffffff" stroke="#facc15" rx="8"/>
+      <text x="12" y="20" class="subtitle" fill="#854d0e">TABEL KEUANGAN</text>
+      <text x="12" y="40" class="desc">order_payments (DP / Lunas)</text>
+      <text x="12" y="56" class="desc">Audit trail payment masuk</text>
+      <text x="12" y="74" class="desc">Status verifikasi Finance</text>
+    </g>
+
+    <g transform="translate(700, 48)">
+      <rect width="200" height="90" fill="#ffffff" stroke="#facc15" rx="8"/>
+      <text x="12" y="20" class="subtitle" fill="#854d0e">TABEL PIPELINE CS</text>
+      <text x="12" y="40" class="desc">cs_leads (CONVERTED)</text>
+      <text x="12" y="56" class="desc">cs_activities (Log Catatan)</text>
+      <text x="12" y="74" class="desc">Real-time toast notifikasi</text>
+    </g>
+  </g>
+</svg>
