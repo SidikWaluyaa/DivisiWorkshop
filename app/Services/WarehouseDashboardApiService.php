@@ -653,7 +653,7 @@ class WarehouseDashboardApiService
             : ($spkOtw > 0 ? 100.0 : 0.0);
 
         // SPK periode (Kamus Metrik v2.0). SPK garansi bernomor "...-GR" atau "...-GR-n" (lihat Warranty\Index)
-        $isGr = fn($q) => $q->where('spk_number', 'like', '%-GR')->orWhere('spk_number', 'like', '%-GR-%');
+        $isGr = fn($q) => KamusMetrikQuery::whereGaransi($q);
 
         $spkGrPeriode = WorkOrder::whereBetween('created_at', [$start, $end])
             ->where($isGr)
