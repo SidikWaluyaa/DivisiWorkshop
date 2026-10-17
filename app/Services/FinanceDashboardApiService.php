@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
-use App\Enums\WorkOrderStatus;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -31,22 +30,9 @@ class FinanceDashboardApiService
         $totalInvoicedValue = (float) $heroMetrics->total_invoiced;
         $totalOutstandingReceivables = (float) $heroMetrics->total_outstanding;
 
-        // 1b. Kamus Metrik v2.0 — invoice valid: created_at di periode, status <> 'Batal', jasa bersih > 0.
-        // Jasa per SPK = total_service_price; bila 0, pakai total_transaksi dikembalikan ke harga jasa
-        // (total_transaksi sudah termasuk ongkir SPK dan sudah dikurangi diskon SPK). Diskon dikurangi sekali.
-        $jasaSpkSql = 'CASE WHEN work_orders.total_service_price > 0 THEN work_orders.total_service_price
-            ELSE GREATEST(COALESCE(work_orders.total_transaksi, 0) - COALESCE(work_orders.shipping_cost, 0) + COALESCE(work_orders.discount, 0), 0) END';
-        $jasaBersihSql = "SUM({$jasaSpkSql}) - SUM(COALESCE(work_orders.discount, 0))";
-
-        $validInvoices = DB::table('invoices')
-            ->join('work_orders', 'work_orders.invoice_id', '=', 'invoices.id')
-            ->whereBetween('invoices.created_at', [$start, $end])
-            ->where('invoices.status', '!=', 'Batal')
-            ->whereNull('work_orders.deleted_at')
-            ->whereNotIn('work_orders.status', [WorkOrderStatus::BATAL->value, WorkOrderStatus::DONASI->value])
-            ->groupBy('invoices.id', 'invoices.shipping_cost', 'invoices.created_at')
-            ->selectRaw("invoices.id, DATE(invoices.created_at) as tanggal, COALESCE(invoices.shipping_cost, 0) as shipping_cost, COUNT(work_orders.id) as spk_count, {$jasaBersihSql} as jasa_bersih")
-            ->havingRaw("{$jasaBersihSql} > 0");
+        // 1b. Kamus Metrik v2.0 — invoice valid: created_at di periode, status <> 'Batal', jasa bersih > 0
+        // (rumus jasa bersih ada di KamusMetrikQuery, dipakai bersama dashboard-summary).
+        $validInvoices = KamusMetrikQuery::validInvoices($start, $end);
 
         $kamusMetrics = DB::query()
             ->fromSub($validInvoices, 'valid_invoices')

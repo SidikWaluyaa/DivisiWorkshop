@@ -187,3 +187,95 @@ it('warehouse-summary menambah spk_rd_periode; SPK R&D ikut di spk_periode_non_g
         ->assertJsonPath('data.summary.spk_periode_non_gr', 3)
         ->assertJsonPath('data.summary.spk_tiba_periode', 2);
 });
+
+it('dashboard-summary menambah per_cs_kamus dan harian_kamus yang jumlahnya sama dengan angka global', function () {
+    $csA = User::factory()->create(['name' => 'CS A', 'role' => 'cs', 'cs_code' => 'AAA']);
+    $csB = User::factory()->create(['name' => 'CS B', 'role' => 'cs', 'cs_code' => 'BBB']);
+    $csC = User::factory()->create(['name' => 'CS C', 'role' => 'cs', 'cs_code' => 'CCC']); // tanpa data
+    $customer = Customer::firstOrCreate(['phone' => '628111111111'], ['name' => 'Customer Uji']);
+
+    $lead = function (User $cs, string $createdAt, ?string $activity = null, bool $deleted = false) {
+        $lead = CsLead::create(['customer_phone' => '0812' . random_int(1000000, 9999999), 'status' => CsLead::STATUS_CONVERTED, 'cs_id' => $cs->id]);
+        DB::table('cs_leads')->where('id', $lead->id)->update(['created_at' => $createdAt, 'deleted_at' => $deleted ? '2026-09-20 00:00:00' : null]);
+        if ($activity) {
+            CsActivity::create(['cs_lead_id' => $lead->id, 'user_id' => $cs->id, 'type' => 'CHAT', 'content' => $activity]);
+        }
+        return $lead->id;
+    };
+    $linkSpk = function (int $leadId, int $workOrderId) use ($customer) {
+        $spkId = DB::table('cs_spk')->insertGetId(['cs_lead_id' => $leadId, 'spk_number' => 'SPK-CS-' . $workOrderId, 'customer_id' => $customer->id, 'services' => '[]', 'total_price' => 0]);
+        DB::table('cs_spk_items')->insert(['spk_id' => $spkId, 'work_order_id' => $workOrderId]);
+    };
+
+    // Leads: A = 2, B = 1. Tidak dihitung: import greeting, terhapus, di luar periode.
+    $leadA = $lead($csA, '2026-09-02 10:00:00');
+    $lead($csA, '2026-09-03 10:00:00');
+    $leadB = $lead($csB, '2026-09-03 11:00:00');
+    $lead($csA, '2026-09-03 12:00:00', 'Lead diimport ke kolam umum (Greeting).');
+    $lead($csB, '2026-09-04 10:00:00', null, true);
+    $lead($csA, '2026-09-26 00:00:01');
+
+    // SPK closing. CS dari lead asal SPK; fallback cs_code; selain itu Tanpa CS.
+    $w1 = insertWorkOrder(['spk_number' => 'S-2609-02-0001-AAA', 'cs_code' => 'AAA', 'created_at' => '2026-09-02 12:00:00', 'total_service_price' => 100000, 'discount' => 10000]);
+    $w2 = insertWorkOrder(['spk_number' => 'S-2609-03-0002-BBB', 'cs_code' => 'BBB', 'created_at' => '2026-09-03 12:00:00', 'total_service_price' => 200000]);
+    $w3 = insertWorkOrder(['spk_number' => 'S-2609-03-0003-BBB', 'cs_code' => 'BBB', 'created_at' => '2026-09-03 13:00:00', 'total_service_price' => 0, 'total_transaksi' => 95000, 'shipping_cost' => 20000, 'discount' => 5000]);
+    $w4 = insertWorkOrder(['spk_number' => 'S-2609-04-0004-ZZZ', 'cs_code' => 'ZZZ', 'created_at' => '2026-09-04 12:00:00', 'total_service_price' => 50000]);
+    $w5 = insertWorkOrder(['spk_number' => 'S-2609-04-0005-GR', 'created_at' => '2026-09-04 13:00:00', 'total_service_price' => 40000]);
+    $w6 = insertWorkOrder(['spk_number' => 'RD-2609-04-0006-AAA', 'cs_code' => 'AAA', 'created_at' => '2026-09-04 14:00:00', 'total_service_price' => 30000]);
+    insertWorkOrder(['spk_number' => 'S-2609-04-0007-AAA', 'cs_code' => 'AAA', 'created_at' => '2026-09-04 15:00:00', 'deleted_at' => '2026-09-05 00:00:00']);
+    $w8 = insertWorkOrder(['spk_number' => 'S-2609-05-0008-AAA', 'cs_code' => 'BBB', 'created_at' => '2026-09-05 12:00:00', 'status' => WorkOrderStatus::BATAL->value, 'total_service_price' => 70000]);
+    $linkSpk($leadA, $w1);
+    $linkSpk($leadB, $w2);
+    $linkSpk($leadA, $w8); // lead menang atas cs_code
+
+    // Invoice: INV1 berisi SPK dua CS (A 90rb, B 200rb) → jumlah_tagihan ke B
+    $inv = fn($no, $at, $status = 'Lunas') => insertInvoice($no, $at, ['status' => $status]);
+    $i1 = $inv('INV-CS-1', '2026-09-05 09:00:00');
+    $i2 = $inv('INV-CS-2', '2026-09-05 10:00:00');
+    $i3 = $inv('INV-CS-3', '2026-09-10 10:00:00');
+    $i4 = $inv('INV-CS-4', '2026-09-06 10:00:00', 'Batal');
+    $i5 = $inv('INV-CS-5', '2026-09-06 11:00:00');
+    $i6 = $inv('INV-CS-6', '2026-09-06 12:00:00');
+    foreach ([$w1 => $i1, $w2 => $i1, $w3 => $i2, $w4 => $i3, $w5 => $i4, $w8 => $i5, $w6 => $i6] as $wo => $invoiceId) {
+        DB::table('work_orders')->where('id', $wo)->update(['invoice_id' => $invoiceId]);
+    }
+
+    $headers = ['X-API-KEY' => 'test-secret-key'];
+    $summary = $this->withHeaders($headers)->getJson('/api/v1/dashboard-summary' . PERIODE . '&force_refresh=1')->assertOk();
+    $finance = $this->withHeaders($headers)->getJson('/api/v1/finance/dashboard' . PERIODE)->assertOk();
+    $warehouse = $this->withHeaders($headers)->getJson('/api/v1/warehouse-summary' . PERIODE)->assertOk();
+
+    $perCs = collect($summary->json('data.per_cs_kamus'))->keyBy(fn($r) => $r['cs_name']);
+    $harian = $summary->json('data.harian_kamus');
+
+    $global = [
+        'leads' => $summary->json('data.summary.total_leads'),
+        'spk_closing' => $warehouse->json('data.summary.spk_periode_non_gr') - $warehouse->json('data.summary.spk_rd_periode'),
+        'jumlah_tagihan' => $finance->json('data.metrics.jumlah_tagihan'),
+        'jumlah_spk_tagihan' => $finance->json('data.metrics.jumlah_spk_tagihan'),
+        'omset_tagihan' => $finance->json('data.metrics.omset_tagihan'),
+    ];
+    expect($global)->toEqual(['leads' => 3, 'spk_closing' => 5, 'jumlah_tagihan' => 4, 'jumlah_spk_tagihan' => 5, 'omset_tagihan' => 445000]);
+
+    // Σ per CS = global, Σ harian = global
+    foreach ($global as $field => $value) {
+        expect($perCs->sum($field))->toEqual($value, "per_cs_kamus {$field}")
+            ->and(collect($harian)->sum($field))->toEqual($value, "harian_kamus {$field}");
+    }
+
+    expect($perCs['CS A'])->toMatchArray(['cs_id' => $csA->id, 'leads' => 2, 'spk_closing' => 2, 'jumlah_tagihan' => 1, 'jumlah_spk_tagihan' => 2, 'omset_tagihan' => 120000])
+        ->and($perCs['CS B'])->toMatchArray(['cs_id' => $csB->id, 'leads' => 1, 'spk_closing' => 2, 'jumlah_tagihan' => 2, 'jumlah_spk_tagihan' => 2, 'omset_tagihan' => 275000])
+        ->and($perCs['CS C'])->toMatchArray(['leads' => 0, 'spk_closing' => 0, 'jumlah_tagihan' => 0, 'omset_tagihan' => 0])
+        ->and($perCs['Tanpa CS'])->toMatchArray(['cs_id' => null, 'leads' => 0, 'spk_closing' => 1, 'jumlah_tagihan' => 1, 'jumlah_spk_tagihan' => 1, 'omset_tagihan' => 50000])
+        ->and(last($summary->json('data.per_cs_kamus'))['cs_name'])->toBe('Tanpa CS');
+
+    // Setiap tanggal ada; tanggal kosong = 0; omset harian = finance chart_data.omset_tagihan_harian
+    expect($harian)->toHaveCount(25)
+        ->and($harian['2026-09-07'])->toEqual(['leads' => 0, 'spk_closing' => 0, 'jumlah_tagihan' => 0, 'jumlah_spk_tagihan' => 0, 'omset_tagihan' => 0])
+        ->and($harian['2026-09-03'])->toMatchArray(['leads' => 2, 'spk_closing' => 2])
+        ->and($harian['2026-09-05'])->toMatchArray(['spk_closing' => 1, 'jumlah_tagihan' => 2, 'jumlah_spk_tagihan' => 3, 'omset_tagihan' => 365000])
+        ->and(collect($harian)->map(fn($d) => $d['omset_tagihan'])->all())->toEqual($finance->json('data.chart_data.omset_tagihan_harian'));
+
+    // per_cs lama tetap ada dengan bentuk lama
+    $summary->assertJsonStructure(['data' => ['per_cs' => [['cs_id', 'cs_name', 'total_closing', 'revenue', 'avg_deal']]]]);
+});
