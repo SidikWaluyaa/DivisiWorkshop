@@ -46,6 +46,23 @@ class DashboardApiService
     {
         $totalLeads = CsLead::whereBetween('created_at', [$start, $end])->count();
 
+        // Kamus Metrik v2.0: lead (data diri customer) per created_at, tanpa baris hasil import greeting Excel.
+        // Baris import dikenali dari aktivitas yang selalu ditulis CsGreetingController@import.
+        $leadsDataDiri = CsLead::whereBetween('cs_leads.created_at', [$start, $end])
+            ->whereNotExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('cs_activities')
+                    ->whereColumn('cs_activities.cs_lead_id', 'cs_leads.id')
+                    ->where(function ($q) {
+                        $q->where('cs_activities.content', 'Imported via Excel Greeting Template.')
+                            ->orWhere('cs_activities.content', 'Lead diimport ke kolam umum (Greeting).')
+                            ->orWhere('cs_activities.content', 'like', 'Lead diimport dan langsung dikelola oleh %');
+                    });
+            });
+
+        $totalLeadsDataDiri = (clone $leadsDataDiri)->count();
+        $totalLeadsConverted = (clone $leadsDataDiri)->where('cs_leads.status', 'CONVERTED')->count();
+
         $totalClosings = CsLead::whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
             ->whereBetween('updated_at', [$start, $end])
             ->count();
@@ -110,6 +127,9 @@ class DashboardApiService
             'total_sepatu_finish_periode' => $totalFinishPeriode,
             'total_sepatu_diterima_periode' => $totalDiterimaPeriode,
             'total_spk_print' => $totalSpkPrint,
+            // Kamus Metrik v2.0
+            'total_leads' => $totalLeadsDataDiri,
+            'total_leads_converted' => $totalLeadsConverted,
         ];
     }
 
