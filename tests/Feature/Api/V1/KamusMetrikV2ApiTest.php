@@ -279,3 +279,102 @@ it('dashboard-summary menambah per_cs_kamus dan harian_kamus yang jumlahnya sama
     // per_cs lama tetap ada dengan bentuk lama
     $summary->assertJsonStructure(['data' => ['per_cs' => [['cs_id', 'cs_name', 'total_closing', 'revenue', 'avg_deal']]]]);
 });
+
+it('warehouse-summary menambah intake_fisik_berbayar, intake_fisik_garansi, intake_fisik_rd menurut tanggal tiba', function () {
+    $qc = fn(string $spk, string $at, array $extra = []) => insertWorkOrder(array_merge(
+        ['spk_number' => $spk, 'warehouse_qc_status' => 'lolos', 'warehouse_qc_at' => $at, 'status' => WorkOrderStatus::PRODUCTION->value], $extra));
+
+    // Berbayar 2, R&D 1 (tiba = QC awal). Tidak dihitung: terhapus, QC di luar periode, warehouse_qc_status kosong.
+    $asal = $qc('S-2609-01-0001-OL', '2026-09-02 10:00:00');
+    $qc('S-2609-01-0002-OL', '2026-09-25 23:59:59');
+    $qc('RD-2609-01-0003-OL', '2026-09-03 10:00:00');
+    $qc('S-2609-01-0004-OL', '2026-09-04 10:00:00', ['deleted_at' => '2026-09-05 00:00:00']);
+    $qc('S-2609-01-0005-OL', '2026-09-26 00:00:01');
+    insertWorkOrder(['spk_number' => 'S-2609-01-0006-OL', 'warehouse_qc_at' => '2026-09-06 10:00:00']);
+
+    // Garansi: 2 klaim di periode (satu sudah punya WO -GR, satu belum) + 1 SPK -GR lama tanpa klaim. Klaim di luar periode tidak dihitung.
+    $klaim = fn(string $grSpk, string $at) => DB::table('work_order_warranties')->insert([
+        'work_order_id' => $asal, 'garansi_spk_number' => $grSpk, 'description' => 'uji', 'created_by' => $this->user->id,
+        'status' => 'OPEN', 'created_at' => $at, 'updated_at' => $at,
+    ]);
+    $klaim('S-2609-01-0001-GR', '2026-09-07 10:00:00');
+    insertWorkOrder(['spk_number' => 'S-2609-01-0001-GR', 'entry_date' => '2026-09-07 10:00:00', 'status' => WorkOrderStatus::SELESAI->value]);
+    $klaim('S-2609-01-0002-GR', '2026-09-08 10:00:00');
+    $klaim('S-2608-01-0009-GR', '2026-08-30 10:00:00');
+    insertWorkOrder(['spk_number' => 'S-2604-01-0010-GR-1', 'entry_date' => '2026-09-09 10:00:00', 'status' => WorkOrderStatus::SELESAI->value]);
+
+    $response = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson('/api/v1/warehouse-summary' . PERIODE)->assertOk();
+
+    $response->assertJsonPath('data.summary.intake_fisik_berbayar', 2)
+        ->assertJsonPath('data.summary.intake_fisik_rd', 1)
+        ->assertJsonPath('data.summary.intake_fisik_garansi', 3)
+        ->assertJsonPath('data.summary.total_qc_processed', 3);
+
+    expect($response->json('data.summary.intake_fisik_berbayar') + $response->json('data.summary.intake_fisik_rd'))
+        ->toBe($response->json('data.summary.total_qc_processed'));
+});
+
+it('setiap WorkOrderStatus punya pemetaan tahap WIP', function () {
+    foreach (WorkOrderStatus::cases() as $case) {
+        expect(array_key_exists($case->value, \App\Services\KamusMetrikQuery::STATUS_TAHAP))->toBeTrue("status {$case->value} belum dipetakan");
+    }
+});
+
+it('warehouse-summary menambah wip_tahap dan wip_per_status (snapshot)', function () {
+    $wo = fn(string $status, array $extra = []) => insertWorkOrder(array_merge(['status' => $status], $extra));
+
+    $wo('SPK_PENDING');                                   // di luar alur
+    $wo('DITERIMA');                                      // fisik_tiba
+    $wo('CX_FOLLOWUP');                                   // reject QC awal → fisik_tiba
+    $wo('ASSESSMENT');                                    // sortir
+    $wo('WAITING_PAYMENT');                               // sortir
+    $wo('OTW_WORKSHOP');                                  // sortir
+    $wo('PREPARATION', ['spk_number' => 'S-2609-01-0101-OL']);  // sortir
+    $wo('SORTIR');                                        // sortir
+    $wo('CX_FOLLOWUP', ['previous_status' => 'SORTIR']);  // sortir
+    $wo('PREPARATION', ['spk_number' => 'RD-2609-01-0102-OL']); // produksi (Stasiun R&D)
+    $wo('PRODUCTION');                                    // produksi
+    $wo('REVISI');                                        // produksi
+    $wo('CX_FOLLOWUP', ['previous_status' => 'PRODUCTION']); // produksi
+    $wo('QC');                                            // qc_finishing
+    $wo('STAGING_OUTBOUND');                              // qc_finishing
+    $wo('SELESAI');                                       // siap_kirim
+    $wo('SELESAI', ['taken_date' => '2026-09-10 10:00:00']); // di luar alur (sudah diambil)
+    $wo('BATAL');                                         // di luar alur
+    $wo('DONASI');                                        // di luar alur
+    $wo('PRODUCTION', ['deleted_at' => '2026-09-10 00:00:00']); // terhapus, tidak dihitung
+
+    $response = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson('/api/v1/warehouse-summary' . PERIODE)->assertOk();
+
+    expect($response->json('data.summary.wip_tahap'))->toBe([
+        'fisik_tiba' => 2, 'sortir' => 6, 'produksi' => 4, 'qc_finishing' => 2, 'siap_kirim' => 1,
+    ]);
+
+    $perStatus = $response->json('data.summary.wip_per_status');
+    expect($perStatus)->toHaveKeys(array_map(fn($c) => $c->value, WorkOrderStatus::cases()))
+        ->and($perStatus['CX_FOLLOWUP'])->toBe(3)
+        ->and($perStatus['SELESAI'])->toBe(2)
+        ->and($perStatus['PRODUCTION'])->toBe(1)
+        ->and($perStatus['DIANTAR'])->toBe(0)
+        ->and(array_sum($perStatus))->toBe(19);
+});
+
+it('warehouse-summary menambah siap_kirim_aktif: siap_kirim yang selesai dalam 30 hari terakhir', function () {
+    Carbon\Carbon::setTestNow('2026-10-17 12:00:00');
+
+    $selesai = fn(array $extra) => insertWorkOrder(array_merge(['status' => WorkOrderStatus::SELESAI->value], $extra));
+    $selesai(['finished_date' => '2026-10-16 09:00:00']);                                   // aktif
+    $selesai(['finished_date' => '2026-09-17 12:00:01']);                                   // aktif (masih dalam 30 hari)
+    $selesai(['finished_date' => '2026-09-17 11:59:59']);                                   // backlog lama
+    $selesai(['finished_date' => null]);                                                    // tanpa tanggal selesai
+    $selesai(['finished_date' => '2026-10-15 09:00:00', 'taken_date' => '2026-10-16 09:00:00']); // sudah diambil
+    $selesai(['finished_date' => '2026-10-15 09:00:00', 'deleted_at' => '2026-10-16 00:00:00']); // terhapus
+    insertWorkOrder(['status' => WorkOrderStatus::QC->value, 'finished_date' => '2026-10-15 09:00:00']); // bukan SELESAI
+
+    $response = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson('/api/v1/warehouse-summary' . PERIODE)->assertOk();
+
+    $response->assertJsonPath('data.summary.siap_kirim_aktif', 2)
+        ->assertJsonPath('data.summary.wip_tahap.siap_kirim', 4);
+
+    Carbon\Carbon::setTestNow();
+});

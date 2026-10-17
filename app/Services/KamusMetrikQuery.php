@@ -103,6 +103,118 @@ class KamusMetrikQuery
                 WHERE spk_cs_users.cs_code = work_orders.cs_code AND spk_cs_users.cs_code <> \'\')
         )';
 
+    /**
+     * Kamus No. 32 Intake Fisik, menurut tanggal tiba.
+     * - berbayar & rd: tiba = QC awal gudang (warehouse_qc_at, warehouse_qc_status terisi), sama dengan total_qc_processed.
+     * - garansi: SPK -GR tidak lewat QC awal dan baru dibuat saat rework selesai, jadi tiba = klaim garansi
+     *   didaftarkan (work_order_warranties.created_at); SPK -GR lama tanpa klaim memakai entry_date.
+     */
+    public static function intakeFisik(Carbon $start, Carbon $end): array
+    {
+        $qcAwal = fn() => WorkOrder::whereNotNull('warehouse_qc_status')
+            ->whereBetween('warehouse_qc_at', [$start, $end]);
+
+        $berbayar = $qcAwal()
+            ->whereNot(fn($q) => self::whereGaransi($q))
+            ->where('spk_number', 'not like', 'RD-%')
+            ->count();
+
+        $rd = $qcAwal()->where('spk_number', 'like', 'RD-%')->count();
+
+        $klaimGaransi = DB::table('work_order_warranties')
+            ->whereBetween('created_at', [$start, $end])
+            ->count();
+
+        $garansiTanpaKlaim = WorkOrder::where(fn($q) => self::whereGaransi($q))
+            ->whereBetween('entry_date', [$start, $end])
+            ->whereNotExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('work_order_warranties')
+                    ->whereColumn('work_order_warranties.garansi_spk_number', 'work_orders.spk_number');
+            })
+            ->count();
+
+        return [
+            'berbayar' => $berbayar,
+            'garansi' => $klaimGaransi + $garansiTanpaKlaim,
+            'rd' => $rd,
+        ];
+    }
+
+    /**
+     * Pemetaan status SPK ke tahap WIP. null = di luar alur.
+     * Pengecualian ditangani di wipTahapFor(): SELESAI yang sudah diambil, PREPARATION R&D (Stasiun R&D),
+     * dan CX_FOLLOWUP/HOLD_FOR_CX yang mengikuti tahap previous_status.
+     */
+    public const STATUS_TAHAP = [
+        'SPK_PENDING' => null,              // belum tiba di gudang
+        'DITERIMA' => 'fisik_tiba',
+        'ASSESSMENT' => 'sortir',
+        'WAITING_PAYMENT' => 'sortir',      // sesudah assessment, sebelum kirim ke workshop
+        'WAITING_VERIFICATION' => 'sortir',
+        'READY_TO_DISPATCH' => 'sortir',
+        'OTW_WORKSHOP' => 'sortir',
+        'PREPARATION' => 'sortir',          // R&D: produksi (Stasiun R&D)
+        'SORTIR' => 'sortir',
+        'PRODUCTION' => 'produksi',
+        'REVISI' => 'produksi',             // QC → kembali ke produksi
+        'QC' => 'qc_finishing',
+        'STAGING_OUTBOUND' => 'qc_finishing', // lolos QC, menunggu manifest ke gudang finish
+        'SELESAI' => 'siap_kirim',          // yang sudah diambil (taken_date) di luar alur
+        'DIANTAR' => null,                  // sudah keluar untuk diantar
+        'CX_FOLLOWUP' => 'previous_status',
+        'HOLD_FOR_CX' => 'previous_status',
+        'BATAL' => null,
+        'DONASI' => null,
+        'HISTORY' => null,
+    ];
+
+    public const WIP_TAHAP_KEYS = ['fisik_tiba', 'sortir', 'produksi', 'qc_finishing', 'siap_kirim'];
+
+    public static function wipTahapFor(?string $status, ?string $previousStatus, bool $isRd, bool $taken): ?string
+    {
+        $tahap = self::STATUS_TAHAP[$status] ?? null;
+
+        if ($tahap === 'previous_status') {
+            // Ditahan CX: ikut tahap sebelum ditahan; tanpa previous_status = reject QC awal (masih di gudang)
+            return $previousStatus ? self::wipTahapFor($previousStatus, null, $isRd, $taken) : 'fisik_tiba';
+        }
+        if ($status === 'SELESAI' && $taken) {
+            return null;
+        }
+        if ($status === 'PREPARATION' && $isRd) {
+            return 'produksi';
+        }
+
+        return $tahap;
+    }
+
+    /** Snapshot WIP saat ini (tidak mengikuti periode). */
+    public static function wipSnapshot(): array
+    {
+        $rows = WorkOrder::query()
+            ->selectRaw("status, CASE WHEN status IN ('CX_FOLLOWUP', 'HOLD_FOR_CX') THEN previous_status END as prev,
+                spk_number LIKE 'RD-%' as is_rd, taken_date IS NOT NULL as taken, COUNT(*) as n")
+            ->groupBy('status', 'prev', 'is_rd', 'taken')
+            ->toBase()
+            ->get();
+
+        $tahap = array_fill_keys(self::WIP_TAHAP_KEYS, 0);
+        $perStatus = array_fill_keys(array_keys(self::STATUS_TAHAP), 0);
+
+        foreach ($rows as $row) {
+            $status = (string) $row->status;
+            $perStatus[$status] = ($perStatus[$status] ?? 0) + (int) $row->n;
+
+            $key = self::wipTahapFor($status, $row->prev, (bool) $row->is_rd, (bool) $row->taken);
+            if ($key !== null) {
+                $tahap[$key] += (int) $row->n;
+            }
+        }
+
+        return ['tahap' => $tahap, 'per_status' => $perStatus];
+    }
+
     private static function activeInvoiceSpk(Builder $query, Carbon $start, Carbon $end): Builder
     {
         return $query

@@ -668,6 +668,9 @@ class WarehouseDashboardApiService
             ->whereNotNull('warehouse_qc_at')
             ->count();
 
+        $intakeFisik = KamusMetrikQuery::intakeFisik($start, $end);
+        $wip = KamusMetrikQuery::wipSnapshot();
+
         // 8. Clearance Rate After (Outbound flow balance)
         $clearanceRateAfter = $afterMasuk > 0 
             ? (($sepatuKeluar - $afterMasuk) / $afterMasuk) * 100 
@@ -689,6 +692,17 @@ class WarehouseDashboardApiService
             // SPK R&D: nomor berawalan "RD-" (dibuat dari item_type R&D; category_spk 'RD' diturunkan dari nomor ini)
             'spk_rd_periode' => WorkOrder::whereBetween('created_at', [$start, $end])
                 ->where('spk_number', 'like', 'RD-%')
+                ->count(),
+            // Kamus No. 32 Intake Fisik (menurut tanggal tiba) dan snapshot WIP per tahap
+            'intake_fisik_berbayar' => $intakeFisik['berbayar'],
+            'intake_fisik_garansi' => $intakeFisik['garansi'],
+            'intake_fisik_rd' => $intakeFisik['rd'],
+            'wip_tahap' => $wip['tahap'],
+            'wip_per_status' => $wip['per_status'],
+            // Bagian siap_kirim yang selesai dalam 30 hari terakhir (tanpa backlog lama)
+            'siap_kirim_aktif' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
+                ->whereNull('taken_date')
+                ->where('finished_date', '>=', now()->subDays(30))
                 ->count(),
             'finished_not_stored' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
