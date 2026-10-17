@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\InvoicePayment;
+use App\Enums\WorkOrderStatus;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -29,6 +30,33 @@ class FinanceDashboardApiService
 
         $totalInvoicedValue = (float) $heroMetrics->total_invoiced;
         $totalOutstandingReceivables = (float) $heroMetrics->total_outstanding;
+
+        // 1b. Kamus Metrik v2.0 — invoice valid: created_at di periode, status <> 'Batal', jasa bersih > 0.
+        // Jasa per SPK = total_service_price; bila 0, pakai total_transaksi dikembalikan ke harga jasa
+        // (total_transaksi sudah termasuk ongkir SPK dan sudah dikurangi diskon SPK). Diskon dikurangi sekali.
+        $jasaSpkSql = 'CASE WHEN work_orders.total_service_price > 0 THEN work_orders.total_service_price
+            ELSE GREATEST(COALESCE(work_orders.total_transaksi, 0) - COALESCE(work_orders.shipping_cost, 0) + COALESCE(work_orders.discount, 0), 0) END';
+        $jasaBersihSql = "SUM({$jasaSpkSql}) - SUM(COALESCE(work_orders.discount, 0))";
+
+        $validInvoices = DB::table('invoices')
+            ->join('work_orders', 'work_orders.invoice_id', '=', 'invoices.id')
+            ->whereBetween('invoices.created_at', [$start, $end])
+            ->where('invoices.status', '!=', 'Batal')
+            ->whereNull('work_orders.deleted_at')
+            ->whereNotIn('work_orders.status', [WorkOrderStatus::BATAL->value, WorkOrderStatus::DONASI->value])
+            ->groupBy('invoices.id', 'invoices.shipping_cost')
+            ->selectRaw("invoices.id, COALESCE(invoices.shipping_cost, 0) as shipping_cost, COUNT(work_orders.id) as spk_count, {$jasaBersihSql} as jasa_bersih")
+            ->havingRaw("{$jasaBersihSql} > 0");
+
+        $kamusMetrics = DB::query()
+            ->fromSub($validInvoices, 'valid_invoices')
+            ->selectRaw('
+                COUNT(*) as jumlah_tagihan,
+                COALESCE(SUM(jasa_bersih), 0) as omset_tagihan,
+                COALESCE(SUM(shipping_cost), 0) as ongkir_tagihan,
+                COALESCE(SUM(spk_count), 0) as jumlah_spk_tagihan
+            ')
+            ->first();
 
         // Cash received is based on payment_date of verified invoice payments in the period
         $totalCashReceived = (float) InvoicePayment::where('verified', true)
@@ -147,6 +175,11 @@ class FinanceDashboardApiService
                 'total_cash_received' => (float) $totalCashReceived,
                 'total_outstanding_receivables' => (float) $totalOutstandingReceivables,
                 'collection_rate' => (float) $collectionRate,
+                // Kamus Metrik v2.0
+                'jumlah_tagihan' => (int) $kamusMetrics->jumlah_tagihan,
+                'omset_tagihan' => (float) $kamusMetrics->omset_tagihan,
+                'ongkir_tagihan' => (float) $kamusMetrics->ongkir_tagihan,
+                'jumlah_spk_tagihan' => (int) $kamusMetrics->jumlah_spk_tagihan,
             ],
             'status_breakdown' => $statusBreakdown,
             'overdue_invoices' => $overdueMetrics,

@@ -652,6 +652,22 @@ class WarehouseDashboardApiService
             ? (($spkOtw - $sepatuMasuk) / $sepatuMasuk) * 100 
             : ($spkOtw > 0 ? 100.0 : 0.0);
 
+        // SPK periode (Kamus Metrik v2.0). SPK garansi bernomor "...-GR" atau "...-GR-n" (lihat Warranty\Index)
+        $isGr = fn($q) => $q->where('spk_number', 'like', '%-GR')->orWhere('spk_number', 'like', '%-GR-%');
+
+        $spkGrPeriode = WorkOrder::whereBetween('created_at', [$start, $end])
+            ->where($isGr)
+            ->count();
+
+        $spkPeriodeNonGr = WorkOrder::whereBetween('created_at', [$start, $end])
+            ->whereNot($isGr)
+            ->count();
+
+        $spkTibaPeriode = WorkOrder::whereBetween('created_at', [$start, $end])
+            ->whereNot($isGr)
+            ->whereNotNull('warehouse_qc_at')
+            ->count();
+
         // 8. Clearance Rate After (Outbound flow balance)
         $clearanceRateAfter = $afterMasuk > 0 
             ? (($sepatuKeluar - $afterMasuk) / $afterMasuk) * 100 
@@ -664,6 +680,12 @@ class WarehouseDashboardApiService
             'pending_reception_period' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
                 ->whereBetween('created_at', [$start, $end])
                 ->count(),
+            // Kamus Metrik v2.0: SPK terbit di periode (created_at), dipisah non-garansi vs garansi (-GR)
+            'spk_periode_non_gr' => $spkPeriodeNonGr,
+            'spk_gr_periode' => $spkGrPeriode,
+            'spk_tiba_periode' => $spkTibaPeriode,
+            // SPK terbit − sepatu tiba (SPK yang BATAL sebelum tiba tetap dihitung belum tiba)
+            'spk_belum_tiba_periode' => $spkPeriodeNonGr - $spkTibaPeriode,
             'finished_not_stored' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
                 ->whereNull('taken_date')
                 ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
