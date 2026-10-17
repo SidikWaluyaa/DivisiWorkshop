@@ -44,8 +44,8 @@ class FinanceDashboardApiService
             ->where('invoices.status', '!=', 'Batal')
             ->whereNull('work_orders.deleted_at')
             ->whereNotIn('work_orders.status', [WorkOrderStatus::BATAL->value, WorkOrderStatus::DONASI->value])
-            ->groupBy('invoices.id', 'invoices.shipping_cost')
-            ->selectRaw("invoices.id, COALESCE(invoices.shipping_cost, 0) as shipping_cost, COUNT(work_orders.id) as spk_count, {$jasaBersihSql} as jasa_bersih")
+            ->groupBy('invoices.id', 'invoices.shipping_cost', 'invoices.created_at')
+            ->selectRaw("invoices.id, DATE(invoices.created_at) as tanggal, COALESCE(invoices.shipping_cost, 0) as shipping_cost, COUNT(work_orders.id) as spk_count, {$jasaBersihSql} as jasa_bersih")
             ->havingRaw("{$jasaBersihSql} > 0");
 
         $kamusMetrics = DB::query()
@@ -57,6 +57,13 @@ class FinanceDashboardApiService
                 COALESCE(SUM(spk_count), 0) as jumlah_spk_tagihan
             ')
             ->first();
+
+        // Omset tagihan per tanggal invoice dibuat — himpunan invoice dan rumus sama dengan metrics.omset_tagihan
+        $dailyOmsetRaw = DB::query()
+            ->fromSub($validInvoices, 'valid_invoices')
+            ->selectRaw('tanggal, SUM(jasa_bersih) as omset')
+            ->groupBy('tanggal')
+            ->pluck('omset', 'tanggal');
 
         // Cash received is based on payment_date of verified invoice payments in the period
         $totalCashReceived = (float) InvoicePayment::where('verified', true)
@@ -136,7 +143,8 @@ class FinanceDashboardApiService
 
         $labels = [];
         $cashInflowData = [];
-        
+        $omsetTagihanHarian = [];
+
         $current = $start->copy();
         while ($current <= $end) {
             $dateStr = $current->toDateString();
@@ -148,6 +156,7 @@ class FinanceDashboardApiService
             });
             
             $cashInflowData[] = $found ? (float) $found->total_amount : 0.0;
+            $omsetTagihanHarian[$dateStr] = (float) ($dailyOmsetRaw[$dateStr] ?? 0);
             $current->addDay();
         }
 
@@ -186,6 +195,8 @@ class FinanceDashboardApiService
             'chart_data' => [
                 'labels' => $labels,
                 'cash_inflow' => $cashInflowData,
+                // Kamus Metrik v2.0: { "Y-m-d": omset }, tanggal tanpa invoice = 0
+                'omset_tagihan_harian' => $omsetTagihanHarian,
             ],
             'recent_payments' => $recentPayments,
             'period' => [
