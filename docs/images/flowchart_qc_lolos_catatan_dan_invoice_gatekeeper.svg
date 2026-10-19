@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 540" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .box { rx: 12; stroke-width: 1.5; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.04)); }
+      .box-green { fill: #f0fdf4; stroke: #22af85; }
+      .box-amber { fill: #fffbeb; stroke: #f59e0b; }
+      .box-blue { fill: #eff6ff; stroke: #3b82f6; }
+      .box-red { fill: #fef2f2; stroke: #ef4444; }
+      .box-purple { fill: #faf5ff; stroke: #a855f7; }
+      .title { font-family: 'Inter', -apple-system, sans-serif; font-size: 12px; font-weight: 800; }
+      .subtitle { font-family: 'Inter', -apple-system, sans-serif; font-size: 9.5px; font-weight: 700; fill: #64748b; }
+      .desc { font-family: 'Inter', -apple-system, sans-serif; font-size: 9px; fill: #334155; }
+      .line { stroke: #64748b; stroke-width: 2; fill: none; stroke-linecap: round; }
+      .line-green { stroke: #22af85; stroke-width: 2.5; fill: none; stroke-linecap: round; }
+      .line-amber { stroke: #f59e0b; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-dasharray: 4 4; }
+      .head-title { font-family: 'Outfit', -apple-system, sans-serif; font-size: 17px; font-weight: 900; fill: #065f46; letter-spacing: -0.02em; }
+      .head-sub { font-family: 'Inter', -apple-system, sans-serif; font-size: 11px; fill: #64748b; font-weight: 500; }
+    </style>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#22af85"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3b82f6"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1020" height="540" fill="#f8fafc" rx="16"/>
+
+  <!-- Header -->
+  <text x="35" y="38" class="head-title">ARSITEKTUR ALUR: QC LOLOS CATATAN &amp; INVOICE GSHEET SYNC GATEKEEPER</text>
+  <text x="35" y="56" class="head-sub">Shoe Workshop Enterprise • Standar Big 4: Perlindungan Kebersihan Data Finansial &amp; Otomasi</text>
+
+  <!-- Box 1: Customer multi-pair -->
+  <g transform="translate(35, 80)">
+    <rect width="210" height="150" class="box box-blue"/>
+    <rect width="210" height="30" fill="#dbeafe" rx="12"/>
+    <rect y="18" width="210" height="12" fill="#dbeafe"/>
+    <text x="14" y="20" class="title" fill="#1e40af">1. CUSTOMER MULTI-SPK</text>
+    <text x="14" y="52" class="desc" font-weight="bold">• 1 Pelanggan = 2 Sepatu</text>
+    <text x="14" y="68" class="desc">• Terbit SPK-01 &amp; SPK-02</text>
+    <text x="14" y="84" class="desc">• Digabung 1 Invoice: INV-XXX</text>
+    <rect x="14" y="98" width="182" height="36" fill="#bfdbfe" rx="6"/>
+    <text x="20" y="112" class="subtitle" font-size="8.5px" fill="#1e3a8a">Universal Invoice Created</text>
+    <text x="20" y="126" class="subtitle" font-size="8px" fill="#475569">Status: PENDING_QC</text>
+  </g>
+
+  <!-- Box 2A: SPK 1 Lolos Murni -->
+  <g transform="translate(290, 80)">
+    <rect width="215" height="150" class="box box-green"/>
+    <rect width="215" height="30" fill="#dcfce7" rx="12"/>
+    <rect y="18" width="215" height="12" fill="#dcfce7"/>
+    <text x="14" y="20" class="title" fill="#15803d">2A. SPK-01: LOLOS MURNI</text>
+    <text x="14" y="52" class="desc" font-weight="bold">• Fisik Sesuai Pesanan Awal</text>
+    <text x="14" y="68" class="desc">• QC Reception: Lolos Bersih</text>
+    <text x="14" y="84" class="desc">• Langsung Lanjut ASSESSMENT</text>
+    <rect x="14" y="98" width="187" height="36" fill="#bbf7d0" rx="6"/>
+    <text x="20" y="112" class="subtitle" font-size="8.5px" fill="#166534">Siap Dikerjakan Workshop</text>
+    <text x="20" y="126" class="subtitle" font-size="8px" fill="#166534">Status: ASSESSMENT</text>
+  </g>
+
+  <!-- Box 2B: SPK 2 Lolos Catatan -->
+  <g transform="translate(290, 260)">
+    <rect width="215" height="150" class="box box-amber"/>
+    <rect width="215" height="30" fill="#fef3c7" rx="12"/>
+    <rect y="18" width="215" height="12" fill="#fef3c7"/>
+    <text x="14" y="20" class="title" fill="#b45309">2B. SPK-02: LOLOS CATATAN</text>
+    <text x="14" y="52" class="desc" font-weight="bold">• Ada Temuan / Tambahan Servis</text>
+    <text x="14" y="68" class="desc">• Butuh Konfirmasi Customer</text>
+    <text x="14" y="84" class="desc">• Masuk Antrean Tindak Lanjut CS</text>
+    <rect x="14" y="98" width="187" height="36" fill="#fde68a" rx="6"/>
+    <text x="20" y="112" class="subtitle" font-size="8.5px" fill="#92400e">Ditahan di CS Resolution Hub</text>
+    <text x="20" y="126" class="subtitle" font-size="8px" fill="#92400e">Status: PENDING_CS_RESOLUTION</text>
+  </g>
+
+  <!-- Box 3: Invoice Gatekeeper -->
+  <g transform="translate(550, 80)">
+    <rect width="215" height="330" class="box box-purple"/>
+    <rect width="215" height="30" fill="#f3e8ff" rx="12"/>
+    <rect y="18" width="215" height="12" fill="#f3e8ff"/>
+    <text x="14" y="20" class="title" fill="#7e22ce">3. INVOICE GATEKEEPER</text>
+    
+    <text x="14" y="52" class="desc" font-weight="bold">🛡️ Pengecekan Kesiapan Sync:</text>
+    <text x="14" y="68" class="desc">1. SPK-01: Lolos Murni (OK)</text>
+    <text x="14" y="84" class="desc">2. SPK-02: Ada Catatan (HOLD)</text>
+    
+    <rect x="14" y="105" width="187" height="60" fill="#fee2e2" stroke="#f87171" rx="8"/>
+    <text x="22" y="125" class="title" fill="#991b1b" font-size="11px">❌ TAHAN INVOICE</text>
+    <text x="22" y="142" class="desc" fill="#991b1b">• Excluded dari API /finance-sync</text>
+    <text x="22" y="156" class="desc" fill="#991b1b">• Google Sheets DILARANG tarik</text>
+    
+    <text x="14" y="190" class="desc" font-weight="bold">⚡ Saat SPK-02 Selesai Ditindaklanjuti:</text>
+    <text x="14" y="206" class="desc">• Nominal disinkronkan final</text>
+    <text x="14" y="222" class="desc">• Gembok sync otomatis terbuka</text>
+
+    <rect x="14" y="240" width="187" height="60" fill="#dcfce7" stroke="#4ade80" rx="8"/>
+    <text x="22" y="260" class="title" fill="#166534" font-size="11px">✅ INVOICE READY</text>
+    <text x="22" y="277" class="desc" fill="#166534">• Status: READY_FOR_SYNC</text>
+    <text x="22" y="291" class="desc" fill="#166534">• Siap ditarik otomatis ke GSheet</text>
+  </g>
+
+  <!-- Box 4: Google Sheets Destination -->
+  <g transform="translate(805, 80)">
+    <rect width="180" height="330" class="box box-green"/>
+    <rect width="180" height="30" fill="#dcfce7" rx="12"/>
+    <rect y="18" width="180" height="12" fill="#dcfce7"/>
+    <text x="14" y="20" class="title" fill="#15803d">4. GOOGLE SHEETS</text>
+    
+    <text x="14" y="60" class="desc" font-weight="bold">📊 Otomasi GSheet:</text>
+    <text x="14" y="80" class="desc">• Menarik via API:</text>
+    <text x="14" y="96" class="desc" font-family="monospace">/api/v1/finance-sync</text>
+    
+    <rect x="14" y="130" width="152" height="150" fill="#ffffff" stroke="#86efac" rx="8"/>
+    <text x="22" y="152" class="subtitle" fill="#15803d">• No. Invoice Valid</text>
+    <text x="22" y="172" class="subtitle" fill="#15803d">• Total Tagihan Final</text>
+    <text x="22" y="192" class="subtitle" fill="#15803d">• Diskon / Ongkir Tepat</text>
+    <text x="22" y="212" class="subtitle" fill="#15803d">• Status Bayar Pasti</text>
+    <text x="22" y="232" class="subtitle" fill="#15803d">• Bebas Selisih Angka</text>
+    <text x="22" y="260" class="title" fill="#166534" font-size="10.5px">DATA 100% BERSIH</text>
+  </g>
+
+  <!-- Flow Lines -->
+  <!-- 1 -> 2A -->
+  <path d="M 245 130 L 290 130" class="line-green" marker-end="url(#arrow-green)"/>
+  <!-- 1 -> 2B -->
+  <path d="M 140 230 L 140 335 L 290 335" class="line-amber" marker-end="url(#arrow-amber)"/>
+
+  <!-- 2A -> 3 -->
+  <path d="M 505 130 L 550 130" class="line-green" marker-end="url(#arrow-green)"/>
+
+  <!-- 2B -> CS Action -> 3 -->
+  <path d="M 505 335 L 525 335 L 525 240 L 550 240" class="line-amber" marker-end="url(#arrow-amber)"/>
+
+  <!-- 3 -> 4 -->
+  <path d="M 765 270 L 805 270" class="line-green" marker-end="url(#arrow-green)"/>
+
+  <!-- Footer Notes -->
+  <text x="35" y="470" class="subtitle" font-size="10px">💡 Catatan Kunci: Selama masih ada SPK berstatus "Lolos Catatan" yang belum selesai dikonfirmasi pelanggan,</text>
+  <text x="35" y="488" class="subtitle" font-size="10px">sistem otomatis menyembunyikan invoice tersebut dari API penarikan Google Sheets, menjamin tidak ada data palsu atau salah nominal.</text>
+</svg>
