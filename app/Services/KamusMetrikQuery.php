@@ -51,12 +51,35 @@ class KamusMetrikQuery
         return $query->where($column, 'like', '%-GR')->orWhere($column, 'like', '%-GR-%');
     }
 
-    /** SPK closing: SPK dibuat di periode, bukan garansi (-GR) dan bukan R&D (RD-). */
+    /**
+     * SPK R&D: nomor "RD-..." atau priority 'R&D' (SPK R&D lama bernomor S- saat fitur R&D masih dikembangkan).
+     * COALESCE agar priority NULL tidak membuat NOT(...) bernilai NULL dan SPK hilang dari hitungan non-R&D.
+     */
+    public const RD_SQL = "(%s.spk_number LIKE 'RD-%%' OR COALESCE(%s.priority, '') = 'R&D')";
+
+    public static function rdSql(string $table = 'work_orders'): string
+    {
+        return sprintf(self::RD_SQL, $table, $table);
+    }
+
+    /** SPK R&D yang bukan garansi, supaya berbayar / R&D / garansi tidak beririsan. */
+    public static function whereRd($query, string $table = 'work_orders')
+    {
+        return $query->whereRaw(self::rdSql($table))
+            ->whereNot(fn($q) => self::whereGaransi($q, "{$table}.spk_number"));
+    }
+
+    /** SPK berbayar: bukan garansi dan bukan R&D. */
+    public static function whereBerbayar($query, string $table = 'work_orders')
+    {
+        return $query->whereNot(fn($q) => self::whereGaransi($q, "{$table}.spk_number"))
+            ->whereRaw('NOT ' . self::rdSql($table));
+    }
+
+    /** SPK closing: SPK dibuat di periode, bukan garansi (-GR) dan bukan R&D. */
     public static function spkClosing(Carbon $start, Carbon $end): EloquentBuilder
     {
-        return WorkOrder::whereBetween('work_orders.created_at', [$start, $end])
-            ->whereNot(fn($q) => self::whereGaransi($q, 'work_orders.spk_number'))
-            ->where('work_orders.spk_number', 'not like', 'RD-%');
+        return self::whereBerbayar(WorkOrder::whereBetween('work_orders.created_at', [$start, $end]));
     }
 
     /**
@@ -114,12 +137,9 @@ class KamusMetrikQuery
         $qcAwal = fn() => WorkOrder::whereNotNull('warehouse_qc_status')
             ->whereBetween('warehouse_qc_at', [$start, $end]);
 
-        $berbayar = $qcAwal()
-            ->whereNot(fn($q) => self::whereGaransi($q))
-            ->where('spk_number', 'not like', 'RD-%')
-            ->count();
+        $berbayar = self::whereBerbayar($qcAwal())->count();
 
-        $rd = $qcAwal()->where('spk_number', 'like', 'RD-%')->count();
+        $rd = self::whereRd($qcAwal())->count();
 
         $klaimGaransi = DB::table('work_order_warranties')
             ->whereBetween('created_at', [$start, $end])
@@ -194,7 +214,7 @@ class KamusMetrikQuery
     {
         $rows = WorkOrder::query()
             ->selectRaw("status, CASE WHEN status IN ('CX_FOLLOWUP', 'HOLD_FOR_CX') THEN previous_status END as prev,
-                spk_number LIKE 'RD-%' as is_rd, taken_date IS NOT NULL as taken, COUNT(*) as n")
+                " . self::rdSql() . " as is_rd, taken_date IS NOT NULL as taken, COUNT(*) as n")
             ->groupBy('status', 'prev', 'is_rd', 'taken')
             ->toBase()
             ->get();
