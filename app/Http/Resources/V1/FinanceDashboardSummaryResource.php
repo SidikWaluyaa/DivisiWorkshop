@@ -22,6 +22,9 @@ class FinanceDashboardSummaryResource extends JsonResource
                 'overdue_invoices' => $this->resource['overdue_invoices'],
                 'chart_data' => $this->resource['chart_data'],
                 'recent_payments' => $this->resource['recent_payments'],
+                // Kamus Metrik v2.0
+                'red_alerts' => $this->resource['red_alerts'] ?? [],
+                'red_alerts_ringkasan' => $this->resource['red_alerts_ringkasan'] ?? null,
                 'period' => $this->resource['period'],
                 'metadata' => [
                     'last_updated' => $this->resource['last_updated'],
