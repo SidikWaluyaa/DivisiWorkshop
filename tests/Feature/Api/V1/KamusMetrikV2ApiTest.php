@@ -406,3 +406,75 @@ it('penanda R&D = nomor RD- ATAU priority R&D, konsisten dan tanpa hitung ganda'
         // PREPARATION R&D bernomor S- masuk produksi (Stasiun R&D)
         ->and($w['wip_tahap']['produksi'])->toBe(5); // 4 PRODUCTION + 1 PREPARATION R&D bernomor S-
 });
+
+it('finance/dashboard menambah red_alerts: siap_kirim_belum_dp dan biodata_tanpa_spk', function () {
+    Carbon\Carbon::setTestNow('2026-09-20 12:00:00');
+
+    $csA = User::factory()->create(['name' => 'CS A', 'role' => 'cs', 'cs_code' => 'AAA']);
+    $spk = fn(string $no, string $status, array $extra = []) => insertWorkOrder(array_merge([
+        'spk_number' => $no, 'status' => $status, 'cs_code' => 'AAA', 'customer_name' => 'Cust ' . $no,
+        'total_service_price' => 100000, 'entry_date' => '2026-09-05 10:00:00',
+    ], $extra));
+    $paidInvoice = insertInvoice('INV-PAID', '2026-09-05 09:00:00', ['paid_amount' => 50000, 'status' => 'DP/Cicil']);
+    $unpaidInvoice = insertInvoice('INV-UNPAID', '2026-09-05 09:00:00', ['paid_amount' => 0, 'status' => 'Belum Bayar']);
+
+    // Masuk alert
+    $spk('S-RTD-BELUM', 'READY_TO_DISPATCH', ['invoice_id' => $unpaidInvoice, 'entry_date' => '2026-09-03 10:00:00']);
+    $spk('S-PROD-BELUM', 'PRODUCTION', ['entry_date' => '2026-09-01 10:00:00']);
+    $spk('S-SELESAI-BELUM', 'SELESAI', ['entry_date' => '2026-09-04 10:00:00']);
+    $unverified = $spk('S-QC-UNVERIFIED', 'QC', ['entry_date' => '2026-09-06 10:00:00']);
+    DB::table('order_payments')->insert(['work_order_id' => $unverified, 'amount_total' => 50000, 'payment_method' => 'Transfer', 'is_verified' => false]);
+
+    // Tidak masuk alert
+    $spk('S-RTD-INVOICE-DP', 'READY_TO_DISPATCH', ['invoice_id' => $paidInvoice]);
+    $verified = $spk('S-QC-VERIFIED', 'QC');
+    DB::table('order_payments')->insert(['work_order_id' => $verified, 'amount_total' => 50000, 'payment_method' => 'Transfer', 'is_verified' => true]);
+    $spk('S-PROD-TOTALPAID', 'PRODUCTION', ['total_paid' => 70000]);
+    $spk('S-SELESAI-DIAMBIL', 'SELESAI', ['taken_date' => '2026-09-10 10:00:00']);
+    $spk('S-WAITING-PAY', 'WAITING_PAYMENT');
+    $spk('S-ASSESSMENT', 'ASSESSMENT');
+    $spk('RD-2609-01-0001-AAA', 'READY_TO_DISPATCH');
+    $spk('S-RND-LAMA', 'PRODUCTION', ['priority' => 'R&D']);
+    $spk('S-2609-01-0009-GR', 'SELESAI');
+    $spk('S-JASA-NOL', 'READY_TO_DISPATCH', ['total_service_price' => 0, 'total_transaksi' => 0]);
+    $spk('S-TERHAPUS', 'READY_TO_DISPATCH', ['deleted_at' => '2026-09-10 00:00:00']);
+
+    // Lead: masuk (> 1 hari tanpa SPK); tidak masuk: punya SPK, < 1 hari, import greeting, di luar periode
+    $customer = Customer::firstOrCreate(['phone' => '628111111111'], ['name' => 'Customer Uji']);
+    $lead = function (string $createdAt, ?string $activity = null) use ($csA) {
+        $lead = CsLead::create(['customer_phone' => '0812' . random_int(1000000, 9999999), 'customer_name' => 'Lead ' . $createdAt, 'status' => CsLead::STATUS_KONSULTASI, 'cs_id' => $csA->id]);
+        DB::table('cs_leads')->where('id', $lead->id)->update(['created_at' => $createdAt]);
+        if ($activity) {
+            CsActivity::create(['cs_lead_id' => $lead->id, 'user_id' => $csA->id, 'type' => 'CHAT', 'content' => $activity]);
+        }
+        return $lead->id;
+    };
+    $tanpaSpk = $lead('2026-09-02 10:00:00');
+    $punyaSpk = $lead('2026-09-02 11:00:00');
+    DB::table('cs_spk')->insert(['cs_lead_id' => $punyaSpk, 'spk_number' => 'SPK-CS-UJI', 'customer_id' => $customer->id, 'services' => '[]', 'total_price' => 0]);
+    $lead('2026-09-20 08:00:00');
+    $lead('2026-09-02 12:00:00', 'Lead diimport ke kolam umum (Greeting).');
+    $lead('2026-08-30 10:00:00');
+
+    $response = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson('/api/v1/finance/dashboard' . PERIODE)->assertOk();
+    $alerts = $response->json('data.red_alerts');
+
+    expect(array_column($alerts, 'nomor'))->toBe(['S-PROD-BELUM', 'LEAD-' . $tanpaSpk, 'S-RTD-BELUM', 'S-SELESAI-BELUM', 'S-QC-UNVERIFIED'])
+        ->and($alerts[0])->toBe([
+            'tipe' => 'siap_kirim_belum_dp', 'nomor' => 'S-PROD-BELUM', 'customer_name' => 'Cust S-PROD-BELUM',
+            'cs_name' => 'CS A', 'masalah' => 'Sudah dikerjakan workshop (produksi) tapi belum ada pembayaran', 'tanggal' => '2026-09-01',
+        ])
+        ->and($alerts[1])->toMatchArray(['tipe' => 'biodata_tanpa_spk', 'cs_name' => 'CS A', 'tanggal' => '2026-09-02',
+            'masalah' => 'Customer kirim data tgl 2 Sep, belum dibuat SPK'])
+        ->and($alerts[2]['masalah'])->toBe('Status Ready (siap kirim ke workshop) tapi belum ada DP')
+        ->and($response->json('data.red_alerts_ringkasan'))->toBe(['siap_kirim_belum_dp' => 4, 'biodata_tanpa_spk' => 1, 'ditampilkan' => 5])
+        // Field lama tetap ada
+        ->and($response->json('data.metrics'))->toHaveKeys(['total_invoiced_value', 'jumlah_tagihan', 'omset_tagihan']);
+
+    // Batas jumlah item: yang paling lama didahulukan
+    $terbatas = \App\Services\KamusMetrikQuery::redAlerts(Carbon\Carbon::parse('2026-09-01'), Carbon\Carbon::parse('2026-09-25')->endOfDay(), 2);
+    expect(array_column($terbatas['items'], 'nomor'))->toBe(['S-PROD-BELUM', 'LEAD-' . $tanpaSpk])
+        ->and($terbatas['ringkasan']['ditampilkan'])->toBe(2);
+
+    Carbon\Carbon::setTestNow();
+});

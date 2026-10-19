@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\WorkOrderStatus;
 use App\Models\CsLead;
+use App\Models\User;
 use App\Models\WorkOrder;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
@@ -233,6 +234,91 @@ class KamusMetrikQuery
         }
 
         return ['tahap' => $tahap, 'per_status' => $perStatus];
+    }
+
+    /**
+     * Status yang sudah melewati gerbang pembayaran (Assessment → WAITING_PAYMENT → READY_TO_DISPATCH)
+     * sampai sepatu menunggu diambil. SPK di sini tanpa pembayaran sama sekali berarti sepatu jalan tanpa uang masuk.
+     * WAITING_PAYMENT/VERIFICATION tidak termasuk (memang sedang ditahan menunggu bayar).
+     */
+    public const STATUS_LEWAT_GERBANG_BAYAR = [
+        'READY_TO_DISPATCH' => 'Status Ready (siap kirim ke workshop) tapi belum ada DP',
+        'OTW_WORKSHOP' => 'Sedang dikirim ke workshop tapi belum ada DP',
+        'PREPARATION' => 'Sudah dikerjakan workshop (preparation) tapi belum ada pembayaran',
+        'SORTIR' => 'Sudah dikerjakan workshop (sortir) tapi belum ada pembayaran',
+        'PRODUCTION' => 'Sudah dikerjakan workshop (produksi) tapi belum ada pembayaran',
+        'REVISI' => 'Sudah dikerjakan workshop (revisi) tapi belum ada pembayaran',
+        'QC' => 'Sudah dikerjakan workshop (QC) tapi belum ada pembayaran',
+        'STAGING_OUTBOUND' => 'Sudah lolos QC, menunggu dikirim ke gudang, tapi belum ada pembayaran',
+        'SELESAI' => 'Sudah selesai dan belum diambil, tapi belum ada pembayaran',
+    ];
+
+    /**
+     * Red alert kebocoran kas (Kamus v2): siap_kirim_belum_dp (posisi saat ini) dan
+     * biodata_tanpa_spk (lead periode yang > 1 hari belum punya SPK). Urut dari yang paling lama.
+     */
+    public static function redAlerts(Carbon $start, Carbon $end, int $limit = 200): array
+    {
+        $bulan = [1 => 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        $tgl = fn(string $date) => (int) substr($date, 8, 2) . ' ' . $bulan[(int) substr($date, 5, 2)];
+
+        // 1) SPK lewat gerbang bayar tanpa pembayaran sama sekali (bukan R&D, bukan garansi, ada nilai jasa)
+        $spkRows = self::whereBerbayar(WorkOrder::query())
+            ->leftJoin('invoices', 'invoices.id', '=', 'work_orders.invoice_id')
+            ->whereIn('work_orders.status', array_keys(self::STATUS_LEWAT_GERBANG_BAYAR))
+            ->where(fn($q) => $q->where('work_orders.status', '!=', 'SELESAI')->orWhereNull('work_orders.taken_date'))
+            ->where(fn($q) => $q->where('work_orders.total_service_price', '>', 0)->orWhere('work_orders.total_transaksi', '>', 0))
+            ->whereRaw('COALESCE(invoices.paid_amount, 0) <= 0')
+            ->whereRaw('COALESCE(work_orders.total_paid, 0) <= 0')
+            ->whereNotExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('order_payments')
+                    ->whereColumn('order_payments.work_order_id', 'work_orders.id')
+                    ->where('order_payments.is_verified', true);
+            })
+            ->selectRaw('work_orders.spk_number, work_orders.customer_name, work_orders.status, '
+                . 'DATE(COALESCE(work_orders.entry_date, work_orders.created_at)) as tanggal, '
+                . self::SPK_CS_ID_SQL . ' as cs_id')
+            ->toBase()
+            ->get();
+
+        // 2) Lead periode (definisi total_leads) yang lebih dari 1 hari belum punya SPK CS
+        $leadRows = self::leads($start, $end)
+            ->where('cs_leads.created_at', '<', now()->subDay())
+            ->whereNotExists(function ($q) {
+                $q->select(DB::raw(1))->from('cs_spk')->whereColumn('cs_spk.cs_lead_id', 'cs_leads.id');
+            })
+            ->selectRaw('cs_leads.id, cs_leads.customer_name, cs_leads.cs_id, DATE(cs_leads.created_at) as tanggal')
+            ->toBase()
+            ->get();
+
+        $csIds = $spkRows->pluck('cs_id')->merge($leadRows->pluck('cs_id'))->filter()->unique();
+        $names = User::withTrashed()->whereIn('id', $csIds)->pluck('name', 'id');
+
+        $items = $spkRows->map(fn($r) => [
+            'tipe' => 'siap_kirim_belum_dp',
+            'nomor' => $r->spk_number,
+            'customer_name' => $r->customer_name,
+            'cs_name' => $r->cs_id ? ($names[$r->cs_id] ?? null) : null,
+            'masalah' => self::STATUS_LEWAT_GERBANG_BAYAR[$r->status] ?? 'Belum ada pembayaran',
+            'tanggal' => $r->tanggal,
+        ])->merge($leadRows->map(fn($r) => [
+            'tipe' => 'biodata_tanpa_spk',
+            'nomor' => 'LEAD-' . $r->id,
+            'customer_name' => $r->customer_name,
+            'cs_name' => $r->cs_id ? ($names[$r->cs_id] ?? null) : null,
+            'masalah' => 'Customer kirim data tgl ' . $tgl($r->tanggal) . ', belum dibuat SPK',
+            'tanggal' => $r->tanggal,
+        ]));
+
+        return [
+            'items' => $items->sortBy([['tanggal', 'asc'], ['nomor', 'asc']])->take($limit)->values()->all(),
+            'ringkasan' => [
+                'siap_kirim_belum_dp' => $spkRows->count(),
+                'biodata_tanpa_spk' => $leadRows->count(),
+                'ditampilkan' => min($items->count(), $limit),
+            ],
+        ];
     }
 
     private static function activeInvoiceSpk(Builder $query, Carbon $start, Carbon $end): Builder
