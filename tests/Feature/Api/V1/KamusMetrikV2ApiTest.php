@@ -378,3 +378,31 @@ it('warehouse-summary menambah siap_kirim_aktif: siap_kirim yang selesai dalam 3
 
     Carbon\Carbon::setTestNow();
 });
+
+it('penanda R&D = nomor RD- ATAU priority R&D, konsisten dan tanpa hitung ganda', function () {
+    $qc = ['warehouse_qc_status' => 'lolos', 'warehouse_qc_at' => '2026-09-12 10:00:00', 'status' => WorkOrderStatus::PRODUCTION->value];
+
+    insertWorkOrder(array_merge($qc, ['spk_number' => 'RD-2609-01-0001-OL', 'priority' => 'R&D']));   // R&D
+    insertWorkOrder(array_merge($qc, ['spk_number' => 'S-2609-01-0002-FR', 'priority' => 'R&D']));    // R&D lama bernomor S-
+    insertWorkOrder(array_merge($qc, ['spk_number' => 'S-2609-01-0003-OL', 'priority' => 'Reguler'])); // berbayar
+    insertWorkOrder(array_merge($qc, ['spk_number' => 'S-2609-01-0004-OL', 'priority' => '']));        // berbayar (priority kosong)
+    insertWorkOrder(['spk_number' => 'S-2609-01-0005-GR', 'priority' => 'R&D']);                      // garansi, bukan R&D
+    insertWorkOrder(['spk_number' => 'S-2609-01-0006-OL', 'priority' => 'R&D', 'status' => WorkOrderStatus::PREPARATION->value]); // R&D, belum tiba
+
+    $headers = ['X-API-KEY' => 'test-secret-key'];
+    $w = $this->withHeaders($headers)->getJson('/api/v1/warehouse-summary' . PERIODE)->assertOk()->json('data.summary');
+    $d = $this->withHeaders($headers)->getJson('/api/v1/dashboard-summary' . PERIODE . '&force_refresh=1')->assertOk()->json('data');
+
+    expect($w['spk_rd_periode'])->toBe(3)
+        ->and($w['spk_periode_non_gr'])->toBe(5)
+        ->and($w['spk_gr_periode'])->toBe(1)
+        ->and($w['intake_fisik_rd'])->toBe(2)
+        ->and($w['intake_fisik_berbayar'])->toBe(2)
+        // berbayar + rd = total_qc_processed, tanpa irisan
+        ->and($w['intake_fisik_berbayar'] + $w['intake_fisik_rd'])->toBe($w['total_qc_processed'])
+        // spk_closing = non_gr − rd, sama di per_cs_kamus dan harian_kamus
+        ->and(collect($d['per_cs_kamus'])->sum('spk_closing'))->toBe($w['spk_periode_non_gr'] - $w['spk_rd_periode'])
+        ->and(collect($d['harian_kamus'])->sum('spk_closing'))->toBe(2)
+        // PREPARATION R&D bernomor S- masuk produksi (Stasiun R&D)
+        ->and($w['wip_tahap']['produksi'])->toBe(5); // 4 PRODUCTION + 1 PREPARATION R&D bernomor S-
+});

@@ -689,9 +689,8 @@ class WarehouseDashboardApiService
             'spk_tiba_periode' => $spkTibaPeriode,
             // SPK terbit − sepatu tiba (SPK yang BATAL sebelum tiba tetap dihitung belum tiba)
             'spk_belum_tiba_periode' => $spkPeriodeNonGr - $spkTibaPeriode,
-            // SPK R&D: nomor berawalan "RD-" (dibuat dari item_type R&D; category_spk 'RD' diturunkan dari nomor ini)
-            'spk_rd_periode' => WorkOrder::whereBetween('created_at', [$start, $end])
-                ->where('spk_number', 'like', 'RD-%')
+            // SPK R&D: nomor "RD-" atau priority 'R&D', bukan garansi (lihat KamusMetrikQuery::whereRd)
+            'spk_rd_periode' => KamusMetrikQuery::whereRd(WorkOrder::whereBetween('created_at', [$start, $end]))
                 ->count(),
             // Kamus No. 32 Intake Fisik (menurut tanggal tiba) dan snapshot WIP per tahap
             'intake_fisik_berbayar' => $intakeFisik['berbayar'],
