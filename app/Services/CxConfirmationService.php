@@ -53,25 +53,34 @@ class CxConfirmationService
             }
 
             // Determine target round:
-            // Sesuai SOP: GARANSI, REVISI, dan OTO minimal adalah After Ke-2 (round = 2).
-            // Jika sudah ada After sebelumnya (misal ada Revisi di After 2, lalu OTO selesai), otomatis naik ke After 3, 4, dst.
-            if (!is_null($forcedRound)) {
-                $existingForced = CxAfterConfirmation::where('work_order_id', $order->id)
-                    ->where('round', $forcedRound)
-                    ->first();
+            // Sesuai SOP:
+            // 1. SPK REGULER & RND HANYA memiliki 1 siklus konfirmasi (After 1 / Round 1).
+            //    Jika SPK ini sudah memiliki After 1, DILARANG keras menerbitkan After 2 (kembalikan record yang ada).
+            // 2. Hanya GARANSI, REVISI, dan OTO yang berhak masuk ke siklus lanjutan (After 2, After 3, dst).
+            $isMultiRoundStage = in_array(strtoupper((string)$stageType), ['GARANSI', 'REVISI', 'OTO']);
 
-                if ($existingForced) {
-                    // Jika ronde tersebut sudah terisi (misal Round 2 adalah REVISI), otomatis naik ke ronde berikutnya!
-                    $targetRound = max((int)($latest?->round ?? 1) + 1, (int)$forcedRound + 1);
-                } else {
-                    $targetRound = $forcedRound;
+            if (!$isMultiRoundStage && is_null($forcedRound)) {
+                if ($latest) {
+                    return $latest;
                 }
-            } elseif ($latest) {
-                $targetRound = max((int)$latest->round + 1, in_array(strtoupper((string)$stageType), ['GARANSI', 'REVISI', 'OTO']) ? 2 : 1);
-            } elseif (in_array(strtoupper((string)$stageType), ['GARANSI', 'REVISI', 'OTO'])) {
-                $targetRound = 2;
-            } else {
                 $targetRound = 1;
+            } else {
+                if (!is_null($forcedRound)) {
+                    $existingForced = CxAfterConfirmation::where('work_order_id', $order->id)
+                        ->where('round', $forcedRound)
+                        ->first();
+
+                    if ($existingForced) {
+                        // Jika ronde tersebut sudah terisi (misal Round 2 adalah REVISI), otomatis naik ke ronde berikutnya!
+                        $targetRound = max((int)($latest?->round ?? 1) + 1, (int)$forcedRound + 1);
+                    } else {
+                        $targetRound = $forcedRound;
+                    }
+                } elseif ($latest) {
+                    $targetRound = max((int)$latest->round + 1, 2);
+                } else {
+                    $targetRound = 2;
+                }
             }
 
             // Batasi hanya jika sudah melampaui batas wajar (misal round > 10)

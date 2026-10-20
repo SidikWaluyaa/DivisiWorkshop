@@ -78,7 +78,6 @@ class UserManagement extends Component
                 'cs.spk' => 'Data SPK',
                 'cs.greeting' => 'Greeting Chat',
                 'cs.after-photos' => 'Galeri After Photo',
-                'cs.forecasting' => 'Forecasting',
             ]
         ],
         [
@@ -265,7 +264,7 @@ class UserManagement extends Component
                 'dashboard', 'internal-tracking',
                 'cs.dashboard', 'cs.analytics', 'cs.leads.konsultasi', 'cs.leads.follow-up',
                 'cs.leads.closing', 'cs.leads.followup-closing', 'cs.pending-monitoring', 'cs.spk',
-                'cs.greeting', 'cs.after-photos', 'cs.forecasting'
+                'cs.greeting', 'cs.after-photos'
             ],
             'workshop' => [
                 'dashboard', 'internal-tracking', 'internal-tracking.services', 'workshop'

@@ -568,8 +568,7 @@ Route::middleware('auth')->group(function () {
             // After Photo Gallery
             Route::get('/after-photos', App\Livewire\Cs\AfterPhotoGallery::class)->name('after-photos');
 
-             // Forecasting
-             Route::get('/forecasting', \App\Livewire\Cs\Forecasting::class)->name('forecasting.index');
+             // Forecasting API Data
              Route::get('/forecasting/api-data', [App\Http\Controllers\CsDashboardController::class, 'getForecastingData'])->name('forecasting.api-data');
 
              // KPI Leaderboard

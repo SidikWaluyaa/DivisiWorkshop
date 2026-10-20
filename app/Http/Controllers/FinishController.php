@@ -296,10 +296,7 @@ class FinishController extends Controller
                 'is_verified' => false,
             ]);
 
-            // 5. Trigger Konfirmasi After
-            $this->cxConfirmationService->createFromOrder($order);
-
-            // 6. Log
+            // 5. Log
             $order->logs()->create([
                 'step' => WorkOrderStatus::SELESAI->value,
                 'action' => 'PENGIRIMAN',

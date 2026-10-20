@@ -190,10 +190,6 @@
                                 📅
                             </div>
                         </div>
-                    </div>
-                    <a href="{{ route('cs.forecasting.index') }}" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all border border-slate-700 flex items-center gap-1.5 hover:text-white">
-                        <span>📊 Forecasting</span>
-                    </a>
                 </div>
             </div>
 

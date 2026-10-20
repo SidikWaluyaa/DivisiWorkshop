@@ -87,7 +87,6 @@ class User extends Authenticatable
                 'cs.spk',
                 'cs.greeting',
                 'cs.after-photos',
-                'cs.forecasting',
             ],
             'gudang' => [
                 'dashboard',
@@ -227,7 +226,7 @@ class User extends Authenticatable
             'cs' => [
                 'cs.dashboard', 'cs.analytics', 'cs.leads.konsultasi', 'cs.leads.follow-up',
                 'cs.leads.closing', 'cs.leads.followup-closing', 'cs.pending-monitoring', 'cs.spk',
-                'cs.greeting', 'cs.after-photos', 'cs.forecasting'
+                'cs.greeting', 'cs.after-photos'
             ],
             'finance' => [
                 'finance.dashboard', 'finance.waiting-payment', 'finance.transaction', 'finance.invoices',
@@ -263,7 +262,6 @@ class User extends Authenticatable
             'cs.leads.followup-closing' => ['cs'],
             'cs.pending-monitoring' => ['cs', 'cs.spk'],
             'cs.after-photos' => ['cs'],
-            'cs.forecasting' => ['cs'],
             'finance.transaction' => ['finance'],
             'finance' => ['finance.transaction', 'finance.dashboard'],
             'cx.followup' => ['cx', 'cx.index'],

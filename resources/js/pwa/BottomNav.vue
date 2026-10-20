@@ -75,16 +75,6 @@
 
                 <!-- Menu Grid -->
                 <div class="grid grid-cols-2 gap-3 mb-6">
-                    
-                    <!-- 1. Forecasting -->
-                    <a href="/cs/forecasting" 
-                       class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-slate-100 dark:border-slate-700/60 transition-all duration-200 group">
-                        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                        </div>
-                        <h4 class="text-xs font-black text-slate-900 dark:text-white mb-0.5">Forecasting</h4>
-                        <p class="text-[10px] text-slate-400 font-medium leading-tight">Target & Proyeksi Revenue</p>
-                    </a>
 
                     <!-- 2. After Photo Gallery -->
                     <a href="/cs/after-photos" 
