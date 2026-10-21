@@ -60,3 +60,14 @@
 - **Kendala yang Dihadapi:** 
   * Terdapat variasi format data historis di mana sebagian pembayaran diinput pada level SPK satuan (`work_order_id`) dan sebagian lainnya pada level invoice gabungan (`invoice_id`). Kueri dirancang secara cermat menggunakan `COALESCE` berjenjang untuk memastikan nomor invoice, nama pelanggan, dan pemisahan nominal ongkir/jasa selalu terpetakan secara utuh tanpa ada pembayaran yang terlewat.
 
+---
+
+### 6. Pemecahan Masalah Eksekusi CLI & Sinkronisasi di Server Produksi aaPanel
+- **Apa yang Dikerjakan:** Mendiagnosis dan memberikan solusi teknis terhadap eror `Composer detected issues in your platform: Your Composer dependencies require a PHP version ">= 8.2.0". You are running 8.1.2` saat menjalankan `php artisan optimize:clear` di server produksi aaPanel.
+- **Hasil & Manfaat:** 
+  * Server produksi berhasil membersihkan cache optimasi aplikasi (`optimize:clear`) dengan menggunakan binary PHP 8.2 aaPanel (`/www/server/php/82/bin/php`).
+  * Perubahan API sinkronisasi terbaru (`sync_work_orders.php`, `sync_payments.php`, dan `sync_finance.php`) telah aktif sempurna di lingkungan live server info.shoeworkshop.id.
+- **Kendala yang Dihadapi:** 
+  * Path perintah global `php` pada terminal sistem operasi Ubuntu mengarah ke PHP 8.1 bawaan OS, sehingga memicu konflik modul ekstensi (opcache, imagick) dan persyaratan minimum Laravel. Masalah diatasi dengan mengarahkan eksekusi ke binary path resmi aaPanel atau memperbarui symlink global terminal.
+
+
