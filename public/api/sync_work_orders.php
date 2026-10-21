@@ -54,11 +54,62 @@ if ($mysqli->connect_error) {
     exit;
 }
 
-// 3. Query Data
+// 3. Filter Parameters (date_from, date_to, date_field, updated_since)
+$whereClauses = [];
+
+// A. Filter updated_since (sync bertahap)
+if (!empty($_GET['updated_since'])) {
+    $updatedSince = trim($_GET['updated_since']);
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $updatedSince)) {
+        $updatedSince .= ' 00:00:00';
+    }
+    $escapedUpdatedSince = $mysqli->real_escape_string($updatedSince);
+    $whereClauses[] = "wo.updated_at >= '{$escapedUpdatedSince}'";
+}
+
+// B. Filter date_from & date_to dengan date_field dinamis
+$allowedDateFields = [
+    'created_at'    => 'wo.created_at',
+    'entry_date'    => 'wo.entry_date',
+    'finished_date' => 'wo.finished_date',
+    'taken_date'    => 'wo.taken_date',
+    'updated_at'    => 'wo.updated_at',
+];
+
+$dateFieldParam = isset($_GET['date_field']) ? trim($_GET['date_field']) : 'created_at';
+$targetDateField = $allowedDateFields[$dateFieldParam] ?? 'wo.created_at';
+
+if (!empty($_GET['date_from'])) {
+    $dateFrom = trim($_GET['date_from']);
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+        $dateFrom .= ' 00:00:00';
+    }
+    $escapedDateFrom = $mysqli->real_escape_string($dateFrom);
+    $whereClauses[] = "{$targetDateField} >= '{$escapedDateFrom}'";
+}
+
+if (!empty($_GET['date_to'])) {
+    $dateTo = trim($_GET['date_to']);
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+        $dateTo .= ' 23:59:59';
+    }
+    $escapedDateTo = $mysqli->real_escape_string($dateTo);
+    $whereClauses[] = "{$targetDateField} <= '{$escapedDateTo}'";
+}
+
+// Default fallback jika tidak ada parameter filter tanggal sama sekali
+if (empty($whereClauses)) {
+    $whereClauses[] = "wo.created_at > '2026-02-10 00:00:00'";
+}
+
+$whereSql = implode(' AND ', $whereClauses);
+
+// 4. Query Data
 // Fetching latest records using indexed joins for high performance (sub-15ms)
 $query = "SELECT 
             wo.id, 
             wo.spk_number as ticket_number, 
+            i.invoice_number,
             wo.customer_name, 
             wo.customer_phone, 
             wo.shoe_brand as brand, 
@@ -75,15 +126,26 @@ $query = "SELECT
                     ELSE 'OFFLINE'
                 END
             ) as channel,
+            wo.cs_code,
             wo.total_transaksi as total_price, 
+            wo.entry_date,
+            wo.finished_date,
+            wo.taken_date,
             wo.created_at, 
+            wo.updated_at,
+            wo.deleted_at,
+            CASE 
+                WHEN wo.deleted_at IS NOT NULL OR wo.status = 'CANCELLED' THEN 1 
+                ELSE 0 
+            END as is_cancelled,
             wo.estimation_date,
             wo.waktu
           FROM work_orders wo
+          LEFT JOIN invoices i ON wo.invoice_id = i.id
           LEFT JOIN cs_spk spk ON wo.id = spk.work_order_id AND spk.deleted_at IS NULL
           LEFT JOIN cs_leads cl_spk ON spk.cs_lead_id = cl_spk.id AND cl_spk.deleted_at IS NULL
           LEFT JOIN cs_leads cl_direct ON wo.id = cl_direct.converted_to_work_order_id AND cl_direct.deleted_at IS NULL
-          WHERE wo.created_at > '2026-02-10 00:00:00'
+          WHERE {$whereSql}
           ORDER BY wo.created_at DESC";
 
 $result = $mysqli->query($query);
@@ -95,13 +157,15 @@ if (!$result) {
     exit;
 }
 
-// 4. Format Data
+// 5. Format Data
 $data = [];
 while ($row = $result->fetch_assoc()) {
+    $row['id'] = (int)$row['id'];
+    $row['is_cancelled'] = (int)$row['is_cancelled'];
     $data[] = $row;
 }
 
-// 5. Return JSON
+// 6. Return JSON
 echo json_encode([
     'status' => 'success',
     'count' => count($data),

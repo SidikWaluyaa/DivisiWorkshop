@@ -1,7 +1,7 @@
 <?php
 /**
- * API to export Finance Payments (Revenue) for Google Sheets Sync
- * Usage: GET /api/sync_finance.php?token=YOUR_SECURE_TOKEN_HERE
+ * API to export Finance Payments (Revenue) for Google Sheets Sync - Version 2
+ * Usage: GET /api/sync_finance_v2.php?token=YOUR_SECURE_TOKEN_HERE
  */
 
 /***********************
@@ -60,30 +60,73 @@ if ($mysqli->connect_error) {
 }
 
 /***********************
- * QUERY (TIDAK DIUBAH KECUALI ALIAS)
+ * DATE FILTER PARAMS
+ ***********************/
+$whereClauses = [];
+
+$dateFrom = isset($_GET['date_from']) ? trim($_GET['date_from']) : null;
+$dateTo = isset($_GET['date_to']) ? trim($_GET['date_to']) : null;
+
+if (!empty($dateFrom)) {
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+        $dateFrom .= ' 00:00:00';
+    }
+    $escapedDateFrom = $mysqli->real_escape_string($dateFrom);
+    $whereClauses[] = "i.created_at >= '{$escapedDateFrom}'";
+}
+
+if (!empty($dateTo)) {
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+        $dateTo .= ' 23:59:59';
+    }
+    $escapedDateTo = $mysqli->real_escape_string($dateTo);
+    $whereClauses[] = "i.created_at <= '{$escapedDateTo}'";
+}
+
+// Default fallback jika tidak ada filter tanggal sama sekali
+if (empty($whereClauses)) {
+    $whereClauses[] = "i.created_at > '2026-02-01 00:00:00'";
+}
+
+$whereSql = implode(' AND ', $whereClauses);
+
+/***********************
+ * QUERY (VERSION 2)
  ***********************/
 $query = "SELECT 
     i.invoice_number as nomor_invoice, 
     c.name AS customer_name,
     c.phone AS customer_phone, 
+    c.email AS customer_email,
     i.status AS status_pembayaran_gabungan,
     i.paid_amount AS amount_paid,
     i.total_amount AS total_bill,
     i.shipping_cost,
     (i.total_amount + COALESCE(i.shipping_cost, 0) - i.paid_amount - i.discount) AS remaining_balance,
     i.discount,
-    i.invoice_awal_url,
-    i.invoice_akhir_url,
+    i.invoice_dp_url,
+    i.invoice_final_url,
+    i.invoice_full_url,
+    i.dp_unique_code,
+    i.final_unique_code,
+    i.total_dp_with_code as total_dp,
+    i.total_pelunasan_with_code as total_pelunasan,
     i.spk_status,
     i.estimasi_selesai,
     i.created_at,
-    i.updated_at
+    i.updated_at,
+    COUNT(wo.id) AS total_pairs,
+    COALESCE(GROUP_CONCAT(DISTINCT wo.cs_code SEPARATOR ', '), '') AS cs_code
 FROM 
     invoices i
 LEFT JOIN 
     customers c ON i.customer_id = c.id
+LEFT JOIN
+    work_orders wo ON wo.invoice_id = i.id
 WHERE 
-    i.created_at > '2026-02-01 00:00:00'
+    {$whereSql}
+GROUP BY 
+    i.id
 ORDER BY 
     i.created_at DESC";
 
@@ -111,9 +154,12 @@ while ($row = $result->fetch_assoc()) {
 
     $formatted_row = [
         'status' => 'IN_PROGRESS',
-        'spk_number' => $row['nomor_invoice'], // WAJIB dari alias baru
+        'spk_number' => $row['nomor_invoice'],
         'customer_name' => $row['customer_name'],
         'customer_phone' => $row['customer_phone'],
+        'customer_email' => $row['customer_email'],
+        'cs_code' => $row['cs_code'] ?? '',
+        'total_pairs' => (int)($row['total_pairs'] ?? 0),
         'status_pembayaran' => $botStatus,
         'spk_status' => $row['spk_status'] ?? 'BELUM SELESAI',
         'amount_paid' => $row['amount_paid'],
@@ -121,8 +167,13 @@ while ($row = $result->fetch_assoc()) {
         'discount' => $row['discount'],
         'shipping_cost' => $row['shipping_cost'] ?? 0,
         'remaining_balance' => $row['remaining_balance'],
-        'invoice_awal_url' => $row['invoice_awal_url'] ?? null,
-        'invoice_akhir_url' => $row['invoice_akhir_url'] ?? null,
+        'invoice_dp_url' => $row['invoice_dp_url'] ?? null,
+        'invoice_final_url' => $row['invoice_final_url'] ?? null,
+        'invoice_full_url' => $row['invoice_full_url'] ?? null,
+        'dp_unique_code' => $row['dp_unique_code'] ?? 0,
+        'final_unique_code' => $row['final_unique_code'] ?? 0,
+        'total_dp' => $row['total_dp'] ?? 0,
+        'total_pelunasan' => $row['total_pelunasan'] ?? 0,
         'estimasi_selesai' => $row['estimasi_selesai'],
         'created_at' => $row['created_at'],
         'updated_at' => $row['updated_at']
