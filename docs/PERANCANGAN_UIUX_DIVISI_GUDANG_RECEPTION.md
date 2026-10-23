@@ -1,9 +1,29 @@
-# RANCANGAN & AUDIT UI/UX MODERN: DIVISI GUDANG (PENERIMAAN / RECEPTION)
-**Sistem Informasi Bengkel & Workshop Sepatu — PT LAF Market Indonesia**  
-*Tanggal Analisis: 17 Oktober 2026*  
-*Fokus Pembaruan: Peningkatan Visual & Kenyamanan Pengguna (UI/UX) Tanpa Mengubah Flow Bisnis*
+<div class="paper-header">
+<div class="paper-badge">DOKUMEN PERANCANGAN SISTEM & PAPER PROJECT</div>
+<div class="paper-org">SHOE WORKSHOP INDONESIA • DIVISI IT & DATA ANALYST</div>
+<h1 class="paper-title">PERANCANGAN & AUDIT UI/UX MODERN: DIVISI GUDANG (RECEPTION)</h1>
+<div class="paper-subtitle">Peningkatan Visual & Kenyamanan Pengguna (UI/UX Ergonomis Mobile-First) Tanpa Mengubah Flow Bisnis & Skema Database</div>
+<div class="meta-grid">
+<div>
+<div class="meta-label">Nomor Dokumen Paper</div>
+<div class="meta-val">UIUX-DOC-2026-REC-001 (Rev 2.0)</div>
+</div>
+<div>
+<div class="meta-label">Status Perancangan</div>
+<div class="meta-val">✅ Final Approved — Siap Eksekusi (Zero Defect)</div>
+</div>
+<div>
+<div class="meta-label">Divisi Terkait</div>
+<div class="meta-val">Divisi Gudang (Reception & Inventory) & Divisi Workshop</div>
+</div>
+<div>
+<div class="meta-label">Lead Architect & Penulis</div>
+<div class="meta-val">Sidik Waluya (Full Stack Dev) & Frontend Specialist Lead</div>
+</div>
+</div>
+</div>
 
----
+</div>
 
 ## 1. Eksekutif Ringkasan (Executive Summary)
 
@@ -12,6 +32,18 @@ Divisi Gudang merupakan **pintu gerbang fisik utama (Physical Gatekeeper)** temp
 Berdasarkan audit mendalam terhadap pola operasional dan arsitektur kode MVC yang ada, halaman utama Penerimaan (`/reception`) memegang peranan krusial bagi produktivitas tim gudang. Pembaruan ini berfokus pada **rekayasa antarmuka visual (UI) dan pengalaman pengguna (UX)** agar operasional harian berjalan jauh lebih cepat, ergonomis di layar ponsel maupun desktop, serta memiliki estetika premium modern tanpa mengubah alur data (*business flow*) yang sudah berjalan dengan stabil.
 
 ---
+
+
+### 1.2 Tujuan Perancangan UI/UX Gudang
+Perancangan arsitektur dan sistem ini disusun secara spesifik untuk mencapai sasaran strategis dan operasional bagi **Divisi Gudang (Reception & Inventory) & Divisi Workshop** sebagai berikut:
+
+1. Meremajakan tampilan antarmuka modul penerimaan barang gudang (`/reception`) dengan prinsip UI/UX modern yang mobile-first dan sangat ergonomis.
+2. Mempercepat proses unboxing paket kiriman, pencocokan resi ekspedisi, dan alokasi rak sepatu (*Rack Management*) dalam waktu kurang dari 60 detik per resi.
+3. Meminimalisir kesalahan identifikasi fisik barang melalui kartu visual informatif, indikator status kontras tinggi, dan tombol aksi sentuh yang nyaman dioperasikan.
+4. Mempertahankan keutuhan logika sistem yang sudah ada dengan jaminan 0 perubahan skema database dan 0 mutasi alur backend.
+
+---
+
 
 ## 2. Prinsip & Batasan Utama (Core Principles & Guardrails)
 
@@ -40,7 +72,7 @@ Berdasarkan audit mendalam terhadap pola operasional dan arsitektur kode MVC yan
 | **Daftar SPK (Desktop)** | Tabel datar standar dengan tombol aksi yang kurang memiliki hirarki visual. | **Elevated Interactive Table**: Baris dengan hover state lembut, badge prioritas ber-dot glow, dan tombol aksi bergradien tegas. |
 | **Daftar SPK (Mobile)** | Kartu sederhana dengan tombol aksi standar. | **Premium Mobile Cards**: Kartu modern dengan pemisah visual yang rapi, tombol copy cepat untuk No. SPK dan WhatsApp, serta tombol "Terima Barang" ergonomis. |
 
----
+<div class="page-break"></div>
 
 ## 4. Flowchart Alur Kerja Penerimaan Gudang (Tetap & Preserved)
 
@@ -74,6 +106,8 @@ flowchart TD
 ```
 
 ---
+
+<div class="page-break"></div>
 
 ## 5. Blueprint Wireframe Antarmuka Baru (`reception/index`)
 

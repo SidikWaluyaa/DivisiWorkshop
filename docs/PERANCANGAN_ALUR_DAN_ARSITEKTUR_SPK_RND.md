@@ -1,209 +1,42 @@
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+<div class="paper-header">
+<div class="paper-badge">DOKUMEN PERANCANGAN SISTEM & PAPER PROJECT</div>
+<div class="paper-org">SHOE WORKSHOP INDONESIA • DIVISI IT & DATA ANALYST</div>
+<h1 class="paper-title">PERANCANGAN ALUR & ARSITEKTUR SPK R&D (RESEARCH & DEVELOPMENT)</h1>
+<div class="paper-subtitle">Standar Operasional Penanganan Sepatu Eksperimental & Prototipe Khusus, Log Foto Progres Mobile via Scan QR, dan Laporan Interaktif Interaktif Klien</div>
+<div class="meta-grid">
+<div>
+<div class="meta-label">Nomor Dokumen Paper</div>
+<div class="meta-val">RND-SPK-2026-001 (Rev 2.0)</div>
+</div>
+<div>
+<div class="meta-label">Status Perancangan</div>
+<div class="meta-val">✅ Final Approved — Siap Eksekusi (Zero Defect)</div>
+</div>
+<div>
+<div class="meta-label">Divisi Terkait</div>
+<div class="meta-val">Divisi Workshop (R&D & Produksi) & Divisi CS</div>
+</div>
+<div>
+<div class="meta-label">Lead Architect & Penulis</div>
+<div class="meta-val">Sidik Waluya (Full Stack Dev) & R&D Lead Specialist</div>
+</div>
+</div>
+</div>
 
-    @page {
-        size: A4;
-        margin: 20mm 15mm 20mm 15mm;
-        @bottom-right {
-            content: "Halaman " counter(page) " dari " counter(pages);
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 8pt;
-            color: #64748b;
-        }
-        @bottom-left {
-            content: "Shoe Workshop • SOP & Arsitektur SPK R&D (Research & Development)";
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 8pt;
-            color: #64748b;
-        }
-    }
+### 1.3 Tujuan Perancangan SPK R&D
+Perancangan arsitektur dan sistem ini disusun secara spesifik untuk mencapai sasaran strategis dan operasional bagi **Divisi Workshop (R&D & Produksi) & Divisi CS** sebagai berikut:
 
-    body {
-        font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        font-size: 10pt;
-        line-height: 1.6;
-        color: #1e293b;
-        background-color: #ffffff;
-    }
+1. Memisahkan alur kerja penanganan sepatu eksperimental, prototipe custom, dan riset bahan ke dalam dokumen SPK R&D tersendiri dengan identitas visual khas (*accent purple/violet*).
+2. Memfasilitasi teknisi riset bengkel dalam mendokumentasikan log foto progres pengerjaan bertahap langsung dari meja kerja via scan kamera HP tanpa membuka komputer admin.
+3. Menghasilkan laporan digital interaktif (*Client-Facing R&D Report*) yang dapat diakses langsung oleh mitra brand atau pelanggan dengan galeri before-after transparan.
+4. Melindungi ritme antrean reparasi reguler di lini produksi utama agar proyek eksperimen riset tidak menghambat kapasitas harian workshop.
 
-    h1, h2, h3, h4 {
-        color: #0f172a;
-        font-weight: 700;
-        page-break-after: avoid;
-    }
+---
 
-    h1 {
-        font-size: 20pt;
-        border-bottom: 2.5px solid #4f46e5;
-        padding-bottom: 6px;
-        margin-top: 0;
-        margin-bottom: 14pt;
-        color: #1e1b4b;
-    }
 
-    h2 {
-        font-size: 14pt;
-        border-left: 4.5px solid #4f46e5;
-        padding-left: 10px;
-        margin-top: 18pt;
-        margin-bottom: 10pt;
-        background: #f5f3ff;
-        padding-top: 4px;
-        padding-bottom: 4px;
-        border-radius: 0 6px 6px 0;
-    }
-
-    h3 {
-        font-size: 11.5pt;
-        margin-top: 14pt;
-        margin-bottom: 6pt;
-        color: #3730a3;
-    }
-
-    p, ul, ol { margin-bottom: 8pt; }
-    li { margin-bottom: 3pt; }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10pt;
-        margin-bottom: 14pt;
-        font-size: 9pt;
-        page-break-inside: avoid;
-    }
-
-    th, td {
-        border: 1px solid #cbd5e1;
-        padding: 7px 10px;
-        text-align: left;
-        vertical-align: top;
-    }
-
-    th {
-        background-color: #ede9fe;
-        color: #3730a3;
-        font-weight: 700;
-    }
-
-    tr:nth-child(even) { background-color: #fafafa; }
-
-    code {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 8.5pt;
-        background-color: #ede9fe;
-        color: #3730a3;
-        padding: 2px 5px;
-        border-radius: 4px;
-        border: 1px solid #ddd6fe;
-    }
-
-    pre {
-        background-color: #0f172a;
-        color: #f8fafc;
-        padding: 12px 14px;
-        border-radius: 8px;
-        overflow-x: auto;
-        font-size: 8.5pt;
-        line-height: 1.5;
-        page-break-inside: avoid;
-        margin: 12pt 0;
-    }
-
-    pre code {
-        background: transparent;
-        color: inherit;
-        border: none;
-        padding: 0;
-    }
-
-    blockquote {
-        border-left: 4px solid #4f46e5;
-        background-color: #f5f3ff;
-        color: #312e81;
-        padding: 10px 14px;
-        margin: 12pt 0;
-        border-radius: 0 8px 8px 0;
-        font-size: 9.5pt;
-        page-break-inside: avoid;
-    }
-
-    .page-break {
-        page-break-after: always;
-        break-after: page;
-        height: 0;
-        display: block;
-    }
-
-    .cover-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        min-height: 90vh;
-        padding: 20px 0;
-    }
-
-    .cover-header { margin-top: 40px; }
-
-    .cover-title {
-        font-size: 26pt;
-        font-weight: 800;
-        color: #0f172a;
-        line-height: 1.25;
-        margin-bottom: 12px;
-        border-bottom: 4px solid #4f46e5;
-        padding-bottom: 14px;
-    }
-
-    .cover-subtitle {
-        font-size: 13pt;
-        color: #64748b;
-        line-height: 1.5;
-        margin-bottom: 25px;
-    }
-
-    .cover-meta {
-        background: #f5f3ff;
-        border: 1.5px solid #ddd6fe;
-        border-radius: 12px;
-        padding: 18px 22px;
-        margin-top: 30px;
-    }
-
-    .cover-footer {
-        font-size: 9pt;
-        color: #94a3b8;
-        border-top: 1px solid #e2e8f0;
-        padding-top: 15px;
-        display: flex;
-        justify-content: space-between;
-    }
-</style>
 
 <!-- ================= COVER PAGE ================= -->
-<div class="cover-container">
-    <div class="cover-header">
-        <p style="text-transform: uppercase; letter-spacing: 0.15em; font-size: 10pt; font-weight: 800; color: #4f46e5; margin-bottom: 8px;">
-            SHOE WORKSHOP • DOKUMEN ARSITEKTUR &amp; SOP RESMI
-        </p>
-        <h1 class="cover-title">
-            Spesifikasi Arsitektur &amp; Alur SPK R&amp;D (Research &amp; Development)
-        </h1>
-        <p class="cover-subtitle">
-            Standar Pengelolaan SPK Riset Internal, Penomoran Prefix RD-, Skema Database Lengkap beserta DDL SQL, Desain Visual Cetak Fisik Berstandar Big 4, dan Fitur Mobile QR Upload Progres
-        </p>
-    </div>
-    <div class="cover-meta">
-        <table style="border: none; margin: 0;">
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; width: 170px; font-weight: 700; color: #3730a3;">Klasifikasi Dokumen</td><td style="border: none; padding: 4px 0; font-weight: 700; color: #0f172a;">: Confidential / Internal Enterprise SOP</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #3730a3;">Versi Dokumen</td><td style="border: none; padding: 4px 0; color: #0f172a;">: 2.0 (Refactored &amp; Completed Architecture)</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #3730a3;">Tanggal Rilis</td><td style="border: none; padding: 4px 0; color: #0f172a;">: Rabu, 30 September 2026</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #3730a3;">Target Pengguna</td><td style="border: none; padding: 4px 0; color: #0f172a;">: CS, Receptionist, Kepala Produksi, Teknisi R&amp;D, Admin Workshop</td></tr>
-        </table>
-    </div>
-    <div class="cover-footer">
-        <span>Divisi Teknologi Informasi &amp; Pengembangan Sistem</span>
-        <span>Shoe Workshop Indonesia &copy; 2026</span>
-    </div>
+
 </div>
 
 <div class="page-break"></div>
@@ -272,7 +105,7 @@ Alur operasional SPK R&D **tetap menggunakan alur stasiun yang sudah ada** namun
 ### 2.1 Diagram Alur Lengkap (Visual Workflow Diagram)
 
 <div align="center" style="margin: 16pt 0;">
-    <img src="images/flowchart_spk_rnd.svg" alt="Diagram Alur End-to-End SPK R&D" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.08);" />
+<img src="images/flowchart_spk_rnd.svg" alt="Diagram Alur End-to-End SPK R&D" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.08);" />
 </div>
 
 ### 2.2 Penjelasan Rinci Tahapan Alur
@@ -298,7 +131,7 @@ Arsitektur ini dirancang menggunakan prinsip **Zero-Breaking-Change** — memanf
 ### 3.1 Entity Relationship Diagram (Visual ERD Diagram)
 
 <div align="center" style="margin: 16pt 0;">
-    <img src="images/erd_spk_rnd.svg" alt="Diagram ERD SPK R&D" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.08);" />
+<img src="images/erd_spk_rnd.svg" alt="Diagram ERD SPK R&D" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.08);" />
 </div>
 
 **Ringkasan Relasi Antar Tabel:**
@@ -634,24 +467,24 @@ Lembar cetak SPK (`resources/views/assessment/print-spk-premium.blade.php`) adal
 <aside class="sidebar" style="background-color: {{ $sidebarBg }};">
     @if($isRnd)
         {{-- Badge R&D --}}
-        <div style="background:rgba(255,255,255,0.20); border:1px solid rgba(255,255,255,0.4);
+<div style="background:rgba(255,255,255,0.20); border:1px solid rgba(255,255,255,0.4);
                     border-radius:8px; padding:6px 10px; text-align:center;
                     font-size:10px; font-weight:900; color:#fff; letter-spacing:0.1em;">
             🔬 RESEARCH & DEVELOPMENT 🔬
-        </div>
+</div>
         {{-- QR Code Mobile Upload --}}
-        <div style="background:#fff; border-radius:8px; padding:8px; text-align:center; margin-top:10px;">
-            <img src="{{ $qrCodeUploadUrl }}" alt="QR Upload Progres" style="width:80px; height:80px;" />
-            <p style="font-size:8px; color:#6b7280; margin-top:4px; font-weight:700;">
+<div style="background:#fff; border-radius:8px; padding:8px; text-align:center; margin-top:10px;">
+<img src="{{ $qrCodeUploadUrl }}" alt="QR Upload Progres" style="width:80px; height:80px;" />
+<p style="font-size:8px; color:#6b7280; margin-top:4px; font-weight:700;">
                 Scan untuk upload progres
-            </p>
-        </div>
+</p>
+</div>
     @elseif($isBrand)
-        <div class="badge-khusus">🏷️ SPK B2B BRAND PARTNERSHIP</div>
+<div class="badge-khusus">🏷️ SPK B2B BRAND PARTNERSHIP</div>
     @elseif($isFastTrack)
-        <div class="badge-khusus">🚀 FAST TRACK SERVICE</div>
+<div class="badge-khusus">🚀 FAST TRACK SERVICE</div>
     @elseif($isWarranty)
-        <div class="badge-khusus">🛡️ KLAIM GARANSI RESMI</div>
+<div class="badge-khusus">🛡️ KLAIM GARANSI RESMI</div>
     @endif
     {{-- Isi informasi SPK & customer di bawah --}}
 </aside>
@@ -730,7 +563,7 @@ Fitur paling menonjol adalah **Galeri Evolusi Foto (Photo Sequence)** yang menya
 $$\mathbf{[Foto\ Tahap\ 1]} \longrightarrow \mathbf{[Foto\ Tahap\ 2]} \longrightarrow \mathbf{[Foto\ Tahap\ 3]} \longrightarrow \dots$$
 
 <div align="center" style="margin: 18pt 0;">
-    <img src="images/wireframe_rnd_report.svg" alt="Wireframe Laporan Interaktif R&D" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.10);" />
+<img src="images/wireframe_rnd_report.svg" alt="Wireframe Laporan Interaktif R&D" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.10);" />
 </div>
 
 #### Rincian Komponen Wireframe 8.1:
@@ -746,7 +579,7 @@ $$\mathbf{[Foto\ Tahap\ 1]} \longrightarrow \mathbf{[Foto\ Tahap\ 2]} \longright
 ### 8.2 Wireframe Internal Detail Order & Modal Form Upload Progres (`/admin/orders/{id}`)
 
 <div align="center" style="margin: 18pt 0;">
-    <img src="images/wireframe_upload_progress.svg" alt="Wireframe Form Modal Upload Progres R&D" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.10);" />
+<img src="images/wireframe_upload_progress.svg" alt="Wireframe Form Modal Upload Progres R&D" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.10);" />
 </div>
 
 #### Rincian Komponen Wireframe 8.2:
@@ -772,7 +605,7 @@ Fitur **Mobile QR Upload Form** dirancang khusus untuk memfasilitasi teknisi aga
 2. **Pindai QR pada Modal Monitor PC**: Tombol **"📱 Scan QR Upload HP"** memunculkan modal popup QR Code ukuran besar di layar komputer untuk dipindai langsung.
 
 <div align="center" style="margin: 18pt 0;">
-    <img src="images/wireframe_mobile_qr_upload.svg" alt="Wireframe Alur Scan QR Code Mobile Upload HP" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.10);" />
+<img src="images/wireframe_mobile_qr_upload.svg" alt="Wireframe Alur Scan QR Code Mobile Upload HP" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.10);" />
 </div>
 
 #### 8.3.2 Rincian Fitur & Keunggulan Form Mobile:
@@ -785,6 +618,6 @@ Fitur **Mobile QR Upload Form** dirancang khusus untuk memfasilitasi teknisi aga
 ---
 
 <div class="cover-footer" style="margin-top: 50px;">
-    <span>Dokumen SOP Resmi Sistem Workshop • Shoe Workshop Indonesia</span>
-    <span>Selesai — Halaman Terakhir</span>
+<span>Dokumen SOP Resmi Sistem Workshop • Shoe Workshop Indonesia</span>
+<span>Selesai — Halaman Terakhir</span>
 </div>

@@ -1,12 +1,29 @@
-# 📑 Dokumen Konsep & Arsitektur Teknis
-## Pemisahan Alur QC (Lolos Murni vs Lolos dengan Catatan) & Sinkronisasi Cerdas Invoice ke Google Sheets
+<div class="paper-header">
+<div class="paper-badge">DOKUMEN PERANCANGAN SISTEM & PAPER PROJECT</div>
+<div class="paper-org">SHOE WORKSHOP INDONESIA • DIVISI IT & DATA ANALYST</div>
+<h1 class="paper-title">PERANCANGAN ALUR QC LOLOS CATATAN & INVOICE SYNC GATEKEEPER</h1>
+<div class="paper-subtitle">Pemisahan Alur QC (Lolos Murni vs Lolos dengan Catatan) & Otomasi Gembok Sinkronisasi Google Sheets untuk Menjamin Keakuratan Data Keuangan 100%</div>
+<div class="meta-grid">
+<div>
+<div class="meta-label">Nomor Dokumen Paper</div>
+<div class="meta-val">ARCH-2026-QC-INV-001 (Rev 2.0)</div>
+</div>
+<div>
+<div class="meta-label">Status Perancangan</div>
+<div class="meta-val">✅ Final Approved — Siap Eksekusi (Zero Defect)</div>
+</div>
+<div>
+<div class="meta-label">Divisi Terkait</div>
+<div class="meta-val">Divisi Gudang (Reception/Shipping), Divisi CC / CX, & Divisi Finance</div>
+</div>
+<div>
+<div class="meta-label">Lead Architect & Penulis</div>
+<div class="meta-val">Sidik Waluya (Full Stack Dev) & AI Architecture Lead</div>
+</div>
+</div>
+</div>
 
-**Nomor Dokumen:** ARCH-2026-QC-INV-001  
-**Penyusun:** Tim Pengembang Sistem Workshop  
-**Tanggal Terbit:** Senin, 19 Oktober 2026  
-**Status:** 🟡 *Draft Usulan Arsitektur & Perencanaan Teknis (Ready for Review & PDF)*  
-
----
+</div>
 
 ## 📌 1. Ringkasan Eksekutif & Latar Belakang Masalah
 
@@ -24,6 +41,18 @@ Secara sistem akuntansi keuangan, kedua SPK tersebut digabungkan ke dalam **1 In
 3. **Dampak Fatal ke Keuangan:**
    - Jika setelah dikonfirmasi pelanggan menyetujui servis tambahan $\rightarrow$ Nilai tagihan berubah, tetapi Google Sheets sudah terlanjur mencatat nominal lama.
    - Jika pelanggan menolak dan membatalkan sepatu #2 $\rightarrow$ Invoice di Google Sheets menjadi selisih (*dirty data*) dan membutuhkan revisi manual yang membingungkan tim finance.
+
+
+
+### 1.2 Tujuan Perancangan Sistem QC Catatan & Finance Lock
+Perancangan arsitektur dan sistem ini disusun secara spesifik untuk mencapai sasaran strategis dan operasional bagi **Divisi Gudang (Reception/Shipping), Divisi CC / CX, & Divisi Finance** sebagai berikut:
+
+1. Mengakomodasi penanganan sepatu yang lolos uji kualitas dengan catatan minor tanpa menahan pengiriman fisik barang di meja Gudang pengiriman.
+2. Menyediakan antrean tindak lanjut khusus bagi tim Customer Care (CC/CX) untuk mengonfirmasi catatan pengerjaan dan solusi kompensasi ke pelanggan secara cepat.
+3. Menerapkan sistem gembok (*Gatekeeper Lock*) pada otomasi API sinkronisasi invoice ke Google Sheets agar order yang belum disetujui pelanggan tidak masuk ke pembukuan finance.
+4. Menjamin keakuratan 100% data keuangan, piutang, dan omzet harian pada Divisi Finance tanpa ada potensi pembatalan transaksi pasca-sinkronisasi.
+
+---
 
 ---
 
@@ -45,8 +74,8 @@ Secara sistem akuntansi keuangan, kedua SPK tersebut digabungkan ke dalam **1 In
 ### A. Diagram Arsitektur Visual (Vector Diagram)
 
 <div align="center" style="margin: 20px 0;">
-  <img src="images/flowchart_qc_lolos_catatan_dan_invoice_gatekeeper.svg" alt="Arsitektur Alur QC Lolos Catatan & Invoice GSheet Gatekeeper" width="100%">
-  <p style="font-size: 11px; color: #64748b; margin-top: 6px;"><em>Gambar 1: Alur Pemisahan QC Lolos Murni vs Catatan dan Mekanisme Gembok Sinkronisasi Google Sheets.</em></p>
+<img src="images/flowchart_qc_lolos_catatan_dan_invoice_gatekeeper.svg" alt="Arsitektur Alur QC Lolos Catatan & Invoice GSheet Gatekeeper" width="100%">
+<p style="font-size: 11px; color: #64748b; margin-top: 6px;"><em>Gambar 1: Alur Pemisahan QC Lolos Murni vs Catatan dan Mekanisme Gembok Sinkronisasi Google Sheets.</em></p>
 </div>
 
 ### B. Diagram Alur Logika Eksekusi Sistem (Mermaid Flowchart)
@@ -89,6 +118,8 @@ flowchart TD
 ```
 
 ---
+
+<div class="page-break"></div>
 
 ## 🛠️ 4. Rancangan Arsitektur Database & Model
 
@@ -249,6 +280,8 @@ public function getFinanceSyncData(?string $startDate = null, ?string $endDate =
 ```
 
 ---
+
+<div class="page-break"></div>
 
 ## 🖥️ 6. Rancangan Antarmuka (UI/UX) Form Reception & Tab CS
 

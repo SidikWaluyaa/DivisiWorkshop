@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 840" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap');
+      .title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 800; fill: #0f172a; }
+      .subtitle { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 500; fill: #64748b; }
+      .layer-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+      .box-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; fill: #0f172a; }
+      .box-desc { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10px; font-weight: 500; fill: #475569; }
+      .mono-tag { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700; }
+      .conn-line { stroke: #cbd5e1; stroke-width: 2; fill: none; stroke-dasharray: 4,4; }
+      .solid-amber { stroke: #d97706; stroke-width: 2.5; fill: none; }
+      .solid-emerald { stroke: #059669; stroke-width: 2.5; fill: none; }
+      .solid-blue { stroke: #2563eb; stroke-width: 2; fill: none; }
+    </style>
+    <filter id="shadow" x="-3%" y="-3%" width="106%" height="108%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.07"/>
+    </filter>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#d97706"/>
+    </marker>
+    <marker id="arrow-emerald" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="840" rx="16" fill="#f8fafc"/>
+  <rect x="1" y="1" width="998" height="838" rx="15" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- Header -->
+  <g transform="translate(40, 28)">
+    <rect x="0" y="0" width="46" height="46" rx="12" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+    <text x="11" y="32" font-size="24">🏛️</text>
+    <text x="60" y="20" class="title">Topologi Arsitektur: 2 Project Terpisah dengan Shared Database</text>
+    <text x="60" y="40" class="subtitle">Pemisahan Aplikasi Core Workshop (Ritel &amp; Teknisi) dan Portal Brand B2B Menggunakan Basis Data Bersama</text>
+  </g>
+
+  <!-- ================= LAYER 1: CLIENT ACCESS & USERS ================= -->
+  <g transform="translate(40, 95)">
+    <rect width="920" height="95" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect x="0" y="0" width="920" height="26" rx="12" fill="#f1f5f9"/>
+    <rect x="0" y="14" width="920" height="12" fill="#f1f5f9"/>
+    <text x="16" y="18" class="layer-title" fill="#475569">LAPISAN PENGGUNA (CLIENT &amp; USERS LAYER)</text>
+
+    <!-- Client 1 -->
+    <g transform="translate(30, 36)">
+      <rect width="260" height="46" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+      <text x="12" y="24" font-size="18">📱</text>
+      <text x="38" y="20" class="box-title">Staff Ritel CS &amp; Kasir</text>
+      <text x="38" y="35" class="box-desc">WhatsApp Leads, Form SPK CS, Pickup Rak</text>
+    </g>
+
+    <!-- Client 2 -->
+    <g transform="translate(330, 36)">
+      <rect width="260" height="46" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+      <text x="12" y="24" font-size="18">📠</text>
+      <text x="38" y="20" class="box-title">Teknisi Meja Bengkel</text>
+      <text x="38" y="35" class="box-desc">Scanner Barcode Stasiun (Sol, Jahit, QC)</text>
+    </g>
+
+    <!-- Client 3 -->
+    <g transform="translate(630, 36)">
+      <rect width="260" height="46" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+      <text x="12" y="24" font-size="18">🏢</text>
+      <text x="38" y="20" class="box-title">Admin B2B &amp; Klien Pabrik</text>
+      <text x="38" y="35" class="box-desc">Intake Batch PO, Matrix Size, Live Progress</text>
+    </g>
+  </g>
+
+  <!-- ================= LAYER 2: ROUTING / REVERSE PROXY ================= -->
+  <g transform="translate(40, 215)">
+    <rect width="920" height="85" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect x="0" y="0" width="920" height="26" rx="12" fill="#f1f5f9"/>
+    <rect x="0" y="14" width="920" height="12" fill="#f1f5f9"/>
+    <text x="16" y="18" class="layer-title" fill="#475569">SERVER aaPanel &amp; WEB SERVER NGINX (ROUTING / SUBDOMAIN)</text>
+
+    <!-- Host 1 -->
+    <g transform="translate(50, 36)">
+      <rect width="380" height="38" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="14" y="24" class="mono-tag" fill="#059669">🌐 info.shoeworkshop.id</text>
+      <text x="210" y="24" class="box-desc">VHost: /www/wwwroot/SistemWorkshop</text>
+    </g>
+
+    <!-- Host 2 -->
+    <g transform="translate(490, 36)">
+      <rect width="380" height="38" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="14" y="24" class="mono-tag" fill="#d97706">🌐 brand.shoeworkshop.id</text>
+      <text x="220" y="24" class="box-desc">VHost: /www/wwwroot/BrandWorkshop</text>
+    </g>
+  </g>
+
+  <!-- Connectors Layer 1 to 2 -->
+  <path d="M 200 178 L 240 215" class="solid-emerald"/>
+  <path d="M 500 178 L 240 215" class="solid-emerald"/>
+  <path d="M 800 178 L 680 215" class="solid-amber"/>
+
+  <!-- ================= LAYER 3: DUA APLIKASI LARAVEL ================= -->
+  <g transform="translate(40, 325)">
+    <!-- App 1: Sistem Workshop -->
+    <g transform="translate(0, 0)">
+      <rect width="440" height="235" rx="14" fill="#ffffff" stroke="#86efac" stroke-width="2" filter="url(#shadow)"/>
+      <path d="M 0 14 Q 0 0 14 0 L 426 0 Q 440 0 440 14 L 440 34 L 0 34 Z" fill="#059669"/>
+      <text x="16" y="22" class="phase-title" fill="#ffffff" font-weight="800">APP 1: SISTEM WORKSHOP (CORE REPO)</text>
+      <rect x="330" y="8" width="95" height="18" rx="4" fill="#047857"/>
+      <text x="338" y="21" class="mono-tag" fill="#ffffff">SCHEMA OWNER</text>
+
+      <g transform="translate(18, 48)">
+        <text x="0" y="16" class="box-title">Tanggung Jawab Aplikasi:</text>
+        <text x="12" y="34" class="box-desc">✅ Memegang seluruh master migrasi database (Schema Master)</text>
+        <text x="12" y="52" class="box-desc">✅ Meja scan barcode stasiun kerja (Prep, Sol, Jahit, QC)</text>
+        <text x="12" y="70" class="box-desc">✅ Modul CS Ritel, Leads WhatsApp, dan Quotation B2C</text>
+        <text x="12" y="88" class="box-desc">✅ Rak pickup kasir umum (Terfilter: brand_order_id IS NULL)</text>
+        <text x="12" y="106" class="box-desc">✅ Saat QC lolos: otomatis ubah status ke BRAND_FINISHED</text>
+        
+        <rect x="0" y="125" width="404" height="42" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+        <text x="12" y="142" class="box-title" fill="#065f46">Scanner Stasiun Tetap Memakai Scanner Reguler</text>
+        <text x="12" y="156" class="box-desc" fill="#047857">Teknisi tidak perlu berganti laptop atau ganti URL aplikasi</text>
+      </g>
+    </g>
+
+    <!-- App 2: Brand Workshop -->
+    <g transform="translate(480, 0)">
+      <rect width="440" height="235" rx="14" fill="#ffffff" stroke="#fde68a" stroke-width="2" filter="url(#shadow)"/>
+      <path d="M 0 14 Q 0 0 14 0 L 426 0 Q 440 0 440 14 L 440 34 L 0 34 Z" fill="#d97706"/>
+      <text x="16" y="22" class="phase-title" fill="#ffffff" font-weight="800">APP 2: BRAND WORKSHOP (PORTAL B2B)</text>
+      <rect x="310" y="8" width="115" height="18" rx="4" fill="#b45309"/>
+      <text x="318" y="21" class="mono-tag" fill="#ffffff">SCHEMA CONSUMER</text>
+
+      <g transform="translate(18, 48)">
+        <text x="0" y="16" class="box-title">Tanggung Jawab Aplikasi:</text>
+        <text x="12" y="34" class="box-desc">✅ Profil master mitra rekanan pabrik &amp; brand (brand_partners)</text>
+        <text x="12" y="52" class="box-desc">✅ Intake batch order: Nomor PO pabrik &amp; Smart Size Matrix</text>
+        <text x="12" y="70" class="box-desc">✅ Batch Generator: Insert 1 brand_orders + N work_orders</text>
+        <text x="12" y="88" class="box-desc">✅ Cetak SPK Induk A4 (Gold) &amp; Grid Stiker Barcode Satuan</text>
+        <text x="12" y="106" class="box-desc">✅ Live Progress Bar &amp; Dispatch B2B (Surat Jalan Pengembalian)</text>
+
+        <rect x="0" y="125" width="404" height="42" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+        <text x="12" y="142" class="box-title" fill="#92400e">Siap Ditingkatkan Jadi Client Portal</text>
+        <text x="12" y="156" class="box-desc" fill="#78350f">Akses login khusus perwakilan pabrik mitra tanpa buka core bengkel</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Connectors Layer 2 to 3 -->
+  <path d="M 240 274 L 240 325" class="solid-emerald" marker-end="url(#arrow-emerald)"/>
+  <path d="M 680 274 L 680 325" class="solid-amber" marker-end="url(#arrow-amber)"/>
+
+  <!-- ================= LAYER 4: DATABASE BERSAMA ================= -->
+  <g transform="translate(40, 585)">
+    <rect width="920" height="225" rx="16" fill="#ffffff" stroke="#94a3b8" stroke-width="2" filter="url(#shadow)"/>
+    <path d="M 0 16 Q 0 0 16 0 L 904 0 Q 920 0 920 16 L 920 38 L 0 38 Z" fill="#0f172a"/>
+    <text x="20" y="24" class="phase-title" fill="#ffffff" font-weight="800">🗄️ LAPISAN DATABASE BERSAMA: MySQL (`sql_info_shoewor`)</text>
+    <rect x="740" y="10" width="160" height="20" rx="4" fill="#334155"/>
+    <text x="752" y="24" class="mono-tag" fill="#38bdf8">SINGLE SOURCE OF TRUTH</text>
+
+    <!-- Table 1 -->
+    <g transform="translate(30, 52)">
+      <rect width="195" height="150" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="0" y="0" width="195" height="28" rx="10" fill="#e2e8f0"/>
+      <text x="12" y="19" class="mono-tag" fill="#0f172a">brand_partners</text>
+      <text x="12" y="46" class="box-desc">🔑 id (PK)</text>
+      <text x="12" y="64" class="box-desc">• code, name (Nama PT)</text>
+      <text x="12" y="82" class="box-desc">• pic_name, pic_phone</text>
+      <text x="12" y="100" class="box-desc">• address, logo_path</text>
+      <text x="12" y="118" class="box-desc">• status (ACTIVE)</text>
+      <rect x="12" y="126" width="105" height="16" rx="4" fill="#fef3c7"/>
+      <text x="18" y="138" class="mono-tag" fill="#b45309">Dikelola App 2</text>
+    </g>
+
+    <!-- Table 2 -->
+    <g transform="translate(250, 52)">
+      <rect width="205" height="150" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="0" y="0" width="205" height="28" rx="10" fill="#e2e8f0"/>
+      <text x="12" y="19" class="mono-tag" fill="#0f172a">brand_orders</text>
+      <text x="12" y="46" class="box-desc">🔑 id (PK)</text>
+      <text x="12" y="64" class="box-desc">• batch_number (BR-xxxx)</text>
+      <text x="12" y="82" class="box-desc">🔗 brand_partner_id (FK)</text>
+      <text x="12" y="100" class="box-desc">• total_pairs, received_date</text>
+      <text x="12" y="118" class="box-desc">• status (INBOUND..DISPATCH)</text>
+      <rect x="12" y="126" width="105" height="16" rx="4" fill="#fef3c7"/>
+      <text x="18" y="138" class="mono-tag" fill="#b45309">Dikelola App 2</text>
+    </g>
+
+    <!-- Table 3 -->
+    <g transform="translate(480, 52)">
+      <rect width="215" height="150" rx="10" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>
+      <rect x="0" y="0" width="215" height="28" rx="10" fill="#bbf7d0"/>
+      <text x="12" y="19" class="mono-tag" fill="#065f46">work_orders (Core Table)</text>
+      <text x="12" y="46" class="box-desc">🔑 id (PK), spk_number</text>
+      <text x="12" y="64" class="box-desc" font-weight="700" fill="#d97706">🔗 brand_order_id (Nullable FK)</text>
+      <text x="12" y="82" class="box-desc">• shoe_brand, shoe_size</text>
+      <text x="12" y="100" class="box-desc">• priority: 'BRAND'</text>
+      <text x="12" y="118" class="box-desc">• status: DITERIMA..BRAND_FIN</text>
+      <rect x="12" y="126" width="135" height="16" rx="4" fill="#dcfce7"/>
+      <text x="18" y="138" class="mono-tag" fill="#15803d">Diakses App 1 &amp; App 2</text>
+    </g>
+
+    <!-- Table 4 -->
+    <g transform="translate(720, 52)">
+      <rect width="170" height="150" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="0" y="0" width="170" height="28" rx="10" fill="#e2e8f0"/>
+      <text x="12" y="19" class="mono-tag" fill="#0f172a">Tabel Pendukung</text>
+      <text x="12" y="46" class="box-desc">• users (Auth bersama)</text>
+      <text x="12" y="64" class="box-desc">• services (Daftar Jasa)</text>
+      <text x="12" y="82" class="box-desc">• work_order_services</text>
+      <text x="12" y="100" class="box-desc">• order_payments</text>
+      <text x="12" y="118" class="box-desc">• stations / log activity</text>
+      <rect x="12" y="126" width="115" height="16" rx="4" fill="#e2e8f0"/>
+      <text x="18" y="138" class="mono-tag" fill="#475569">Shared Resources</text>
+    </g>
+  </g>
+
+  <!-- Connectors App to DB -->
+  <path d="M 240 560 L 240 585" class="solid-emerald" marker-end="url(#arrow-emerald)"/>
+  <path d="M 680 560 L 680 585" class="solid-amber" marker-end="url(#arrow-amber)"/>
+
+</svg>

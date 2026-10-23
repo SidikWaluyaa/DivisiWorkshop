@@ -1,0 +1,205 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap');
+      .title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 800; fill: #0f172a; }
+      .sub { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 500; fill: #64748b; }
+      .heading { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; fill: #0f172a; }
+      .text-sm { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 500; fill: #334155; }
+      .text-xs { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 9.5px; font-weight: 500; fill: #64748b; }
+      .mono { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+    </style>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="106%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Browser Frame -->
+  <rect width="1000" height="700" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  
+  <!-- Browser Header Bar -->
+  <rect width="1000" height="42" rx="14" fill="#0f172a"/>
+  <rect y="28" width="1000" height="14" fill="#0f172a"/>
+  <circle cx="24" cy="21" r="5" fill="#ef4444"/>
+  <circle cx="40" cy="21" r="5" fill="#f59e0b"/>
+  <circle cx="56" cy="21" r="5" fill="#10b981"/>
+
+  <!-- URL Address Bar -->
+  <rect x="250" y="8" width="500" height="26" rx="6" fill="#1e293b"/>
+  <text x="320" y="25" class="mono" fill="#fde68a">🔒 https://brand.shoeworkshop.id/dashboard</text>
+
+  <!-- App Header / Navbar -->
+  <g transform="translate(0, 42)">
+    <rect width="1000" height="60" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <!-- Logo & Brand Badge -->
+    <rect x="24" y="12" width="36" height="36" rx="8" fill="#d97706"/>
+    <text x="32" y="37" font-size="20">🏷️</text>
+    <text x="68" y="28" class="title" font-size="15">PORTAL B2B BRAND</text>
+    <text x="68" y="44" class="sub" font-size="10">Shoe Workshop Enterprise Partnership System</text>
+
+    <!-- Nav Items -->
+    <rect x="360" y="16" width="95" height="28" rx="6" fill="#fffbeb" stroke="#fde68a" stroke-width="1"/>
+    <text x="375" y="34" class="heading" fill="#b45309" font-size="11">📦 Batch Orders</text>
+
+    <text x="480" y="34" class="heading" fill="#64748b" font-size="11">🤝 Mitra Brand</text>
+    <text x="590" y="34" class="heading" fill="#64748b" font-size="11">🚚 Dispatch B2B</text>
+    <text x="705" y="34" class="heading" fill="#64748b" font-size="11">📊 Laporan B2B</text>
+
+    <!-- User / Role Switcher -->
+    <rect x="830" y="14" width="145" height="32" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+    <circle cx="848" cy="30" r="10" fill="#d97706"/>
+    <text x="844" y="34" font-size="10" fill="#ffffff">👑</text>
+    <text x="866" y="27" class="mono" font-size="9" fill="#0f172a">Admin Workshop</text>
+    <text x="866" y="38" class="text-xs" font-size="8">Mode Internal B2B</text>
+  </g>
+
+  <!-- Main Body Content -->
+  <g transform="translate(30, 125)">
+    <!-- Top Action Bar -->
+    <text x="0" y="20" class="title" font-size="18">Batch Masuk Pabrik &amp; Mitra Brand</text>
+    <text x="0" y="38" class="sub">Kelola intake batch ratusan pasang sepatu langsung dari pabrik dengan Smart Size Matrix</text>
+
+    <!-- Action Buttons -->
+    <rect x="760" y="5" width="180" height="38" rx="8" fill="#d97706" filter="url(#shadow)"/>
+    <text x="785" y="29" class="heading" fill="#ffffff">+ Batch Order Baru</text>
+
+    <!-- KPI Summary Row -->
+    <g transform="translate(0, 55)">
+      <!-- Card 1 -->
+      <rect width="215" height="70" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="16" y="24" class="sub">TOTAL BATCH AKTIF</text>
+      <text x="16" y="50" class="title" font-size="22">8 Batch</text>
+      <rect x="150" y="16" width="50" height="22" rx="4" fill="#fffbeb"/>
+      <text x="156" y="31" class="mono" fill="#d97706">520 Psg</text>
+
+      <!-- Card 2 -->
+      <g transform="translate(235, 0)">
+        <rect width="215" height="70" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+        <text x="16" y="24" class="sub">SEDANG DIKERJAKAN</text>
+        <text x="16" y="50" class="title" font-size="22" fill="#0284c7">360 Psg</text>
+        <rect x="150" y="16" width="50" height="22" rx="4" fill="#e0f2fe"/>
+        <text x="158" y="31" class="mono" fill="#0369a1">Bengkel</text>
+      </g>
+
+      <!-- Card 3 -->
+      <g transform="translate(470, 0)">
+        <rect width="215" height="70" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+        <text x="16" y="24" class="sub">TAHAP FINAL QC</text>
+        <text x="16" y="50" class="title" font-size="22" fill="#d97706">110 Psg</text>
+        <rect x="145" y="16" width="55" height="22" rx="4" fill="#fef3c7"/>
+        <text x="152" y="31" class="mono" fill="#b45309">Audit QC</text>
+      </g>
+
+      <!-- Card 4 -->
+      <g transform="translate(705, 0)">
+        <rect width="235" height="70" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+        <text x="16" y="24" class="sub">SIAP DISPATCH (PULANG)</text>
+        <text x="16" y="50" class="title" font-size="22" fill="#16a34a">50 Psg</text>
+        <rect x="150" y="16" width="70" height="22" rx="4" fill="#dcfce7"/>
+        <text x="156" y="31" class="mono" fill="#15803d">100% Selesai</text>
+      </g>
+    </g>
+
+    <!-- Table Container -->
+    <g transform="translate(0, 145)">
+      <rect width="940" height="380" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+      
+      <!-- Table Header -->
+      <rect width="940" height="38" rx="12" fill="#f8fafc"/>
+      <rect y="26" width="940" height="12" fill="#f8fafc"/>
+      <text x="20" y="24" class="mono" fill="#64748b">NO BATCH &amp; PO</text>
+      <text x="210" y="24" class="mono" fill="#64748b">MITRA BRAND</text>
+      <text x="360" y="24" class="mono" fill="#64748b">MODEL &amp; LAYANAN</text>
+      <text x="560" y="24" class="mono" fill="#64748b">PROGRESS SCAN BENGKEL</text>
+      <text x="760" y="24" class="mono" fill="#64748b">STATUS B2B</text>
+      <text x="870" y="24" class="mono" fill="#64748b">AKSI</text>
+
+      <!-- Row 1: Finished & Ready to Dispatch -->
+      <g transform="translate(0, 42)">
+        <rect width="940" height="68" fill="#fffbeb" stroke="#fef3c7" stroke-width="1"/>
+        <text x="20" y="28" class="mono" fill="#b45309">BR-2610-18-0001</text>
+        <text x="20" y="46" class="text-xs">PO: VNTL-PO-8821</text>
+
+        <text x="210" y="28" class="heading">VENTELA INDONESIA</text>
+        <text x="210" y="46" class="text-xs">PIC: Bpk. Budi (Pabrik Bdg)</text>
+
+        <text x="360" y="28" class="text-sm">Basic Low (Black/Natural)</text>
+        <text x="360" y="46" class="text-xs">Sol Reglue + Sole Stitching</text>
+
+        <!-- Progress Bar (100%) -->
+        <g transform="translate(560, 16)">
+          <text x="0" y="12" class="mono" fill="#15803d">50 / 50 Pasang Selesai (100%)</text>
+          <rect y="18" width="170" height="10" rx="5" fill="#e2e8f0"/>
+          <rect y="18" width="170" height="10" rx="5" fill="#16a34a"/>
+          <text x="0" y="40" class="text-xs" fill="#16a34a">✓ Seluruh sepatu lolos QC</text>
+        </g>
+
+        <!-- Badge Status -->
+        <rect x="760" y="22" width="95" height="24" rx="6" fill="#dcfce7" stroke="#86efac"/>
+        <text x="772" y="38" class="mono" fill="#15803d">FINISHED</text>
+
+        <!-- Action Button -->
+        <rect x="870" y="18" width="55" height="30" rx="6" fill="#d97706"/>
+        <text x="880" y="37" class="mono" fill="#ffffff">KIRIM</text>
+      </g>
+
+      <!-- Row 2: In Production (Scan Active) -->
+      <g transform="translate(0, 115)">
+        <rect width="940" height="68" fill="#ffffff" stroke="#f1f5f9" stroke-width="1"/>
+        <text x="20" y="28" class="mono" fill="#0f172a">BR-2610-20-0002</text>
+        <text x="20" y="46" class="text-xs">PO: BRDO-REWORK-10</text>
+
+        <text x="210" y="28" class="heading">BRODO FOOTWEAR</text>
+        <text x="210" y="46" class="text-xs">PIC: Ibu Rina (QC Vendor)</text>
+
+        <text x="360" y="28" class="text-sm">Signore Low Brown</text>
+        <text x="360" y="46" class="text-xs">Deep Conditioning &amp; Upper Care</text>
+
+        <!-- Progress Bar (75%) -->
+        <g transform="translate(560, 16)">
+          <text x="0" y="12" class="mono" fill="#0284c7">60 / 80 Pasang (75%)</text>
+          <rect y="18" width="170" height="10" rx="5" fill="#e2e8f0"/>
+          <rect y="18" width="127" height="10" rx="5" fill="#0284c7"/>
+          <text x="0" y="40" class="text-xs" fill="#0369a1">Stasiun Aktif: Sol Jahit (Meja 3)</text>
+        </g>
+
+        <!-- Badge Status -->
+        <rect x="760" y="22" width="95" height="24" rx="6" fill="#e0f2fe" stroke="#7dd3fc"/>
+        <text x="768" y="38" class="mono" fill="#0369a1">IN PRODUCTION</text>
+
+        <!-- Action Button -->
+        <rect x="870" y="18" width="55" height="30" rx="6" fill="#f1f5f9" stroke="#cbd5e1"/>
+        <text x="880" y="37" class="mono" fill="#0f172a">DETAIL</text>
+      </g>
+
+      <!-- Row 3: Just Inbound (Preparation) -->
+      <g transform="translate(0, 188)">
+        <rect width="940" height="68" fill="#ffffff" stroke="#f1f5f9" stroke-width="1"/>
+        <text x="20" y="28" class="mono" fill="#0f172a">BR-2610-21-0001</text>
+        <text x="20" y="46" class="text-xs">PO: ARDI-BATCH-44</text>
+
+        <text x="210" y="28" class="heading">ARDILES CULTURE</text>
+        <text x="210" y="46" class="text-xs">PIC: Bpk. Dani (Warehouse)</text>
+
+        <text x="360" y="28" class="text-sm">Vortex Retro High</text>
+        <text x="360" y="46" class="text-xs">Full Sole Replacement</text>
+
+        <!-- Progress Bar (0%) -->
+        <g transform="translate(560, 16)">
+          <text x="0" y="12" class="mono" fill="#64748b">0 / 40 Pasang (0%)</text>
+          <rect y="18" width="170" height="10" rx="5" fill="#e2e8f0"/>
+          <text x="0" y="40" class="text-xs" fill="#64748b">Menunggu tempel stiker barcode</text>
+        </g>
+
+        <!-- Badge Status -->
+        <rect x="760" y="22" width="95" height="24" rx="6" fill="#fef3c7" stroke="#fde68a"/>
+        <text x="778" y="38" class="mono" fill="#b45309">INBOUND</text>
+
+        <!-- Action Button -->
+        <rect x="870" y="18" width="55" height="30" rx="6" fill="#f1f5f9" stroke="#cbd5e1"/>
+        <text x="880" y="37" class="mono" fill="#0f172a">CETAK</text>
+      </g>
+    </g>
+  </g>
+</svg>

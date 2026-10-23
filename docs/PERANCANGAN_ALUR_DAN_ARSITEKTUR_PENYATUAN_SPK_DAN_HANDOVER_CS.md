@@ -1,189 +1,29 @@
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+<div class="paper-header">
+<div class="paper-badge">DOKUMEN PERANCANGAN SISTEM & PAPER PROJECT</div>
+<div class="paper-org">SHOE WORKSHOP INDONESIA • DIVISI IT & DATA ANALYST</div>
+<h1 class="paper-title">PERANCANGAN ALUR PENYATUAN TERBIT SPK & 1-KLIK HANDOVER CS</h1>
+<div class="paper-subtitle">Standar Operasional Efisiensi Kerja CS, Auto-Fill Profil CS, Sinkronisasi Foto Fisik & 0 Mutasi Database</div>
+<div class="meta-grid">
+<div>
+<div class="meta-label">Nomor Dokumen Paper</div>
+<div class="meta-val">CS-HANDOVER-2026-001 (Rev 2.0)</div>
+</div>
+<div>
+<div class="meta-label">Status Perancangan</div>
+<div class="meta-val">✅ 100% Backward Compatible — Zero Database Mutation</div>
+</div>
+<div>
+<div class="meta-label">Divisi Terkait</div>
+<div class="meta-val">Divisi CS (Customer Service) & Divisi Workshop (Produksi)</div>
+</div>
+<div>
+<div class="meta-label">Lead Architect & Penulis</div>
+<div class="meta-val">Sidik Waluya (Full Stack Dev) & CS Operational Lead</div>
+</div>
+</div>
+</div>
 
-    @page {
-        size: A4;
-        margin: 20mm 15mm 20mm 15mm;
-        @bottom-right {
-            content: "Halaman " counter(page) " dari " counter(pages);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 8pt;
-            color: #64748b;
-        }
-        @bottom-left {
-            content: "Shoe Workshop • SOP & Arsitektur Penyatuan SPK & Handover CS";
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 8pt;
-            color: #64748b;
-        }
-    }
-
-    body {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        font-size: 9.5pt;
-        line-height: 1.6;
-        color: #1e293b;
-        background-color: #ffffff;
-    }
-
-    h1, h2, h3, h4 {
-        color: #0f172a;
-        font-weight: 800;
-        page-break-after: avoid;
-    }
-
-    h1 {
-        font-size: 18pt;
-        border-bottom: 2.5px solid #22af85;
-        padding-bottom: 6px;
-        margin-top: 0;
-        margin-bottom: 12pt;
-        color: #065f46;
-        letter-spacing: -0.02em;
-    }
-
-    h2 {
-        font-size: 13pt;
-        border-left: 4.5px solid #22af85;
-        padding-left: 10px;
-        margin-top: 16pt;
-        margin-bottom: 8pt;
-        background: #f0fdf4;
-        padding-top: 4px;
-        padding-bottom: 4px;
-        border-radius: 0 6px 6px 0;
-        color: #065f46;
-    }
-
-    h3 {
-        font-size: 11pt;
-        margin-top: 12pt;
-        margin-bottom: 6pt;
-        color: #047857;
-    }
-
-    h4 {
-        font-size: 10pt;
-        margin-top: 10pt;
-        margin-bottom: 4pt;
-        color: #0f172a;
-        font-weight: 700;
-    }
-
-    p, ul, ol {
-        margin-bottom: 8pt;
-    }
-
-    li {
-        margin-bottom: 3pt;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 8pt;
-        margin-bottom: 12pt;
-        font-size: 8.5pt;
-        page-break-inside: avoid;
-    }
-
-    th, td {
-        border: 1px solid #cbd5e1;
-        padding: 6pt 8pt;
-        text-align: left;
-        vertical-align: top;
-    }
-
-    th {
-        background-color: #f8fafc;
-        color: #0f172a;
-        font-weight: 700;
-    }
-
-    tr:nth-child(even) {
-        background-color: #f8fafc;
-    }
-
-    .alert {
-        border-radius: 8px;
-        padding: 10pt 12pt;
-        margin-top: 8pt;
-        margin-bottom: 12pt;
-        font-size: 9pt;
-        page-break-inside: avoid;
-    }
-
-    .alert-success {
-        background-color: #f0fdf4;
-        border: 1.5px solid #86efac;
-        color: #14532d;
-    }
-
-    .alert-info {
-        background-color: #eff6ff;
-        border: 1.5px solid #93c5fd;
-        color: #1e3a8a;
-    }
-
-    .alert-warning {
-        background-color: #fffbeb;
-        border: 1.5px solid #fde68a;
-        color: #78350f;
-    }
-
-    .img-container {
-        text-align: center;
-        margin-top: 10pt;
-        margin-bottom: 14pt;
-        page-break-inside: avoid;
-    }
-
-    .img-container img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-
-    .code-box {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 8pt;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 8pt 10pt;
-        margin-bottom: 10pt;
-        overflow-x: auto;
-        page-break-inside: avoid;
-    }
-
-    .badge {
-        display: inline-block;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 7.5pt;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .badge-green { background: #dcfce7; color: #15803d; }
-    .badge-blue { background: #dbeafe; color: #1d4ed8; }
-    .badge-amber { background: #fef3c7; color: #b45309; }
-
-    .page-break {
-        page-break-before: always;
-    }
-</style>
-
-# ARSITEKTUR & DESAIN SISTEM: PENYATUAN ALUR TERBITKAN SPK & SERAH TERIMA WORKSHOP (1-KLIK HANDOVER)
-
-**Divisi**: Customer Service (CS) & Workshop Production  
-**Tanggal Rilis**: 17 Oktober 2026  
-**Klasifikasi**: Enterprise Operational Efficiency & UX Architecture  
-**Status Audit**: <span class="badge badge-green">100% Backward Compatible</span> <span class="badge badge-blue">Zero Database Mutation</span>
-
----
+</div>
 
 ## 1. Latar Belakang & Analisis Efisiensi Kerja CS
 
@@ -200,12 +40,24 @@ Pada implementasi eksisting, proses ini berjalan melalui dua modal dialog yang t
 - **Ketik Manual Kode CS**: Setiap kali membuka form SPK, CS harus mengetik kode CS masing-masing secara manual, padahal user yang sedang login sudah memiliki atribut `cs_code` di profilnya.
 - **Proses Berbelit untuk Order Offline**: Untuk pelanggan *Walk-in / Offline* di mana fisik sepatu sudah berada di meja CS, pemisahan menjadi 2 modal berurutan memperlambat pelayanan dan memakan waktu ~2.5 menit per order.
 
+
+
+### 1.2 Tujuan Perancangan Penyatuan SPK & Handover
+Perancangan arsitektur dan sistem ini disusun secara spesifik untuk mencapai sasaran strategis dan operasional bagi **Divisi CS (Customer Service) & Divisi Workshop (Produksi)** sebagai berikut:
+
+1. Mengintegrasikan proses penerbitan SPK dan serah terima ke workshop (handover) ke dalam 1 dialog modal terpadu (1-klik) tanpa perlu berpindah-pindah tab antarmuka.
+2. Mengeliminasi redundansi penginputan ulang Brand, Model sepatu, dan kode CS dengan pengisian otomatis dari profil pengguna yang sedang login (`Auth::user()->cs_code`).
+3. Memangkas lead time pemrosesan pesanan offline/walk-in oleh tim CS hingga 60% (dari rata-rata 2.5 menit menjadi 45 detik per order).
+4. Menjamin konsistensi transaksi data di database melalui eksekusi transaksi atomik (`DB::transaction`) tanpa mengubah skema tabel database yang sudah berjalan.
+
+---
+
 ---
 
 ## 2. Jaminan Keamanan Sistem: Apakah Mengganggu Flow & Database?
 
 <div class="alert alert-success">
-    <strong>🛡️ Jaminan Keamanan 100%:</strong> Fitur ini sama sekali <strong>TIDAK MENGGANGGU</strong> flow operasional yang sudah berjalan dan <strong>TIDAK MENGUBAH SKEMA DATABASE APAPUN</strong>.
+<strong>🛡️ Jaminan Keamanan 100%:</strong> Fitur ini sama sekali <strong>TIDAK MENGGANGGU</strong> flow operasional yang sudah berjalan dan <strong>TIDAK MENGUBAH SKEMA DATABASE APAPUN</strong>.
 </div>
 
 ### A. Integritas Skema Database (Zero Database Mutation)
@@ -240,8 +92,8 @@ Sistem menyediakan kontrol otomatis dan manual melalui toggle cerdas di dalam mo
 Berikut adalah diagram alir visual yang membandingkan alur lama dengan alur baru terpadu:
 
 <div class="img-container">
-    <img src="images/flowchart_penyatuan_spk_dan_handover_cs.svg" alt="Flowchart Penyatuan SPK & Handover CS">
-    <p><em>Gambar 1: Flowchart Perbandingan Alur Lama vs Alur Baru Terpadu dan Eksekusi Database Atomik</em></p>
+<img src="images/flowchart_penyatuan_spk_dan_handover_cs.svg" alt="Flowchart Penyatuan SPK & Handover CS">
+<p><em>Gambar 1: Flowchart Perbandingan Alur Lama vs Alur Baru Terpadu dan Eksekusi Database Atomik</em></p>
 </div>
 
 ### Urutan Eksekusi Transaksi Database Atomik (`DB::transaction`)
@@ -280,8 +132,8 @@ DB::transaction(function () use ($spkService, $customerService) {
 Berikut adalah visualisasi antarmuka modal terpadu dalam format wireframe enterprise:
 
 <div class="img-container">
-    <img src="images/wireframe_penyatuan_spk_dan_handover_cs.svg" alt="Wireframe Modal Terpadu SPK & Handover CS">
-    <p><em>Gambar 2: Wireframe Desain Modal Terpadu Finalisasi SPK &amp; Serah Terima Workshop</em></p>
+<img src="images/wireframe_penyatuan_spk_dan_handover_cs.svg" alt="Wireframe Modal Terpadu SPK & Handover CS">
+<p><em>Gambar 2: Wireframe Desain Modal Terpadu Finalisasi SPK &amp; Serah Terima Workshop</em></p>
 </div>
 
 ### Elemen-Elemen Kunci Antarmuka:

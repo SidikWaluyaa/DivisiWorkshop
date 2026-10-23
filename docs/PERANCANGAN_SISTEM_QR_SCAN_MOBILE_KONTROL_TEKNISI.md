@@ -1,253 +1,47 @@
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+<div class="paper-header">
+<div class="paper-badge">DOKUMEN PERANCANGAN SISTEM & PAPER PROJECT</div>
+<div class="paper-org">SHOE WORKSHOP INDONESIA • DIVISI IT & DATA ANALYST</div>
+<h1 class="paper-title">PERANCANGAN SISTEM QR SCAN MOBILE KONTROL TEKNISI & REAL-TIME TIME TRACKING SPK</h1>
+<div class="paper-subtitle">Standar Operasional Efisiensi Lantai Produksi, Auto-Stopwatch Pengerjaan, Integrasi Kamera Mobile PWA & 0 Mutasi Database</div>
+<div class="meta-grid">
+<div>
+<div class="meta-label">Nomor Dokumen Paper</div>
+<div class="meta-val">TECH-QR-2026-001 (Rev 2.0)</div>
+</div>
+<div>
+<div class="meta-label">Status Perancangan</div>
+<div class="meta-val">✅ Final Architecture Approved — Zero Database Migration</div>
+</div>
+<div>
+<div class="meta-label">Divisi Terkait</div>
+<div class="meta-val">Divisi Workshop (Produksi & Teknisi Reparasi)</div>
+</div>
+<div>
+<div class="meta-label">Lead Architect & Penulis</div>
+<div class="meta-val">Sidik Waluya (Full Stack Dev) & Workshop Production Lead</div>
+</div>
+</div>
+</div>
 
-  @media print {
-    @page {
-      size: A4;
-      margin: 14mm 15mm 18mm 15mm;
-    }
-    body {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .page-break {
-      page-break-before: always;
-    }
-    .avoid-break {
-      page-break-inside: avoid;
-    }
-  }
-
-  body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #0f172a;
-    background: #ffffff;
-    font-size: 10pt;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-  }
-
-  h1 {
-    font-size: 18pt;
-    font-weight: 900;
-    color: #0f172a;
-    border-bottom: 3px solid #10b981;
-    padding-bottom: 8px;
-    margin-top: 0;
-    margin-bottom: 12px;
-    letter-spacing: -0.02em;
-    page-break-after: avoid;
-  }
-
-  h2 {
-    font-size: 13pt;
-    font-weight: 800;
-    color: #0f172a;
-    background: #f8fafc;
-    border-left: 4px solid #10b981;
-    padding: 8px 14px;
-    margin-top: 24px;
-    margin-bottom: 14px;
-    border-radius: 0 8px 8px 0;
-    letter-spacing: -0.01em;
-    page-break-after: avoid;
-  }
-
-  h3 {
-    font-size: 11pt;
-    font-weight: 700;
-    color: #047857;
-    margin-top: 16px;
-    margin-bottom: 8px;
-    page-break-after: avoid;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    margin-bottom: 16px;
-    font-size: 9pt;
-    page-break-inside: avoid;
-  }
-
-  th {
-    background-color: #0f172a;
-    color: #ffffff;
-    font-weight: 700;
-    text-align: left;
-    padding: 8px 10px;
-    border: 1px solid #1e293b;
-    text-transform: uppercase;
-    font-size: 8pt;
-    letter-spacing: 0.05em;
-  }
-
-  td {
-    padding: 8px 10px;
-    border: 1px solid #e2e8f0;
-    vertical-align: top;
-  }
-
-  tr:nth-child(even) {
-    background-color: #f8fafc;
-  }
-
-  code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8.5pt;
-    background-color: #f1f5f9;
-    color: #0f172a;
-    padding: 2px 5px;
-    border-radius: 4px;
-    border: 1px solid #e2e8f0;
-  }
-
-  pre {
-    background-color: #0f172a;
-    color: #f8fafc;
-    padding: 12px;
-    border-radius: 8px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8.5pt;
-    line-height: 1.5;
-    overflow-x: auto;
-    page-break-inside: avoid;
-    border: 1px solid #1e293b;
-  }
-
-  pre code {
-    background: transparent;
-    color: inherit;
-    padding: 0;
-    border: none;
-  }
-
-  .callout {
-    border-left: 4px solid;
-    border-radius: 0 8px 8px 0;
-    padding: 12px 16px;
-    margin: 14px 0;
-    page-break-inside: avoid;
-    font-size: 9.5pt;
-  }
-
-  .callout-emerald {
-    background-color: #ecfdf5;
-    border-color: #10b981;
-    color: #065f46;
-  }
-
-  .callout-amber {
-    background-color: #fffbeb;
-    border-color: #f59e0b;
-    color: #92400e;
-  }
-
-  .callout-indigo {
-    background-color: #eef2ff;
-    border-color: #6366f1;
-    color: #3730a3;
-  }
-
-  .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 18px;
-    page-break-inside: avoid;
-  }
-
-  .kpi-card {
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 12px;
-    background: #f8fafc !important;
-    text-align: center;
-    -webkit-print-color-adjust: exact;
-  }
-
-  .kpi-num {
-    font-size: 15pt;
-    font-weight: 900;
-    color: #10b981;
-    margin-top: 4px;
-  }
-
-  .kpi-label {
-    font-size: 7.5pt;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-  }
-
-  .img-container {
-    width: 100%;
-    text-align: center;
-    margin: 16px 0;
-    page-break-inside: avoid;
-  }
-
-  .img-container img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  }
-
-  .img-caption {
-    font-size: 8.5pt;
-    font-weight: 700;
-    color: #64748b;
-    margin-top: 6px;
-    text-align: center;
-  }
-
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 8pt;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .badge-success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
-  .badge-primary { background: #e0e7ff; color: #4338ca; border: 1px solid #a5b4fc; }
-  .badge-warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-</style>
-
-# 📋 BLUEPRINT PERENCANAAN SISTEM
-# QR Scan Mobile Kontrol Teknisi & Real-Time Time Tracking SPK
-
-**Dokumen Referensi:** Standar Operasional Lantai Bengkel & Modul Produksi Workshop  
-**Periode Rilis:** Sprint 1 — Oktober 2026  
-**Status Dokumen:** ✅ *Final Plan Approved — Siap Dieksekusi (0 Database Migration)*  
-**Lead Architect & Developer:** AI Senior Full Stack Developer & Workshop Tech Lead (Big 4 Standard)  
-**Target Modul:** Modul Produksi (Reparasi), Stasiun Kerja Teknisi, & Cetak SPK Fisik  
-
----
+</div>
 
 <div class="kpi-grid">
-  <div class="kpi-card">
-    <div class="kpi-label">Migrasi Database</div>
-    <div class="kpi-num">0 Tabel / Kolom</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Akses Teknisi</div>
-    <div class="kpi-num">One-Time Login</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Metode Time Tracking</div>
-    <div class="kpi-num">Live Stopwatch</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Identifikasi Aktor</div>
-    <div class="kpi-num">Auto Auth::id()</div>
-  </div>
+<div class="kpi-card">
+<div class="kpi-label">Migrasi Database</div>
+<div class="kpi-num">0 Tabel / Kolom</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-label">Akses Teknisi</div>
+<div class="kpi-num">One-Time Login</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-label">Metode Time Tracking</div>
+<div class="kpi-num">Live Stopwatch</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-label">Identifikasi Aktor</div>
+<div class="kpi-num">Auto Auth::id()</div>
+</div>
 </div>
 
 ---
@@ -263,6 +57,18 @@ Kondisi tersebut menyebabkan beberapa kendala operasional:
 
 ### 🎯 Solusi Strategis:
 Menciptakan **jembatan fisik-ke-digital (*Physical-to-Digital Bridge*)** melalui penyematan **QR Code Khusus** di lembar cetak SPK fisik. Didukung oleh **sesi persisten mobile (*One-Time Login*)**, sistem langsung mengenali identitas teknisi yang sedang memegang ponsel, mencatat timestamp `Mulai` dan `Selesai`, menghitung `Stopwatch` durasi kerja aktif, dan menyelaraskan dashboard desktop `/production` tanpa membuat tabel atau kolom database baru.
+
+
+
+### 1.2 Tujuan Perancangan QR Mobile & Time Tracking
+Perancangan arsitektur dan sistem ini disusun secara spesifik untuk mencapai sasaran strategis dan operasional bagi **Divisi Workshop (Produksi & Teknisi Reparasi)** sebagai berikut:
+
+1. Membangun jembatan fisik-ke-digital (*Physical-to-Digital Bridge*) antara lembar cetak SPK di meja bengkel dengan smartphone teknisi via scan QR code instan.
+2. Menerapkan sesi persisten mobile (*One-Time Login*) dan deteksi otomatis `Auth::id()` agar akuntabilitas teknisi tercatat tanpa login berulang.
+3. Menyediakan live digital stopwatch pengerjaan per stasiun kerja untuk merekam durasi pengerjaan aktual (*lead time*) secara akurat dan transparan.
+4. Menghadirkan antarmuka bergerak *Mobile Controlling Center* bagi supervisor lantai produksi untuk mengawasi status antrean dan pekerjaan aktif secara real-time.
+
+---
 
 ---
 
@@ -306,7 +112,7 @@ Untuk menjamin akuntabilitas data sekaligus kenyamanan operasional teknisi di la
    - Begitu login berhasil, teknisi **langsung otomatis dikembalikan ke lembar SPK** yang tadi dipindai tanpa perlu scan ulang.
 
 <div class="callout callout-emerald">
-  <strong>Keuntungan Pendekatan Ini:</strong><br>
+<strong>Keuntungan Pendekatan Ini:</strong><br>
   100% akuntabel karena setiap penekanan tombol tercatat atas nama akun teknisi yang login di HP (<code>user_id</code> otomatis masuk ke <code>work_orders</code> dan <code>work_order_logs</code>). Bebas repot karena teknisi tidak perlu login berulang-ulang setiap hari.
 </div>
 
@@ -319,8 +125,8 @@ Untuk menjamin akuntabilitas data sekaligus kenyamanan operasional teknisi di la
 Berikut adalah alur lengkap interaksi antara lembar cetak SPK fisik, ponsel pintar teknisi, lapisan database, dan dashboard desktop workshop:
 
 <div class="img-container">
-  <img src="images/flowchart_qr_mobile_kontrol_teknisi.svg" alt="Diagram Alur End-to-End QR Scan Mobile Kontrol Teknisi">
-  <div class="img-caption">Gambar 1: Alur Kerja End-to-End Pengerjaan SPK Berbasis Scan QR dan Sinkronisasi Real-Time</div>
+<img src="images/flowchart_qr_mobile_kontrol_teknisi.svg" alt="Diagram Alur End-to-End QR Scan Mobile Kontrol Teknisi">
+<div class="img-caption">Gambar 1: Alur Kerja End-to-End Pengerjaan SPK Berbasis Scan QR dan Sinkronisasi Real-Time</div>
 </div>
 
 ### Penjelasan Langkah Kerja:
@@ -342,8 +148,8 @@ Berikut adalah alur lengkap interaksi antara lembar cetak SPK fisik, ponsel pint
 Penempatan QR Code dirancang sangat strategis pada template cetak resmi [print-spk-premium.blade.php](file:///c:/laragon/www/SistemWorkshop/resources/views/assessment/print-spk-premium.blade.php) tanpa merusak komposisi visual maupun meluberkan tinggi kertas A4.
 
 <div class="img-container">
-  <img src="images/wireframe_spk_print_qr_location.svg" alt="Mockup Penempatan QR Code pada Lembar Cetak SPK">
-  <div class="img-caption">Gambar 2: Mockup Lembar Fisik SPK Menampilkan Penempatan QR Code Kontrol Teknisi di Sidebar Kiri</div>
+<img src="images/wireframe_spk_print_qr_location.svg" alt="Mockup Penempatan QR Code pada Lembar Cetak SPK">
+<div class="img-caption">Gambar 2: Mockup Lembar Fisik SPK Menampilkan Penempatan QR Code Kontrol Teknisi di Sidebar Kiri</div>
 </div>
 
 ### Spesifikasi Teknis Cetak:
@@ -363,8 +169,8 @@ Penempatan QR Code dirancang sangat strategis pada template cetak resmi [print-s
 Antarmuka mobile dirancang dengan standar **UI/UX Pro Max** yang mengutamakan kecepatan interaksi, kemudahan operasional satu tangan (*single-hand thumb zone*), dan tingkat keterbacaan tinggi di bengkel kerja.
 
 <div class="img-container">
-  <img src="images/wireframe_mobile_spk_tracker_ui.svg" alt="Wireframe UI Mobile Kontrol Teknisi">
-  <div class="img-caption">Gambar 3: Spesifikasi Tampilan Mobile Web PWA untuk Ponsel Pintar Teknisi</div>
+<img src="images/wireframe_mobile_spk_tracker_ui.svg" alt="Wireframe UI Mobile Kontrol Teknisi">
+<div class="img-caption">Gambar 3: Spesifikasi Tampilan Mobile Web PWA untuk Ponsel Pintar Teknisi</div>
 </div>
 
 ### 5.1. Komponen Antarmuka Mobile Kunci:
@@ -391,8 +197,8 @@ Antarmuka mobile dirancang dengan standar **UI/UX Pro Max** yang mengutamakan ke
 Sebagai penyempurnaan menyeluruh dari ekosistem mobile, sistem tidak hanya menyediakan halaman detail individual saat scan QR (`/m/spk/{spk}`), melainkan menghadirkan **Pusat Pengendali Bergerak (*Mobile Controlling Center*)** yang dapat diakses langsung oleh Admin, Supervisor, maupun Teknisi melalui rute `/m/production`.
 
 <div class="img-container">
-  <img src="images/wireframe_mobile_controlling_dashboard.svg" alt="Wireframe Mobile Controlling Dashboard PWA">
-  <div class="img-caption">Gambar 4: Desain Antarmuka Mobile Controlling Center (PWA) untuk Monitoring SPK Berjalan & Antrean</div>
+<img src="images/wireframe_mobile_controlling_dashboard.svg" alt="Wireframe Mobile Controlling Dashboard PWA">
+<div class="img-caption">Gambar 4: Desain Antarmuka Mobile Controlling Center (PWA) untuk Monitoring SPK Berjalan & Antrean</div>
 </div>
 
 ### 6.1. Karakteristik & Fitur Utama Mobile Controlling Center:
@@ -492,19 +298,19 @@ Implementasi teknis mencakup **4 berkas utama**, tanpa migrasi database baru:
 
 ## ✍️ 10. LEMBAR PENGESAHAN DOKUMEN
 
-Dokumen perencanaan arsitektur ini telah diaudit dan disetujui untuk masuk ke fase eksekusi rekayasa perangkat lunak:
+Dokumen perancangan arsitektur ini telah diaudit dan disetujui untuk masuk ke fase eksekusi rekayasa perangkat lunak:
 
 <table style="margin-top: 30px; border: none;">
-  <tr style="background: transparent;">
-    <td style="border: none; text-align: center; width: 50%;">
-      <p style="font-size: 8.5pt; color: #64748b; margin-bottom: 50px;">Disusun Oleh,<br><strong>Lead AI Architect &amp; Software Engineer</strong></p>
-      <p style="font-size: 9.5pt; font-weight: 800; color: #0f172a; margin: 0;">AI Senior Full Stack Developer</p>
-      <p style="font-size: 8pt; color: #64748b; margin: 0;">Big 4 Software Engineering Standard</p>
-    </td>
-    <td style="border: none; text-align: center; width: 50%;">
-      <p style="font-size: 8.5pt; color: #64748b; margin-bottom: 50px;">Disetujui Oleh,<br><strong>Product Owner &amp; Operational Lead</strong></p>
-      <p style="font-size: 9.5pt; font-weight: 800; color: #0f172a; margin: 0;">Sidik Waluya</p>
-      <p style="font-size: 8pt; color: #64748b; margin: 0;">Divisi Workshop Management</p>
-    </td>
-  </tr>
+<tr style="background: transparent;">
+<td style="border: none; text-align: center; width: 50%;">
+<p style="font-size: 8.5pt; color: #64748b; margin-bottom: 50px;">Disusun Oleh,<br><strong>Lead AI Architect &amp; Software Engineer</strong></p>
+<p style="font-size: 9.5pt; font-weight: 800; color: #0f172a; margin: 0;">AI Senior Full Stack Developer</p>
+<p style="font-size: 8pt; color: #64748b; margin: 0;">Big 4 Software Engineering Standard</p>
+</td>
+<td style="border: none; text-align: center; width: 50%;">
+<p style="font-size: 8.5pt; color: #64748b; margin-bottom: 50px;">Disetujui Oleh,<br><strong>Product Owner &amp; Operational Lead</strong></p>
+<p style="font-size: 9.5pt; font-weight: 800; color: #0f172a; margin: 0;">Sidik Waluya</p>
+<p style="font-size: 8pt; color: #64748b; margin: 0;">Divisi Workshop Management</p>
+</td>
+</tr>
 </table>

@@ -70,4 +70,48 @@
 - **Kendala yang Dihadapi:** 
   * Path perintah global `php` pada terminal sistem operasi Ubuntu mengarah ke PHP 8.1 bawaan OS, sehingga memicu konflik modul ekstensi (opcache, imagick) dan persyaratan minimum Laravel. Masalah diatasi dengan mengarahkan eksekusi ke binary path resmi aaPanel atau memperbarui symlink global terminal.
 
+---
+
+### 7. Penyusunan Dokumen Kajian Arsitektur Pemisahan Modul Brand Terpisah Berbasis Shared Database
+- **Apa yang Dikerjakan:** Menyusun dokumen kajian arsitektur enterprise siap cetak PDF di `docs/ANALISIS_ARSITEKTUR_BRAND_TERPISAH_SHARED_DB.md` lengkap dengan 3 diagram visual SVG resolusi tinggi (`diagram_arsitektur_shared_database.svg`, `diagram_dataflow_batch_satuan.svg`, dan `wireframe_client_portal_brand.svg`).
+- **Hasil & Manfaat:** 
+  * Merumuskan arsitektur masa depan *Decoupled Multi-App with Shared Data Store* untuk memisahkan modul Brand B2B (`brand.shoeworkshop.id`) dari sistem utama workshop (`info.shoeworkshop.id`).
+  * Mengeliminasi risiko kode (*zero blast radius*) agar pengembangan fitur kemitraan pabrik tidak mengganggu antrean CS ritel atau scanner meja bengkel.
+  * Menetapkan protokol kepemilikan migrasi database (*Master Schema Owner*) di mana `SistemWorkshop` memegang master skema untuk mencegah bentrok tabel `migrations` di MySQL.
+  * Merancang alur transisi bertahap menuju *Self-Service Client Portal* bagi perwakilan pabrik mitra (Ventela, Brodo, dll.).
+- **Kendala yang Dihadapi:** 
+  * Diperlukan perancangan tata kelola migrasi dan sinkronisasi model yang sangat disiplin agar pemisahan aplikasi ke dalam repository berbeda tidak memicu ketidaksinkronan struktur tabel di basis data bersama.
+
+---
+
+### 8. Standardisasi Penamaan, Perbaikan Layout Render, & Kompilasi Ulang Dokumen PDF (Paper Project Ready-to-PDF)
+- **Apa yang Dikerjakan:** 
+  * Mengubah standarisasi penamaan berkas dokumen arsitektur di folder `docs/` menjadi berawalan `PERANCANGAN_...` termasuk dokumen modul mobile teknisi (`PERANCANGAN_SISTEM_QR_SCAN_MOBILE_KONTROL_TEKNISI.md`, `PERANCANGAN_ALUR_DAN_ARSITEKTUR_SPK_RND.md`, `PERANCANGAN_ALUR_DAN_ARSITEKTUR_MANAJEMEN_BRAND.md`, `PERANCANGAN_ALUR_DAN_ARSITEKTUR_PENYATUAN_SPK_DAN_HANDOVER_CS.md`, `PERANCANGAN_ANALISIS_ARSITEKTUR_BRAND_TERPISAH_SHARED_DB.md`, `PERANCANGAN_KONSEP_DAN_ARSITEKTUR_LOLOS_CATATAN_DAN_AUTOMATION_INVOICE.md`, `PERANCANGAN_KONSEP_DATABASE_BARU_MANAJEMEN_BRAND_TRACKING.md`, `PERANCANGAN_UIUX_DIVISI_GUDANG_RECEPTION.md`, dan `PERANCANGAN_ALUR_DAN_ARSITEKTUR_SISTEM_LABEL_MEMBERSHIP_CUSTOMER.md`).
+  * Memperbaiki tampilan render PDF yang sebelumnya memunculkan blok teks kode mentah (`<style> @import...`) akibat aturan CommonMark GFM (tag `<style>` di dalam markdown di-escape menjadi teks entitas).
+  * Memisahkan seluruh styling cetak dokumen ke file master stylesheet terpusat (`docs/document_paper_style.css`) serta mengonfigurasikannya ke `.vscode/settings.json` (`markdown-pdf.styles`).
+  * Merestrukturisasi tata letak dokumen menjadi format **Paper Project Resmi** yang bersih dan rapi dengan Card Metadata berbasis Grid tanpa indentasi spasi markdown, kartu metrik KPI, tipografi modern (Plus Jakarta Sans & JetBrains Mono), dan batas margin cetak A4 terstandar.
+  * Mengeliminasi seluruh nama entitas luar ("LAF Market") dan menyelaraskan seluruh identitas organisasi secara mutlak menjadi **Shoe Workshop Indonesia • Divisi IT & Data Analyst**.
+  * Mengompilasi ulang dokumen perancangan menjadi file `.pdf` siap cetak dan siap baca langsung di folder `docs/`.
+- **Hasil & Manfaat:** 
+  * Dokumen perancangan mobile kontrol teknisi kini berstandar sama dengan dokumen paper sistem workshop lainnya dengan tampilan bersih, kartu KPI ringkas, dan bebas dari kebocoran tag HTML/CSS.
+  * File `docs/PERANCANGAN_SISTEM_QR_SCAN_MOBILE_KONTROL_TEKNISI.pdf` (1.92 MB) telah selesai dikompilasi dengan hasil visual yang sempurna dan elegan.
+  * File markdown kini jauh lebih ringan, bersih, dan mudah dibaca langsung tanpa dipenuhi 200-300 baris kode `<style>`.
+- **Kendala yang Dihadapi:** 
+  * Sebelumnya, tag `<style>` disematkan langsung di dalam file Markdown. Saat diparsing menggunakan engine CommonMark, aturan keamanan GFM mengubah tag `<style>` menjadi entitas teks biasa (`&lt;style>`), sehingga kode CSS dicetak sebagai teks pada halaman pertama dokumen. Kendala ini diselesaikan secara tuntas dengan memisahkan styling ke `document_paper_style.css` terpusat dan menyuntikkannya ke bagian `<head>` HTML pada saat proses kompilasi PDF.
+
+---
+
+### 9. Penambahan Informasi Divisi Terkait & Perumusan Tujuan Perancangan pada Seluruh Dokumen Paper Project
+- **Apa yang Dikerjakan:** 
+  * Mengintegrasikan atribut **Divisi Terkait** ke dalam kartu metadata utama (*Header Card*) pada 9 berkas dokumen perancangan di folder `docs/` guna menegaskan kepemilikan proses bisnis antar divisi (Divisi CS, Divisi Gudang, Divisi Finance, Divisi Workshop / R&D / Teknisi, dan Divisi CC/CX).
+  * Menyusun dan menambahkan sub-bab **Tujuan Perancangan** (sasaran strategis dan operasional terukur) di awal setiap dokumen perancangan melengkapi latar belakang masalah yang sudah ada.
+  * Memastikan seluruh 9 berkas dokumen `.md` bersih dari tag `<style>` yang membebani editor dan mengompilasi ulang seluruh berkas `.pdf` menggunakan master stylesheet terpusat `docs/document_paper_style.css`.
+- **Hasil & Manfaat:** 
+  * Pembagian ruang lingkup tanggung jawab divisi menjadi sangat eksplisit pada setiap dokumen perancangan, memudahkan pimpinan dan staf operasional dalam membaca SOP sesuai divisinya masing-masing.
+  * Setiap dokumen kini memiliki struktur akademik dan korporat yang lengkap (Latar Belakang Masalah $\rightarrow$ Tujuan Perancangan $\rightarrow$ Alur Sistem $\rightarrow$ Skema Database $\rightarrow$ UI/UX Wireframe).
+  * Seluruh 9 berkas PDF di folder `docs/` telah ter-update secara serentak dengan visual yang konsisten, bersih, dan siap cetak.
+- **Kendala yang Dihadapi:** 
+  * Setiap dokumen memiliki gaya penomoran sub-bab awal yang berbeda (Bab 1, Seksi 1, atau Ringkasan Eksekutif). Penempatan sub-bab Tujuan Perancangan disesuaikan secara presisi agar tidak merusak urutan penomoran bab berikutnya dan tetap mudah dibaca dari daftar isi.
+
+
 

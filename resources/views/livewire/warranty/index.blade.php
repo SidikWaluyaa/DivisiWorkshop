@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-[#f8fafc] pb-20">
+<div class="min-h-screen bg-[#f8fafc] pb-20" x-data="{ showExportModal: false, exportMode: 'month', exportMonth: '{{ now()->month }}', exportYear: '{{ now()->year }}', exportStartDate: '', exportEndDate: '' }">
     {{-- Header Section --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
         {{-- Error Flash Message --}}
@@ -52,7 +52,13 @@
                 <p class="text-sm font-bold text-gray-500 max-w-lg">Kelola klaim perbaikan dan riwayat garansi pelanggan dengan standar premium.</p>
             </div>
 
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
+                <button @click="showExportModal = true" type="button" 
+                        class="flex items-center gap-2.5 px-6 py-4 bg-[#1a3b34] hover:bg-[#132c27] text-white rounded-2xl shadow-xl shadow-teal-950/20 hover:shadow-teal-950/40 hover:-translate-y-0.5 transition-all duration-300 font-extrabold uppercase tracking-widest text-[11px]">
+                    <svg class="w-4 h-4 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Cetak Rekap PDF
+                </button>
+
                 <button wire:click="openCreateModal" 
                         class="flex items-center gap-3 px-8 py-4 bg-[#FFC232] text-[#1a3b34] rounded-2xl shadow-xl shadow-yellow-500/20 hover:shadow-yellow-500/40 hover:-translate-y-0.5 transition-all duration-300 font-extrabold uppercase tracking-widest text-[11px]">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
@@ -823,6 +829,127 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    {{-- MODAL PILIHAN CETAK REKAP BULANAN GARANSI PDF --}}
+    <div x-show="showExportModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+         style="display: none;">
+        
+        <div @click.away="showExportModal = false"
+             class="bg-white rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl border border-gray-100 relative">
+            
+            {{-- Modal Header --}}
+            <div class="flex items-center justify-between pb-6 border-b border-gray-100 mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-[#22AF85]/10 text-[#22AF85] flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-[#1a3b34] tracking-tight">Cetak Rekap Bulanan Garansi</h3>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Format Resmi Eksekutif A4 Landscape</p>
+                    </div>
+                </div>
+                <button @click="showExportModal = false" class="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            {{-- Form Export --}}
+            <form action="{{ route('garansi.export-pdf') }}" method="GET" target="_blank" @submit="setTimeout(() => showExportModal = false, 500)">
+                
+                {{-- Mode Switcher --}}
+                <div class="flex p-1 bg-gray-100 rounded-2xl mb-6">
+                    <button type="button" 
+                            @click="exportMode = 'month'"
+                            :class="exportMode === 'month' ? 'bg-white text-[#1a3b34] shadow-sm font-black' : 'text-gray-500 hover:text-gray-700'"
+                            class="flex-1 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all">
+                        Pilih Bulan & Tahun
+                    </button>
+                    <button type="button" 
+                            @click="exportMode = 'custom'"
+                            :class="exportMode === 'custom' ? 'bg-white text-[#1a3b34] shadow-sm font-black' : 'text-gray-500 hover:text-gray-700'"
+                            class="flex-1 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all">
+                        Rentang Kustom
+                    </button>
+                </div>
+
+                {{-- Mode 1: Bulan & Tahun --}}
+                <div x-show="exportMode === 'month'" class="space-y-4">
+                    {{-- Quick Buttons --}}
+                    <div class="flex gap-2">
+                        <button type="button" 
+                                @click="exportMonth = '{{ now()->month }}'; exportYear = '{{ now()->year }}'"
+                                class="px-3.5 py-1.5 rounded-xl bg-teal-50 text-[#22AF85] text-[11px] font-bold hover:bg-teal-100 transition-colors">
+                            Bulan Ini ({{ now()->translatedFormat('M Y') }})
+                        </button>
+                        <button type="button" 
+                                @click="exportMonth = '{{ now()->subMonth()->month }}'; exportYear = '{{ now()->subMonth()->year }}'"
+                                class="px-3.5 py-1.5 rounded-xl bg-gray-100 text-gray-600 text-[11px] font-bold hover:bg-gray-200 transition-colors">
+                            Bulan Lalu ({{ now()->subMonth()->translatedFormat('M Y') }})
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Bulan</label>
+                            <select name="month" x-model="exportMonth" class="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-[#22AF85]">
+                                @foreach([1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'] as $mNum => $mName)
+                                    <option value="{{ $mNum }}">{{ $mName }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Tahun</label>
+                            <select name="year" x-model="exportYear" class="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-[#22AF85]">
+                                @for($y = now()->year - 2; $y <= now()->year + 1; $y++)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Mode 2: Custom Date Range --}}
+                <div x-show="exportMode === 'custom'" class="space-y-4" style="display: none;">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Dari Tanggal</label>
+                            <input type="date" name="start_date" x-model="exportStartDate" :disabled="exportMode !== 'custom'" class="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-[#22AF85]">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sampai Tanggal</label>
+                            <input type="date" name="end_date" x-model="exportEndDate" :disabled="exportMode !== 'custom'" class="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-[#22AF85]">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Info Note --}}
+                <div class="mt-6 p-4 rounded-2xl bg-teal-50/60 border border-teal-100 flex items-start gap-3">
+                    <svg class="w-5 h-5 text-[#22AF85] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        Dokumen PDF mencakup <strong>Kartu KPI Ringkasan</strong>, <strong>Tabel Klaim Masuk</strong>, dan <strong>Tabel Klaim Selesai</strong> dengan durasi kerja <em>lead time</em>.
+                    </p>
+                </div>
+
+                {{-- Submit Buttons --}}
+                <div class="mt-8 flex items-center justify-end gap-3">
+                    <button type="button" @click="showExportModal = false" class="px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-wider text-gray-500 hover:bg-gray-100 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-8 py-3.5 rounded-2xl bg-[#1a3b34] hover:bg-[#132c27] text-white font-extrabold uppercase tracking-widest text-[11px] shadow-lg shadow-teal-950/20 hover:shadow-teal-950/40 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4 text-[#22AF85]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Download / Buka PDF
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

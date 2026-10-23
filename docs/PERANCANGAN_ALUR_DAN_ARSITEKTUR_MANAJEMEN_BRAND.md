@@ -1,223 +1,42 @@
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+<div class="paper-header">
+<div class="paper-badge">DOKUMEN PERANCANGAN SISTEM & PAPER PROJECT</div>
+<div class="paper-org">SHOE WORKSHOP INDONESIA • DIVISI IT & DATA ANALYST</div>
+<h1 class="paper-title">PERANCANGAN ALUR & ARSITEKTUR SISTEM MANAJEMEN BRAND (B2B)</h1>
+<div class="paper-subtitle">Standar Pengelolaan Batch Pesanan Masuk Langsung dari Pabrik & Mitra Brand di Divisi Workshop, Smart Matrix Input Ukuran, Integrasi Stasiun Pengerjaan, dan Desain Cetak Hybrid</div>
+<div class="meta-grid">
+<div>
+<div class="meta-label">Nomor Dokumen Paper</div>
+<div class="meta-val">BRAND-ARCH-2026-001 (Rev 2.0)</div>
+</div>
+<div>
+<div class="meta-label">Status Perancangan</div>
+<div class="meta-val">✅ Final Approved Architecture (Zero Defect)</div>
+</div>
+<div>
+<div class="meta-label">Divisi Terkait</div>
+<div class="meta-val">Divisi Workshop (Produksi) & Divisi Finance</div>
+</div>
+<div>
+<div class="meta-label">Lead Architect & Penulis</div>
+<div class="meta-val">Sidik Waluya (Full Stack Dev) & AI Architecture Lead</div>
+</div>
+</div>
+</div>
 
-    @page {
-        size: A4;
-        margin: 20mm 15mm 20mm 15mm;
-        @bottom-right {
-            content: "Halaman " counter(page) " dari " counter(pages);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 8pt;
-            color: #64748b;
-        }
-        @bottom-left {
-            content: "Shoe Workshop • SOP & Arsitektur Manajemen Brand (B2B)";
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 8pt;
-            color: #64748b;
-        }
-    }
+### 1.4 Tujuan Perancangan Sistem Manajemen Brand
+Perancangan arsitektur dan sistem ini disusun secara spesifik untuk mencapai sasaran strategis dan operasional bagi **Divisi Workshop (Produksi) & Divisi Finance** sebagai berikut:
 
-    body {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        font-size: 10pt;
-        line-height: 1.6;
-        color: #1e293b;
-        background-color: #ffffff;
-    }
+1. Memisahkan jalur operasional pesanan B2B Brand dari antrean ritel CS agar basis data CRM pelanggan individu (`customers`) tetap bersih dan tidak terpolusi oleh data pabrik/vendor.
+2. Menyediakan mekanisme registrasi batch massal super cepat melalui fitur Smart Matrix Input Ukuran dan Impor Excel untuk puluhan hingga ratusan pasang sepatu dalam hitungan detik.
+3. Memastikan pelacakan progres stasiun pengerjaan (Soling, Upper, QC, Finishing) dapat dipantau secara real-time per kloter batch maupun per pasang sepatu.
+4. Menyediakan sistem penagihan terpadu (Invoice B2B & SPK Induk Hybrid) yang mempermudah rekonsiliasi dan pencatatan omzet kemitraan oleh Divisi Finance.
 
-    h1, h2, h3, h4 {
-        color: #0f172a;
-        font-weight: 700;
-        page-break-after: avoid;
-    }
+---
 
-    h1 {
-        font-size: 20pt;
-        border-bottom: 2.5px solid #d97706;
-        padding-bottom: 6px;
-        margin-top: 0;
-        margin-bottom: 14pt;
-        color: #b45309;
-    }
 
-    h2 {
-        font-size: 14pt;
-        border-left: 4.5px solid #d97706;
-        padding-left: 10px;
-        margin-top: 18pt;
-        margin-bottom: 10pt;
-        background: #fffbeb;
-        padding-top: 4px;
-        padding-bottom: 4px;
-        border-radius: 0 6px 6px 0;
-    }
-
-    h3 {
-        font-size: 11.5pt;
-        margin-top: 14pt;
-        margin-bottom: 6pt;
-        color: #92400e;
-    }
-
-    h4 {
-        font-size: 10.5pt;
-        margin-top: 11pt;
-        margin-bottom: 5pt;
-        color: #78350f;
-        border-left: 3px solid #d97706;
-        padding-left: 8px;
-        font-weight: 700;
-    }
-
-    p, ul, ol {
-        margin-bottom: 8pt;
-    }
-
-    li {
-        margin-bottom: 3pt;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10pt;
-        margin-bottom: 14pt;
-        font-size: 9pt;
-        page-break-inside: avoid;
-    }
-
-    th, td {
-        border: 1px solid #cbd5e1;
-        padding: 7px 10px;
-        text-align: left;
-        vertical-align: top;
-    }
-
-    th {
-        background-color: #fef3c7;
-        color: #92400e;
-        font-weight: 700;
-    }
-
-    tr:nth-child(even) {
-        background-color: #fdfdfd;
-    }
-
-    code {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 8.5pt;
-        background-color: #fef3c7;
-        color: #b45309;
-        padding: 2px 5px;
-        border-radius: 4px;
-        border: 1px solid #fde68a;
-    }
-
-    pre code {
-        display: block;
-        padding: 10px;
-        background-color: #0f172a;
-        color: #f8fafc;
-        border-radius: 8px;
-        border: none;
-        overflow-x: auto;
-        font-size: 8.5pt;
-        line-height: 1.45;
-    }
-
-    .page-break {
-        page-break-after: always;
-        break-after: page;
-        height: 0;
-        display: block;
-    }
-
-    .badge-amber {
-        display: inline-block;
-        padding: 2px 8px;
-        background-color: #fef3c7;
-        color: #b45309;
-        border: 1px solid #fde68a;
-        border-radius: 9999px;
-        font-weight: 700;
-        font-size: 8pt;
-    }
-
-    .cover-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        min-height: 90vh;
-        padding: 20px 0;
-    }
-
-    .cover-header {
-        margin-top: 40px;
-    }
-
-    .cover-title {
-        font-size: 26pt;
-        font-weight: 800;
-        color: #0f172a;
-        line-height: 1.25;
-        margin-bottom: 12px;
-        border-bottom: 4px solid #d97706;
-        padding-bottom: 14px;
-    }
-
-    .cover-subtitle {
-        font-size: 13pt;
-        color: #64748b;
-        line-height: 1.5;
-        margin-bottom: 25px;
-    }
-
-    .cover-meta {
-        background: #fffbeb;
-        border: 1.5px solid #fde68a;
-        border-radius: 12px;
-        padding: 18px 22px;
-        margin-top: 30px;
-    }
-
-    .cover-footer {
-        font-size: 9pt;
-        color: #94a3b8;
-        border-top: 1px solid #e2e8f0;
-        padding-top: 15px;
-        display: flex;
-        justify-content: space-between;
-    }
-</style>
 
 <!-- ================= COVER PAGE ================= -->
-<div class="cover-container">
-    <div class="cover-header">
-        <p style="text-transform: uppercase; letter-spacing: 0.15em; font-size: 10pt; font-weight: 800; color: #d97706; margin-bottom: 8px;">
-            SHOE WORKSHOP • DOKUMEN ARSITEKTUR & SOP RESMI
-        </p>
-        <h1 class="cover-title">
-            Spesifikasi Alur & Arsitektur Modul Manajemen Brand (B2B Batch Inbound)
-        </h1>
-        <p class="cover-subtitle">
-            Standar Pengelolaan Batch Pesanan Masuk Langsung dari Pabrik & Mitra Brand di Divisi Workshop, Smart Matrix Input Ukuran, Integrasi Stasiun Pengerjaan, dan Desain Cetak Hybrid Berstandar Big 4
-        </p>
-    </div>
 
-    <div class="cover-meta">
-        <table style="border: none; margin: 0;">
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; width: 170px; font-weight: 700; color: #78350f;">Klasifikasi Dokumen</td><td style="border: none; padding: 4px 0; font-weight: 700; color: #0f172a;">: Confidential / Internal Enterprise Architecture SOP</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #78350f;">Versi Dokumen</td><td style="border: none; padding: 4px 0; color: #0f172a;">: 1.0 (Final Approved Architecture)</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #78350f;">Tanggal Rilis</td><td style="border: none; padding: 4px 0; color: #0f172a;">: Rabu, 30 September 2026</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #78350f;">Target Pengguna</td><td style="border: none; padding: 4px 0; color: #0f172a;">: Admin Workshop, Kepala Produksi, Teknisi Stasiun, Staff Gudang Inbound</td></tr>
-        </table>
-    </div>
-
-    <div class="cover-footer">
-        <span>Divisi Teknologi Informasi & Pengembangan Sistem</span>
-        <span>Shoe Workshop Indonesia © 2026</span>
-    </div>
 </div>
 
 <div class="page-break"></div>
@@ -287,7 +106,7 @@ Alur operasional pengerjaan pesanan Brand terbagi ke dalam 4 fase terintegrasi:
 ### 2.1 Diagram Alur Lengkap (Visual Flowchart)
 
 <div align="center" style="margin: 18pt 0;">
-    <img src="images/flowchart_manajemen_brand.svg" alt="Diagram Alur End-to-End Manajemen Brand" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); background-color: #ffffff;" />
+<img src="images/flowchart_manajemen_brand.svg" alt="Diagram Alur End-to-End Manajemen Brand" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); background-color: #ffffff;" />
 </div>
 
 ### 2.2 Rincian Fase Operasional
@@ -351,7 +170,7 @@ Rancangan database mengadopsi prinsip **Clean Architecture & High Cohesion**:
 ### 3.1 Entity Relationship Diagram (ERD)
 
 <div align="center" style="margin: 18pt 0;">
-    <img src="images/erd_manajemen_brand.svg" alt="Entity Relationship Diagram Manajemen Brand" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); background-color: #ffffff;" />
+<img src="images/erd_manajemen_brand.svg" alt="Entity Relationship Diagram Manajemen Brand" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); background-color: #ffffff;" />
 </div>
 
 ### 3.2 Spesifikasi Detail Struktur Tabel
@@ -516,7 +335,7 @@ Untuk memfasilitasi tim pengembang dalam membangun antarmuka yang intuitif dan b
 Dashboard ini digunakan oleh Admin Workshop dan Kepala Produksi untuk memantau seluruh kloter batch kiriman brand yang sedang berjalan, mendeteksi stasiun bottleneck, dan memantau persentase penyelesaian proyek.
 
 <div align="center" style="margin: 18pt 0;">
-    <img src="images/wireframe_brand_batch_dashboard.svg" alt="Wireframe Dashboard Batch Order Masuk Brand" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.10); background-color: #ffffff;" />
+<img src="images/wireframe_brand_batch_dashboard.svg" alt="Wireframe Dashboard Batch Order Masuk Brand" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.10); background-color: #ffffff;" />
 </div>
 
 #### Rincian Komponen Dashboard:
@@ -540,7 +359,7 @@ Dashboard ini digunakan oleh Admin Workshop dan Kepala Produksi untuk memantau s
 Form modal ini dirancang untuk mengatasi masalah input massal yang lambat. Admin workshop dapat mendaftarkan puluhan hingga ratusan pasang sepatu hanya dalam hitungan detik.
 
 <div align="center" style="margin: 18pt 0;">
-    <img src="images/wireframe_matrix_input_brand.svg" alt="Wireframe Form Modal Smart Matrix Input Brand" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.10); background-color: #ffffff;" />
+<img src="images/wireframe_matrix_input_brand.svg" alt="Wireframe Form Modal Smart Matrix Input Brand" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.10); background-color: #ffffff;" />
 </div>
 
 #### Rincian Fitur Smart Matrix Input:
@@ -567,7 +386,7 @@ Form modal ini dirancang untuk mengatasi masalah input massal yang lambat. Admin
 Halaman ini dapat diakses melalui menu **Manajemen Brand ➔ Mitra Brand ➔ [Klik Brand Terkait]** (`/workshop/brands/{id}`). Halaman ini bertindak sebagai pusat informasi kemitraan terpadu (*360° Partner Profile View*) yang menampilkan profil resmi perusahaan, metrik performa historis, dan **tabel riwayat seluruh batch pesanan** yang pernah dikirimkan oleh brand tersebut.
 
 <div align="center" style="margin: 18pt 0;">
-    <img src="images/wireframe_brand_partner_detail.svg" alt="Wireframe Halaman Detail Master Brand dan Riwayat Pesanan" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.10); background-color: #ffffff;" />
+<img src="images/wireframe_brand_partner_detail.svg" alt="Wireframe Halaman Detail Master Brand dan Riwayat Pesanan" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.10); background-color: #ffffff;" />
 </div>
 
 #### Rincian Fitur Halaman Detail Master Brand:
@@ -623,7 +442,7 @@ Halaman ini dapat diakses melalui menu **Manajemen Brand ➔ Mitra Brand ➔ [Kl
 Untuk menjamin efisiensi penggunaan kertas di bengkel (*zero paper waste*) sekaligus menjaga kejelasan instruksi pengerjaan massal, modul Brand menerapkan sistem **Cetak Fisik Hybrid**.
 
 <div align="center" style="margin: 18pt 0;">
-    <img src="images/wireframe_spk_brand_print.svg" alt="Spesifikasi Cetak Fisik Hybrid SPK Induk & Stiker Barcode" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.10); background-color: #ffffff;" />
+<img src="images/wireframe_spk_brand_print.svg" alt="Spesifikasi Cetak Fisik Hybrid SPK Induk & Stiker Barcode" style="width: 100%; max-width: 860px; height: auto; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.10); background-color: #ffffff;" />
 </div>
 
 ### 7.1 Bagian Kiri: 1 Lembar SPK Induk Batch A4
@@ -694,6 +513,6 @@ Tabel berikut menyajikan ringkasan perbandingan menyeluruh antara ketiga tipe al
 ---
 
 <div class="cover-footer" style="margin-top: 50px;">
-    <span>Dokumen SOP Resmi Sistem Workshop • Shoe Workshop Indonesia</span>
-    <span>Selesai — Halaman Terakhir</span>
+<span>Dokumen SOP Resmi Sistem Workshop • Shoe Workshop Indonesia</span>
+<span>Selesai — Halaman Terakhir</span>
 </div>

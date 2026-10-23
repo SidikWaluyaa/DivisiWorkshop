@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 860" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap');
+      .title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 800; fill: #0f172a; }
+      .subtitle { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 500; fill: #64748b; }
+      .step-num { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 800; fill: #ffffff; }
+      .step-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; fill: #0f172a; }
+      .step-desc { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 10.5px; font-weight: 500; fill: #475569; line-height: 1.4; }
+      .app-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; }
+      .solid-arrow { stroke: #d97706; stroke-width: 2.5; fill: none; }
+      .dashed-arrow { stroke: #059669; stroke-width: 2.5; fill: none; stroke-dasharray: 5,5; }
+    </style>
+    <filter id="shadow" x="-3%" y="-3%" width="106%" height="108%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.06"/>
+    </filter>
+    <marker id="arrow-gold" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#d97706"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="860" rx="16" fill="#f8fafc"/>
+  <rect x="1" y="1" width="998" height="858" rx="15" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- Header -->
+  <g transform="translate(40, 26)">
+    <rect x="0" y="0" width="46" height="46" rx="12" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+    <text x="11" y="32" font-size="24">🔄</text>
+    <text x="60" y="20" class="title">Siklus Aliran Data Lintas Aplikasi (Cross-App Data Lifecycle)</text>
+    <text x="60" y="40" class="subtitle">Dari Pendaftaran Batch di Brand Workshop hingga Pengerjaan di Scanner Meja Sistem Workshop &amp; Dispatch</text>
+  </g>
+
+  <!-- STEP 1 -->
+  <g transform="translate(40, 95)">
+    <rect width="920" height="88" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+    <circle cx="36" cy="44" r="18" fill="#d97706"/>
+    <text x="32" y="49" class="step-num">1</text>
+    
+    <g transform="translate(70, 20)">
+      <text x="0" y="14" class="step-title">Penerimaan Fisik Batch &amp; Input Cepat di Portal Brand</text>
+      <text x="0" y="32" class="step-desc">Staff Inbound / Admin membuka form Smart Size Matrix di Brand Workshop (brand.shoeworkshop.id).</text>
+      <text x="0" y="48" class="step-desc">Memilih Mitra Brand, menginput nomor PO Pabrik, tanggal deadline, dan menyebarkan kuantitas ukuran (Size 37–45).</text>
+    </g>
+
+    <rect x="740" y="24" width="150" height="40" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+    <text x="752" y="41" class="app-tag" fill="#b45309">Dijalankan di:</text>
+    <text x="752" y="55" class="app-tag" fill="#92400e">APP 2: BrandWorkshop</text>
+  </g>
+
+  <!-- Down Arrow 1 -->
+  <path d="M 500 183 L 500 205" class="solid-arrow" marker-end="url(#arrow-gold)"/>
+
+  <!-- STEP 2 -->
+  <g transform="translate(40, 215)">
+    <rect width="920" height="88" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+    <circle cx="36" cy="44" r="18" fill="#d97706"/>
+    <text x="32" y="49" class="step-num">2</text>
+    
+    <g transform="translate(70, 20)">
+      <text x="0" y="14" class="step-title">Atomic Generator: Penulisan Massal ke Database Bersama</text>
+      <text x="0" y="32" class="step-desc">Saat tombol "Simpan &amp; Generate" ditekan, sistem membuat 1 record di `brand_orders` (BR-2609-30-0001)</text>
+      <text x="0" y="48" class="step-desc">dan serentak membuat 50 baris di tabel `work_orders` (BR-2609-30-0001-01 s/d -50) dengan foreign key `brand_order_id`.</text>
+    </g>
+
+    <rect x="740" y="24" width="150" height="40" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="752" y="41" class="app-tag" fill="#334155">Target Penyimpanan:</text>
+    <text x="752" y="55" class="app-tag" fill="#0f172a">SHARED MYSQL DATABASE</text>
+  </g>
+
+  <!-- Down Arrow 2 -->
+  <path d="M 500 303 L 500 325" class="solid-arrow" marker-end="url(#arrow-gold)"/>
+
+  <!-- STEP 3 -->
+  <g transform="translate(40, 335)">
+    <rect width="920" height="88" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+    <circle cx="36" cy="44" r="18" fill="#d97706"/>
+    <text x="32" y="49" class="step-num">3</text>
+    
+    <g transform="translate(70, 20)">
+      <text x="0" y="14" class="step-title">Cetak Fisik Hybrid (Lembar SPK Induk + Stiker Barcode Satuan)</text>
+      <text x="0" y="32" class="step-desc">Mencetak 1 Lembar SPK Induk A4 beraksen Amber Gold (#d97706) untuk ditempel pada kardus master proyek.</text>
+      <text x="0" y="48" class="step-desc">Mencetak lembar stiker barcode mini Code 128 untuk ditempelkan pada fisik sepatu / hangtag tiap pasang.</text>
+    </g>
+
+    <rect x="740" y="24" width="150" height="40" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+    <text x="752" y="41" class="app-tag" fill="#b45309">Dijalankan di:</text>
+    <text x="752" y="55" class="app-tag" fill="#92400e">APP 2: BrandWorkshop</text>
+  </g>
+
+  <!-- Down Arrow 3 (Switching to Core App - Green) -->
+  <path d="M 500 423 L 500 445" class="dashed-arrow" marker-end="url(#arrow-green)"/>
+
+  <!-- STEP 4 -->
+  <g transform="translate(40, 455)">
+    <rect width="920" height="88" rx="12" fill="#ffffff" stroke="#86efac" stroke-width="1.5" filter="url(#shadow)"/>
+    <circle cx="36" cy="44" r="18" fill="#059669"/>
+    <text x="32" y="49" class="step-num">4</text>
+    
+    <g transform="translate(70, 20)">
+      <text x="0" y="14" class="step-title" fill="#065f46">Eksekusi Scan di Meja Stasiun Kerja Bengkel (Tanpa Ganti Sistem)</text>
+      <text x="0" y="32" class="step-desc">Teknisi bengkel tetap menggunakan aplikasi SistemWorkshop (info.shoeworkshop.id) dan scanner reguler.</text>
+      <text x="0" y="48" class="step-desc">Scanner langsung mengenali barcode satuan `BR-xxxx-xx`. Record `work_orders` diupdate secara real-time.</text>
+    </g>
+
+    <rect x="740" y="24" width="150" height="40" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+    <text x="752" y="41" class="app-tag" fill="#065f46">Dijalankan di:</text>
+    <text x="752" y="55" class="app-tag" fill="#047857">APP 1: SistemWorkshop</text>
+  </g>
+
+  <!-- Down Arrow 4 -->
+  <path d="M 500 543 L 500 565" class="dashed-arrow" marker-end="url(#arrow-green)"/>
+
+  <!-- STEP 5 -->
+  <g transform="translate(40, 575)">
+    <rect width="920" height="88" rx="12" fill="#ffffff" stroke="#86efac" stroke-width="1.5" filter="url(#shadow)"/>
+    <circle cx="36" cy="44" r="18" fill="#059669"/>
+    <text x="32" y="49" class="step-num">5</text>
+    
+    <g transform="translate(70, 20)">
+      <text x="0" y="14" class="step-title" fill="#065f46">Final QC Audit, Status BRAND_FINISHED, &amp; Isolasi Rak Pickup CS</text>
+      <text x="0" y="32" class="step-desc">Saat lolos QC, status sepatu otomatis diubah menjadi `BRAND_FINISHED` (bukan `SELESAI` ritel).</text>
+      <text x="0" y="48" class="step-desc">Sepatu masuk Area Staging B2B dan secara otomatis diisolasi agar tidak muncul di rak penyerahan kasir CS.</text>
+    </g>
+
+    <rect x="740" y="24" width="150" height="40" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+    <text x="752" y="41" class="app-tag" fill="#065f46">Dijalankan di:</text>
+    <text x="752" y="55" class="app-tag" fill="#047857">APP 1: SistemWorkshop</text>
+  </g>
+
+  <!-- Down Arrow 5 (Switching back to Brand App - Gold) -->
+  <path d="M 500 663 L 500 685" class="solid-arrow" marker-end="url(#arrow-gold)"/>
+
+  <!-- STEP 6 -->
+  <g transform="translate(40, 695)">
+    <rect width="920" height="88" rx="12" fill="#ffffff" stroke="#fde68a" stroke-width="1.5" filter="url(#shadow)"/>
+    <circle cx="36" cy="44" r="18" fill="#d97706"/>
+    <text x="32" y="49" class="step-num">6</text>
+    
+    <g transform="translate(70, 20)">
+      <text x="0" y="14" class="step-title">Live Progress Bar Penuh (100%) &amp; Dispatch Surat Jalan Pengembalian</text>
+      <text x="0" y="32" class="step-desc">Dashboard di Brand Workshop membaca 50/50 pasang sudah `BRAND_FINISHED` dan memicu notifikasi batch selesai.</text>
+      <text x="0" y="48" class="step-desc">Admin mengklik "🚚 Serah Terima B2B", mencetak Surat Jalan Pengembalian, dan status berubah ke `DISPATCHED`.</text>
+    </g>
+
+    <rect x="740" y="24" width="150" height="40" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+    <text x="752" y="41" class="app-tag" fill="#b45309">Dijalankan di:</text>
+    <text x="752" y="55" class="app-tag" fill="#92400e">APP 2: BrandWorkshop</text>
+  </g>
+
+  <!-- Footer Indicator -->
+  <g transform="translate(40, 805)">
+    <rect width="920" height="34" rx="8" fill="#f1f5f9"/>
+    <text x="20" y="21" class="mono-tag" fill="#475569">LEGASI WARNA: 🟨 EMAS = Modul Brand (App 2) | 🟩 HIJAU = Core Meja Bengkel (App 1) | SINKRONISASI = INSTAN VIA SHARED DB</text>
+  </g>
+</svg>

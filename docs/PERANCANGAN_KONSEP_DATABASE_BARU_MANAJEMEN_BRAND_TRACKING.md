@@ -1,11 +1,29 @@
-# Konsep Database Baru — Manajemen Brand (B2B) & Sistem Tracking Progress
+<div class="paper-header">
+<div class="paper-badge">DOKUMEN PERANCANGAN SISTEM & PAPER PROJECT</div>
+<div class="paper-org">SHOE WORKSHOP INDONESIA • DIVISI IT & DATA ANALYST</div>
+<h1 class="paper-title">PERANCANGAN SKEMA DATABASE MANAJEMEN BRAND (B2B) & PROGRESS TRACKING</h1>
+<div class="paper-subtitle">Arsitektur Skema Relasional 12 Tabel Standalone, Lifecycle Unit Tracking, Append-Only Progress Log, & Public Token Link</div>
+<div class="meta-grid">
+<div>
+<div class="meta-label">Nomor Dokumen Paper</div>
+<div class="meta-val">DB-ARCH-2026-B2B-002 (Rev 1.2)</div>
+</div>
+<div>
+<div class="meta-label">Status Perancangan</div>
+<div class="meta-val">✅ Final Draft Approved (Zero Database Breaking Changes)</div>
+</div>
+<div>
+<div class="meta-label">Divisi Terkait</div>
+<div class="meta-val">Divisi Workshop (Produksi), Divisi Finance, & Divisi IT</div>
+</div>
+<div>
+<div class="meta-label">Lead Architect & Penulis</div>
+<div class="meta-val">Sidik Waluya (Full Stack Dev) & Tim Data IT</div>
+</div>
+</div>
+</div>
 
-**Versi:** 1.1 (Draft Hasil Sesi Grill-Me + Keputusan Foto Unit)  
-**Tanggal:** Kamis, 8 Oktober 2026  
-**Dokumen Acuan:** [`ALUR_DAN_ARSITEKTUR_MANAJEMEN_BRAND.md`](ALUR_DAN_ARSITEKTUR_MANAJEMEN_BRAND.md) (v1.0, 30 Sep 2026)  
-**Status:** Usulan arsitektur — belum ada migration yang dibuat.
-
----
+</div>
 
 ## 1. Ringkasan Keputusan (Hasil Sesi Grill-Me)
 
@@ -29,7 +47,19 @@
 > - Scanner, halaman mobile teknisi, dan cetak SPK **harus dibuat paralel** untuk brand (rute `/m/brand/...`), tidak dapat memakai ulang `ProductionControlling` / `SpkTracker` begitu saja (hanya pola dan trait-nya yang bisa dicontoh).
 > - Laporan/dashboard/keuangan eksisting yang membaca `work_orders` **tidak akan melihat data brand**. Perlu keputusan terpisah untuk laporan & penagihan brand (lihat Bab 10).
 
+
+
+## 🎯 Tujuan Perancangan Skema Database
+Perancangan arsitektur dan sistem ini disusun secara spesifik untuk mencapai sasaran strategis dan operasional bagi **Divisi Workshop (Produksi), Divisi Finance, & Divisi IT** sebagai berikut:
+
+1. Merancang struktur 12 tabel database relasional baru yang modular dan berdiri sendiri untuk kebutuhan kemitraan brand B2B dari tahap registrasi hingga penagihan.
+2. Mendukung pelacakan status bertingkat (*Lifecycle Unit Tracking & Append-Only Progress Logs*) untuk merekam jejak pengerjaan stasiun sol, upper, jahit, dan finishing.
+3. Menyediakan token akses unik (`tracking_token`) pada setiap batch order untuk memfasilitasi live tracking publik tanpa memerlukan akun login pabrik.
+4. Menjamin nol dampak kerusakan (*zero breaking changes*) terhadap tabel transaksi workshop eksisting (`work_orders`, `customers`, `order_payments`).
+
 ---
+
+<div class="page-break"></div>
 
 ## 2. Entity Relationship Diagram
 
@@ -73,6 +103,8 @@ erDiagram
 | 12 | `brand_unit_photos` | Foto BEFORE/PROCESS/AFTER/REJECT per unit & tahap | Transaksi |
 
 ---
+
+<div class="page-break"></div>
 
 ## 3. Spesifikasi Tabel (DDL)
 

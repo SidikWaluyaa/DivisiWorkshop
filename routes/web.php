@@ -452,6 +452,7 @@ Route::middleware('auth')->group(function () {
     // Revision System
     Route::prefix('revision')->name('revision.')->middleware('access:finish')->group(function () {
         Route::get('/', [App\Http\Controllers\RevisionController::class, 'index'])->name('index');
+        Route::get('/export-pdf', [App\Http\Controllers\RevisionController::class, 'exportPdf'])->name('export-pdf');
         Route::get('/{revision}', [App\Http\Controllers\RevisionController::class, 'show'])->name('show');
         Route::post('/{workOrder}/request', [App\Http\Controllers\RevisionController::class, 'request'])->name('request');
         Route::post('/{revision}/complete', [App\Http\Controllers\RevisionController::class, 'complete'])->name('complete');
@@ -462,6 +463,7 @@ Route::middleware('auth')->group(function () {
     // Warranty System (Livewire)
     Route::prefix('garansi')->name('garansi.')->middleware('access:finish')->group(function () {
         Route::get('/', App\Livewire\Warranty\Index::class)->name('index');
+        Route::get('/export-pdf', [App\Http\Controllers\WarrantyController::class, 'exportPdf'])->name('export-pdf');
         Route::get('/{id}/print', [App\Http\Controllers\WarrantyController::class, 'printSpk'])->name('print');
     });
 

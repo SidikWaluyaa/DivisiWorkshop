@@ -1,272 +1,30 @@
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-
-    @page {
-        size: A4;
-        margin: 20mm 15mm 20mm 15mm;
-        @bottom-right {
-            content: "Halaman " counter(page) " dari " counter(pages);
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 8pt;
-            color: #64748b;
-        }
-        @bottom-left {
-            content: "Shoe Workshop • Alur & Arsitektur Sistem Label Membership Customer";
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 8pt;
-            color: #64748b;
-        }
-    }
-
-    body {
-        font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        font-size: 10pt;
-        line-height: 1.6;
-        color: #1e293b;
-        background-color: #ffffff;
-    }
-
-    h1, h2, h3, h4 {
-        color: #0f172a;
-        font-weight: 700;
-        page-break-after: avoid;
-    }
-
-    h1 {
-        font-size: 20pt;
-        border-bottom: 2.5px solid #22AF85;
-        padding-bottom: 6px;
-        margin-top: 0;
-        margin-bottom: 14pt;
-        color: #065f46;
-    }
-
-    h2 {
-        font-size: 13.5pt;
-        border-left: 4.5px solid #22AF85;
-        padding-left: 10px;
-        margin-top: 18pt;
-        margin-bottom: 10pt;
-        background: #f0fdf4;
-        padding-top: 4px;
-        padding-bottom: 4px;
-        border-radius: 0 6px 6px 0;
-        color: #065f46;
-    }
-
-    h3 {
-        font-size: 11pt;
-        margin-top: 14pt;
-        margin-bottom: 6pt;
-        color: #047857;
-    }
-
-    p, ul, ol { margin-bottom: 8pt; }
-    li { margin-bottom: 3pt; }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10pt;
-        margin-bottom: 14pt;
-        font-size: 9pt;
-        page-break-inside: avoid;
-    }
-
-    th, td {
-        border: 1px solid #cbd5e1;
-        padding: 7px 10px;
-        text-align: left;
-        vertical-align: top;
-    }
-
-    th {
-        background-color: #ecfdf5;
-        color: #065f46;
-        font-weight: 700;
-    }
-
-    tr:nth-child(even) { background-color: #fafafa; }
-
-    code {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 8.5pt;
-        background-color: #f1f5f9;
-        color: #0f172a;
-        padding: 2px 5px;
-        border-radius: 4px;
-        border: 1px solid #e2e8f0;
-    }
-
-    pre {
-        background-color: #0f172a;
-        color: #f8fafc;
-        padding: 12px 14px;
-        border-radius: 8px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 8.5pt;
-        line-height: 1.5;
-        overflow-x: auto;
-        page-break-inside: avoid;
-        margin: 12pt 0;
-    }
-
-    pre code {
-        background: transparent;
-        color: inherit;
-        border: none;
-        padding: 0;
-    }
-
-    blockquote {
-        border-left: 4px solid #22AF85;
-        background-color: #f0fdf4;
-        color: #065f46;
-        padding: 10px 14px;
-        margin: 12pt 0;
-        border-radius: 0 8px 8px 0;
-        font-size: 9.5pt;
-        page-break-inside: avoid;
-    }
-
-    .badge {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 9999px;
-        font-size: 7.5pt;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .badge-platinum {
-        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-        color: #fbbf24;
-        border: 1px solid #f59e0b;
-    }
-
-    .badge-gold {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        color: #92400e;
-        border: 1px solid #f59e0b;
-    }
-
-    .badge-reguler {
-        background: #f1f5f9;
-        color: #475569;
-        border: 1px solid #cbd5e1;
-    }
-
-    .callout {
-        border-left: 4px solid #22AF85;
-        background-color: #f0fdf4;
-        padding: 10px 14px;
-        margin-bottom: 12pt;
-        border-radius: 0 6px 6px 0;
-        font-size: 9pt;
-    }
-
-    .callout-title {
-        font-weight: 700;
-        color: #065f46;
-        margin-bottom: 3px;
-    }
-
-    .page-break {
-        page-break-after: always;
-        break-after: page;
-        height: 0;
-        display: block;
-    }
-
-    .cover-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        min-height: 88vh;
-        padding: 20px 0;
-    }
-
-    .cover-header { margin-top: 30px; }
-
-    .cover-title {
-        font-size: 24pt;
-        font-weight: 800;
-        color: #0f172a;
-        line-height: 1.25;
-        margin-bottom: 12px;
-        border-bottom: 4px solid #22AF85;
-        padding-bottom: 14px;
-    }
-
-    .cover-subtitle {
-        font-size: 12pt;
-        color: #64748b;
-        line-height: 1.5;
-        margin-bottom: 25px;
-    }
-
-    .cover-meta {
-        background: #f0fdf4;
-        border: 1.5px solid #a7f3d0;
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-top: 25px;
-    }
-
-    .cover-footer {
-        font-size: 9pt;
-        color: #94a3b8;
-        border-top: 1px solid #e2e8f0;
-        padding-top: 15px;
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .diagram-container {
-        text-align: center;
-        margin: 16pt 0;
-        page-break-inside: avoid;
-    }
-
-    .diagram-container img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-</style>
+<div class="paper-header">
+<div class="paper-badge">DOKUMEN PERANCANGAN SISTEM & PAPER PROJECT</div>
+<div class="paper-org">SHOE WORKSHOP INDONESIA • DIVISI IT & DATA ANALYST</div>
+<h1 class="paper-title">PERANCANGAN ALUR & ARSITEKTUR SISTEM LABEL MEMBERSHIP CUSTOMER</h1>
+<div class="paper-subtitle">Standarisasi Klasifikasi Loyalitas Pelanggan (Regular, Silver, Gold, Platinum) Berbasis Data Transaksi Historis, Akselerasi Layanan CS, dan Retensi Pelanggan</div>
+<div class="meta-grid">
+<div>
+<div class="meta-label">Nomor Dokumen Paper</div>
+<div class="meta-val">MEMBERSHIP-2026-001 (Rev 2.0)</div>
+</div>
+<div>
+<div class="meta-label">Status Perancangan</div>
+<div class="meta-val">✅ Final Approved — Siap Eksekusi (Zero Defect)</div>
+</div>
+<div>
+<div class="meta-label">Divisi Terkait</div>
+<div class="meta-val">Divisi CS (Customer Service) & Divisi CC / CX (Customer Care)</div>
+</div>
+<div>
+<div class="meta-label">Lead Architect & Penulis</div>
+<div class="meta-val">Sidik Waluya (Full Stack Dev) & CRM Specialist Lead</div>
+</div>
+</div>
+</div>
 
 <!-- ================= COVER PAGE ================= -->
-<div class="cover-container">
-    <div class="cover-header">
-        <p style="text-transform: uppercase; letter-spacing: 0.15em; font-size: 10pt; font-weight: 800; color: #22AF85; margin-bottom: 8px;">
-            SHOE WORKSHOP • DOKUMEN ARSITEKTUR &amp; SOP RESMI ENTERPRISE
-        </p>
-        <h1 class="cover-title">
-            Alur &amp; Arsitektur Sistem Label &amp; Tier Membership Customer
-        </h1>
-        <p class="cover-subtitle">
-            Standarisasi Segmentasi Nilai Pelanggan (RFM Monetary Engine), Skema Database Terperinci, Mekanisme Pembaruan Real-Time Tanpa Perintah Manual, dan Auto-Backfill Database Live saat Deployment ke Staging &amp; Production
-        </p>
-    </div>
 
-    <div class="cover-meta">
-        <table style="border: none; margin: 0;">
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; width: 170px; font-weight: 700; color: #065f46;">Klasifikasi Dokumen</td><td style="border: none; padding: 4px 0; font-weight: 700; color: #0f172a;">: Confidential / Internal Enterprise Architecture SOP</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #065f46;">Versi Dokumen</td><td style="border: none; padding: 4px 0; color: #0f172a;">: 1.0 (Ready for Executive Decision &amp; PDF Export)</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #065f46;">Tanggal Rilis</td><td style="border: none; padding: 4px 0; color: #0f172a;">: Jumat, 2 Oktober 2026</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #065f46;">Basis Data Empiris</td><td style="border: none; padding: 4px 0; color: #0f172a;">: 2.955 Pelanggan Aktif | Rp 1,83 Miliar Omset (1 Juni – 30 September 2026)</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #065f46;">Target Pengguna</td><td style="border: none; padding: 4px 0; color: #0f172a;">: Direksi, Manajer Operasional, Customer Service (CS), dan Tim Developer</td></tr>
-            <tr style="background: transparent;"><td style="border: none; padding: 4px 0; font-weight: 700; color: #065f46;">Status Implementasi</td><td style="border: none; padding: 4px 0; font-weight: 800; color: #059669;">: Blueprint Phase (Non-Executing — Siap Dieksekusi)</td></tr>
-        </table>
-    </div>
-
-    <div class="cover-footer">
-        <span>Sistem Manajemen Workshop (`info.shoeworkshop`)</span>
-        <span>Divisi IT, Data Analytics &amp; Bisnis Shoe Workshop</span>
-    </div>
 </div>
 
 <div class="page-break"></div>
@@ -307,6 +65,18 @@ Mengacu pada dokumen evaluasi strategis [proposal_program_membership_loyalty_sho
 * Sepanjang periode tersebut, workshop melayani **2.955 pelanggan aktif** dengan perputaran total omset sebesar **Rp 1.828.292.822 (~Rp 1,83 Miliar)** dari **3.170 transaksi invoice** dan **3.983 pasang sepatu**.
 * **Celah Pertumbuhan Terbesar (*Growth Bottleneck*):** Sebanyak **93,84% pelanggan (2.773 orang)** berstatus *one-time buyer* (hanya pernah transaksi 1 kali), sementara angka *repeat order* baru berada di level **6,16% (182 orang)**.
 * **Kekuatan Inti Member Loyal (*The Pareto Principle*):** Sebanyak **237 pelanggan (8,02% dari total pelanggan)** yang memiliki akumulasi belanja $\ge$ Rp 1,5 Juta telah menyumbangkan **Rp 748,1 Juta (40,9% dari total perputaran omset bengkel!)**.
+
+
+
+## 🎯 Tujuan Perancangan Sistem Membership
+Perancangan arsitektur dan sistem ini disusun secara spesifik untuk mencapai sasaran strategis dan operasional bagi **Divisi CS (Customer Service) & Divisi CC / CX (Customer Care)** sebagai berikut:
+
+1. Menerapkan klasifikasi otomatis level loyalitas pelanggan (Regular, Silver, Gold, Platinum) berbasis metrik frekuensi transaksi dan total belanja historis (*Lifetime Value*).
+2. Menyediakan indikator visual instan (*badge tier*) pada layar Customer Service saat menerima konsultasi chat WhatsApp maupun pendaftaran walk-in.
+3. Mendukung tim Customer Care (CC/CX) dalam memberikan perlakuan khusus, prioritas antrean pengerjaan, dan penanganan kompensasi bagi pelanggan setia.
+4. Mendorong peningkatan retensi pelanggan melalui penawaran kupon diskon dan benefit keanggotaan eksklusif tanpa manipulasi manual dari staf kasir.
+
+---
 
 > [!IMPORTANT]
 > **Tujuan Arsitektur Sistem:**  
@@ -388,8 +158,8 @@ Sesuai hasil penyelarasan manajemen dan standar retensi industri:
 Diagram alur di bawah ini mengilustrasikan bagaimana sistem mendeteksi setiap transaksi invoice baru atau perubahan status pembayaran, memprosesnya secara *background real-time*, dan langsung memperbarui tampilan antarmuka:
 
 <div class="diagram-container">
-    <img src="images/flowchart_membership_customer.svg" alt="Diagram Alur Sistem Membership Customer">
-    <p style="font-size: 8.5pt; color: #64748b; margin-top: 6px;"><em>Gambar 3.1: Diagram Alur Real-Time Kalkulasi &amp; Distribusi Label Membership</em></p>
+<img src="images/flowchart_membership_customer.svg" alt="Diagram Alur Sistem Membership Customer">
+<p style="font-size: 8.5pt; color: #64748b; margin-top: 6px;"><em>Gambar 3.1: Diagram Alur Real-Time Kalkulasi &amp; Distribusi Label Membership</em></p>
 </div>
 
 ### 3.1 Penjelasan Tahapan Alur:
@@ -411,8 +181,8 @@ Diagram alur di bawah ini mengilustrasikan bagaimana sistem mendeteksi setiap tr
 Struktur tabel dirancang efisien dengan prinsip denormalisasi parsial (*caching column*) pada tabel `customers`. Hal ini menjamin performa query daftar ribuan customer tetap instan (*sub-millisecond latency*) tanpa perlu melakukan agregasi `SUM()` berulang-ulang setiap kali tabel dibuka.
 
 <div class="diagram-container">
-    <img src="images/erd_membership_customer.svg" alt="Entity Relationship Diagram Sistem Membership">
-    <p style="font-size: 8.5pt; color: #64748b; margin-top: 6px;"><em>Gambar 4.1: Entity Relationship Diagram (ERD) Asosiasi Customer, Invoice, dan Work Order</em></p>
+<img src="images/erd_membership_customer.svg" alt="Entity Relationship Diagram Sistem Membership">
+<p style="font-size: 8.5pt; color: #64748b; margin-top: 6px;"><em>Gambar 4.1: Entity Relationship Diagram (ERD) Asosiasi Customer, Invoice, dan Work Order</em></p>
 </div>
 
 ### 4.1 Spesifikasi Kolom Baru pada Tabel `customers`
@@ -613,8 +383,8 @@ class Customer extends Model
 Sesuai kesepakatan sesi wawancara, antarmuka visual lencana membership difokuskan pada dua halaman operasional utama:
 
 <div class="diagram-container">
-    <img src="images/wireframe_customer_membership_ui.svg" alt="Wireframe Tampilan UI Sistem Label Membership">
-    <p style="font-size: 8.5pt; color: #64748b; margin-top: 6px;"><em>Gambar 6.1: Wireframe Antarmuka Detail Order dan Master Pelanggan</em></p>
+<img src="images/wireframe_customer_membership_ui.svg" alt="Wireframe Tampilan UI Sistem Label Membership">
+<p style="font-size: 8.5pt; color: #64748b; margin-top: 6px;"><em>Gambar 6.1: Wireframe Antarmuka Detail Order dan Master Pelanggan</em></p>
 </div>
 
 ### 6.1 Detail Order Admin (`/admin/orders/{id}`)
