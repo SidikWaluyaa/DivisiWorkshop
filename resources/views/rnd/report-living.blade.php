@@ -217,7 +217,7 @@
                     <span class="text-[9px] font-black font-mono text-ink leading-none">{{ $index + 1 }}</span>
                 </div>
                 <div class="flex-1 photo-card rounded-2xl bg-ink-panel border border-ink-border overflow-hidden transition-all duration-300 cursor-pointer hover:border-sw-green/30"
-                     @click="openLightbox('{{ asset('storage/' . $item->photo_path) }}', '{{ addslashes($item->stage_title) }}', '{{ addslashes($item->notes ?? '') }}', '{{ $statusKey }}', '{{ $item->created_at->format('d M Y • H:i') }}', {{ $index + 1 }})">
+                     @click="openLightbox({{ $index }})">
                     <div class="px-3.5 py-2.5 flex items-center justify-between gap-2 border-b border-ink-border">
                         <span class="text-xs font-poppins font-bold text-concrete-light truncate">{{ $item->stage_title }}</span>
                         <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 {{ $conf['badge'] }}">{{ $conf['label'] }}</span>
@@ -274,7 +274,7 @@
             <div class="photo-card rounded-2xl bg-ink-panel border border-ink-border overflow-hidden transition-all duration-300 cursor-pointer flex flex-col hover:border-sw-green/30"
                  x-show="shouldShowItem('{{ $statusKey }}')"
                  x-transition
-                 @click="openLightbox('{{ asset('storage/' . $item->photo_path) }}', '{{ addslashes($item->stage_title) }}', '{{ addslashes($item->notes ?? '') }}', '{{ $statusKey }}', '{{ $item->created_at->format('d M Y • H:i') }}', {{ $index + 1 }})">
+                 @click="openLightbox({{ $index }})">
                 <div class="relative aspect-video bg-ink overflow-hidden">
                     <img src="{{ asset('storage/' . $item->photo_path) }}" alt="{{ $item->stage_title }}" loading="lazy"
                          class="photo-img w-full h-full object-cover">
@@ -468,18 +468,14 @@
                 activeTime: '',
                 activeStep: 1,
                 totalPhotos: {{ $totalStages }},
-                photos: [
-                    @foreach($progresses as $index => $item)
-                    {
-                        img: '{{ asset('storage/' . $item->photo_path) }}',
-                        title: '{{ addslashes($item->stage_title) }}',
-                        notes: '{{ addslashes($item->notes ?? '') }}',
-                        status: '{{ $item->result_status }}',
-                        time: '{{ $item->created_at->format('d M Y • H:i') }}',
-                        step: {{ $index + 1 }}
-                    }{{ !$loop->last ? ',' : '' }}
-                    @endforeach
-                ],
+                photos: @js($progresses->map(fn($item, $index) => [
+                    "img"    => asset("storage/" . $item->photo_path),
+                    "title"  => $item->stage_title,
+                    "notes"  => $item->notes ?? "",
+                    "status" => $item->result_status,
+                    "time"   => $item->created_at->format("d M Y • H:i"),
+                    "step"   => $index + 1,
+                ])->values()),
                 copiedLink: false,
                 toastShow: false,
                 toastMessage: '',
@@ -496,16 +492,18 @@
                     }, { passive: true });
                 },
 
-                openLightbox(img, title, notes, status, time, step) {
-                    this.activeImage = img;
-                    this.activeTitle = title;
-                    this.activeNotes = notes;
-                    this.activeStatus = status;
-                    this.activeTime = time;
-                    this.activeStep = step || 1;
+                openLightbox(idx) {
+                    const p = this.photos[idx];
+                    if (!p) return;
+                    this.activeImage  = p.img;
+                    this.activeTitle  = p.title;
+                    this.activeNotes  = p.notes;
+                    this.activeStatus = p.status;
+                    this.activeTime   = p.time;
+                    this.activeStep   = p.step;
                     this.lightboxOpen = true;
                     // Lock body scroll
-                    document.body.style.overflow = 'hidden';
+                    document.body.style.overflow = "hidden";
                 },
 
                 closeLightbox() {
@@ -609,7 +607,7 @@
                 },
 
                 shareWhatsApp() {
-                    const title = encodeURIComponent(`Laporan R&D: {{ $order->spk_number }} ({{ $order->shoe_brand }} {{ $order->shoe_type }})`);
+                    const title = encodeURIComponent(@js("Laporan R&D: " . $order->spk_number . " (" . $order->shoe_brand . " " . $order->shoe_type . ")"));
                     const url = encodeURIComponent(window.location.href);
                     const text = `${title}%0A%0APantau perkembangan riset lab secara real-time:%0A${url}`;
                     window.open(`https://wa.me/?text=${text}`, '_blank');
