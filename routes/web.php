@@ -403,6 +403,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('m')->name('mobile.')->group(function () {
         Route::get('/production', \App\Livewire\Mobile\ProductionControlling::class)->name('production.index');
         Route::get('/spk/{spk_number}', \App\Livewire\Mobile\SpkTracker::class)->name('spk.track');
+        Route::get('/panduan-teknisi/pdf', [\App\Http\Controllers\MobileGuideController::class, 'downloadPdf'])->name('panduan.pdf');
     });
 
     // QC
