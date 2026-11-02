@@ -178,6 +178,7 @@
                                         <div class="flex flex-col gap-1">
                                             <div class="flex items-center gap-2">
                                                 <span class="text-sm font-black text-gray-900 font-mono tracking-tighter">{{ $order->spk_number }}</span>
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">{{ $order->status->value ?? $order->status }}</span>
                                                 @if($order->priority_scale == 1)
                                                     <span class="relative flex h-2 w-2">
                                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

@@ -760,7 +760,12 @@ class WorkOrder extends Model
 
     public function scopeProductionLate($query)
     {
-        return $query->where('status', WorkOrderStatus::PRODUCTION->value)
+        return $query->whereIn('status', [
+                WorkOrderStatus::PREPARATION->value,
+                WorkOrderStatus::SORTIR->value,
+                WorkOrderStatus::PRODUCTION->value,
+                WorkOrderStatus::QC->value,
+            ])
             ->select('*')
             ->selectRaw("
                 DATEDIFF(estimation_date, NOW()) as calendar_days_remaining,

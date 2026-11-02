@@ -61,6 +61,7 @@ $mysqli->query("SET time_zone = '$db_tz'");
 $query = "SELECT 
             id,
             spk_number, 
+            status,
             customer_name, 
             customer_phone,
             estimation_date,
@@ -81,9 +82,7 @@ $query = "SELECT
                 ELSE 3
             END as priority_scale
         FROM work_orders 
-        WHERE status = 'PRODUCTION'
-        AND DATEDIFF(estimation_date, CURDATE()) <= 5
-        AND DATEDIFF(estimation_date, CURDATE()) >= 1
+        WHERE status IN ('PREPARATION', 'SORTIR', 'PRODUCTION', 'QC')
         ORDER BY priority_scale ASC, sisa_hari ASC";
 
 $result = $mysqli->query($query);
