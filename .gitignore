@@ -24,4 +24,5 @@ heal_transactions.php
 *.sql
 laporan_kerja_*.md
 !laporan_kerja/2026-10/*
+!laporan_kerja/2026-11/*
 /.gemini-scratch/
