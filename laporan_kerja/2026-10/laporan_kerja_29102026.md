@@ -20,5 +20,8 @@
 
 ━━━━━━━━━━━━━━━━━━
 🚀 *Output Hari Ini*
-1. *Komputer Kantor Langsung Sinkron*: Begitu Indra menekan tombol 'Mulai' di HP di ujung bengkel, monitor komputer kantor seketika berubah warna biru 'Sedang Dikerjakan' dan menampilkan nama Indra sebagai teknisi secara instan tanpa perlu refresh.
-2. *Persetujuan Kepala Produksi*: Kepala Produksi meninjau langsung ke meja kerja dan resmi menyetujui tata letak kotak QR Code pada kertas SPK karena pas dan tidak mengganggu area catatan sepatu.
+1. *Sinkronisasi Otomatis ke Komputer Kantor*: Begitu Indra menekan tombol "Mulai" di HP di lantai bengkel, monitor komputer kantor seketika berubah warna biru "Sedang Dikerjakan" dan menampilkan nama Indra sebagai teknisi secara instan tanpa perlu kasir menekan tombol refresh.
+2. *Persetujuan Resmi Kepala Produksi*: Admin Workshop meninjau langsung ke meja kerja bengkel dan menyetujui secara resmi tata letak kotak QR Code pada kertas SPK fisik karena pas, rapi, dan tidak mengganggu area catatan kerusakan sepatu.
+3. *Pengujian Alur Antar-Stasiun Lancar*: Alur perpindahan pengerjaan sepatu dari stasiun soling berlanjut ke stasiun jahit dan finishing berhasil disimulasikan dengan mulus tanpa ada data status kerja yang bertabrakan.
+4. *Ketahanan Sinyal di Sudut Bengkel Teruji*: Aplikasi terbukti tetap berjalan stabil dan data waktu pengerjaan tidak hilang saat teknisi membawa HP ke sudut bengkel yang jangkauan sinyal WiFi-nya agak lemah.
+5. *Notifikasi Prioritas Sepatu Cepat Terbaca*: Label tanda "Express / Fast Track" pada kertas SPK sukses terbaca menonjol dengan warna merah di layar HP teknisi, sehingga teknisi dapat langsung mengetahui sepatu mana yang wajib didahulukan.

@@ -22,3 +22,4 @@
 🚀 *Output Hari Ini*
 1. *Tombol Kerja Ramah Jempol*: Tombol stasiun kerja (Sol, Jahit, Upper, Treatment) dibuat berukuran besar (setinggi 48px) agar teknisi yang tangannya kotor atau memakai sarung tangan tetap bisa menekan dengan mudah tanpa salah pencet.
 2. *Stopwatch Digital Otomatis*: Saat tombol hijau 'Mulai Kerja' ditekan, jam digital di layar HP langsung berdetik menghitung lama kerja. Saat tombol merah 'Selesaikan' ditekan, jam otomatis berhenti dan mencatat total waktu kerja nyata ke sistem.
+3. Membuat Fitur Cetak PDF pada Fitur Garansi dan Revisi bertujuan untuk workshop dapat menarik data dalam bentuk PDF untuk perbulannya.
