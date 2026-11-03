@@ -202,7 +202,7 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-teal-400 font-bold">Follow Up Closing</span>
 
             @php
-                $followUpClosingCount = \App\Models\CxIssue::where('source', 'GUDANG')->where('status', 'OPEN')->count();
+                $followUpClosingCount = $sidebarCounts['follow_up_closing'] ?? \App\Models\CxIssue::where('source', 'GUDANG')->where('status', 'OPEN')->count();
             @endphp
             @if($followUpClosingCount > 0)
                 <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-amber-500 text-white shadow-sm">
@@ -226,7 +226,7 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold">Kiriman SPK Pending</span>
 
             @php
-                $pendingSpkCount = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SPK_PENDING)->count();
+                $pendingSpkCount = $sidebarCounts['reception'] ?? \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::SPK_PENDING)->count();
             @endphp
             @if($pendingSpkCount > 0)
                 <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-[11px] font-black bg-amber-500 text-white shadow-xs">
@@ -334,7 +334,7 @@
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 font-bold text-amber-400">Penerimaan Outbound</span>
             
-            @php $pendingOutboundCount = \App\Models\WorkshopManifest::where('manifest_number', 'like', 'MNF-OUT-%')->where('status', 'SENT')->count(); @endphp
+            @php $pendingOutboundCount = $sidebarCounts['pending_outbound'] ?? \App\Models\WorkshopManifest::where('manifest_number', 'like', 'MNF-OUT-%')->where('status', 'SENT')->count(); @endphp
             @if($pendingOutboundCount > 0)
                 <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-amber-500 text-slate-950 shadow-sm animate-pulse">
                     {{ $pendingOutboundCount }}
@@ -414,7 +414,7 @@
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-primary-green font-bold">Penyimpanan Rak</span>
             
-            @php $totalStored = \App\Models\StorageAssignment::stored()->count(); @endphp
+            @php $totalStored = $sidebarCounts['total_stored'] ?? \App\Models\StorageAssignment::stored()->count(); @endphp
             @if($totalStored > 0)
                 <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-primary-green text-white shadow-sm">
                     {{ $totalStored }}
@@ -492,7 +492,7 @@
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-emerald-400 font-bold">Logistik Manifest</span>
             
-            @php $manifestCount = \App\Models\WorkshopManifest::where('manifest_number', 'not like', 'MNF-OUT-%')->whereIn('status', ['DRAFT', 'SENT'])->count(); @endphp
+            @php $manifestCount = $sidebarCounts['manifest_count'] ?? \App\Models\WorkshopManifest::where('manifest_number', 'not like', 'MNF-OUT-%')->whereIn('status', ['DRAFT', 'SENT'])->count(); @endphp
             @if($manifestCount > 0)
                 <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-sm">
                     {{ $manifestCount }}
@@ -662,7 +662,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-emerald-400 font-bold">Waiting Payment</span>
-            @php $financeWaitingCount = \App\Models\WorkOrder::where('status', 'WAITING_PAYMENT')->count(); @endphp
+            @php $financeWaitingCount = $sidebarCounts['waiting_payment'] ?? \App\Models\WorkOrder::where('status', 'WAITING_PAYMENT')->count(); @endphp
             <span x-show="!sidebarCollapsed && {{ $financeWaitingCount }} > 0" class="ml-auto bg-emerald-100 text-emerald-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $financeWaitingCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Menunggu</span>
         </a>
@@ -678,7 +678,7 @@
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Finance Transaksi</span>
             {{-- Counter --}}
-            @php $financeCount = \App\Models\WorkOrder::where('status', 'WAITING_PAYMENT')->count(); @endphp
+            @php $financeCount = $sidebarCounts['waiting_payment'] ?? \App\Models\WorkOrder::where('status', 'WAITING_PAYMENT')->count(); @endphp
             <span x-show="!sidebarCollapsed && {{ $financeCount }} > 0" class="ml-auto bg-yellow-100 text-yellow-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $financeCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Transaksi</span>
         </a>
@@ -706,7 +706,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-red-500 font-bold">Transaksi Batal</span>
-            @php $batalCount = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::BATAL->value)->count(); @endphp
+            @php $batalCount = $sidebarCounts['batal'] ?? \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::BATAL->value)->count(); @endphp
             <span x-show="!sidebarCollapsed && {{ $batalCount }} > 0" class="ml-auto bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $batalCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-red-500 text-xs font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Batal</span>
         </a>
@@ -721,7 +721,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-orange-400 font-black italic">Audit Bayar CS</span>
-            @php $pendingCsCount = \App\Models\OrderPayment::where('is_verified', false)->where('notes', 'LIKE', '%dari CS%')->count(); @endphp
+            @php $pendingCsCount = $sidebarCounts['pending_cs_payment'] ?? \App\Models\OrderPayment::where('is_verified', false)->where('notes', 'LIKE', '%dari CS%')->count(); @endphp
             <span x-show="!sidebarCollapsed && {{ $pendingCsCount }} > 0" class="ml-auto bg-orange-500 text-white py-0.5 px-2 rounded-full text-[10px] font-black animate-pulse">{{ $pendingCsCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Audit CS</span>
         </a>
@@ -762,7 +762,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 text-purple-400 font-bold">Verifikasi Mutasi</span>
-            @php $unverifiedCount = \App\Models\InvoicePayment::where('verified', false)->count(); @endphp
+            @php $unverifiedCount = $sidebarCounts['unverified_payment'] ?? \App\Models\InvoicePayment::where('verified', false)->count(); @endphp
             <span x-show="!sidebarCollapsed && {{ $unverifiedCount }} > 0" class="ml-auto bg-purple-100 text-purple-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $unverifiedCount }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">Verifikasi</span>
         </a>
@@ -859,7 +859,7 @@
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3">Kolam OTO (Upsell)</span>
             
             {{-- Counter for Pending CX --}}
-            @php $otoPending = \App\Models\OTO::where('status', 'PENDING_CX')->count(); @endphp
+            @php $otoPending = $sidebarCounts['oto_pending'] ?? \App\Models\OTO::where('status', 'PENDING_CX')->count(); @endphp
             <span x-show="!sidebarCollapsed && {{ $otoPending }} > 0" class="ml-auto bg-orange-100 text-orange-600 py-0.5 px-2 rounded-full text-xs font-bold">{{ $otoPending }}</span>
             <span x-show="sidebarCollapsed" class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">OTO</span>
         </a>
@@ -915,7 +915,7 @@
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-teal-400 font-bold tracking-tight">Inbox Klaim Garansi</span>
             
-            @php $pendingClaimsCount = \App\Models\WarrantyClaim::where('status', 'PENDING')->count(); @endphp
+            @php $pendingClaimsCount = $sidebarCounts['pending_claims'] ?? \App\Models\WarrantyClaim::where('status', 'PENDING')->count(); @endphp
             @if($pendingClaimsCount > 0)
                 <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-amber-500 text-white shadow-sm animate-pulse">
                     {{ $pendingClaimsCount }}
@@ -938,7 +938,7 @@
             </svg>
             <span x-show="!sidebarCollapsed" class="nav-item-text ml-3 flex-1 text-emerald-400 font-bold tracking-tight">Alamat Terverifikasi</span>
             
-            @php $verifiedToday = \App\Models\Customer::where('is_address_verified', 1)->whereDate('address_verified_at', \Carbon\Carbon::today())->count(); @endphp
+            @php $verifiedToday = $sidebarCounts['verified_today'] ?? \App\Models\Customer::where('is_address_verified', 1)->whereDate('address_verified_at', \Carbon\Carbon::today())->count(); @endphp
             @if($verifiedToday > 0)
                 <span x-show="!sidebarCollapsed" class="ml-2 py-0.5 px-2 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-sm animate-pulse">
                     {{ $verifiedToday }}

@@ -23,6 +23,8 @@
 
 ━━━━━━━━━━━━━━━━━━
 🚀 *Output Hari Ini*
-1. *Tabel Invoice Multi-Sepatu Cepat*: Pesanan dengan banyak pasang sepatu kini di-load sekaligus tanpa kueri berulang per pasang sepatu anak.
-2. *Audit Bayar CS Tanpa Hambatan*: Pencocokan klaim pembayaran dari CS ke rekening kasir workshop selesai dalam sekejap.
-3. *Halaman Transaksi Batal Enteng*: Riwayat refund dan pembatalan transaksi tampil instan tanpa memberatkan memori server.
+1. *Halaman Menunggu Pembayaran (Waiting Payment) Gesit*: Tabel tagihan pelanggan kini mengambil data status SPK dan riwayat DP sekaligus dalam satu perintah efisien.
+2. *Buka Rincian Invoice Tagihan Jadi Seketika*: Staf keuangan kini bisa membuka dan melihat detail rincian tagihan invoice tanpa harus menunggu layar berputar lama.
+3. *Pencatatan Pembayaran Kasir Lebih Responsif*: Tombol input pelunasan kasir langsung memperbarui status invoice secara instan tanpa membuat antrean kasir tersendat.
+4. *Pengecekan Angka Nominal & Diskon 100% Cocok*: Dipastikan seluruh hitungan uang masuk, sisa tagihan, diskon promo, dan kode unik pembayaran tetap 100% akurat tanpa selisih sepeserpun.
+5. *Beban Server aaPanel Saat Jam Kasir Menurun*: Optimasi pada tabel keuangan berhasil memangkas lonjakan beban database saat jam sibuk pelunasan sore hari.

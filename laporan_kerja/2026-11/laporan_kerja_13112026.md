@@ -23,6 +23,8 @@
 
 ━━━━━━━━━━━━━━━━━━
 🚀 *Output Hari Ini*
-1. *Fast Track Loading Instan*: Antrean pesanan prioritas kini memuat estimasi deadline dan histori stasiun tanpa query berulang per pasang sepatu.
-2. *Audit Keterlambatan Sangat Cepat*: Layar pantau keterlambatan pengerjaan sepatu tidak lagi membebani database meski menyaring ratusan order aktif.
-3. *Lacak Jasa & SPK Internal Responsif*: Pencarian riwayat penanganan sepatu antar stasiun langsung muncul seketika saat diketik.
+1. *Halaman Info Keterlambatan Sepatu Lebih Gesit*: Tabel pantauan SPK terlambat dan peringatan tenggat waktu kini terbuka cepat tanpa membuat browser mandor macet.
+2. *Penyaringan Alasan Kendala Material Dioptimasi*: Form pencatatan alasan keterlambatan (seperti menunggu sol khusus atau konfirmasi warna cat) kini langsung tersimpan dengan responsif.
+3. *Dashboard Utama Bengkel Diringankan*: Kartu angka yang menampilkan total sepatu sedang dikerjakan di setiap stasiun kini dihitung secara otomatis dalam satu kueri ringkas.
+4. *Pengujian Filter Cepat Tanggap Bengkel*: Fitur pencarian no SPK darurat dan tombol penanda Prioritas Fast Track dipastikan berfungsi 100% normal dan akurat.
+5. *Mandor Bengkel Lebih Mudah Mengontrol Antrean*: Pemantauan SPK yang mendekati batas waktu selesai menjadi lebih nyaman karena daftar sepatu darurat langsung muncul tanpa loading lama.

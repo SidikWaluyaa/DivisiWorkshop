@@ -162,8 +162,8 @@ class DashboardController extends Controller
         $completedDelta = $prevCompleted > 0 ? round((($completedPeriod - $prevCompleted) / $prevCompleted) * 100, 1) : 0;
 
         // === Gudang: Inventori ===
-        $inventoryValue = Material::all()->sum(fn($m) => $m->stock * $m->price);
-        $lowStockCount = Material::whereRaw('stock <= min_stock')->count();
+        $inventoryValue = (float) Material::selectRaw('COALESCE(SUM(stock * price), 0) as val')->value('val');
+        $lowStockCount = $this->getLowStockCount();
         $storedItems = StorageAssignment::where('status', 'stored')->count();
 
         // === CX: Resolution ===
@@ -215,17 +215,31 @@ class DashboardController extends Controller
     }
 
     /**
+     * Helper: Memoized WorkOrder counts by status to prevent duplicate queries
+     */
+    private function getWorkOrderStatusCounts()
+    {
+        return once(function () {
+            return WorkOrder::selectRaw('status, count(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status');
+        });
+    }
+
+    /**
      * Section 2: Customer Journey Map — Real-time SPK flow
      */
     private function getJourneyFlow()
     {
+        $statusCounts = $this->getWorkOrderStatusCounts();
+
         return [
             ['stage' => 'CS Terima', 'icon' => '📋', 'count' => CsLead::whereNotIn('status', ['CONVERTED', 'LOST'])->count(), 'color' => '#3b82f6'],
-            ['stage' => 'Gudang Masuk', 'icon' => '📥', 'count' => WorkOrder::where('status', 'DITERIMA')->count(), 'color' => '#8b5cf6'],
-            ['stage' => 'Assessment', 'icon' => '🔍', 'count' => WorkOrder::where('status', 'ASSESSMENT')->count(), 'color' => '#FFC232'],
-            ['stage' => 'Preparation', 'icon' => '🧼', 'count' => WorkOrder::where('status', 'PREPARATION')->count(), 'color' => '#0ea5e9'],
-            ['stage' => 'Production', 'icon' => '🔨', 'count' => WorkOrder::where('status', 'PRODUCTION')->count(), 'color' => '#f97316'],
-            ['stage' => 'QC', 'icon' => '✅', 'count' => WorkOrder::where('status', 'QC')->count(), 'color' => '#22AF85'],
+            ['stage' => 'Gudang Masuk', 'icon' => '📥', 'count' => (int) ($statusCounts['DITERIMA'] ?? 0), 'color' => '#8b5cf6'],
+            ['stage' => 'Assessment', 'icon' => '🔍', 'count' => (int) ($statusCounts['ASSESSMENT'] ?? 0), 'color' => '#FFC232'],
+            ['stage' => 'Preparation', 'icon' => '🧼', 'count' => (int) ($statusCounts['PREPARATION'] ?? 0), 'color' => '#0ea5e9'],
+            ['stage' => 'Production', 'icon' => '🔨', 'count' => (int) ($statusCounts['PRODUCTION'] ?? 0), 'color' => '#f97316'],
+            ['stage' => 'QC', 'icon' => '✅', 'count' => (int) ($statusCounts['QC'] ?? 0), 'color' => '#22AF85'],
             ['stage' => 'Selesai', 'icon' => '🛍️', 'count' => WorkOrder::where('status', 'SELESAI')->whereNull('taken_date')->count(), 'color' => '#10b981'],
         ];
     }
@@ -235,14 +249,16 @@ class DashboardController extends Controller
      */
     private function getProductionInsights($start, $end)
     {
+        $statusCounts = $this->getWorkOrderStatusCounts();
+
         // Production funnel (current snapshot, not filtered by period)
         $funnel = [
-            ['label' => 'Diterima', 'count' => WorkOrder::where('status', 'DITERIMA')->count(), 'color' => '#3b82f6'],
-            ['label' => 'Assessment', 'count' => WorkOrder::where('status', 'ASSESSMENT')->count(), 'color' => '#FFC232'],
-            ['label' => 'Preparation', 'count' => WorkOrder::where('status', 'PREPARATION')->count(), 'color' => '#0ea5e9'],
-            ['label' => 'Sortir', 'count' => WorkOrder::where('status', 'SORTIR')->count(), 'color' => '#6366f1'],
-            ['label' => 'Production', 'count' => WorkOrder::where('status', 'PRODUCTION')->count(), 'color' => '#f97316'],
-            ['label' => 'QC', 'count' => WorkOrder::where('status', 'QC')->count(), 'color' => '#22AF85'],
+            ['label' => 'Diterima', 'count' => (int) ($statusCounts['DITERIMA'] ?? 0), 'color' => '#3b82f6'],
+            ['label' => 'Assessment', 'count' => (int) ($statusCounts['ASSESSMENT'] ?? 0), 'color' => '#FFC232'],
+            ['label' => 'Preparation', 'count' => (int) ($statusCounts['PREPARATION'] ?? 0), 'color' => '#0ea5e9'],
+            ['label' => 'Sortir', 'count' => (int) ($statusCounts['SORTIR'] ?? 0), 'color' => '#6366f1'],
+            ['label' => 'Production', 'count' => (int) ($statusCounts['PRODUCTION'] ?? 0), 'color' => '#f97316'],
+            ['label' => 'QC', 'count' => (int) ($statusCounts['QC'] ?? 0), 'color' => '#22AF85'],
         ];
 
         // Top 5 technicians by jobs assigned — direct query against FK columns
@@ -332,7 +348,7 @@ class DashboardController extends Controller
             ->get();
 
         // Complaint Analytics
-        $complaintsPending = Complaint::where('status', 'PENDING')->count();
+        $complaintsPending = $this->getPendingComplaintsCount();
         $complaintsProcess = Complaint::where('status', 'PROCESS')->count();
         $complaintsOverdue = Complaint::where('status', 'PENDING')
             ->where('created_at', '<', now()->subHours(48))->count();
@@ -401,11 +417,21 @@ class DashboardController extends Controller
     private function getQuickStats()
     {
         return [
-            'pending_complaints' => Complaint::where('status', 'PENDING')->count(),
-            'low_stock_count' => Material::whereRaw('stock <= min_stock')->count(),
+            'pending_complaints' => $this->getPendingComplaintsCount(),
+            'low_stock_count' => $this->getLowStockCount(),
             'pending_po' => Purchase::where('status', 'pending')->count(),
             'today_deadlines' => WorkOrder::whereDate('estimation_date', today())
                 ->whereNotIn('status', ['SELESAI', 'DIBATALKAN', 'HISTORY'])->count(),
         ];
+    }
+
+    private function getPendingComplaintsCount()
+    {
+        return once(fn() => Complaint::where('status', 'PENDING')->count());
+    }
+
+    private function getLowStockCount()
+    {
+        return once(fn() => Material::whereRaw('stock <= min_stock')->count());
     }
 }

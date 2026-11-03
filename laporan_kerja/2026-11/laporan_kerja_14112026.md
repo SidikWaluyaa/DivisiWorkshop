@@ -23,6 +23,8 @@
 
 ━━━━━━━━━━━━━━━━━━
 🚀 *Output Hari Ini*
-1. *Stasiun Produksi & Sortir Enteng*: Pengambilan nama teknisi penanggung jawab di setiap stasiun kini di-load sekaligus dalam satu query.
-2. *Pindah Stasiun Tanpa Delay*: Perpindahan status SPK saat teknisi scan barcode di meja kerja berlangsung mulus tanpa jeda database.
-3. *Surat Jalan Antar-Stasiun Lancar*: Pembuatan manifest perpindahan barang dari sortir ke reparasi dan QC selesai dalam pecahan detik.
+1. *Stasiun Persiapan (Cuci) & Sortir Jadi Instan*: Daftar antrean cuci sepatu dan pembagian tugas pengerjaan awal kini ditarik sekaligus, memangkas waktu tunggu teknisi di awal giliran kerja.
+2. *Stasiun Produksi Reparasi Terbuka Ringan*: Halaman utama tempat teknisi sol dan jahit melihat instruksi reparasi kini tidak lagi bolak-balik meminta riwayat detail sepatu ke database.
+3. *Perpindahan Antar Stasiun Kerja Mulus*: Tombol serah terima sepatu dari stasiun cuci ke stasiun jahit/reparasi memproses data dengan cepat tanpa jeda putar layar.
+4. *Verifikasi Catatan Khusus Reparasi Pelanggan*: Dipastikan instruksi khusus pelanggan (misal: ganti sol warna hitam, lem ekstra kuat) tetap tampil lengkap di layar teknisi.
+5. *Kinerja Komputer Meja Bengkel Terasa Lebih Enteng*: Pengurangan beban kueri membuat komputer operasional di lantai bengkel yang speknya sederhana tetap responsif dan tidak lag.

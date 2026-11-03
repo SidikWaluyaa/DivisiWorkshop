@@ -550,6 +550,19 @@ class WorkOrder extends Model
     public function hasServiceCategory($categoryNames)
     {
         $categories = (array) $categoryNames;
+
+        // Jika relasi workOrderServices sudah dimuat (eager-loaded), gunakan koleksi di memori (0 kueri)
+        if ($this->relationLoaded('workOrderServices')) {
+            return $this->workOrderServices->contains(function ($item) use ($categories) {
+                foreach ($categories as $cat) {
+                    if ($item->category_name === $cat) return true;
+                    if ($cat !== '' && stripos($item->category_name ?? '', $cat) !== false) return true;
+                    if ($cat !== '' && stripos($item->custom_service_name ?? '', $cat) !== false) return true;
+                }
+                return false;
+            });
+        }
+
         return $this->workOrderServices()
             ->where(function ($q) use ($categories) {
                 $q->whereIn('category_name', $categories);
@@ -638,54 +651,56 @@ class WorkOrder extends Model
      */
     public static function getCxActiveCount(): int
     {
-        $user = auth()->user();
-        if (!$user) return 0;
+        return once(function () {
+            $user = auth()->user();
+            if (!$user) return 0;
 
-        $query = self::where(function($q) {
-                $q->whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
-                  ->orWhereHas('cxIssues', function($sq) {
-                      $sq->where('status', 'OPEN')
-                         ->where('category', 'like', 'Revisi %')
-                         ->where(function($subQ) {
-                             $subQ->where(function($q1) {
-                                 $q1->whereIn('category', ['Revisi PREPARATION', 'REVISI PREPARATION'])
-                                    ->where('work_orders.status', 'PREPARATION');
-                             })
-                             ->orWhere(function($q1) {
-                                 $q1->whereIn('category', ['Revisi SORTIR', 'REVISI SORTIR'])
-                                    ->where('work_orders.status', 'SORTIR');
-                             })
-                             ->orWhere(function($q1) {
-                                 $q1->whereIn('category', ['Revisi PRODUCTION', 'REVISI PRODUCTION'])
-                                    ->where('work_orders.status', 'PRODUCTION');
-                             })
-                             ->orWhere(function($q1) {
-                                 $q1->whereIn('category', ['Revisi QC', 'REVISI QC'])
-                                    ->where('work_orders.status', 'QC');
+            $query = self::where(function($q) {
+                    $q->whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
+                      ->orWhereHas('cxIssues', function($sq) {
+                          $sq->where('status', 'OPEN')
+                             ->where('category', 'like', 'Revisi %')
+                             ->where(function($subQ) {
+                                 $subQ->where(function($q1) {
+                                     $q1->whereIn('category', ['Revisi PREPARATION', 'REVISI PREPARATION'])
+                                        ->where('work_orders.status', 'PREPARATION');
+                                 })
+                                 ->orWhere(function($q1) {
+                                     $q1->whereIn('category', ['Revisi SORTIR', 'REVISI SORTIR'])
+                                        ->where('work_orders.status', 'SORTIR');
+                                 })
+                                 ->orWhere(function($q1) {
+                                     $q1->whereIn('category', ['Revisi PRODUCTION', 'REVISI PRODUCTION'])
+                                        ->where('work_orders.status', 'PRODUCTION');
+                                 })
+                                 ->orWhere(function($q1) {
+                                     $q1->whereIn('category', ['Revisi QC', 'REVISI QC'])
+                                        ->where('work_orders.status', 'QC');
+                                 });
                              });
-                         });
-                  });
-            })
-            ->whereNotIn('status', [
-                WorkOrderStatus::SELESAI->value,
-                WorkOrderStatus::DIANTAR->value,
-                WorkOrderStatus::HISTORY->value,
-                WorkOrderStatus::BATAL->value
-            ])
-            ->where(function($mainQ) {
-                $mainQ->whereHas('cxIssues', function($q) {
-                    $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');
+                      });
                 })
-                ->orWhereDoesntHave('cxIssues', function($q) {
-                    $q->where('status', 'OPEN');
+                ->whereNotIn('status', [
+                    WorkOrderStatus::SELESAI->value,
+                    WorkOrderStatus::DIANTAR->value,
+                    WorkOrderStatus::HISTORY->value,
+                    WorkOrderStatus::BATAL->value
+                ])
+                ->where(function($mainQ) {
+                    $mainQ->whereHas('cxIssues', function($q) {
+                        $q->where('status', 'OPEN')->where('source', '!=', 'GUDANG');
+                    })
+                    ->orWhereDoesntHave('cxIssues', function($q) {
+                        $q->where('status', 'OPEN');
+                    });
                 });
-            });
 
-        if (!in_array($user->role, ['admin', 'owner'])) {
-            $query->where('cx_handler_id', $user->id);
-        }
+            if (!in_array($user->role, ['admin', 'owner'])) {
+                $query->where('cx_handler_id', $user->id);
+            }
 
-        return $query->count();
+            return $query->count();
+        });
     }
 
     // ========================================

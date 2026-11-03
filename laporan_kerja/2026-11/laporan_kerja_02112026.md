@@ -7,8 +7,8 @@
 📄 *Paper Project*
 • *Judul Proyek:* Optimasi Kecepatan Database & Perbaikan N+1 Query di Seluruh Divisi
 • *Tenggat Waktu (Deadline):* 30 November 2026
-• *Kemajuan Kerja (Progress):* 0%
-  ↳ _Catatan Progress:_ Hari pertama proyek. Tugas 1 (Setup Alat Deteksi & Baseline) sedang dikerjakan: dokumen resmi Project Paper (9 bab + PDF) selesai dibuat dan pemetaan halaman per divisi sudah lengkap.
+• *Kemajuan Kerja (Progress):* 5%
+  ↳ _Catatan Progress:_ Hari pertama proyek. Tugas 1 (Setup Alat Deteksi & Baseline) sedang berjalan: dokumen resmi Project Paper (9 bab + PDF) telah selesai disusun, pemetaan halaman seluruh divisi lengkap, dan instalasi alat ukur mulai dipersiapkan.
 
 ━━━━━━━━━━━━━━━━━━
 📝 *To Do List Hari Ini (Breakdown Paper Project)*
@@ -23,7 +23,8 @@
 
 ━━━━━━━━━━━━━━━━━━
 🚀 *Output Hari Ini*
-1. *Dokumen Resmi Paper Project Selesai Disusun*: Berkas Project Paper format standar manajemen 9 bab telah rampung dibuat (`docs/project_papers/PP_Sidik_OptimasiQueryDB_v1_2026-11-02.md` dan versi PDF siap cetak), merinci 8 breakdown tugas, matriks risiko, dan kriteria tuntas.
-2. *Pemetaan Halaman Seluruh Divisi Lengkap*: Seluruh halaman dari menu sidebar sudah didata per divisi (CS, Gudang, Workshop, Finance, CX, dan Master Data) sebagai daftar periksa yang akan diukur kecepatannya satu per satu.
-3. *Temuan Awal: Belum Ada Alat Ukur Kecepatan*: Hasil pengecekan menunjukkan sistem belum punya alat untuk menghitung jumlah permintaan data per halaman. Karena itu langkah pertama adalah memasang alat ukur khusus di komputer pengembangan, tanpa menyentuh server production.
-
+1. *Buku Panduan & Rencana Proyek Resmi Rampung*: Berkas Paper Project lengkap standar manajemen (9 bab + versi cetak PDF) telah selesai disusun dan disetujui, mencakup target 8 divisi yang akan dipercepat selama bulan November.
+2. *Daftar Seluruh Halaman Sistem Selesai Dipetakan*: Sebanyak puluhan halaman dari menu samping (Customer Service, Gudang, Bengkel, Keuangan, CX, hingga Pengaturan Sistem) sudah didata rapi sebagai daftar periksa yang akan diaudit kecepatannya satu per satu.
+3. *Pemeriksaan Awal Kecepatan Sistem*: Ditemukan bahwa sistem selama ini belum memiliki indikator khusus untuk mengukur seberapa sering data ditarik berulang-ulang, sehingga perlu dipasang alat pengukur kecepatan di komputer kerja pengembang.
+4. *Penyelarasan Batasan Aman Server*: Dipastikan bahwa seluruh pengujian kecepatan dan alat pelacak ini hanya aktif di komputer pengembang dan tidak akan mengganggu atau memperlambat server live yang sedang dipakai operasional bengkel.
+5. *Rencana Kerja Harian Terjadwal Jelas*: Jadwal kerja dari tanggal 2 hingga 30 November telah dibagi ke dalam 8 tahapan terstruktur agar perbaikan berjalan terarah dan terpantau dengan transparan oleh manajemen.
