@@ -185,11 +185,17 @@ class CsLead extends Model
 
     public function getLatestQuotation()
     {
+        if ($this->relationLoaded('quotations')) {
+            return $this->quotations->sortByDesc('version')->first();
+        }
         return $this->quotations()->latest('version')->first();
     }
 
     public function getAcceptedQuotation()
     {
+        if ($this->relationLoaded('quotations')) {
+            return $this->quotations->where('status', CsQuotation::STATUS_ACCEPTED)->sortByDesc('created_at')->first();
+        }
         return $this->quotations()->where('status', CsQuotation::STATUS_ACCEPTED)->latest()->first();
     }
 

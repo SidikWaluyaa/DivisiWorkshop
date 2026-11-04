@@ -1118,7 +1118,7 @@ class LeadDetailManager extends Component
     #[Computed]
     public function categories()
     {
-        $cats = Service::distinct()->pluck('category')->filter()->toArray();
+        $cats = $this->services->pluck('category')->filter()->unique()->values()->toArray();
         if (!in_array('Custom', $cats)) {
             $cats[] = 'Custom';
         }
@@ -1211,6 +1211,9 @@ class LeadDetailManager extends Component
 
     public function render()
     {
+        // Pastikan seluruh relasi bersarang selalu ter-eager load saat Livewire re-hydration (/livewire/update) maupun setelah refresh()
+        $this->lead->loadMissing(['cs', 'activities.user', 'quotations.quotationItems', 'spk.customer', 'spk.items']);
+
         return view('livewire.cs.lead-detail-manager');
     }
 }

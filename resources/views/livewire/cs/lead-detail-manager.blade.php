@@ -443,7 +443,7 @@
                                         <span class="text-[8px] font-black text-slate-300 uppercase">{{ $activity->type }}</span>
                                     </div>
                                     <p class="text-sm font-medium text-slate-700 leading-snug">{{ $activity->content }}</p>
-                                    <p class="text-[10px] font-bold text-emerald-500 mt-1">@ {{ $activity->user->name }}</p>
+                                    <p class="text-[10px] font-bold text-emerald-500 mt-1">@ {{ $activity->user?->name ?? 'System' }}</p>
                                 </div>
                             @endforeach
                         </div>

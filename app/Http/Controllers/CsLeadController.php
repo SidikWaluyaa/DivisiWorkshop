@@ -69,7 +69,7 @@ class CsLeadController extends Controller
     {
         $this->authorize('viewAny', CsLead::class);
         $user = Auth::user();
-        $query = CsLead::with(['cs', 'activities' => fn($q) => $q->latest()->limit(5)])
+        $query = CsLead::with(['cs'])
             ->where('status', CsLead::STATUS_KONSULTASI);
 
         if (\Illuminate\Support\Facades\Gate::denies('cs.manage-all')) {
@@ -92,7 +92,7 @@ class CsLeadController extends Controller
     {
         $this->authorize('viewAny', CsLead::class);
         $user = Auth::user();
-        $query = CsLead::with(['cs', 'activities' => fn($q) => $q->latest()->limit(5), 'quotations'])
+        $query = CsLead::with(['cs'])
             ->where('status', CsLead::STATUS_FOLLOW_UP);
 
         if (\Illuminate\Support\Facades\Gate::denies('cs.manage-all')) {
@@ -786,7 +786,7 @@ class CsLeadController extends Controller
     private function buildFilteredBaseQuery(Request $request)
     {
         $user = Auth::user();
-        $baseQuery = CsLead::with(['cs', 'activities' => fn($q) => $q->latest()->limit(5)]);
+        $baseQuery = CsLead::query();
 
         // Policy Logic
         if (\Illuminate\Support\Facades\Gate::denies('cs.manage-all')) {
@@ -822,7 +822,6 @@ class CsLeadController extends Controller
     private function getGreetingLeads($query, int $perPage)
     {
         return $query->greeting()
-            ->with(['activities' => fn($q) => $q->latest()->limit(3)])
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'greeting_page');
     }
@@ -846,30 +845,51 @@ class CsLeadController extends Controller
     private function getFollowUpLeads($query, int $perPage)
     {
         return $query->followUp()
-            ->with(['quotations' => fn($q) => $q->latest()])
             ->orderBy('last_activity_at', 'desc')
             ->paginate($perPage, ['*'], 'followup_page');
     }
 
     private function calculateDashboardMetrics($baseQuery, $greetingLeads, $konsultasiLeads, $followUpLeads, $closingLeads)
     {
-        $todayConverted = CsLead::converted()->whereDate('updated_at', today())->count();
-        $yesterdayConverted = CsLead::converted()->whereDate('updated_at', today()->subDay())->count();
+        $todayStr = today()->toDateString();
+        $yesterdayStr = today()->subDay()->toDateString();
+
+        // Konsolidasi 7 kueri global CsLead menjadi 1 kueri agregasi tunggal
+        $globalStats = CsLead::selectRaw("
+            COUNT(*) as total_all,
+            SUM(CASE WHEN status = 'CONVERTED' THEN 1 ELSE 0 END) as total_converted,
+            SUM(CASE WHEN status = 'CONVERTED' AND DATE(updated_at) = ? THEN 1 ELSE 0 END) as today_converted,
+            SUM(CASE WHEN status = 'CONVERTED' AND DATE(updated_at) = ? THEN 1 ELSE 0 END) as yesterday_converted,
+            AVG(response_time_minutes) as avg_response_time,
+            SUM(CASE WHEN priority = 'HOT' AND status IN ('GREETING', 'KONSULTASI', 'FOLLOW_UP') THEN 1 ELSE 0 END) as hot_leads,
+            SUM(CASE WHEN DATE(created_at) = ? THEN 1 ELSE 0 END) as new_leads_today
+        ", [$todayStr, $yesterdayStr, $todayStr])->first();
+
+        // Konsolidasi 2 kueri terfilter pada baseQuery menjadi 1 kueri agregasi
+        $filteredStats = (clone $baseQuery)->selectRaw("
+            SUM(CASE WHEN status = 'LOST' THEN 1 ELSE 0 END) as total_lost,
+            SUM(CASE WHEN DATE(next_follow_up_at) <= ? THEN 1 ELSE 0 END) as needs_follow_up
+        ", [$todayStr])->first();
+
+        $totalAll = (int) ($globalStats->total_all ?? 0);
+        $totalConverted = (int) ($globalStats->total_converted ?? 0);
+        $todayConverted = (int) ($globalStats->today_converted ?? 0);
+        $yesterdayConverted = (int) ($globalStats->yesterday_converted ?? 0);
 
         return [
             'total_greeting' => $greetingLeads->total(),
             'total_konsultasi' => $konsultasiLeads->total(),
             'total_follow_up' => $followUpLeads->total(),
             'total_closing' => $closingLeads->total(),
-            'total_lost' => (clone $baseQuery)->lost()->count(),
-            'avg_response_time' => CsLead::whereNotNull('response_time_minutes')->avg('response_time_minutes'),
-            'conversion_rate' => $this->leadService->calculateConversionRate(),
+            'total_lost' => (int) ($filteredStats->total_lost ?? 0),
+            'avg_response_time' => $globalStats->avg_response_time,
+            'conversion_rate' => $totalAll > 0 ? round(($totalConverted / $totalAll) * 100, 1) : 0,
             'total_converted_today' => $todayConverted,
             'converted_yesterday' => $yesterdayConverted,
             'converted_trend' => $yesterdayConverted > 0 ? (($todayConverted - $yesterdayConverted) / $yesterdayConverted) * 100 : 0,
-            'hot_leads' => CsLead::hotLeads()->whereIn('status', [CsLead::STATUS_GREETING, CsLead::STATUS_KONSULTASI, CsLead::STATUS_FOLLOW_UP])->count(),
-            'needs_follow_up' => (clone $baseQuery)->whereDate('next_follow_up_at', '<=', today())->count(),
-            'new_leads_today' => CsLead::whereDate('created_at', today())->count(),
+            'hot_leads' => (int) ($globalStats->hot_leads ?? 0),
+            'needs_follow_up' => (int) ($filteredStats->needs_follow_up ?? 0),
+            'new_leads_today' => (int) ($globalStats->new_leads_today ?? 0),
         ];
     }
 

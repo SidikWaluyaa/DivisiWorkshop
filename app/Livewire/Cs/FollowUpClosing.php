@@ -245,18 +245,12 @@ class FollowUpClosing extends Component
     {
         $user = Auth::user();
 
-        // Calculate count of active GUDANG issues
-        $activeCount = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
-            ->whereHas('cxIssues', function ($q) {
-                $q->where('source', 'GUDANG')->where('status', 'OPEN');
-            })->count();
-
         // Fetch WorkOrders with open GUDANG issues
         $query = WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
             ->whereHas('cxIssues', function ($q) {
                 $q->where('source', 'GUDANG')->where('status', 'OPEN');
             })
-            ->with(['cxIssues' => fn($q) => $q->where('source', 'GUDANG')->latest(), 'cxHandler']);
+            ->with(['cxIssues' => fn($q) => $q->where('source', 'GUDANG')->with('reporter')->latest(), 'cxHandler']);
 
         if ($this->search) {
             $query->where(function ($q) {
@@ -274,9 +268,18 @@ class FollowUpClosing extends Component
 
         $data = $query->orderBy('updated_at', $this->sort)->paginate(10);
 
+        // Gunakan total paginator jika tidak ada filter aktif untuk menghemat 1 kueri COUNT(*)
+        $hasFilters = !empty($this->search) || !empty($this->start_date) || !empty($this->end_date);
+        $activeCount = $hasFilters
+            ? WorkOrder::whereIn('status', [WorkOrderStatus::CX_FOLLOWUP->value, WorkOrderStatus::HOLD_FOR_CX->value])
+                ->whereHas('cxIssues', function ($q) {
+                    $q->where('source', 'GUDANG')->where('status', 'OPEN');
+                })->count()
+            : $data->total();
+
         $categories = CxIssue::select('category')->whereNotNull('category')->distinct()->pluck('category');
         $masterServices = Service::all();
-        $masterCategories = Service::select('category')->distinct()->pluck('category');
+        $masterCategories = $masterServices->pluck('category')->filter()->unique()->values();
 
         return view('livewire.cs.follow-up-closing', [
             'data' => $data,

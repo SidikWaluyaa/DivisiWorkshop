@@ -121,10 +121,18 @@ class PendingSpkMonitoring extends Component
     #[Computed]
     public function counts()
     {
+        $row = WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
+            ->selectRaw('
+                COUNT(*) as total_all,
+                SUM(CASE WHEN customer_tracking_number IS NOT NULL THEN 1 ELSE 0 END) as in_transit,
+                SUM(CASE WHEN customer_tracking_number IS NULL THEN 1 ELSE 0 END) as waiting
+            ')
+            ->first();
+
         return [
-            'all' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->count(),
-            'in_transit' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->whereNotNull('customer_tracking_number')->count(),
-            'waiting' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->whereNull('customer_tracking_number')->count(),
+            'all' => (int) ($row->total_all ?? 0),
+            'in_transit' => (int) ($row->in_transit ?? 0),
+            'waiting' => (int) ($row->waiting ?? 0),
         ];
     }
 

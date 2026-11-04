@@ -65,17 +65,20 @@ class AppServiceProvider extends ServiceProvider
                         ->groupBy('status')
                         ->pluck('cnt', 'status');
 
+                    // Agregasi kueri status CsLead dalam 1 kali kueri efisien
+                    $csFilterSql = $isCsOnly ? ' AND cs_id = ' . (int) $user->id : '';
+                    $csStats = \App\Models\CsLead::selectRaw("
+                        SUM(CASE WHEN status = 'GREETING' AND cs_id IS NULL THEN 1 ELSE 0 END) as cs_greeting,
+                        SUM(CASE WHEN status = 'KONSULTASI'{$csFilterSql} THEN 1 ELSE 0 END) as cs_konsultasi,
+                        SUM(CASE WHEN status = 'FOLLOW_UP'{$csFilterSql} THEN 1 ELSE 0 END) as cs_follow_up,
+                        SUM(CASE WHEN status = 'CLOSING'{$csFilterSql} THEN 1 ELSE 0 END) as cs_closing
+                    ")->whereIn('status', ['GREETING', 'KONSULTASI', 'FOLLOW_UP', 'CLOSING'])->first();
+
                     return [
-                        'cs_greeting' => \App\Models\CsLead::greeting()->whereNull('cs_id')->count(),
-                        'cs_konsultasi' => \App\Models\CsLead::konsultasi()
-                                            ->when($isCsOnly, fn($q) => $q->where('cs_id', $user->id))
-                                            ->count(),
-                        'cs_follow_up' => \App\Models\CsLead::followUp()
-                                            ->when($isCsOnly, fn($q) => $q->where('cs_id', $user->id))
-                                            ->count(),
-                        'cs_closing' => \App\Models\CsLead::closing()
-                                            ->when($isCsOnly, fn($q) => $q->where('cs_id', $user->id))
-                                            ->count(),
+                        'cs_greeting' => (int) ($csStats->cs_greeting ?? 0),
+                        'cs_konsultasi' => (int) ($csStats->cs_konsultasi ?? 0),
+                        'cs_follow_up' => (int) ($csStats->cs_follow_up ?? 0),
+                        'cs_closing' => (int) ($csStats->cs_closing ?? 0),
                         'reception' => (int) ($woCounts[\App\Enums\WorkOrderStatus::SPK_PENDING->value] ?? 0),
                         'assessment' => (int) ($woCounts[\App\Enums\WorkOrderStatus::ASSESSMENT->value] ?? 0),
                         'preparation' => (int) ($woCounts[\App\Enums\WorkOrderStatus::PREPARATION->value] ?? 0),

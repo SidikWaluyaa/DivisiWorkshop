@@ -185,12 +185,13 @@
                                                    class="rounded border-gray-300 text-red-600 focus:ring-red-500">
                                         </td>
                                         <td class="py-4 px-4">
+                                            @php $contactDate = $greeting->first_contact_at ?? $greeting->created_at; @endphp
                                             <div class="flex flex-col">
                                                 <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                                    {{ $greeting->first_contact_at->format('d M Y') }}
+                                                    {{ $contactDate?->format('d M Y') ?? '-' }}
                                                 </span>
                                                 <span class="text-xs text-gray-400">
-                                                    {{ $greeting->first_contact_at->format('H:i') }}
+                                                    {{ $contactDate?->format('H:i') ?? '-' }}
                                                 </span>
                                             </div>
                                         </td>

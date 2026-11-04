@@ -37,11 +37,10 @@ class CsSpkController extends Controller
             });
         }
 
-        // Metrics
-        $totalSpk = $query->count();
+        // Metrics & Pagination (gunakan total() dari paginator untuk menghemat 1 kueri COUNT)
         $totalRevenue = $query->sum('total_price');
-
         $spks = $query->paginate(20)->withQueryString();
+        $totalSpk = $spks->total();
 
         return view('cs.spk.index', compact('spks', 'totalSpk', 'totalRevenue'));
     }

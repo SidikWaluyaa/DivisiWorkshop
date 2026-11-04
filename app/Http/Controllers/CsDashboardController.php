@@ -37,13 +37,10 @@ class CsDashboardController extends Controller
         // 5. Channel Performance
         $channelStats = $this->getChannelStats($startDate, $endDate, $csId);
 
-        // 6. Lost Analysis
-        $lostAnalysis = $this->getLostAnalysis($startDate, $endDate, $csId);
+        // 6. Lost Analysis (teruskan total_leads dari overview untuk menghindari kueri COUNT duplikat)
+        $lostAnalysis = $this->getLostAnalysis($startDate, $endDate, $csId, $overview['total_leads']);
 
-        // 7. Enhanced CS KPI Leaderboard
-        $csKpis = $this->getCsPerformanceList($startDate, $endDate);
-
-        // CS Users for filter (Active users only)
+        // CS Users for filter & leaderboard (Active users only - dimuat 1x untuk dipakai bersama)
         $csUsers = User::where('is_active', true)
             ->where(function($q) {
                 $q->where('access_rights', 'LIKE', '%"cs"%')
@@ -51,6 +48,9 @@ class CsDashboardController extends Controller
             })
             ->orderBy('name')
             ->get();
+
+        // 7. Enhanced CS KPI Leaderboard
+        $csKpis = $this->getCsPerformanceList($startDate, $endDate, $csUsers);
 
         return view('admin.cs.dashboard.index', compact(
             'overview',
@@ -236,16 +236,18 @@ class CsDashboardController extends Controller
             'LOST' => CsLead::STATUS_LOST,
         ];
 
-        $funnel = [];
-        $totalCreated = CsLead::whereBetween('created_at', [$start, $end])
+        // Konsolidasi 7 kueri count() menjadi 1 kueri GROUP BY status
+        $countsByStatus = CsLead::selectRaw('status, COUNT(*) as cnt')
+            ->whereBetween('created_at', [$start, $end])
             ->when($csId, fn($q) => $q->where('cs_id', $csId))
-            ->count();
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+
+        $totalCreated = (int) $countsByStatus->sum();
+        $funnel = [];
 
         foreach ($statuses as $label => $status) {
-            $count = CsLead::where('status', $status)
-                ->whereBetween('created_at', [$start, $end])
-                ->when($csId, fn($q) => $q->where('cs_id', $csId))
-                ->count();
+            $count = (int) ($countsByStatus[$status] ?? 0);
             
             $funnel[] = [
                 'status' => $label,
@@ -265,21 +267,32 @@ class CsDashboardController extends Controller
      */
     private function getResponseTimeMetrics($start, $end, $csId = null)
     {
-        $baseQuery = CsLead::whereBetween('created_at', [$start, $end])
+        // Konsolidasi 8 kueri terpisah menjadi 1 kueri agregasi tunggal
+        $stats = CsLead::whereBetween('created_at', [$start, $end])
             ->whereNotNull('response_time_minutes')
             ->where('response_time_minutes', '>', 0)
-            ->when($csId, fn($q) => $q->where('cs_id', $csId));
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
+            ->selectRaw('
+                AVG(response_time_minutes) as avg_resp,
+                MIN(response_time_minutes) as min_resp,
+                MAX(response_time_minutes) as max_resp,
+                COUNT(*) as total_resp,
+                SUM(CASE WHEN response_time_minutes < 30 THEN 1 ELSE 0 END) as under30,
+                SUM(CASE WHEN response_time_minutes BETWEEN 30 AND 60 THEN 1 ELSE 0 END) as b30_60,
+                SUM(CASE WHEN response_time_minutes BETWEEN 61 AND 180 THEN 1 ELSE 0 END) as b61_180,
+                SUM(CASE WHEN response_time_minutes > 180 THEN 1 ELSE 0 END) as over3h
+            ')
+            ->first();
 
-        $avgResponse = round((clone $baseQuery)->avg('response_time_minutes') ?? 0);
-        $fastest = (clone $baseQuery)->min('response_time_minutes') ?? 0;
-        $slowest = (clone $baseQuery)->max('response_time_minutes') ?? 0;
-        $totalWithResponse = (clone $baseQuery)->count();
+        $avgResponse = round($stats->avg_resp ?? 0);
+        $fastest = (int) ($stats->min_resp ?? 0);
+        $slowest = (int) ($stats->max_resp ?? 0);
+        $totalWithResponse = (int) ($stats->total_resp ?? 0);
 
-        // Distribution buckets
-        $under30 = (clone $baseQuery)->where('response_time_minutes', '<', 30)->count();
-        $between30and60 = (clone $baseQuery)->whereBetween('response_time_minutes', [30, 60])->count();
-        $between1and3h = (clone $baseQuery)->whereBetween('response_time_minutes', [61, 180])->count();
-        $over3h = (clone $baseQuery)->where('response_time_minutes', '>', 180)->count();
+        $under30 = (int) ($stats->under30 ?? 0);
+        $between30and60 = (int) ($stats->b30_60 ?? 0);
+        $between1and3h = (int) ($stats->b61_180 ?? 0);
+        $over3h = (int) ($stats->over3h ?? 0);
 
         return [
             'avg_minutes' => $avgResponse,
@@ -303,29 +316,56 @@ class CsDashboardController extends Controller
         $channels = [CsLead::CHANNEL_ONLINE, CsLead::CHANNEL_OFFLINE, CsLead::CHANNEL_FOLLOW_UP];
         $result = [];
 
+        // Pre-aggregate leads & closings per channel di luar loop
+        $leadsByChannel = CsLead::selectRaw('channel, COUNT(*) as cnt')
+            ->whereIn('channel', $channels)
+            ->whereBetween('created_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
+            ->groupBy('channel')
+            ->pluck('cnt', 'channel');
+
+        $closingsByChannel = CsLead::selectRaw('channel, COUNT(*) as cnt')
+            ->whereIn('channel', $channels)
+            ->whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
+            ->whereBetween('updated_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_id', $csId))
+            ->groupBy('channel')
+            ->pluck('cnt', 'channel');
+
+        // Pre-fetch SPK per channel dalam 1 kueri di luar loop
+        $spksInChannels = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
+            ->whereIn('cs_leads.channel', $channels)
+            ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
+            ->whereBetween('cs_spk.created_at', [$start, $end])
+            ->when($csId, fn($q) => $q->where('cs_leads.cs_id', $csId))
+            ->select('cs_spk.id', 'cs_spk.total_price', 'cs_leads.channel')
+            ->get();
+
+        $spksByChannel = $spksInChannels->groupBy('channel');
+        $allChSpkIds = $spksInChannels->pluck('id');
+
+        $woRevenueBySpk = collect();
+        if ($allChSpkIds->isNotEmpty()) {
+            $woRevenueBySpk = \App\Models\CsSpkItem::join('work_orders', 'cs_spk_items.work_order_id', '=', 'work_orders.id')
+                ->whereIn('cs_spk_items.spk_id', $allChSpkIds)
+                ->whereNotNull('cs_spk_items.work_order_id')
+                ->whereNull('work_orders.deleted_at')
+                ->selectRaw('cs_spk_items.spk_id, SUM(work_orders.total_transaksi) as total_rev')
+                ->groupBy('cs_spk_items.spk_id')
+                ->pluck('total_rev', 'cs_spk_items.spk_id');
+        }
+
         foreach ($channels as $channel) {
-            $leads = CsLead::where('channel', $channel)
-                ->whereBetween('created_at', [$start, $end])
-                ->when($csId, fn($q) => $q->where('cs_id', $csId))
-                ->count();
-            
-            $closings = CsLead::where('channel', $channel)
-                ->whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
-                ->whereBetween('updated_at', [$start, $end])
-                ->when($csId, fn($q) => $q->where('cs_id', $csId))
-                ->count();
+            $leads = (int) ($leadsByChannel[$channel] ?? 0);
+            $closings = (int) ($closingsByChannel[$channel] ?? 0);
 
-            $chSpkIds = \App\Models\CsSpk::join('cs_leads', 'cs_spk.cs_lead_id', '=', 'cs_leads.id')
-                ->where('cs_leads.channel', $channel)
-                ->where('cs_spk.status', '!=', \App\Models\CsSpk::STATUS_DRAFT)
-                ->whereBetween('cs_spk.created_at', [$start, $end])
-                ->when($csId, fn($q) => $q->where('cs_leads.cs_id', $csId))
-                ->pluck('cs_spk.id');
-
-            $chWoIds = \App\Models\CsSpkItem::whereIn('spk_id', $chSpkIds)->whereNotNull('work_order_id')->pluck('work_order_id');
-            $revenue = (float) \App\Models\WorkOrder::whereIn('id', $chWoIds)->sum('total_transaksi');
-            if ($revenue == 0) {
-                $revenue = (float) \App\Models\CsSpk::whereIn('id', $chSpkIds)->sum('total_price');
+            $chSpks = $spksByChannel->get($channel, collect());
+            $revenue = 0.0;
+            if ($chSpks->isNotEmpty()) {
+                $revenue = (float) $chSpks->sum(fn($spk) => (float) ($woRevenueBySpk[$spk->id] ?? 0));
+                if ($revenue == 0) {
+                    $revenue = (float) $chSpks->sum('total_price');
+                }
             }
 
             $conversionRate = $leads > 0 ? round(($closings / $leads) * 100, 1) : 0;
@@ -347,14 +387,14 @@ class CsDashboardController extends Controller
     /**
      * Section 6: Lost Analysis
      */
-    private function getLostAnalysis($start, $end, $csId = null)
+    private function getLostAnalysis($start, $end, $csId = null, $precomputedTotalLeads = null)
     {
         $totalLost = CsLead::where('status', CsLead::STATUS_LOST)
             ->whereBetween('updated_at', [$start, $end])
             ->when($csId, fn($q) => $q->where('cs_id', $csId))
             ->count();
 
-        $totalLeads = CsLead::whereBetween('created_at', [$start, $end])
+        $totalLeads = $precomputedTotalLeads ?? CsLead::whereBetween('created_at', [$start, $end])
             ->when($csId, fn($q) => $q->where('cs_id', $csId))
             ->count();
         $lostRate = $totalLeads > 0 ? round(($totalLost / $totalLeads) * 100, 1) : 0;
@@ -393,98 +433,128 @@ class CsDashboardController extends Controller
     /**
      * Section 7: Enhanced CS Performance Leaderboard
      */
-    private function getCsPerformanceList($start, $end)
+    private function getCsPerformanceList($start, $end, $csUsers = null)
     {
-        $csUsers = User::where('is_active', true)
+        $csUsers = $csUsers ?? User::where('is_active', true)
             ->where(function($q) {
                 $q->where('access_rights', 'LIKE', '%"cs"%')
                   ->orWhere('role', 'cs');
             })
             ->get();
 
+        $csUserIds = $csUsers->pluck('id');
+        if ($csUserIds->isEmpty()) {
+            return [];
+        }
+
+        // 1. Pre-aggregate Leads Created & Avg Response Time per CS (1 kueri menggantikan 3xN kueri)
+        $createdStatsByCs = CsLead::whereIn('cs_id', $csUserIds)
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw("
+                cs_id,
+                COUNT(*) as total_leads,
+                SUM(CASE WHEN channel = ? THEN 1 ELSE 0 END) as leads_online,
+                AVG(CASE WHEN response_time_minutes IS NOT NULL AND response_time_minutes > 0 THEN response_time_minutes ELSE NULL END) as avg_resp
+            ", [CsLead::CHANNEL_ONLINE])
+            ->groupBy('cs_id')
+            ->get()
+            ->keyBy('cs_id');
+
+        // 2. Pre-aggregate Closings & Lost per CS (1 kueri menggantikan 2xN kueri)
+        $updatedStatsByCs = CsLead::whereIn('cs_id', $csUserIds)
+            ->whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED, CsLead::STATUS_LOST])
+            ->whereBetween('updated_at', [$start, $end])
+            ->selectRaw("
+                cs_id,
+                SUM(CASE WHEN status IN ('CLOSING', 'CONVERTED') THEN 1 ELSE 0 END) as total_closing,
+                SUM(CASE WHEN status = 'LOST' THEN 1 ELSE 0 END) as lost_count
+            ")
+            ->groupBy('cs_id')
+            ->get()
+            ->keyBy('cs_id');
+
+        // 3. Pre-fetch Closed Leads & Follow-Up Activities (2 kueri menggantikan 2xN kueri)
+        $closedLeads = CsLead::whereIn('cs_id', $csUserIds)
+            ->whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
+            ->whereBetween('updated_at', [$start, $end])
+            ->get(['id', 'cs_id']);
+
+        $allClosedLeadIds = $closedLeads->pluck('id');
+        $viaFollowUpLeadIds = $allClosedLeadIds->isNotEmpty()
+            ? CsActivity::whereIn('cs_lead_id', $allClosedLeadIds)
+                ->where('type', CsActivity::TYPE_STATUS_CHANGE)
+                ->where('content', 'LIKE', '%Status diubah ke FOLLOW_UP%')
+                ->distinct()
+                ->pluck('cs_lead_id')
+                ->flip()
+            : collect();
+
+        $closedLeadsByCs = $closedLeads->groupBy('cs_id');
+
+        // 4. Pre-aggregate Active Follow-Up per CS (1 kueri menggantikan N kueri)
+        $activeFollowUpByCs = CsLead::whereIn('cs_id', $csUserIds)
+            ->where('status', CsLead::STATUS_FOLLOW_UP)
+            ->selectRaw('cs_id, COUNT(*) as cnt')
+            ->groupBy('cs_id')
+            ->pluck('cnt', 'cs_id');
+
+        // 5. Pre-fetch WorkOrders pada periode entry_date dalam 1 kueri tunggal (menggantikan N kueri di dalam loop)
+        $workOrdersInPeriod = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end])
+            ->get(['status', 'spk_number', 'created_by', 'total_transaksi']);
+
+        $pendingStatusVal = \App\Enums\WorkOrderStatus::SPK_PENDING->value;
+        $batalStatusVal = \App\Enums\WorkOrderStatus::BATAL->value;
+
         $performance = [];
 
         foreach ($csUsers as $user) {
-            $totalLeads = CsLead::where('cs_id', $user->id)
-                ->whereBetween('created_at', [$start, $end])
-                ->count();
+            $cStat = $createdStatsByCs->get($user->id);
+            $uStat = $updatedStatsByCs->get($user->id);
 
-            $leadsOnline = CsLead::where('cs_id', $user->id)
-                ->where('channel', CsLead::CHANNEL_ONLINE)
-                ->whereBetween('created_at', [$start, $end])
-                ->count();
-            
+            $totalLeads = (int) ($cStat->total_leads ?? 0);
+            $leadsOnline = (int) ($cStat->leads_online ?? 0);
             $leadsOffline = $totalLeads - $leadsOnline;
 
-            // Total closings for this CS
-            $totalClosing = CsLead::where('cs_id', $user->id)
-                ->whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
-                ->whereBetween('updated_at', [$start, $end])
-                ->count();
+            $totalClosing = (int) ($uStat->total_closing ?? 0);
+            $lostCount = (int) ($uStat->lost_count ?? 0);
 
-            // Closing path breakdown for this CS
-            $closedLeadIds = CsLead::where('cs_id', $user->id)
-                ->whereIn('status', [CsLead::STATUS_CLOSING, CsLead::STATUS_CONVERTED])
-                ->whereBetween('updated_at', [$start, $end])
-                ->pluck('id');
+            $userClosedLeads = $closedLeadsByCs->get($user->id, collect());
+            $closingViaFollowUp = $userClosedLeads->filter(fn($l) => $viaFollowUpLeadIds->has($l->id))->count();
+            $closingDirect = $userClosedLeads->count() - $closingViaFollowUp;
 
-            $closingViaFollowUp = CsActivity::whereIn('cs_lead_id', $closedLeadIds)
-                ->where('type', CsActivity::TYPE_STATUS_CHANGE)
-                ->where('content', 'LIKE', '%Status diubah ke FOLLOW_UP%')
-                ->distinct('cs_lead_id')
-                ->count('cs_lead_id');
-
-            $closingDirect = $closedLeadIds->count() - $closingViaFollowUp;
-
-            // Follow-up count for this CS
-            $followUpCount = CsLead::where('cs_id', $user->id)
-                ->where('status', CsLead::STATUS_FOLLOW_UP)
-                ->count();
-
-            // Lost count
-            $lostCount = CsLead::where('cs_id', $user->id)
-                ->where('status', CsLead::STATUS_LOST)
-                ->whereBetween('updated_at', [$start, $end])
-                ->count();
-
+            $followUpCount = (int) ($activeFollowUpByCs[$user->id] ?? 0);
             $lostRate = $totalLeads > 0 ? round(($lostCount / $totalLeads) * 100, 1) : 0;
 
-            // PENDING & IN GUDANG = menggunakan metrik WORK ORDERS yang secara riil mendarat di Gudang hari ini
-            $workOrdersQuery = \App\Models\WorkOrder::whereBetween('entry_date', [$start, $end]);
-            
-            if (!empty($user->cs_code)) {
-                $workOrdersQuery->where('spk_number', 'LIKE', '%-' . $user->cs_code);
-            } else {
-                $workOrdersQuery->where('created_by', $user->id);
+            // Filter WorkOrder milik CS ini di memori (identik dengan LIKE '%-' . $user->cs_code atau created_by)
+            $hasCsCode = !empty($user->cs_code);
+            $suffix = $hasCsCode ? strtolower('-' . $user->cs_code) : '';
+            $suffixLen = strlen($suffix);
+
+            $userWorkOrders = $workOrdersInPeriod->filter(function ($wo) use ($user, $hasCsCode, $suffix, $suffixLen) {
+                if ($hasCsCode) {
+                    $spk = strtolower((string) $wo->spk_number);
+                    return $suffixLen > 0 && substr($spk, -$suffixLen) === $suffix;
+                }
+                return (int) $wo->created_by === (int) $user->id;
+            });
+
+            $spkPending = 0;
+            $spkDiterima = 0;
+            $revenue = 0.0;
+
+            foreach ($userWorkOrders as $wo) {
+                $st = $wo->status instanceof \BackedEnum ? $wo->status->value : (string) $wo->status;
+                if ($st === $pendingStatusVal) {
+                    $spkPending++;
+                } elseif ($st !== $batalStatusVal) {
+                    $spkDiterima++;
+                    $revenue += (float) $wo->total_transaksi;
+                }
             }
 
-            // PENDING = Menunggu Gudang klik "Terima Barang"
-            $spkPending = (clone $workOrdersQuery)
-                ->where('status', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                ->count();
-
-            // IN GUDANG = Sudah diverifikasi Gudang
-            $spkDiterima = (clone $workOrdersQuery)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
-                ->count();
-
-            // ITEMS IN = disamakan dengan jumlah sepatu yang diterima riil oleh gudang pada periode filter
             $incomingItems = $spkDiterima;
 
-            // Revenue dihitung dari sepatu yang diterima riil oleh gudang pada periode filter
-            $revenue = (clone $workOrdersQuery)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::SPK_PENDING->value)
-                ->where('status', '!=', \App\Enums\WorkOrderStatus::BATAL->value)
-                ->sum('total_transaksi');
-
-            // Avg Response Time
-            $avgResponseTime = CsLead::where('cs_id', $user->id)
-                ->whereBetween('created_at', [$start, $end])
-                ->whereNotNull('response_time_minutes')
-                ->where('response_time_minutes', '>', 0)
-                ->avg('response_time_minutes');
-
+            $avgResponseTime = $cStat->avg_resp ?? 0;
             $avgDealValue = $totalClosing > 0 ? round($revenue / $totalClosing) : 0;
 
             $performance[] = [
