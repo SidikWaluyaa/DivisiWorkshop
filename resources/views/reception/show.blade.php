@@ -377,11 +377,89 @@
                     </div>
                 </div>
 
-                {{-- Section 3: Kelengkapan Aksesoris --}}
+                {{-- Section 3: Standardized Photo Upload & Gallery --}}
+                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8" x-data="photoGallery()">
+                    <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">3</span>
+                        FOTO KONDISI AWAL (BEFORE)
+                    </h3>
+
+                    {{-- Photo Gallery Grid --}}
+                    @if($order->photos->count() > 0)
+                    <div class="mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div class="flex items-center justify-between mb-6">
+                            <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Galeri Foto ({{ $order->photos->count() }})
+                            </h4>
+                            <div class="flex gap-2">
+                                <button type="button" @click="isSelecting = !isSelecting" class="text-[10px] font-black uppercase px-3 py-1.5 rounded-lg transition-all" :class="isSelecting ? 'bg-gray-200 text-gray-600' : 'bg-[#22AF85] text-white shadow-md shadow-[#22AF85]/20'" x-text="isSelecting ? 'Batal' : 'Kelola'"></button>
+                                <template x-if="isSelecting && selectedPhotos.length > 0">
+                                    <button type="button" @click="deleteSelected()" class="text-[10px] font-black uppercase px-3 py-1.5 bg-red-500 text-white rounded-lg shadow-md shadow-red-200" x-text="'Hapus (' + selectedPhotos.length + ')'"></button>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            @foreach($order->photos as $photo)
+                            <div class="relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 group" :class="selectedPhotos.includes({{ $photo->id }}) ? 'border-[#22AF85] ring-4 ring-[#22AF85]/10' : 'border-white shadow-sm hover:shadow-xl'">
+                                <img src="{{ $photo->photo_url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer" @click="handlePhotoClick('{{ $photo->photo_url }}', {{ $photo->id }})">
+                                
+                                {{-- Selection Overlay --}}
+                                <div x-show="isSelecting" class="absolute inset-0 bg-black/20 flex items-start justify-end p-2 pointer-events-none">
+                                    <div class="w-5 h-5 rounded-full border-2 border-white shadow-sm flex items-center justify-center transition-colors" :class="selectedPhotos.includes({{ $photo->id }}) ? 'bg-[#22AF85]' : 'bg-white/50'">
+                                        <svg x-show="selectedPhotos.includes({{ $photo->id }})" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+
+                                {{-- Quick Actions (Visible on Hover) --}}
+                                <div x-show="!isSelecting" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                    <button type="button" @click="setAsCover({{ $photo->id }})" class="p-2 bg-[#FFC232] text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Set sebagai Cover">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                                    </button>
+                                    <button type="button" @click="window.open('{{ $photo->photo_url }}', '_blank')" class="p-2 bg-white text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Lihat Fullscreen">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    </button>
+                                </div>
+
+                                {{-- Labels --}}
+                                <div class="absolute bottom-2 left-2 flex flex-col gap-1 pointer-events-none">
+                                    <span class="px-2 py-0.5 bg-black/60 text-white text-[8px] font-black uppercase rounded-full backdrop-blur-md">{{ $photo->step }}</span>
+                                    @if($photo->is_spk_cover)
+                                    <span class="px-2 py-0.5 bg-[#FFC232] text-gray-900 text-[8px] font-black uppercase rounded-full shadow-sm">COVER</span>
+                                    @endif
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Standard Upload Button --}}
+                    <div class="flex justify-center">
+                        <div class="relative">
+                            <button type="button" id="upload-btn" class="px-10 py-4 bg-[#22AF85] text-white font-black rounded-2xl hover:bg-[#1b8e6b] hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-3 uppercase tracking-widest text-sm shadow-md group">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                PILIH FOTO & UPLOAD
+                            </button>
+                            <input type="file" id="file_input" class="hidden" multiple accept="image/*">
+                            
+                            {{-- Progress Overlay (Overlaying the button area) --}}
+                            <div id="upload-loading" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm rounded-2xl flex-col items-center justify-center z-10 p-2 border border-[#22AF85]/20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 border-4 border-[#22AF85]/20 border-t-[#22AF85] rounded-full animate-spin"></div>
+                                    <span class="text-xs font-black text-gray-900" id="upload-progress-text">0%</span>
+                                    <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-wider" id="upload-status-label">Uploading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Section 4: Kelengkapan Aksesoris --}}
                 <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8">
                     <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
                         <span
-                            class="w-10 h-10 bg-[#FFC232] text-gray-900 rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#FFC232]/20">3</span>
+                            class="w-10 h-10 bg-[#FFC232] text-gray-900 rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#FFC232]/20">4</span>
                         KELENGKAPAN AKSESORIS
                     </h3>
 
@@ -612,7 +690,149 @@
                     @endif
                 </div>
 
-                {{-- Section 4: QC Gatekeeper --}}
+                {{-- Section 5: Rekap Layanan & Pesan CS --}}
+                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8">
+                    <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
+                        <span
+                            class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">5</span>
+                        REKAP LAYANAN & PESAN CS
+                    </h3>
+
+                    {{-- 1. Layanan yang Disarankan --}}
+                    <div class="mb-8">
+                        <label class="block text-xs font-black text-[#22AF85] uppercase tracking-widest mb-4">Layanan
+                            yang Disarankan CS:</label>
+                        @if($order->workOrderServices->count() > 0)
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                @foreach($order->workOrderServices as $service)
+                                    <div
+                                        class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:border-[#22AF85]/30 transition-all flex flex-col group relative overflow-hidden">
+                                        {{-- Category Badge --}}
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-[9px] font-black bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md uppercase tracking-widest">
+                                                {{ $service->category_name ?? $service->service->category ?? 'General' }}
+                                            </span>
+                                            <span class="text-[10px] font-black text-[#22AF85]">
+                                                Rp {{ number_format($service->cost, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+
+                                        <span
+                                            class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 group-hover:text-[#22AF85] transition-colors inline-block">
+                                            {{ $service->custom_service_name ?? $service->service->name ?? 'Custom Service' }}
+                                        </span>
+
+                                        @if($service->service && $service->service->description)
+                                            <p class="text-[10px] text-gray-500 font-medium mb-2 line-clamp-2">
+                                                {{ $service->service->description }}
+                                            </p>
+                                        @endif
+
+                                        @if(!empty($service->service_details) && is_array($service->service_details))
+                                            <div class="mt-auto space-y-2">
+                                                @if(isset($service->service_details['manual_detail']) && !empty($service->service_details['manual_detail']))
+                                                    <div class="p-2 bg-yellow-50 border border-yellow-100 rounded-lg text-[10px] text-yellow-800 font-bold italic">
+                                                        @if(is_array($service->service_details['manual_detail']))
+                                                            @foreach($service->service_details['manual_detail'] as $line)
+                                                                <div style="margin-bottom: 1px;">• {{ $line }}</div>
+                                                            @endforeach
+                                                        @else
+                                                            "{{ $service->service_details['manual_detail'] }}"
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                                
+                                                <div class="flex flex-wrap gap-1 pt-1">
+                                                    @foreach($service->service_details as $key => $detail)
+                                                        @if($key !== 'manual_detail' && $key !== 'is_cx_additional' && $key !== 'hk_days' && !empty($detail))
+                                                            <span
+                                                                class="text-[8px] font-bold bg-[#22AF85]/5 text-[#22AF85] px-1.5 py-0.5 rounded-md border border-[#22AF85]/10">
+                                                                #{{ is_array($detail) ? implode(', ', $detail) : $detail }}
+                                                            </span>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div
+                                class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-500 font-medium italic">
+                                Belum ada layanan yang dipilih oleh CS.
+                            </div>
+                        @endif
+                    </div>
+
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <div class="p-6 bg-[#22AF85]/5 border-2 border-dashed border-[#22AF85]/20 rounded-2xl">
+                                <label
+                                    class="block text-xs font-black text-[#22AF85] uppercase tracking-widest mb-3">Pesan
+                                    untuk Workshop (Dari CS)</label>
+                                <div
+                                    class="p-4 bg-white rounded-xl border border-[#22AF85]/10 text-gray-800 font-bold text-sm min-h-[80px]">
+                                    "{{ $order->notes ?? $order->customer_notes ?? 'Tidak ada pesan khusus.' }}"
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Catatan
+                                    Tambahan Gudang</label>
+                                <textarea name="technician_notes" rows="3"
+                                    placeholder="Tambahkan catatan jika ada kondisi khusus saat barang diterima..."
+                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">{{ old('technician_notes', $order->technician_notes) }}</textarea>
+                                <div class="mt-3 text-right">
+                                    <button type="button" onclick="quickSaveReceptionNotesBtn()"
+                                        class="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md transition-all transform hover:-translate-y-0.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2v-9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                        </svg>
+                                        SIMPAN CATATAN
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 h-full">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200">
+                                    <svg class="w-6 h-6 text-[#22AF85]" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer
+                                        Service</div>
+                                    <div class="text-lg font-black text-gray-900">
+                                        {{ $order->created_by_name ?? 'ADMIN' }}</div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4 pt-4 border-t border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Input Tanggal</span>
+                                    <span
+                                        class="text-xs font-black text-gray-900">{{ $order->created_at->format('d M Y, H:i') }}</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Input Lokasi Store</span>
+                                    <span
+                                        class="text-xs font-black text-[#22AF85] uppercase tracking-wider">{{ $order->store->name ?? 'CENTRAL' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Section 6: QC Gatekeeper --}}
                 <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8 relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-8 opacity-5 text-[#22AF85]">
                         <svg class="w-48 h-48 rotate-12" fill="currentColor" viewBox="0 0 20 20">
@@ -624,7 +844,7 @@
 
                     <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3 relative z-10">
                         <span
-                            class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">4</span>
+                            class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">6</span>
                         QC GATEKEEPER (PEMERIKSAAN AWAL)
                     </h3>
 
@@ -1089,227 +1309,6 @@
                                     </path>
                                 </svg>
                                 Order akan ditahan untuk konfirmasi CS
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Section 5: Rekap Layanan & Pesan CS --}}
-                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8">
-                    <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
-                        <span
-                            class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">5</span>
-                        REKAP LAYANAN & PESAN CS
-                    </h3>
-
-                    {{-- 1. Layanan yang Disarankan --}}
-                    <div class="mb-8">
-                        <label class="block text-xs font-black text-[#22AF85] uppercase tracking-widest mb-4">Layanan
-                            yang Disarankan CS:</label>
-                        @if($order->workOrderServices->count() > 0)
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                @foreach($order->workOrderServices as $service)
-                                    <div
-                                        class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:border-[#22AF85]/30 transition-all flex flex-col group relative overflow-hidden">
-                                        {{-- Category Badge --}}
-                                        <div class="flex items-center justify-between mb-2">
-                                            <span class="text-[9px] font-black bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md uppercase tracking-widest">
-                                                {{ $service->category_name ?? $service->service->category ?? 'General' }}
-                                            </span>
-                                            <span class="text-[10px] font-black text-[#22AF85]">
-                                                Rp {{ number_format($service->cost, 0, ',', '.') }}
-                                            </span>
-                                        </div>
-
-                                        <span
-                                            class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 group-hover:text-[#22AF85] transition-colors inline-block">
-                                            {{ $service->custom_service_name ?? $service->service->name ?? 'Custom Service' }}
-                                        </span>
-
-                                        @if($service->service && $service->service->description)
-                                            <p class="text-[10px] text-gray-500 font-medium mb-2 line-clamp-2">
-                                                {{ $service->service->description }}
-                                            </p>
-                                        @endif
-
-                                        @if(!empty($service->service_details) && is_array($service->service_details))
-                                            <div class="mt-auto space-y-2">
-                                                @if(isset($service->service_details['manual_detail']) && !empty($service->service_details['manual_detail']))
-                                                    <div class="p-2 bg-yellow-50 border border-yellow-100 rounded-lg text-[10px] text-yellow-800 font-bold italic">
-                                                        @if(is_array($service->service_details['manual_detail']))
-                                                            @foreach($service->service_details['manual_detail'] as $line)
-                                                                <div style="margin-bottom: 1px;">• {{ $line }}</div>
-                                                            @endforeach
-                                                        @else
-                                                            "{{ $service->service_details['manual_detail'] }}"
-                                                        @endif
-                                                    </div>
-                                                @endif
-                                                
-                                                <div class="flex flex-wrap gap-1 pt-1">
-                                                    @foreach($service->service_details as $key => $detail)
-                                                        @if($key !== 'manual_detail' && $key !== 'is_cx_additional' && $key !== 'hk_days' && !empty($detail))
-                                                            <span
-                                                                class="text-[8px] font-bold bg-[#22AF85]/5 text-[#22AF85] px-1.5 py-0.5 rounded-md border border-[#22AF85]/10">
-                                                                #{{ is_array($detail) ? implode(', ', $detail) : $detail }}
-                                                            </span>
-                                                        @endif
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div
-                                class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm text-gray-500 font-medium italic">
-                                Belum ada layanan yang dipilih oleh CS.
-                            </div>
-                        @endif
-                    </div>
-
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="space-y-6">
-                            <div class="p-6 bg-[#22AF85]/5 border-2 border-dashed border-[#22AF85]/20 rounded-2xl">
-                                <label
-                                    class="block text-xs font-black text-[#22AF85] uppercase tracking-widest mb-3">Pesan
-                                    untuk Workshop (Dari CS)</label>
-                                <div
-                                    class="p-4 bg-white rounded-xl border border-[#22AF85]/10 text-gray-800 font-bold text-sm min-h-[80px]">
-                                    "{{ $order->notes ?? $order->customer_notes ?? 'Tidak ada pesan khusus.' }}"
-                                </div>
-                            </div>
-
-                            <div>
-                                <label
-                                    class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Catatan
-                                    Tambahan Gudang</label>
-                                <textarea name="technician_notes" rows="3"
-                                    placeholder="Tambahkan catatan jika ada kondisi khusus saat barang diterima..."
-                                    class="w-full bg-gray-50 border-gray-200 rounded-xl focus:ring-[#22AF85] focus:border-[#22AF85] font-bold text-gray-800 py-3 transition-all">{{ old('technician_notes', $order->technician_notes) }}</textarea>
-                                <div class="mt-3 text-right">
-                                    <button type="button" onclick="quickSaveReceptionNotesBtn()"
-                                        class="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md transition-all transform hover:-translate-y-0.5">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2v-9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                                        </svg>
-                                        SIMPAN CATATAN
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 h-full">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div
-                                    class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200">
-                                    <svg class="w-6 h-6 text-[#22AF85]" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer
-                                        Service</div>
-                                    <div class="text-lg font-black text-gray-900">
-                                        {{ $order->created_by_name ?? 'ADMIN' }}</div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-4 pt-4 border-t border-gray-200">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-gray-500 uppercase">Input Tanggal</span>
-                                    <span
-                                        class="text-xs font-black text-gray-900">{{ $order->created_at->format('d M Y, H:i') }}</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-gray-500 uppercase">Input Lokasi Store</span>
-                                    <span
-                                        class="text-xs font-black text-[#22AF85] uppercase tracking-wider">{{ $order->store->name ?? 'CENTRAL' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                {{-- Section 6: Standardized Photo Upload & Gallery --}}
-                <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 mb-8" x-data="photoGallery()">
-                    <h3 class="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="w-10 h-10 bg-[#22AF85] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-[#22AF85]/20">6</span>
-                        FOTO KONDISI AWAL (BEFORE)
-                    </h3>
-
-                    {{-- Photo Gallery Grid --}}
-                    @if($order->photos->count() > 0)
-                    <div class="mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                        <div class="flex items-center justify-between mb-6">
-                            <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                Galeri Foto ({{ $order->photos->count() }})
-                            </h4>
-                            <div class="flex gap-2">
-                                <button type="button" @click="isSelecting = !isSelecting" class="text-[10px] font-black uppercase px-3 py-1.5 rounded-lg transition-all" :class="isSelecting ? 'bg-gray-200 text-gray-600' : 'bg-[#22AF85] text-white shadow-md shadow-[#22AF85]/20'" x-text="isSelecting ? 'Batal' : 'Kelola'"></button>
-                                <template x-if="isSelecting && selectedPhotos.length > 0">
-                                    <button type="button" @click="deleteSelected()" class="text-[10px] font-black uppercase px-3 py-1.5 bg-red-500 text-white rounded-lg shadow-md shadow-red-200" x-text="'Hapus (' + selectedPhotos.length + ')'"></button>
-                                </template>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                            @foreach($order->photos as $photo)
-                            <div class="relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 group" :class="selectedPhotos.includes({{ $photo->id }}) ? 'border-[#22AF85] ring-4 ring-[#22AF85]/10' : 'border-white shadow-sm hover:shadow-xl'">
-                                <img src="{{ $photo->photo_url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer" @click="handlePhotoClick('{{ $photo->photo_url }}', {{ $photo->id }})">
-                                
-                                {{-- Selection Overlay --}}
-                                <div x-show="isSelecting" class="absolute inset-0 bg-black/20 flex items-start justify-end p-2 pointer-events-none">
-                                    <div class="w-5 h-5 rounded-full border-2 border-white shadow-sm flex items-center justify-center transition-colors" :class="selectedPhotos.includes({{ $photo->id }}) ? 'bg-[#22AF85]' : 'bg-white/50'">
-                                        <svg x-show="selectedPhotos.includes({{ $photo->id }})" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                    </div>
-                                </div>
-
-                                {{-- Quick Actions (Visible on Hover) --}}
-                                <div x-show="!isSelecting" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                    <button type="button" @click="setAsCover({{ $photo->id }})" class="p-2 bg-[#FFC232] text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Set sebagai Cover">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-                                    </button>
-                                    <button type="button" @click="window.open('{{ $photo->photo_url }}', '_blank')" class="p-2 bg-white text-gray-900 rounded-lg hover:scale-110 transition-transform shadow-lg" title="Lihat Fullscreen">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                    </button>
-                                </div>
-
-                                {{-- Labels --}}
-                                <div class="absolute bottom-2 left-2 flex flex-col gap-1 pointer-events-none">
-                                    <span class="px-2 py-0.5 bg-black/60 text-white text-[8px] font-black uppercase rounded-full backdrop-blur-md">{{ $photo->step }}</span>
-                                    @if($photo->is_spk_cover)
-                                    <span class="px-2 py-0.5 bg-[#FFC232] text-gray-900 text-[8px] font-black uppercase rounded-full shadow-sm">COVER</span>
-                                    @endif
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endif
-
-                    {{-- Standard Upload Button --}}
-                    <div class="flex justify-center">
-                        <div class="relative">
-                            <button type="button" id="upload-btn" class="px-10 py-4 bg-[#22AF85] text-white font-black rounded-2xl hover:bg-[#1b8e6b] hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-3 uppercase tracking-widest text-sm shadow-md group">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                                PILIH FOTO & UPLOAD
-                            </button>
-                            <input type="file" id="file_input" class="hidden" multiple accept="image/*">
-                            
-                            {{-- Progress Overlay (Overlaying the button area) --}}
-                            <div id="upload-loading" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm rounded-2xl flex-col items-center justify-center z-10 p-2 border border-[#22AF85]/20">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 border-4 border-[#22AF85]/20 border-t-[#22AF85] rounded-full animate-spin"></div>
-                                    <span class="text-xs font-black text-gray-900" id="upload-progress-text">0%</span>
-                                    <span class="text-[10px] font-black text-[#22AF85] uppercase tracking-wider" id="upload-status-label">Uploading...</span>
-                                </div>
                             </div>
                         </div>
                     </div>
