@@ -280,10 +280,13 @@
                             $isHoldStatus = in_array($currentStatusVal, ['CX_FOLLOWUP', 'HOLD_FOR_CX']);
 
                             // Deteksi Garansi Aktif (OPEN)
+                            // Catatan: work_orders.is_warranty dipakai CS untuk menandai paket "Bergaransi vs Non-Garansi",
+                            // sehingga klaim garansi aktif hanya diambil dari work_order_warranties (OPEN) atau SPK Rework (-GR / parent_id).
                             $openWarranty = $order->relationLoaded('warranties')
                                 ? $order->warranties->where('status', 'OPEN')->sortByDesc('id')->first()
                                 : null;
-                            $isWarrantyStatus = (bool)$openWarranty || ((bool)$order->is_warranty && !in_array($currentStatusVal, ['SELESAI', 'DIAMBIL', 'BATAL', 'CANCELLED']));
+                            $isGrReworkSpk = (bool) preg_match('/-GR(-\d+)?$/i', (string) $order->spk_number) || !empty($order->parent_id);
+                            $isWarrantyStatus = (bool)$openWarranty || ($isGrReworkSpk && !in_array($currentStatusVal, ['SELESAI', 'DIAMBIL', 'BATAL', 'CANCELLED']));
 
                             // Deteksi OTO Aktif (ACCEPTED / IN_PROGRESS / has_active_oto) & Penawaran OTO (PENDING)
                             $activeOto = $order->relationLoaded('otos')

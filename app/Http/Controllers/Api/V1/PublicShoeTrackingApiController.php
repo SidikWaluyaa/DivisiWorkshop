@@ -109,8 +109,11 @@ class PublicShoeTrackingApiController extends Controller
         ]);
 
         // Deteksi Garansi Aktif (OPEN)
+        // Catatan: kolom work_orders.is_warranty digunakan CS sebagai penanda paket "Bergaransi vs Non-Garansi",
+        // sehingga status klaim garansi aktif hanya diambil dari work_order_warranties (OPEN) atau SPK Rework (-GR / parent_id).
         $openWarranty = $order->warranties->where('status', 'OPEN')->sortByDesc('id')->first();
-        $isWarranty = (bool)$openWarranty || ((bool)$order->is_warranty && !in_array($statusVal, ['SELESAI', 'DIAMBIL', 'BATAL', 'CANCELLED']));
+        $isGrReworkSpk = (bool) preg_match('/-GR(-\d+)?$/i', (string) $order->spk_number) || !empty($order->parent_id);
+        $isWarranty = (bool)$openWarranty || ($isGrReworkSpk && !in_array($statusVal, ['SELESAI', 'DIAMBIL', 'BATAL', 'CANCELLED']));
 
         // Deteksi OTO Aktif (ACCEPTED / IN_PROGRESS / has_active_oto) & Penawaran OTO (PENDING)
         $activeOto = $order->otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->sortByDesc('id')->first();
@@ -164,7 +167,7 @@ class PublicShoeTrackingApiController extends Controller
                     ? 'Layanan utama sepatu Anda telah selesai. Tim kami merekomendasikan penawaran khusus layanan tambahan: ' . $pendingOto->proposed_services . '. Silakan hubungi admin CX kami untuk konfirmasi.'
                     : null,
                 'is_warranty' => $isWarranty,
-                'warranty_spk_number' => $openWarranty ? $openWarranty->garansi_spk_number : ($order->is_warranty ? $order->spk_number : null),
+                'warranty_spk_number' => $openWarranty ? $openWarranty->garansi_spk_number : ($isGrReworkSpk ? $order->spk_number : null),
                 'warranty_title' => $isWarranty ? 'Pengerjaan Klaim Garansi' : null,
                 'warranty_message' => $isWarranty
                     ? 'Sepatu Anda saat ini sedang dalam proses penanganan klaim garansi oleh tim teknisi kami untuk memastikan hasil perbaikan kembali optimal.' . ($openWarranty && $openWarranty->description ? ' Catatan Garansi: "' . $openWarranty->description . '"' : '')
