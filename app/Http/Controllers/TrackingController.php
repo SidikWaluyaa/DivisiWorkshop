@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderWarranty;
 use App\Enums\WorkOrderStatus;
 
 class TrackingController extends Controller
@@ -61,23 +62,54 @@ class TrackingController extends Controller
         return !$hasLetters && is_numeric($cleanInput) && strlen($cleanInput) >= 9;
     }
 
+    private function getTrackingRelations(): array
+    {
+        return [
+            'services',
+            'workOrderServices.service',
+            'logs.user',
+            'materials',
+            'photos',
+            'otos',
+            'warranties',
+            'revisions',
+        ];
+    }
+
     private function searchByPhone(string $phone): \Illuminate\Support\Collection
     {
         return WorkOrder::where('customer_phone', 'LIKE', "%{$phone}%")
-            ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
+            ->with($this->getTrackingRelations())
             ->orderBy('created_at', 'desc')
             ->get();
     }
 
     private function searchBySpk(string $spk): \Illuminate\Support\Collection
     {
+        $relations = $this->getTrackingRelations();
+
         $order = WorkOrder::where('spk_number', $spk)
-            ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
+            ->with($relations)
             ->first();
 
         if (!$order) {
             $order = WorkOrder::where('spk_number', 'LIKE', $spk)
+                ->with($relations)
                 ->first();
+        }
+
+        // Fallback: Jika yang dicari adalah Nomor SPK Garansi (-GR) yang masih OPEN (belum menjadi row di work_orders)
+        if (!$order) {
+            $warranty = WorkOrderWarranty::where('garansi_spk_number', $spk)
+                ->orWhere('garansi_spk_number', 'LIKE', $spk)
+                ->latest()
+                ->first();
+
+            if ($warranty && $warranty->workOrder) {
+                $order = WorkOrder::where('id', $warranty->work_order_id)
+                    ->with($relations)
+                    ->first();
+            }
         }
 
         return $order ? collect([$order]) : collect();
@@ -86,13 +118,28 @@ class TrackingController extends Controller
     private function transformOrdersForAjax(\Illuminate\Support\Collection $orders): \Illuminate\Support\Collection
     {
         return $orders->map(function ($order) {
+            $statusVal = is_object($order->status) ? $order->status->value : $order->status;
+            $hasOpenWarranty = $order->relationLoaded('warranties') && $order->warranties->where('status', 'OPEN')->isNotEmpty();
+            $hasActiveOto = (bool)$order->has_active_oto || ($order->relationLoaded('otos') && $order->otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->isNotEmpty());
+            $hasOpenRevision = $statusVal === 'REVISI' || (bool)$order->is_revising || ($order->relationLoaded('revisions') && $order->revisions->where('status', 'OPEN')->isNotEmpty());
+
+            if ($hasOpenWarranty) {
+                $displayStatus = 'GARANSI';
+            } elseif ($hasActiveOto) {
+                $displayStatus = 'OTO';
+            } elseif ($hasOpenRevision) {
+                $displayStatus = 'REVISI';
+            } else {
+                $displayStatus = $order->status;
+            }
+
             return [
                 'id' => $order->id,
                 'spk_number' => $order->spk_number,
                 'customer_name' => $order->customer_name,
                 'shoe_brand' => $order->shoe_brand . ' - ' . $order->shoe_type,
                 'shoe_color' => $order->shoe_color,
-                'status' => $order->status,
+                'status' => $displayStatus,
                 'total_price' => number_format($order->total_price ?? 0, 0, ',', '.'),
                 'entry_date' => $order->entry_date->format('d/m/Y'),
                 'estimation_date' => $order->estimation_date ? $order->estimation_date->format('d/m/Y') : '-',

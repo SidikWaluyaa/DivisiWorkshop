@@ -102,21 +102,22 @@ graph TD
 ---
 
 ### 3.3 Endpoint Pelanggan & Publik (`/api/v1/public/*`)
-*Rate Limiter:* Dibatasi throttle per IP tanpa memerlukan autentikasi API Key.
+*Rate Limiter:* Dibatasi throttle per IP tanpa memerlukan autentikasi API Key.  
+*Dokumentasi Integrasi Lengkap:* Lihat [`docs/DOKUMENTASI_API_PUBLIC_TRACKING.md`](file:///c:/laragon/www/SistemWorkshop/docs/DOKUMENTASI_API_PUBLIC_TRACKING.md).
 
 #### 1. `GET /api/v1/public/track`
 - **Controller:** [`App\Http\Controllers\Api\V1\PublicTrackingApiController@track`](file:///c:/laragon/www/SistemWorkshop/app/Http/Controllers/Api/V1/PublicTrackingApiController.php)
 - **Rate Limit:** 60 request / menit
 - **Query Params:**
-  - `spk_number` *(wajib, string)*: Nomor SPK (misal `SPK-2610-0012` atau format barcode scan).
-- **Logika:** Mengambil seluruh riwayat tahapan pengerjaan (`DITERIMA`, `SORTIR`, `PRODUKSI`, `QC`, `SELESAI`), layanan yang diambil, foto dokumentasi pengerjaan, dan log perjalanan sepatu.
+  - `spk_number` *(wajib, string)*: Nomor SPK reguler (`-SW` / `-CS`), Nomor SPK Garansi (`-GR`), atau format barcode scan.
+- **Logika:** Mengambil seluruh riwayat 7 tahapan pengerjaan (`DITERIMA`, `ASSESSMENT`, `PREPARATION`, `SORTIR`, `PRODUCTION`, `QC`, `SELESAI`), penyesuaian posisi stepper otomatis saat sedang **OTO (`code: "OTO"`)**, **Garansi (`code: "GARANSI"`)**, atau **Revisi (`code: "REVISI"`)**, layanan yang diambil, serta foto dokumentasi pengerjaan.
 
 #### 2. `GET /api/v1/public/track-shoes`
 - **Controller:** [`App\Http\Controllers\Api\V1\PublicShoeTrackingApiController@track`](file:///c:/laragon/www/SistemWorkshop/app/Http/Controllers/Api/V1/PublicShoeTrackingApiController.php)
 - **Rate Limit:** 60 request / menit
 - **Query Params:**
   - `spk_number` *(string, nullable)* ATAU `id` *(integer, nullable)*.
-- **Logika:** Versi data ringan (*lightweight*) yang mengembalikan status pengerjaan, merk, model, dan jenis layanan untuk integrasi widget web front-end.
+- **Logika:** Versi data ringan (*lightweight*) yang mengembalikan status pengerjaan (termasuk deteksi `OTO`, `GARANSI`, `REVISI`, dan `HOLD_CX`), merk, model, dan jenis layanan untuk integrasi widget web front-end.
 
 #### 3. `POST /api/v1/public/warranty-claims/check`
 - **Controller:** [`App\Http\Controllers\Api\V1\PublicWarrantyClaimApiController@check`](file:///c:/laragon/www/SistemWorkshop/app/Http/Controllers/Api/V1/PublicWarrantyClaimApiController.php)

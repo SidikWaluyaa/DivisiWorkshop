@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderWarranty;
 use App\Enums\WorkOrderStatus;
 use Illuminate\Http\JsonResponse;
 
@@ -34,16 +35,41 @@ class PublicTrackingApiController extends Controller
             }
         }
 
+        $relations = [
+            'services',
+            'workOrderServices.service',
+            'logs.user',
+            'materials',
+            'photos',
+            'otos',
+            'warranties',
+            'revisions',
+        ];
+
         // Query the WorkOrder with relationships
         $order = WorkOrder::where('spk_number', $spk)
-            ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
+            ->with($relations)
             ->first();
 
         // Fallback exact match using LIKE if exact = fails
         if (!$order) {
             $order = WorkOrder::where('spk_number', 'LIKE', $spk)
-                ->with(['services', 'workOrderServices', 'logs.user', 'materials', 'photos'])
+                ->with($relations)
                 ->first();
+        }
+
+        // Fallback: Jika yang dicari adalah Nomor SPK Garansi (-GR) yang masih OPEN
+        if (!$order) {
+            $warrantyLookup = WorkOrderWarranty::where('garansi_spk_number', $spk)
+                ->orWhere('garansi_spk_number', 'LIKE', $spk)
+                ->latest()
+                ->first();
+
+            if ($warrantyLookup && $warrantyLookup->work_order_id) {
+                $order = WorkOrder::where('id', $warrantyLookup->work_order_id)
+                    ->with($relations)
+                    ->first();
+            }
         }
 
         // Handle case where SPK is not found
@@ -89,11 +115,29 @@ class PublicTrackingApiController extends Controller
             'HOLD_FOR_CX'
         ]);
 
-        $isRevising = ($currentStatusVal === 'REVISI' || (bool)$order->is_revising);
+        // Deteksi Garansi Aktif (OPEN)
+        $openWarranty = $order->warranties->where('status', 'OPEN')->sortByDesc('id')->first();
+        $isWarranty = (bool)$openWarranty || ((bool)$order->is_warranty && !in_array($currentStatusVal, ['SELESAI', 'DIAMBIL', 'BATAL', 'CANCELLED']));
 
-        if ($currentStatusVal === 'REVISI' || $isOnHold) {
+        // Deteksi OTO Aktif (ACCEPTED / IN_PROGRESS / has_active_oto) & Penawaran OTO (PENDING)
+        $activeOto = $order->otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->sortByDesc('id')->first();
+        $isOto = (bool)$order->has_active_oto || (bool)$activeOto;
+        $pendingOto = !$isOto
+            ? $order->otos->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])->sortByDesc('id')->first()
+            : null;
+
+        // Deteksi Revisi Aktif
+        $openRevision = $order->revisions->where('status', 'OPEN')->sortByDesc('id')->first();
+        $isRevising = ($currentStatusVal === 'REVISI' || (bool)$order->is_revising || (bool)$openRevision);
+
+        $isSpecialServiceActive = ($isWarranty || $isOto || $isRevising);
+
+        if ($isOnHold) {
             $prevVal = $order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status;
             $effectiveStatusVal = $prevVal ?: 'PRODUCTION';
+        } elseif ($isSpecialServiceActive) {
+            // Saat sedang OTO, Garansi, atau Revisi: tarik posisi ke Step 5: Service (PRODUCTION)
+            $effectiveStatusVal = 'PRODUCTION';
         } else {
             $effectiveStatusVal = $currentStatusVal;
         }
@@ -104,13 +148,13 @@ class PublicTrackingApiController extends Controller
         }
 
         // Visual enhancement overrides from result.blade.php
-        // 1. If in PRODUCTION but production is finished or revising -> keep at PRODUCTION / Service index
-        if ($effectiveStatusVal === 'PRODUCTION' && ($order->is_production_finished || $order->is_revising)) {
+        // 1. If in PRODUCTION / Special Service (OTO, Garansi, Revisi) -> keep at PRODUCTION / Service index (4)
+        if ($isSpecialServiceActive || ($effectiveStatusVal === 'PRODUCTION' && ($order->is_production_finished || $order->is_revising))) {
             $currentIndex = 4; // Index of PRODUCTION
         }
 
-        // 2. If in QC but QC is finished -> move visual indicator to SELESAI
-        if ($effectiveStatusVal === 'QC' && $order->is_qc_finished) {
+        // 2. If in QC but QC is finished -> move visual indicator to SELESAI ONLY if not in OTO / Garansi / Revisi
+        if (!$isSpecialServiceActive && $effectiveStatusVal === 'QC' && $order->is_qc_finished) {
             $currentIndex = 6; // Index of SELESAI
         }
 
@@ -119,11 +163,20 @@ class PublicTrackingApiController extends Controller
             'code' => $currentStatusVal,
             'label' => '-',
             'description' => '-',
-            'is_production_finished' => (bool)$order->is_production_finished,
-            'is_qc_finished' => (bool)$order->is_qc_finished,
+            'is_production_finished' => $isSpecialServiceActive ? false : (bool)$order->is_production_finished,
+            'is_qc_finished' => $isSpecialServiceActive ? false : (bool)$order->is_qc_finished,
         ];
 
-        if ($isRevising) {
+        if ($isWarranty) {
+            $currentStatusDetails['code'] = 'GARANSI';
+            $currentStatusDetails['label'] = 'Service (Garansi)';
+            $currentStatusDetails['description'] = 'Order Anda sedang dalam proses pengerjaan klaim garansi.';
+        } elseif ($isOto) {
+            $currentStatusDetails['code'] = 'OTO';
+            $currentStatusDetails['label'] = 'Service (OTO)';
+            $currentStatusDetails['description'] = 'Order Anda sedang dalam proses pengerjaan layanan tambahan One Time Offer (OTO).';
+        } elseif ($isRevising) {
+            $currentStatusDetails['code'] = 'REVISI';
             $currentStatusDetails['label'] = 'Service (Revisi)';
             $currentStatusDetails['description'] = 'Order Anda sedang dalam penyesuaian pengerjaan ulang (revisi).';
         } elseif ($currentIndex !== false && isset($stageKeys[$currentIndex])) {
@@ -150,9 +203,11 @@ class PublicTrackingApiController extends Controller
 
             // Get exact timestamp
             $timestamp = null;
-            if ($key === 'DITERIMA') {
+            if ($isSpecialServiceActive && $isCurrent) {
+                $timestamp = null;
+            } elseif ($key === 'DITERIMA') {
                 $timestamp = $order->created_at;
-            } elseif ($key === 'SELESAI' && $order->finished_date) {
+            } elseif ($key === 'SELESAI' && $order->finished_date && !$isSpecialServiceActive) {
                 $timestamp = $order->finished_date;
             } else {
                 $log = $order->logs->where('step', $key)->sortByDesc('created_at')->first();
@@ -165,7 +220,7 @@ class PublicTrackingApiController extends Controller
                 'label' => $stageInfo['label'],
                 'is_completed' => $isCompleted,
                 'is_current' => $isCurrent,
-                'waktu' => $timestamp ? $timestamp->format('Y-m-d H:i:s') : null
+                'waktu' => ($isCompleted && $timestamp) ? $timestamp->format('Y-m-d H:i:s') : null
             ];
         }
 
@@ -207,6 +262,21 @@ class PublicTrackingApiController extends Controller
                 'hold_title' => $isOnHold ? 'Konfirmasi Kendala Diperlukan' : null,
                 'hold_message' => $isOnHold ? 'Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu Anda. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.' : null,
                 'report_issue_url' => $isOnHold ? route('cx-issues.report', $order->spk_number) : null,
+                'is_oto' => $isOto,
+                'oto_title' => $isOto ? 'Pengerjaan Layanan Tambahan (OTO)' : null,
+                'oto_message' => $isOto
+                    ? 'Sepatu Anda saat ini sedang berada di Stasiun Khusus OTO untuk pengerjaan layanan tambahan (One Time Offer) yang telah Anda setujui.' . ($activeOto && $activeOto->proposed_services ? ' Layanan OTO: ' . $activeOto->proposed_services . '.' : '')
+                    : null,
+                'has_oto_offer' => (bool)$pendingOto,
+                'oto_offer_message' => $pendingOto
+                    ? 'Layanan utama sepatu Anda telah selesai. Tim kami merekomendasikan penawaran khusus layanan tambahan: ' . $pendingOto->proposed_services . '. Silakan hubungi admin CX kami untuk konfirmasi.'
+                    : null,
+                'is_warranty' => $isWarranty,
+                'warranty_spk_number' => $openWarranty ? $openWarranty->garansi_spk_number : ($order->is_warranty ? $order->spk_number : null),
+                'warranty_title' => $isWarranty ? 'Pengerjaan Klaim Garansi' : null,
+                'warranty_message' => $isWarranty
+                    ? 'Sepatu Anda saat ini sedang dalam proses penanganan klaim garansi oleh tim teknisi kami untuk memastikan hasil perbaikan kembali optimal.' . ($openWarranty && $openWarranty->description ? ' Catatan Garansi: "' . $openWarranty->description . '"' : '')
+                    : null,
                 'is_revising' => $isRevising,
                 'revision_title' => $isRevising ? 'Pengerjaan Ulang & Penyesuaian Kualitas (Revisi)' : null,
                 'revision_message' => $isRevising ? 'Sepatu Anda saat ini sedang dalam proses penyesuaian pengerjaan ulang oleh tim spesialis kami untuk memastikan hasil akhir memenuhi standar mutu terbaik.' : null,

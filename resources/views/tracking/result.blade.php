@@ -94,9 +94,25 @@
                                 <p class="text-sm text-gray-500 mb-4">{{ $order->shoe_color }}</p>
 
                                 <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
+                                    @php
+                                        $cardStatusVal = is_object($order->status) ? $order->status->value : $order->status;
+                                        $cardHasWarranty = $order->relationLoaded('warranties') && $order->warranties->where('status', 'OPEN')->isNotEmpty();
+                                        $cardHasOto = (bool)$order->has_active_oto || ($order->relationLoaded('otos') && $order->otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->isNotEmpty());
+                                        $cardHasRevisi = $cardStatusVal === 'REVISI' || (bool)$order->is_revising || ($order->relationLoaded('revisions') && $order->revisions->where('status', 'OPEN')->isNotEmpty());
+
+                                        if ($cardHasWarranty) {
+                                            $cardDisplayStatus = 'SERVICE (GARANSI)';
+                                        } elseif ($cardHasOto) {
+                                            $cardDisplayStatus = 'SERVICE (OTO)';
+                                        } elseif ($cardHasRevisi) {
+                                            $cardDisplayStatus = 'SERVICE (REVISI)';
+                                        } else {
+                                            $cardDisplayStatus = str_replace('_', ' ', $cardStatusVal);
+                                        }
+                                    @endphp
                                     <div class="flex flex-col">
                                         <span class="text-[10px] uppercase font-bold text-gray-400">Status</span>
-                                        <span class="text-sm font-bold text-teal-600">{{ str_replace('_', ' ', $order->status->value ?? $order->status) }}</span>
+                                        <span class="text-sm font-bold text-teal-600">{{ $cardDisplayStatus }}</span>
                                     </div>
                                     
                                     {{-- Recursive form to view detail (Using SPK Input to reuse logic or Link Mode) --}}
@@ -262,11 +278,37 @@
                             $statusKeys = array_keys($statuses);
                             $currentStatusVal = is_object($order->status) ? $order->status->value : $order->status;
                             $isHoldStatus = in_array($currentStatusVal, ['CX_FOLLOWUP', 'HOLD_FOR_CX']);
-                            $isRevisingStatus = ($currentStatusVal === 'REVISI' || (bool)$order->is_revising);
 
-                            if ($currentStatusVal === 'REVISI' || $isHoldStatus) {
+                            // Deteksi Garansi Aktif (OPEN)
+                            $openWarranty = $order->relationLoaded('warranties')
+                                ? $order->warranties->where('status', 'OPEN')->sortByDesc('id')->first()
+                                : null;
+                            $isWarrantyStatus = (bool)$openWarranty || ((bool)$order->is_warranty && !in_array($currentStatusVal, ['SELESAI', 'DIAMBIL', 'BATAL', 'CANCELLED']));
+
+                            // Deteksi OTO Aktif (ACCEPTED / IN_PROGRESS / has_active_oto) & Penawaran OTO (PENDING)
+                            $activeOto = $order->relationLoaded('otos')
+                                ? $order->otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->sortByDesc('id')->first()
+                                : null;
+                            $isOtoStatus = (bool)$order->has_active_oto || (bool)$activeOto;
+
+                            $pendingOto = (!$isOtoStatus && $order->relationLoaded('otos'))
+                                ? $order->otos->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])->sortByDesc('id')->first()
+                                : null;
+
+                            // Deteksi Revisi Aktif
+                            $openRevision = $order->relationLoaded('revisions')
+                                ? $order->revisions->where('status', 'OPEN')->sortByDesc('id')->first()
+                                : null;
+                            $isRevisingStatus = ($currentStatusVal === 'REVISI' || (bool)$order->is_revising || (bool)$openRevision);
+
+                            $isSpecialServiceActive = ($isWarrantyStatus || $isOtoStatus || $isRevisingStatus);
+
+                            if ($isHoldStatus) {
                                 $prevVal = $order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status;
                                 $timelineStatusVal = $prevVal ?: 'PRODUCTION';
+                            } elseif ($isSpecialServiceActive) {
+                                // Saat sedang OTO, Garansi, atau Revisi: tarik posisi ke Step 5: Service (PRODUCTION)
+                                $timelineStatusVal = 'PRODUCTION';
                             } else {
                                 $timelineStatusVal = $currentStatusVal;
                             }
@@ -280,15 +322,15 @@
                                 $currentIndex = array_search($order->status->name, $statusKeys);
                             }
 
-                            // ENHANCED LOGIC: If physically in QC (Production finished) OR in Revision, 
-                            // visually move the index to QC (index 5) for the customer if not specified.
-                            if ($timelineStatusVal === 'PRODUCTION' && ($order->is_production_finished || $order->is_revising)) {
+                            // ENHANCED LOGIC: If physically in Service / Special Service (OTO / Garansi / Revisi),
+                            // keep the visual indicator at PRODUCTION (index 4 / Step 5: Service).
+                            if ($isSpecialServiceActive || ($timelineStatusVal === 'PRODUCTION' && ($order->is_production_finished || $order->is_revising))) {
                                 $currentIndex = 4; // Index of PRODUCTION / Service
                             }
 
                             // ENHANCED LOGIC: If physically SELESAI (QC finished) but status still QC,
-                            // visually move the index to SELESAI (index 6) for the customer.
-                            if ($timelineStatusVal === 'QC' && $order->is_qc_finished) {
+                            // visually move the index to SELESAI (index 6) ONLY if not in OTO / Garansi / Revisi.
+                            if (!$isSpecialServiceActive && $timelineStatusVal === 'QC' && $order->is_qc_finished) {
                                 $currentIndex = 6; // Index of SELESAI
                             }
                         @endphp
@@ -311,6 +353,52 @@
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
                                 </a>
                             </div>
+                        @elseif($isWarrantyStatus)
+                            <div class="mb-8 p-6 bg-indigo-50 border border-indigo-200 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+                                <div class="flex items-start gap-4">
+                                    <div class="p-3 bg-indigo-100 text-indigo-600 rounded-full shrink-0">
+                                        <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h3 class="font-extrabold text-indigo-900 text-base">Pengerjaan Klaim Garansi</h3>
+                                            @if($openWarranty && $openWarranty->garansi_spk_number)
+                                                <span class="px-2.5 py-0.5 bg-indigo-600 text-white rounded-lg text-[10px] font-mono font-black tracking-wider">
+                                                    {{ $openWarranty->garansi_spk_number }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <p class="text-indigo-800/90 text-xs mt-1 font-semibold leading-relaxed">
+                                            Sepatu Anda saat ini sedang dalam proses penanganan klaim garansi oleh tim teknisi kami untuk memastikan hasil perbaikan kembali optimal.
+                                            @if($openWarranty && $openWarranty->description)
+                                                <span class="block mt-1 text-indigo-900 font-bold">Catatan Garansi: "{{ $openWarranty->description }}"</span>
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @elseif($isOtoStatus)
+                            <div class="mb-8 p-6 bg-orange-50 border border-orange-200 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+                                <div class="flex items-start gap-4">
+                                    <div class="p-3 bg-orange-100 text-orange-600 rounded-full shrink-0">
+                                        <svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h3 class="font-extrabold text-orange-900 text-base">Pengerjaan Layanan Tambahan (OTO)</h3>
+                                            <span class="px-2.5 py-0.5 bg-orange-500 text-white rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                                Fast Track OTO
+                                            </span>
+                                        </div>
+                                        <p class="text-orange-800/90 text-xs mt-1 font-semibold leading-relaxed">
+                                            Sepatu Anda saat ini sedang berada di Stasiun Khusus OTO untuk pengerjaan layanan tambahan (One Time Offer) yang telah Anda setujui.
+                                            @if($activeOto && $activeOto->proposed_services)
+                                                <span class="block mt-1 text-orange-900 font-bold">Layanan OTO: {{ $activeOto->proposed_services }}</span>
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         @elseif($isRevisingStatus)
                             <div class="mb-8 p-6 bg-amber-50 border border-amber-200 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
                                 <div class="flex items-start gap-4">
@@ -321,6 +409,20 @@
                                         <h3 class="font-extrabold text-amber-900 text-base">Pengerjaan Ulang & Penyesuaian Kualitas (Revisi)</h3>
                                         <p class="text-amber-800/90 text-xs mt-1 font-semibold leading-relaxed">
                                             Sepatu Anda saat ini sedang dalam proses penyesuaian pengerjaan ulang oleh tim spesialis kami untuk memastikan hasil akhir memenuhi standar mutu terbaik.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @elseif($pendingOto)
+                            <div class="mb-8 p-6 bg-teal-50 border border-teal-200 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+                                <div class="flex items-start gap-4">
+                                    <div class="p-3 bg-teal-100 text-teal-600 rounded-full shrink-0">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <h3 class="font-extrabold text-teal-900 text-base">Penawaran Layanan Tambahan (One Time Offer) Tersedia</h3>
+                                        <p class="text-teal-800/90 text-xs mt-1 font-semibold leading-relaxed">
+                                            Layanan utama sepatu Anda telah selesai. Tim kami merekomendasikan penawaran khusus layanan tambahan: <strong>{{ $pendingOto->proposed_services }}</strong>. Silakan hubungi admin CX kami untuk konfirmasi.
                                         </p>
                                     </div>
                                 </div>
@@ -355,6 +457,12 @@
                                             if ($isHoldStatus) {
                                                 $circleColorClass = 'bg-rose-500 text-white border-rose-600 shadow-lg scale-110 animate-pulse';
                                                 $iconColorClass = 'text-rose-600 drop-shadow-md';
+                                            } elseif ($isWarrantyStatus) {
+                                                $circleColorClass = 'bg-indigo-500 text-white border-indigo-600 shadow-lg scale-110 animate-pulse';
+                                                $iconColorClass = 'text-indigo-600 drop-shadow-md';
+                                            } elseif ($isOtoStatus) {
+                                                $circleColorClass = 'bg-orange-500 text-white border-orange-600 shadow-lg scale-110 animate-pulse';
+                                                $iconColorClass = 'text-orange-600 drop-shadow-md';
                                             } elseif ($isRevisingStatus) {
                                                 $circleColorClass = 'bg-amber-500 text-white border-amber-600 shadow-lg scale-110 animate-pulse';
                                                 $iconColorClass = 'text-amber-600 drop-shadow-md';
@@ -366,9 +474,14 @@
 
                                         // Get Timestamp
                                         $timestamp = null;
-                                        if ($key === 'DITERIMA') $timestamp = $order->created_at; 
-                                        elseif ($key === 'SELESAI' && $order->finished_date) $timestamp = $order->finished_date;
-                                        else {
+                                        if ($isSpecialServiceActive && $isCurrent) {
+                                            // Jangan tampilkan timestamp selesai lama pada step Service yang sedang aktif ulang (OTO/Garansi/Revisi)
+                                            $timestamp = null;
+                                        } elseif ($key === 'DITERIMA') {
+                                            $timestamp = $order->created_at;
+                                        } elseif ($key === 'SELESAI' && $order->finished_date && !$isSpecialServiceActive) {
+                                            $timestamp = $order->finished_date;
+                                        } else {
                                             $log = $order->logs->where('step', $key)->sortByDesc('created_at')->first();
                                             if ($log) $timestamp = $log->created_at;
                                         }
@@ -413,6 +526,18 @@
                                                         <p class="text-[9px] font-black text-rose-500 mt-1 md:mt-1.5 tracking-widest uppercase animate-pulse">
                                                             ⚠️ Tertunda (CX)
                                                         </p>
+                                                    @elseif($isWarrantyStatus)
+                                                        <p class="text-[9px] font-black text-indigo-600 mt-1 md:mt-1.5 tracking-widest uppercase animate-pulse">
+                                                            🛡️ Proses Garansi
+                                                        </p>
+                                                    @elseif($isOtoStatus)
+                                                        <p class="text-[9px] font-black text-orange-600 mt-1 md:mt-1.5 tracking-widest uppercase animate-pulse">
+                                                            ⚡ Proses OTO
+                                                        </p>
+                                                    @elseif($isRevisingStatus)
+                                                        <p class="text-[9px] font-black text-amber-600 mt-1 md:mt-1.5 tracking-widest uppercase animate-pulse">
+                                                            🔄 Proses Revisi
+                                                        </p>
                                                     @else
                                                         <p class="text-[9px] font-black text-[#FFC232] mt-1 md:mt-1.5 tracking-widest uppercase animate-pulse">
                                                             ⚡ Sedang Proses
@@ -450,15 +575,32 @@
                                         <svg class="w-6 h-6 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                      </div>
                                      <div>
-                                         <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: {{ $statuses[$statusKeys[$currentIndex]]['label'] }}</h3>
-                                         <p class="text-teal-700/80 text-sm mt-1">
-                                             Order Anda sedang dalam proses {{ strtolower($statuses[$statusKeys[$currentIndex]]['label']) }}. 
-                                             @if($currentIndex < count($statuses)-1)
-                                                 Langkah berikutnya: <strong>{{ $statuses[$statusKeys[$currentIndex+1]]['label'] }}</strong>.
-                                             @else
-                                                 Terima kasih telah mempercayakan sepatu Anda kepada kami!
-                                             @endif
-                                         </p>
+                                         @if($isWarrantyStatus)
+                                             <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: Service (Garansi)</h3>
+                                             <p class="text-teal-700/80 text-sm mt-1">
+                                                 Order Anda sedang dalam proses pengerjaan klaim garansi di workshop kami. Langkah berikutnya: <strong>{{ $statuses[$statusKeys[$currentIndex+1]]['label'] }}</strong>.
+                                             </p>
+                                         @elseif($isOtoStatus)
+                                             <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: Service (OTO)</h3>
+                                             <p class="text-teal-700/80 text-sm mt-1">
+                                                 Order Anda sedang dalam proses pengerjaan layanan tambahan One Time Offer (OTO). Langkah berikutnya: <strong>{{ $statuses[$statusKeys[$currentIndex+1]]['label'] }}</strong>.
+                                             </p>
+                                         @elseif($isRevisingStatus)
+                                             <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: Service (Revisi)</h3>
+                                             <p class="text-teal-700/80 text-sm mt-1">
+                                                 Order Anda sedang dalam penyesuaian pengerjaan ulang (revisi). Langkah berikutnya: <strong>{{ $statuses[$statusKeys[$currentIndex+1]]['label'] }}</strong>.
+                                             </p>
+                                         @else
+                                             <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: {{ $statuses[$statusKeys[$currentIndex]]['label'] }}</h3>
+                                             <p class="text-teal-700/80 text-sm mt-1">
+                                                 Order Anda sedang dalam proses {{ strtolower($statuses[$statusKeys[$currentIndex]]['label']) }}. 
+                                                 @if($currentIndex < count($statuses)-1)
+                                                     Langkah berikutnya: <strong>{{ $statuses[$statusKeys[$currentIndex+1]]['label'] }}</strong>.
+                                                 @else
+                                                     Terima kasih telah mempercayakan sepatu Anda kepada kami!
+                                                 @endif
+                                             </p>
+                                         @endif
                                      </div>
                                   </div>
                               @endif

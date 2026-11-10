@@ -157,6 +157,7 @@ class FinishController extends Controller
             'photos',
             'invoice',
             'latestOto',
+            'pendingOto',
             'revisions.creator',
             'revisions.resolver',
             'picSortirSol', 

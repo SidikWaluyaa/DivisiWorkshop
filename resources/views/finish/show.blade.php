@@ -516,7 +516,7 @@
                                 </span>
                             </div>
                             <div class="divide-y divide-gray-100 dark:divide-gray-700">
-                                @foreach($order->revisions()->orderBy('created_at', 'desc')->get() as $rev)
+                                @foreach($order->revisions->sortByDesc('created_at') as $rev)
                                     <div class="p-5 space-y-3">
                                         <div class="flex justify-between items-start">
                                             <div>
@@ -607,7 +607,7 @@
                         {{-- Real-time Audit Logs Feed Ordered from Oldest to Newest (SPK_PENDING / Dibuat ➔ Selesai) --}}
                         <div class="space-y-4 max-h-[600px] overflow-y-auto pr-1">
                             @php
-                                $orderedLogs = $order->logs()->with('user')->orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
+                                $orderedLogs = $order->logs->sortBy([['created_at', 'asc'], ['id', 'asc']]);
                             @endphp
                             @forelse($orderedLogs as $log)
                                 @php
