@@ -130,10 +130,18 @@ class OutboundReceiptIndex extends Component
 
         $manifests = $query->latest('dispatched_at')->paginate(10);
 
-        // Stats summary counts
-        $pendingCount = WorkshopManifest::where('manifest_number', 'like', 'MNF-OUT-%')->where('status', 'SENT')->count();
-        $receivedTodayCount = WorkshopManifest::where('manifest_number', 'like', 'MNF-OUT-%')->where('status', 'RECEIVED')->whereDate('received_at', now())->count();
-        $totalReceivedCount = WorkshopManifest::where('manifest_number', 'like', 'MNF-OUT-%')->where('status', 'RECEIVED')->count();
+        // Stats summary counts (Consolidated into 1 SQL query)
+        $statsRow = WorkshopManifest::where('manifest_number', 'like', 'MNF-OUT-%')
+            ->selectRaw("
+                SUM(CASE WHEN status = 'SENT' THEN 1 ELSE 0 END) as pending_count,
+                SUM(CASE WHEN status = 'RECEIVED' AND DATE(received_at) = ? THEN 1 ELSE 0 END) as received_today_count,
+                SUM(CASE WHEN status = 'RECEIVED' THEN 1 ELSE 0 END) as total_received_count
+            ", [now()->toDateString()])
+            ->first();
+
+        $pendingCount = (int) ($statsRow->pending_count ?? 0);
+        $receivedTodayCount = (int) ($statsRow->received_today_count ?? 0);
+        $totalReceivedCount = (int) ($statsRow->total_received_count ?? 0);
 
         return view('livewire.gudang.outbound-receipt-index', [
             'manifests'          => $manifests,

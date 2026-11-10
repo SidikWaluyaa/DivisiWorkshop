@@ -135,12 +135,15 @@ class KamusMetrikQuery
      */
     public static function intakeFisik(Carbon $start, Carbon $end): array
     {
-        $qcAwal = fn() => WorkOrder::whereNotNull('warehouse_qc_status')
-            ->whereBetween('warehouse_qc_at', [$start, $end]);
+        $rdSql = self::rdSql('work_orders');
+        $grSql = "(work_orders.spk_number LIKE '%-GR' OR work_orders.spk_number LIKE '%-GR-%')";
 
-        $berbayar = self::whereBerbayar($qcAwal())->count();
-
-        $rd = self::whereRd($qcAwal())->count();
+        $qcAgg = WorkOrder::whereNotNull('warehouse_qc_status')
+            ->whereBetween('warehouse_qc_at', [$start, $end])
+            ->selectRaw("
+                SUM(CASE WHEN NOT {$grSql} AND NOT ({$rdSql}) THEN 1 ELSE 0 END) as berbayar,
+                SUM(CASE WHEN ({$rdSql}) AND NOT {$grSql} THEN 1 ELSE 0 END) as rd
+            ")->first();
 
         $klaimGaransi = DB::table('work_order_warranties')
             ->whereBetween('created_at', [$start, $end])
@@ -156,9 +159,9 @@ class KamusMetrikQuery
             ->count();
 
         return [
-            'berbayar' => $berbayar,
+            'berbayar' => (int) ($qcAgg->berbayar ?? 0),
             'garansi' => $klaimGaransi + $garansiTanpaKlaim,
-            'rd' => $rd,
+            'rd' => (int) ($qcAgg->rd ?? 0),
         ];
     }
 

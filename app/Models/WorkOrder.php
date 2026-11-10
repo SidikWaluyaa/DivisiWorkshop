@@ -1413,23 +1413,38 @@ class WorkOrder extends Model
      */
     public function getSpkCoverPhotoAttribute()
     {
-        $photos = $this->relationLoaded('photos') ? $this->photos : $this->photos();
-
-        // 1. Manually selected cover
-        $cover = $photos->where('is_spk_cover', true)->first();
-        if ($cover) {
-            return $cover->file_path;
+        if ($this->relationLoaded('spkCoverPhoto') && $this->getRelation('spkCoverPhoto')) {
+            return $this->getRelation('spkCoverPhoto')->file_path;
         }
 
-        // 2. Fallback: Reception Photo (Foto Referensi) or Warehouse Before
-        $reception = $photos->whereIn('step', ['RECEPTION', 'WAREHOUSE_BEFORE'])->first();
-        if ($reception) {
-            return $reception->file_path;
+        if ($this->relationLoaded('photos')) {
+            $photos = $this->photos;
+
+            // 1. Manually selected cover
+            $cover = $photos->firstWhere('is_spk_cover', true);
+            if ($cover) {
+                return $cover->file_path;
+            }
+
+            // 2. Fallback: Reception Photo (Foto Referensi) or Warehouse Before
+            $reception = $photos->firstWhere('step', 'RECEPTION')
+                ?? $photos->firstWhere('step', 'WAREHOUSE_BEFORE');
+            if ($reception) {
+                return $reception->file_path;
+            }
+
+            // 3. Last Fallback: First available photo
+            $first = $photos->first();
+            return $first ? $first->file_path : null;
         }
 
-        // 3. Last Fallback: First available photo
-        $first = $photos->first();
-        return $first ? $first->file_path : null;
+        // Fallback single query if neither relation was eager loaded
+        $photo = $this->photos()
+            ->orderByRaw("CASE WHEN is_spk_cover = 1 THEN 0 WHEN step IN ('RECEPTION', 'WAREHOUSE_BEFORE') THEN 1 ELSE 2 END ASC")
+            ->orderBy('id', 'asc')
+            ->first();
+
+        return $photo ? $photo->file_path : null;
     }
 
     /**
@@ -1437,6 +1452,13 @@ class WorkOrder extends Model
      */
     public function getSpkCoverPhotoUrlAttribute()
     {
+        if ($this->relationLoaded('spkCoverPhoto') && $this->getRelation('spkCoverPhoto')) {
+            $cover = $this->getRelation('spkCoverPhoto');
+            if (method_exists($cover, 'getPhotoUrlAttribute')) {
+                return $cover->photo_url;
+            }
+        }
+
         if ($this->relationLoaded('photos') && $this->photos && $this->photos->isNotEmpty()) {
             $cover = $this->photos->firstWhere('is_spk_cover', true)
                 ?? $this->photos->firstWhere('step', 'RECEPTION')

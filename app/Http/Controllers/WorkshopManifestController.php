@@ -26,9 +26,15 @@ class WorkshopManifestController extends Controller
     {
         $baseQuery = WorkshopManifest::where('manifest_number', 'not like', 'MNF-OUT-%');
 
-        $countSent = (clone $baseQuery)->where('status', 'SENT')->count();
-        $countReceived = (clone $baseQuery)->where('status', 'RECEIVED')->count();
-        $countAll = (clone $baseQuery)->count();
+        $manifestCounts = (clone $baseQuery)->selectRaw("
+            COUNT(*) as count_all,
+            SUM(CASE WHEN status = 'SENT' THEN 1 ELSE 0 END) as count_sent,
+            SUM(CASE WHEN status = 'RECEIVED' THEN 1 ELSE 0 END) as count_received
+        ")->first();
+
+        $countSent = (int) ($manifestCounts->count_sent ?? 0);
+        $countReceived = (int) ($manifestCounts->count_received ?? 0);
+        $countAll = (int) ($manifestCounts->count_all ?? 0);
 
         $query = (clone $baseQuery)->with(['dispatcher', 'receiver'])
             ->withCount('workOrders');

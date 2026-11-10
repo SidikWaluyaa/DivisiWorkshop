@@ -532,7 +532,7 @@ class StationIndex extends Component
 
         $query = WorkOrder::query()
             ->withoutRnd()
-            ->with(['customer', 'workOrderServices', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'cxIssues', 'photos', 'invoice', 'logs', 'revisions', 'suratJalanItems.suratJalan']);
+            ->with(['customer', 'workOrderServices.service', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'cxIssues.resolver', 'photos', 'invoice', 'logs', 'revisions', 'suratJalanItems.suratJalan']);
 
         // Base Filter: Only show items in PRODUCTION status (excluding active OTOs which are handled in Stasiun OTO)
         $query->where('status', WorkOrderStatus::PRODUCTION->value)

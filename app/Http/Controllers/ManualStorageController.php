@@ -40,10 +40,16 @@ class ManualStorageController extends Controller
         // Racks for filter
         $racks = StorageRack::where('status', \App\Enums\RackStatus::ACTIVE)->orderBy('rack_code')->get();
 
-        // Calculate Summary stats for Dashboard Header
-        $totalItems = ManualStorageItem::where('status', 'stored')->sum('quantity');
-        $todayIn = ManualStorageItem::whereDate('in_date', now())->count();
-        $todayOut = ManualStorageItem::whereDate('out_date', now())->count();
+        // Calculate Summary stats for Dashboard Header in 1 query
+        $statsRow = ManualStorageItem::selectRaw("
+            COALESCE(SUM(CASE WHEN status = 'stored' THEN quantity ELSE 0 END), 0) as total_items,
+            SUM(CASE WHEN DATE(in_date) = ? THEN 1 ELSE 0 END) as today_in,
+            SUM(CASE WHEN DATE(out_date) = ? THEN 1 ELSE 0 END) as today_out
+        ", [now()->toDateString(), now()->toDateString()])->first();
+
+        $totalItems = (int) ($statsRow->total_items ?? 0);
+        $todayIn = (int) ($statsRow->today_in ?? 0);
+        $todayOut = (int) ($statsRow->today_out ?? 0);
 
         return view('manual-storage.index', compact('items', 'racks', 'totalItems', 'todayIn', 'todayOut'));
     }

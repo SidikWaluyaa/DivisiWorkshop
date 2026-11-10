@@ -123,9 +123,7 @@ class QCController extends Controller
              }
         }
 
-        $orders = $ordersQuery->with(['customer', 'services', 'workOrderServices', 'materials', 'cxIssues', 'qcJahitBy', 'qcCleanupBy', 'qcFinalBy', 'logs' => function($query) {
-                $query->latest()->limit(10); // Only load last 10 logs
-            }])
+        $orders = $ordersQuery->with(['customer', 'services', 'workOrderServices.service', 'materials', 'cxIssues.resolver', 'prodCleaningBy', 'qcJahitBy', 'qcCleanupBy', 'qcFinalBy', 'photos', 'invoice', 'revisions', 'logs'])
             ->orderByRaw("CASE 
                 WHEN EXISTS (SELECT 1 FROM cx_issues WHERE cx_issues.work_order_id = work_orders.id AND cx_issues.status = 'RESOLVED') THEN 0 
                 WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 1 

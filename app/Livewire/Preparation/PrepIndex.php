@@ -835,7 +835,7 @@ class PrepIndex extends Component
 
         // Fetch SPK orders matching page slice
         $pageOrders = (clone $woQuery)
-            ->with(['customer', 'workOrderServices', 'prepWashingBy', 'prepSolBy', 'prepUpperBy', 'cxIssues', 'photos', 'invoice'])
+            ->with(['customer', 'workOrderServices.service', 'prepWashingBy', 'prepSolBy', 'prepUpperBy', 'cxIssues.resolver', 'photos', 'invoice', 'logs', 'revisions'])
             ->where(function($q) use ($pageManifestIds, $includeOrphan) {
                 if (!empty($pageManifestIds)) {
                     $q->whereIn('workshop_manifest_id', $pageManifestIds);

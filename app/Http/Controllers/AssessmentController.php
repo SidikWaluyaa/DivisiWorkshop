@@ -30,15 +30,24 @@ class AssessmentController extends Controller
 
     public function index(Request $request)
     {
-        $baseQuery = WorkOrder::where('status', WorkOrderStatus::ASSESSMENT->value);
+        // 1. Hitung agregat antrean secara real-time dalam 1 kueri terpadu
+        $agg = WorkOrder::where('work_orders.status', WorkOrderStatus::ASSESSMENT->value)
+            ->leftJoin('invoices', 'work_orders.invoice_id', '=', 'invoices.id')
+            ->selectRaw("
+                COUNT(work_orders.id) as all_count,
+                SUM(CASE WHEN invoices.status = 'Lunas' THEN 1 ELSE 0 END) as lunas_count,
+                SUM(CASE WHEN invoices.status = 'DP/Cicil' THEN 1 ELSE 0 END) as dp_count,
+                SUM(CASE WHEN invoices.status = 'Belum Bayar' THEN 1 ELSE 0 END) as belum_bayar_count,
+                SUM(CASE WHEN work_orders.invoice_id IS NULL THEN 1 ELSE 0 END) as none_count
+            ")
+            ->first();
 
-        // 1. Hitung agregat antrean secara real-time untuk ditampilkan di tab filter
         $counts = [
-            'all' => (clone $baseQuery)->count(),
-            'lunas' => (clone $baseQuery)->whereHas('invoice', function($q) { $q->where('status', 'Lunas'); })->count(),
-            'dp' => (clone $baseQuery)->whereHas('invoice', function($q) { $q->where('status', 'DP/Cicil'); })->count(),
-            'belum_bayar' => (clone $baseQuery)->whereHas('invoice', function($q) { $q->where('status', 'Belum Bayar'); })->count(),
-            'none' => (clone $baseQuery)->whereNull('invoice_id')->count(),
+            'all' => (int) ($agg->all_count ?? 0),
+            'lunas' => (int) ($agg->lunas_count ?? 0),
+            'dp' => (int) ($agg->dp_count ?? 0),
+            'belum_bayar' => (int) ($agg->belum_bayar_count ?? 0),
+            'none' => (int) ($agg->none_count ?? 0),
         ];
 
         // 2. Terapkan query filter

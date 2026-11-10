@@ -487,15 +487,22 @@ class StorageService
     /**
      * Get rack utilization statistics
      */
-    public function getRackUtilization(?string $category = null): array
+    public function getRackUtilization(?string $category = null, ?\Illuminate\Support\Collection $preloadedRacks = null): array
     {
-        $query = StorageRack::active();
-        
-        if ($category && in_array($category, ['shoes', 'accessories', 'before'])) {
-            $query->where('category', $category);
-        }
+        if ($preloadedRacks !== null) {
+            $racks = $preloadedRacks;
+            if ($category && in_array($category, ['shoes', 'accessories', 'before'])) {
+                $racks = $racks->filter(fn($r) => ($r->category instanceof \BackedEnum ? $r->category->value : $r->category) === $category)->values();
+            }
+        } else {
+            $query = StorageRack::active();
+            
+            if ($category && in_array($category, ['shoes', 'accessories', 'before'])) {
+                $query->where('category', $category);
+            }
 
-        $racks = $query->get();
+            $racks = $query->get();
+        }
 
         $totalCapacity = $racks->sum('capacity');
         $totalUsed = $racks->sum('current_count');
@@ -567,20 +574,20 @@ class StorageService
              });
          }
  
-         $totalStored = (clone $baseQuery)->stored()->count();
-         $totalRetrieved = (clone $baseQuery)->isRetrieved()->count();
-         $overdueCount = (clone $baseQuery)->overdue(7)->count();
- 
-         // Average storage duration for retrieved items
-         $avgDuration = (clone $baseQuery)->isRetrieved()
-             ->selectRaw('AVG(TIMESTAMPDIFF(DAY, stored_at, retrieved_at)) as avg_days')
-             ->value('avg_days');
- 
+         $overdueThreshold = now()->subDays(7)->toDateTimeString();
+
+         $agg = (clone $baseQuery)->selectRaw("
+             SUM(CASE WHEN status = 'stored' AND retrieved_at IS NULL THEN 1 ELSE 0 END) as total_stored,
+             SUM(CASE WHEN status = 'retrieved' AND retrieved_at IS NOT NULL THEN 1 ELSE 0 END) as total_retrieved,
+             SUM(CASE WHEN status = 'stored' AND retrieved_at IS NULL AND stored_at <= ? THEN 1 ELSE 0 END) as overdue_count,
+             AVG(CASE WHEN status = 'retrieved' AND retrieved_at IS NOT NULL THEN TIMESTAMPDIFF(DAY, stored_at, retrieved_at) ELSE NULL END) as avg_days
+         ", [$overdueThreshold])->first();
+
          return [
-             'total_stored' => $totalStored,
-             'total_retrieved' => $totalRetrieved,
-             'overdue_count' => $overdueCount,
-             'avg_storage_days' => round($avgDuration ?? 0, 1),
+             'total_stored' => (int) ($agg->total_stored ?? 0),
+             'total_retrieved' => (int) ($agg->total_retrieved ?? 0),
+             'overdue_count' => (int) ($agg->overdue_count ?? 0),
+             'avg_storage_days' => round($agg->avg_days ?? 0, 1),
          ];
      }
  

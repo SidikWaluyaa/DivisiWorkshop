@@ -49,13 +49,26 @@ class PickupHistory extends Component
 
     public function getStatsProperty()
     {
+        $today = Carbon::today()->toDateString();
+        $weekStart = Carbon::now()->startOfWeek()->toDateTimeString();
+        $weekEnd = Carbon::now()->endOfWeek()->toDateTimeString();
+        $month = Carbon::now()->month;
+        $year = Carbon::now()->year;
+
+        $row = WorkOrder::whereNotNull('taken_date')
+            ->selectRaw('
+                COUNT(*) as total_count,
+                SUM(CASE WHEN DATE(taken_date) = ? THEN 1 ELSE 0 END) as today_count,
+                SUM(CASE WHEN taken_date BETWEEN ? AND ? THEN 1 ELSE 0 END) as week_count,
+                SUM(CASE WHEN MONTH(taken_date) = ? AND YEAR(taken_date) = ? THEN 1 ELSE 0 END) as month_count
+            ', [$today, $weekStart, $weekEnd, $month, $year])
+            ->first();
+
         return [
-            'today' => WorkOrder::whereDate('taken_date', Carbon::today())->count(),
-            'week' => WorkOrder::whereBetween('taken_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->count(),
-            'month' => WorkOrder::whereMonth('taken_date', Carbon::now()->month)
-                                ->whereYear('taken_date', Carbon::now()->year)
-                                ->count(),
-            'total' => WorkOrder::whereNotNull('taken_date')->count(),
+            'today' => (int) ($row->today_count ?? 0),
+            'week' => (int) ($row->week_count ?? 0),
+            'month' => (int) ($row->month_count ?? 0),
+            'total' => (int) ($row->total_count ?? 0),
         ];
     }
 
@@ -108,7 +121,7 @@ class PickupHistory extends Component
     public function render()
     {
         $query = WorkOrder::whereNotNull('taken_date')
-            ->with(['spkCoverPhoto', 'workOrderServices.service']);
+            ->with(['spkCoverPhoto', 'photos', 'invoice', 'workOrderServices.service']);
 
         if ($this->search) {
             $query->where(function($q) {

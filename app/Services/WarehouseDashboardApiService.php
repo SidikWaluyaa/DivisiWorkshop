@@ -122,13 +122,22 @@ class WarehouseDashboardApiService
             });
         }
 
-        $recentManifests = $recentManifestsQuery->orderBy('dispatched_at', 'desc')->get()->map(function($m) {
-            // Calculate total services count for this manifest
-            $servicesCount = DB::table('work_orders')
+        $recentManifestsRaw = $recentManifestsQuery->orderBy('dispatched_at', 'desc')->get();
+
+        // Batch pre-fetch services count per manifest in 1 query (eliminates N+1 inside map)
+        $manifestIds = $recentManifestsRaw->pluck('id')->all();
+        $servicesByManifest = !empty($manifestIds)
+            ? DB::table('work_orders')
                 ->join('work_order_services', 'work_orders.id', '=', 'work_order_services.work_order_id')
-                ->where('work_orders.workshop_manifest_id', $m->id)
+                ->whereIn('work_orders.workshop_manifest_id', $manifestIds)
                 ->whereNull('work_orders.deleted_at')
-                ->count();
+                ->selectRaw('work_orders.workshop_manifest_id, COUNT(work_order_services.id) as services_count')
+                ->groupBy('work_orders.workshop_manifest_id')
+                ->pluck('services_count', 'workshop_manifest_id')
+            : collect();
+
+        $recentManifests = $recentManifestsRaw->map(function($m) use ($servicesByManifest) {
+            $servicesCount = $servicesByManifest[$m->id] ?? 0;
 
             return [
                 'id' => $m->id,
@@ -218,18 +227,25 @@ class WarehouseDashboardApiService
 
         $workOrders = $query->orderBy('updated_at', 'asc')->get();
 
+        // Batch pre-fetch latest SORTIR entry logs in 1 query (eliminates N+1 inside foreach)
+        $woIds = $workOrders->pluck('id')->all();
+        $enteredLogs = !empty($woIds)
+            ? DB::table('work_order_logs')
+                ->whereIn('work_order_id', $woIds)
+                ->where('step', 'SORTIR')
+                ->where('action', 'STATUS_CHANGE')
+                ->selectRaw('work_order_id, MAX(created_at) as latest_entered_at')
+                ->groupBy('work_order_id')
+                ->pluck('latest_entered_at', 'work_order_id')
+            : collect();
+
         $items = [];
         $overdueCount = 0;
         $totalDays = 0;
 
         foreach ($workOrders as $wo) {
-            // Find the date it entered the SORTIR stage
-            $enteredAtRaw = DB::table('work_order_logs')
-                ->where('work_order_id', $wo->id)
-                ->where('step', 'SORTIR')
-                ->where('action', 'STATUS_CHANGE')
-                ->orderBy('created_at', 'desc')
-                ->value('created_at');
+            // Find the date it entered the SORTIR stage from pre-fetched map
+            $enteredAtRaw = $enteredLogs[$wo->id] ?? null;
 
             // Fallback if log doesn't exist
             $enteredAt = $enteredAtRaw ? Carbon::parse($enteredAtRaw) : ($wo->waktu ?? $wo->updated_at);
@@ -331,6 +347,18 @@ class WarehouseDashboardApiService
 
         $workOrders = $query->orderBy('updated_at', 'asc')->get();
 
+        // Batch pre-fetch latest PRODUCTION entry logs in 1 query (eliminates N+1 inside foreach)
+        $woIds = $workOrders->pluck('id')->all();
+        $enteredLogs = !empty($woIds)
+            ? DB::table('work_order_logs')
+                ->whereIn('work_order_id', $woIds)
+                ->where('step', 'PRODUCTION')
+                ->where('action', 'STATUS_CHANGE')
+                ->selectRaw('work_order_id, MAX(created_at) as latest_entered_at')
+                ->groupBy('work_order_id')
+                ->pluck('latest_entered_at', 'work_order_id')
+            : collect();
+
         $items = [];
         $overdueCount = 0;
         $upcomingCount = 0;
@@ -339,13 +367,8 @@ class WarehouseDashboardApiService
         $today = now()->startOfDay();
 
         foreach ($workOrders as $wo) {
-            // Find the date it entered the PRODUCTION stage
-            $enteredAtRaw = DB::table('work_order_logs')
-                ->where('work_order_id', $wo->id)
-                ->where('step', 'PRODUCTION')
-                ->where('action', 'STATUS_CHANGE')
-                ->orderBy('created_at', 'desc')
-                ->value('created_at');
+            // Find the date it entered the PRODUCTION stage from pre-fetched map
+            $enteredAtRaw = $enteredLogs[$wo->id] ?? null;
 
             $enteredAt = $enteredAtRaw ? Carbon::parse($enteredAtRaw) : ($wo->waktu ?? $wo->updated_at);
             $daysInProduction = (int) abs(round(now()->diffInDays($enteredAt)));
@@ -475,6 +498,18 @@ class WarehouseDashboardApiService
 
         $workOrders = $query->orderBy('updated_at', 'asc')->get();
 
+        // Batch pre-fetch latest QC entry logs in 1 query (eliminates N+1 inside foreach)
+        $woIds = $workOrders->pluck('id')->all();
+        $enteredLogs = !empty($woIds)
+            ? DB::table('work_order_logs')
+                ->whereIn('work_order_id', $woIds)
+                ->where('step', 'QC')
+                ->where('action', 'STATUS_CHANGE')
+                ->selectRaw('work_order_id, MAX(created_at) as latest_entered_at')
+                ->groupBy('work_order_id')
+                ->pluck('latest_entered_at', 'work_order_id')
+            : collect();
+
         $items = [];
         $overdueCount = 0;
         $upcomingCount = 0;
@@ -483,13 +518,8 @@ class WarehouseDashboardApiService
         $today = now()->startOfDay();
 
         foreach ($workOrders as $wo) {
-            // Find the date it entered the QC stage
-            $enteredAtRaw = DB::table('work_order_logs')
-                ->where('work_order_id', $wo->id)
-                ->where('step', 'QC')
-                ->where('action', 'STATUS_CHANGE')
-                ->orderBy('created_at', 'desc')
-                ->value('created_at');
+            // Find the date it entered the QC stage from pre-fetched map
+            $enteredAtRaw = $enteredLogs[$wo->id] ?? null;
 
             $enteredAt = $enteredAtRaw ? Carbon::parse($enteredAtRaw) : ($wo->waktu ?? $wo->updated_at);
 
@@ -605,123 +635,127 @@ class WarehouseDashboardApiService
 
     public function getHeroMetrics(Carbon $start, Carbon $end)
     {
-        // 1. Sepatu Masuk (Status DITERIMA ke atas - entry_date)
-        // Exclude SPK_PENDING: entry_date diisi saat WO dibuat dari CS handover,
-        // tapi baru dihitung "masuk" ketika gudang konfirmasi fisik (status != SPK_PENDING)
-        $sepatuMasuk = WorkOrder::whereNotNull('entry_date')
-            ->whereBetween('entry_date', [$start, $end])
-            ->where('status', '!=', WorkOrderStatus::SPK_PENDING)
-            ->count();
+        $startStr = $start->toDateTimeString();
+        $endStr = $end->toDateTimeString();
+        $thirtyDaysAgoStr = now()->subDays(30)->toDateTimeString();
+        $threeMonthsAgoStr = now()->subMonths(3)->toDateTimeString();
+        $rdSql = KamusMetrikQuery::rdSql('work_orders');
+        $grSql = "(work_orders.spk_number LIKE '%-GR' OR work_orders.spk_number LIKE '%-GR-%')";
 
-        // 2. SPK Print / Otw Ws (Historically captured via logs)
-        $spkOtw = WorkOrderLog::where('step', 'OTW_WORKSHOP')
-            ->where('action', 'STATUS_CHANGE')
-            ->whereBetween('created_at', [$start, $end])
-            ->distinct('work_order_id')
-            ->count('work_order_id');
+        // 1. Consolidated WorkOrder counts in 1 query
+        $woAgg = WorkOrder::selectRaw("
+            SUM(CASE WHEN entry_date IS NOT NULL AND entry_date BETWEEN ? AND ? AND status != ? THEN 1 ELSE 0 END) as sepatu_masuk,
+            SUM(CASE WHEN finished_date IS NOT NULL AND finished_date BETWEEN ? AND ? THEN 1 ELSE 0 END) as after_masuk,
+            SUM(CASE WHEN taken_date IS NOT NULL AND taken_date BETWEEN ? AND ? THEN 1 ELSE 0 END) as sepatu_keluar,
+            SUM(CASE WHEN created_at BETWEEN ? AND ? AND {$grSql} THEN 1 ELSE 0 END) as spk_gr_periode,
+            SUM(CASE WHEN created_at BETWEEN ? AND ? AND NOT {$grSql} THEN 1 ELSE 0 END) as spk_periode_non_gr,
+            SUM(CASE WHEN created_at BETWEEN ? AND ? AND NOT {$grSql} AND warehouse_qc_at IS NOT NULL THEN 1 ELSE 0 END) as spk_tiba_periode,
+            SUM(CASE WHEN created_at BETWEEN ? AND ? AND ({$rdSql}) AND NOT {$grSql} THEN 1 ELSE 0 END) as spk_rd_periode,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending_reception,
+            SUM(CASE WHEN status = ? AND created_at BETWEEN ? AND ? THEN 1 ELSE 0 END) as pending_reception_period,
+            SUM(CASE WHEN status = ? AND taken_date IS NULL AND finished_date >= ? THEN 1 ELSE 0 END) as siap_kirim_aktif,
+            SUM(CASE WHEN status = ? AND taken_date IS NULL AND NOT EXISTS (
+                SELECT 1 FROM storage_assignments sa WHERE sa.work_order_id = work_orders.id AND sa.status = 'stored' AND sa.retrieved_at IS NULL
+            ) THEN 1 ELSE 0 END) as finished_not_stored,
+            SUM(CASE WHEN status = ? AND taken_date IS NULL AND EXISTS (
+                SELECT 1 FROM storage_assignments sa WHERE sa.work_order_id = work_orders.id AND sa.status = 'stored' AND sa.retrieved_at IS NULL
+            ) THEN 1 ELSE 0 END) as ready_for_pickup,
+            SUM(CASE WHEN status = ? AND updated_at BETWEEN ? AND ? THEN 1 ELSE 0 END) as finished_day,
+            SUM(CASE WHEN created_at BETWEEN ? AND ? THEN 1 ELSE 0 END) as total_incoming,
+            SUM(CASE WHEN warehouse_qc_status IS NOT NULL AND warehouse_qc_at BETWEEN ? AND ? THEN 1 ELSE 0 END) as total_qc_processed
+        ", [
+            $startStr, $endStr, WorkOrderStatus::SPK_PENDING->value,
+            $startStr, $endStr,
+            $startStr, $endStr,
+            $startStr, $endStr,
+            $startStr, $endStr,
+            $startStr, $endStr,
+            $startStr, $endStr,
+            WorkOrderStatus::SPK_PENDING->value,
+            WorkOrderStatus::SPK_PENDING->value, $startStr, $endStr,
+            WorkOrderStatus::SELESAI->value, $thirtyDaysAgoStr,
+            WorkOrderStatus::SELESAI->value,
+            WorkOrderStatus::SELESAI->value,
+            WorkOrderStatus::SELESAI->value, $startStr, $endStr,
+            $startStr, $endStr,
+            $startStr, $endStr,
+        ])->first();
 
-        // 3. SPK Tertahan / QC Reject (Historical Rejections in this Period)
-        $qcReject = WorkOrderLog::where('action', 'QC_REJECTED')
-            ->whereBetween('created_at', [$start, $end])
-            ->count();
+        $sepatuMasuk = (int) ($woAgg->sepatu_masuk ?? 0);
+        $afterMasuk = (int) ($woAgg->after_masuk ?? 0);
+        $sepatuKeluar = (int) ($woAgg->sepatu_keluar ?? 0);
+        $spkGrPeriode = (int) ($woAgg->spk_gr_periode ?? 0);
+        $spkPeriodeNonGr = (int) ($woAgg->spk_periode_non_gr ?? 0);
+        $spkTibaPeriode = (int) ($woAgg->spk_tiba_periode ?? 0);
+        $spkRdPeriode = (int) ($woAgg->spk_rd_periode ?? 0);
 
-        // 4. After Masuk (Status SELESAI - finished_date)
-        $afterMasuk = WorkOrder::whereNotNull('finished_date')
-            ->whereBetween('finished_date', [$start, $end])
-            ->count();
+        // 2. Consolidated WorkOrderLog counts in 1 query
+        $logAgg = WorkOrderLog::whereBetween('created_at', [$start, $end])
+            ->selectRaw("
+                COUNT(DISTINCT CASE WHEN step = 'OTW_WORKSHOP' AND action = 'STATUS_CHANGE' THEN work_order_id END) as spk_otw,
+                SUM(CASE WHEN action = 'QC_REJECTED' THEN 1 ELSE 0 END) as qc_reject
+            ")->first();
 
-        // 5. Sepatu Keluar (taken_date filled)
-        $sepatuKeluar = WorkOrder::whereNotNull('taken_date')
-            ->whereBetween('taken_date', [$start, $end])
-            ->count();
+        $spkOtw = (int) ($logAgg->spk_otw ?? 0);
+        $qcReject = (int) ($logAgg->qc_reject ?? 0);
 
-        // 6. Total Sepatu di Gudang (Split into Inbound and Finish)
-        $inboundInventory = StorageRack::active()
-            ->where('category', \App\Enums\StorageCategory::BEFORE)
-            ->sum('current_count');
+        // 3. Consolidated StorageRack sums in 1 query
+        $rackAgg = StorageRack::active()
+            ->selectRaw("
+                COALESCE(SUM(CASE WHEN category = ? THEN current_count ELSE 0 END), 0) as inbound_inventory,
+                COALESCE(SUM(CASE WHEN category NOT IN (?, ?) THEN current_count ELSE 0 END), 0) as finish_inventory,
+                COALESCE(SUM(CASE WHEN category != ? THEN current_count ELSE 0 END), 0) as stored_items
+            ", [
+                \App\Enums\StorageCategory::BEFORE->value,
+                \App\Enums\StorageCategory::BEFORE->value,
+                \App\Enums\StorageCategory::ACCESSORIES->value,
+                \App\Enums\StorageCategory::ACCESSORIES->value,
+            ])->first();
 
-        $finishInventory = StorageRack::active()
-            ->whereNotIn('category', [
-                \App\Enums\StorageCategory::BEFORE,
-                \App\Enums\StorageCategory::ACCESSORIES
-            ])
-            ->sum('current_count');
+        $inboundInventory = (int) ($rackAgg->inbound_inventory ?? 0);
+        $finishInventory = (int) ($rackAgg->finish_inventory ?? 0);
 
-        // 7. Clearance Rate Before (Inbound flow balance)
+        // 4. Consolidated StorageAssignment counts in 1 query
+        $saAgg = \App\Models\StorageAssignment::where('category', \App\Enums\StorageCategory::SHOES->value)
+            ->stored()
+            ->selectRaw("
+                COUNT(*) as shoes_in_rack_count,
+                SUM(CASE WHEN stored_at <= ? THEN 1 ELSE 0 END) as donation_candidates_count
+            ", [$threeMonthsAgoStr])->first();
+
+        // 5. Clearance Rate Before & After
         $clearanceRateBefore = $sepatuMasuk > 0 
             ? (($spkOtw - $sepatuMasuk) / $sepatuMasuk) * 100 
             : ($spkOtw > 0 ? 100.0 : 0.0);
 
-        // SPK periode (Kamus Metrik v2.0). SPK garansi bernomor "...-GR" atau "...-GR-n" (lihat Warranty\Index)
-        $isGr = fn($q) => KamusMetrikQuery::whereGaransi($q);
-
-        $spkGrPeriode = WorkOrder::whereBetween('created_at', [$start, $end])
-            ->where($isGr)
-            ->count();
-
-        $spkPeriodeNonGr = WorkOrder::whereBetween('created_at', [$start, $end])
-            ->whereNot($isGr)
-            ->count();
-
-        $spkTibaPeriode = WorkOrder::whereBetween('created_at', [$start, $end])
-            ->whereNot($isGr)
-            ->whereNotNull('warehouse_qc_at')
-            ->count();
-
-        $intakeFisik = KamusMetrikQuery::intakeFisik($start, $end);
-        $wip = KamusMetrikQuery::wipSnapshot();
-
-        // 8. Clearance Rate After (Outbound flow balance)
         $clearanceRateAfter = $afterMasuk > 0 
             ? (($sepatuKeluar - $afterMasuk) / $afterMasuk) * 100 
             : ($sepatuKeluar > 0 ? 100.0 : 0.0);
 
+        $intakeFisik = KamusMetrikQuery::intakeFisik($start, $end);
+        $wip = KamusMetrikQuery::wipSnapshot();
+
         return [
             // Status Saat Ini (Snapshot)
-            'pending_reception' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)->count(),
-            // SPK dibuat di periode yang sampai sekarang masih SPK_PENDING (belum diterima gudang)
-            'pending_reception_period' => WorkOrder::where('status', WorkOrderStatus::SPK_PENDING)
-                ->whereBetween('created_at', [$start, $end])
-                ->count(),
-            // Kamus Metrik v2.0: SPK terbit di periode (created_at), dipisah non-garansi vs garansi (-GR)
+            'pending_reception' => (int) ($woAgg->pending_reception ?? 0),
+            'pending_reception_period' => (int) ($woAgg->pending_reception_period ?? 0),
             'spk_periode_non_gr' => $spkPeriodeNonGr,
             'spk_gr_periode' => $spkGrPeriode,
             'spk_tiba_periode' => $spkTibaPeriode,
-            // SPK terbit − sepatu tiba (SPK yang BATAL sebelum tiba tetap dihitung belum tiba)
             'spk_belum_tiba_periode' => $spkPeriodeNonGr - $spkTibaPeriode,
-            // SPK R&D: nomor "RD-" atau priority 'R&D', bukan garansi (lihat KamusMetrikQuery::whereRd)
-            'spk_rd_periode' => KamusMetrikQuery::whereRd(WorkOrder::whereBetween('created_at', [$start, $end]))
-                ->count(),
-            // Kamus No. 32 Intake Fisik (menurut tanggal tiba) dan snapshot WIP per tahap
+            'spk_rd_periode' => $spkRdPeriode,
             'intake_fisik_berbayar' => $intakeFisik['berbayar'],
             'intake_fisik_garansi' => $intakeFisik['garansi'],
             'intake_fisik_rd' => $intakeFisik['rd'],
             'wip_tahap' => $wip['tahap'],
             'wip_per_status' => $wip['per_status'],
-            // Bagian siap_kirim yang selesai dalam 30 hari terakhir (tanpa backlog lama)
-            'siap_kirim_aktif' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
-                ->whereNull('taken_date')
-                ->where('finished_date', '>=', now()->subDays(30))
-                ->count(),
-            'finished_not_stored' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
-                ->whereNull('taken_date')
-                ->whereDoesntHave('storageAssignments', fn($q) => $q->stored())
-                ->count(),
-            'stored_items' => StorageRack::active()
-                ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
-                ->sum('current_count'), 
+            'siap_kirim_aktif' => (int) ($woAgg->siap_kirim_aktif ?? 0),
+            'finished_not_stored' => (int) ($woAgg->finished_not_stored ?? 0),
+            'stored_items' => (int) ($rackAgg->stored_items ?? 0),
             'shipping_pending' => Shipping::where('is_verified', false)->count(),
-            'ready_for_pickup' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
-                ->whereNull('taken_date')
-                ->whereHas('storageAssignments', fn($q) => $q->stored())
-                ->count(),
-            'shoes_in_rack_count' => \App\Models\StorageAssignment::where('category', \App\Enums\StorageCategory::SHOES->value)
-                ->stored()
-                ->count(),
-            'donation_candidates_count' => \App\Models\StorageAssignment::where('category', \App\Enums\StorageCategory::SHOES->value)
-                ->stored()
-                ->where('stored_at', '<=', now()->subMonths(3))
-                ->count(),
+            'ready_for_pickup' => (int) ($woAgg->ready_for_pickup ?? 0),
+            'shoes_in_rack_count' => (int) ($saAgg->shoes_in_rack_count ?? 0),
+            'donation_candidates_count' => (int) ($saAgg->donation_candidates_count ?? 0),
             
             // Performa Periode & Scoreboard Baru (M1 - M9)
             'incoming_day' => $sepatuMasuk, 
@@ -736,12 +770,10 @@ class WarehouseDashboardApiService
             'clearance_rate_after' => round($clearanceRateAfter, 1),
             
             // Tambahan Analytics (Bypass / Compatibility)
-            'finished_day' => WorkOrder::where('status', WorkOrderStatus::SELESAI)
-                ->whereBetween('updated_at', [$start, $end])
-                ->count(),
-            'total_incoming' => WorkOrder::whereBetween('created_at', [$start, $end])->count(),
-            'total_finished' => WorkOrder::where('status', WorkOrderStatus::SELESAI)->whereBetween('updated_at', [$start, $end])->count(),
-            'total_qc_processed' => WorkOrder::whereNotNull('warehouse_qc_status')->whereBetween('warehouse_qc_at', [$start, $end])->count(),
+            'finished_day' => (int) ($woAgg->finished_day ?? 0),
+            'total_incoming' => (int) ($woAgg->total_incoming ?? 0),
+            'total_finished' => (int) ($woAgg->finished_day ?? 0),
+            'total_qc_processed' => (int) ($woAgg->total_qc_processed ?? 0),
         ];
     }
 
@@ -757,20 +789,21 @@ class WarehouseDashboardApiService
             ->groupBy('date')
             ->get();
 
-        // Audit daily OTW_WORKSHOP historically
-        $otw = WorkOrderLog::where('step', 'OTW_WORKSHOP')
-            ->where('action', 'STATUS_CHANGE')
-            ->whereBetween('created_at', [$start, $end])
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(DISTINCT work_order_id) as count'))
+        // Audit daily OTW_WORKSHOP & QC_REJECTED in 1 query
+        $logsDaily = WorkOrderLog::whereBetween('created_at', [$start, $end])
+            ->where(function ($q) {
+                $q->where(function ($sq) {
+                    $sq->where('step', 'OTW_WORKSHOP')->where('action', 'STATUS_CHANGE');
+                })->orWhere('action', 'QC_REJECTED');
+            })
+            ->selectRaw("
+                DATE(created_at) as date,
+                COUNT(DISTINCT CASE WHEN step = 'OTW_WORKSHOP' AND action = 'STATUS_CHANGE' THEN work_order_id END) as otw_count,
+                SUM(CASE WHEN action = 'QC_REJECTED' THEN 1 ELSE 0 END) as reject_count
+            ")
             ->groupBy('date')
-            ->get();
-
-        // Audit daily rejections historically using WorkOrderLog action QC_REJECTED
-        $reject = WorkOrderLog::where('action', 'QC_REJECTED')
-            ->whereBetween('created_at', [$start, $end])
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
-            ->groupBy('date')
-            ->get();
+            ->get()
+            ->keyBy('date');
 
         $after = WorkOrder::whereNotNull('finished_date')
             ->whereBetween('finished_date', [$start, $end])
@@ -798,9 +831,10 @@ class WarehouseDashboardApiService
             $dateStr = $current->format('Y-m-d');
             $labels[] = $current->format('d M');
             
+            $logRow = $logsDaily->get($dateStr);
             $masukCount = $inbound->firstWhere('date', $dateStr)->count ?? 0;
-            $otwCount = $otw->firstWhere('date', $dateStr)->count ?? 0;
-            $rejectCount = $reject->firstWhere('date', $dateStr)->count ?? 0;
+            $otwCount = $logRow ? (int) $logRow->otw_count : 0;
+            $rejectCount = $logRow ? (int) $logRow->reject_count : 0;
             $afterCount = $after->firstWhere('date', $dateStr)->count ?? 0;
             $keluarCount = $outbound->firstWhere('date', $dateStr)->count ?? 0;
             
@@ -850,19 +884,17 @@ class WarehouseDashboardApiService
 
     public function getQcTrends(Carbon $start, Carbon $end)
     {
-        $lolosTrends = WorkOrder::where('warehouse_qc_status', 'lolos')
+        $trendsRaw = WorkOrder::whereIn('warehouse_qc_status', ['lolos', 'reject'])
             ->whereNotNull('warehouse_qc_at')
             ->whereBetween('warehouse_qc_at', [$start, $end])
-            ->select(DB::raw('DATE(warehouse_qc_at) as date'), DB::raw('count(*) as count'))
+            ->selectRaw("
+                DATE(warehouse_qc_at) as date,
+                SUM(CASE WHEN warehouse_qc_status = 'lolos' THEN 1 ELSE 0 END) as lolos_count,
+                SUM(CASE WHEN warehouse_qc_status = 'reject' THEN 1 ELSE 0 END) as reject_count
+            ")
             ->groupBy('date')
-            ->get();
-
-        $rejectTrends = WorkOrder::where('warehouse_qc_status', 'reject')
-            ->whereNotNull('warehouse_qc_at')
-            ->whereBetween('warehouse_qc_at', [$start, $end])
-            ->select(DB::raw('DATE(warehouse_qc_at) as date'), DB::raw('count(*) as count'))
-            ->groupBy('date')
-            ->get();
+            ->get()
+            ->keyBy('date');
 
         $labels = [];
         $lolosData = [];
@@ -873,11 +905,9 @@ class WarehouseDashboardApiService
             $dateStr = $current->format('Y-m-d');
             $labels[] = $current->format('d M');
             
-            $foundLolos = $lolosTrends->firstWhere('date', $dateStr);
-            $lolosData[] = $foundLolos ? $foundLolos->count : 0;
-            
-            $foundReject = $rejectTrends->firstWhere('date', $dateStr);
-            $rejectData[] = $foundReject ? $foundReject->count : 0;
+            $row = $trendsRaw->get($dateStr);
+            $lolosData[] = $row ? (int) $row->lolos_count : 0;
+            $rejectData[] = $row ? (int) $row->reject_count : 0;
             
             $current->addDay();
         }
@@ -927,54 +957,71 @@ class WarehouseDashboardApiService
 
     public function getInventoryValue()
     {
-        $materials = Material::all();
-        $totalValue = $materials->sum(fn($m) => $m->stock * $m->price);
-        
+        $byCategory = Material::query()
+            ->selectRaw('category, COALESCE(SUM(stock * price), 0) as category_value')
+            ->groupBy('category')
+            ->pluck('category_value', 'category')
+            ->map(fn($val) => (float) $val);
+
         return [
-            'total' => $totalValue,
-            'by_category' => $materials->groupBy('category')->map(fn($group) => $group->sum(fn($m) => $m->stock * $m->price)),
+            'total' => $byCategory->sum(),
+            'by_category' => $byCategory,
         ];
     }
 
     public function getMaterialTrends()
     {
+        $topMaterials = Material::orderBy('stock', 'desc')->take(5)->get(['name', 'stock']);
+
         return [
-            'labels' => Material::orderBy('stock', 'desc')->take(5)->pluck('name'),
-            'data' => Material::orderBy('stock', 'desc')->take(5)->pluck('stock'),
+            'labels' => $topMaterials->pluck('name'),
+            'data' => $topMaterials->pluck('stock'),
         ];
     }
 
-    public function getHeatmapData()
+    public function getHeatmapData(?\Illuminate\Support\Collection $preloadedRacks = null)
     {
-        return StorageRack::active()
-            ->orderBy('rack_code')
-            ->get()
-            ->map(function($rack) {
-                $usage = ($rack->current_count / max(1, $rack->capacity)) * 100;
-                return [
-                    'code' => $rack->rack_code,
-                    'usage' => round($usage),
-                    'color' => $usage > 90 ? 'black' : ($usage > 50 ? 'yellow' : 'green'),
-                    'count' => $rack->current_count,
-                    'capacity' => $rack->capacity,
-                    'category' => $rack->category->value
-                ];
-            });
+        $racks = $preloadedRacks ?? StorageRack::active()->orderBy('rack_code')->get();
+
+        return $racks->map(function($rack) {
+            $usage = ($rack->current_count / max(1, $rack->capacity)) * 100;
+            $catVal = $rack->category instanceof \BackedEnum ? $rack->category->value : $rack->category;
+            return [
+                'code' => $rack->rack_code,
+                'usage' => round($usage),
+                'color' => $usage > 90 ? 'black' : ($usage > 50 ? 'yellow' : 'green'),
+                'count' => $rack->current_count,
+                'capacity' => $rack->capacity,
+                'category' => $catVal
+            ];
+        });
     }
 
-    public function getStorageStats()
+    public function getStorageStats(?\Illuminate\Support\Collection $preloadedRacks = null)
     {
+        if ($preloadedRacks !== null) {
+            $nonAcc = $preloadedRacks->filter(fn($r) => ($r->category instanceof \BackedEnum ? $r->category->value : $r->category) !== \App\Enums\StorageCategory::ACCESSORIES->value);
+            $totalCap = (int) $nonAcc->sum('capacity');
+            $currUsage = (int) $nonAcc->sum('current_count');
+            return [
+                'total_capacity' => $totalCap,
+                'current_usage' => $currUsage,
+                'available_slots' => $totalCap - $currUsage,
+            ];
+        }
+
+        $row = StorageRack::active()
+            ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
+            ->selectRaw('COALESCE(SUM(capacity), 0) as total_capacity, COALESCE(SUM(current_count), 0) as current_usage')
+            ->first();
+
+        $totalCap = (int) ($row->total_capacity ?? 0);
+        $currUsage = (int) ($row->current_usage ?? 0);
+
         return [
-            'total_capacity' => StorageRack::active()
-                ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
-                ->sum('capacity'),
-            'current_usage' => StorageRack::active()
-                ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
-                ->sum('current_count'),
-            'available_slots' => StorageRack::active()
-                ->where('category', '!=', \App\Enums\StorageCategory::ACCESSORIES)
-                ->get()
-                ->sum(fn($r) => $r->capacity - $r->current_count),
+            'total_capacity' => $totalCap,
+            'current_usage' => $currUsage,
+            'available_slots' => $totalCap - $currUsage,
         ];
     }
 

@@ -173,11 +173,14 @@ class Dashboard extends Component
         $start = Carbon::parse($this->startDate)->startOfDay();
         $end = Carbon::parse($this->endDate)->endOfDay();
 
+        // Preload active racks once for all rack metrics, heatmap, and available racks
+        $allActiveRacks = StorageRack::active()->orderBy('rack_code')->get();
+
         // 1. Hero Stats (Mirroring API Global Metrics)
         $stats = $apiService->getHeroMetrics($start, $end);
 
-        // 2. Storage Metrics
-        $storageMainStats = $apiService->getStorageStats();
+        // 2. Storage Metrics (computed from preloaded racks — 0 extra queries)
+        $storageMainStats = $apiService->getStorageStats($allActiveRacks);
         $storageStats = [
             ['label' => 'Total Kapasitas', 'value' => $storageMainStats['total_capacity'], 'icon' => '📦', 'color' => 'bg-blue-50 text-blue-600'],
             ['label' => 'Terpakai', 'value' => $storageMainStats['current_usage'], 'icon' => '📥', 'color' => 'bg-indigo-50 text-indigo-600'],
@@ -190,15 +193,22 @@ class Dashboard extends Component
             ->count();
 
         $rackStats = [
-            'total' => StorageRack::active()->count(),
-            'full' => StorageRack::active()->whereColumn('current_count', '>=', 'capacity')->count(),
-            'empty' => StorageRack::active()->where('current_count', 0)->count(),
+            'total' => $allActiveRacks->count(),
+            'full' => $allActiveRacks->filter(fn($r) => $r->current_count >= $r->capacity)->count(),
+            'empty' => $allActiveRacks->filter(fn($r) => $r->current_count == 0)->count(),
         ];
 
-        $racksByCategory = StorageRack::active()
-            ->select('category', DB::raw('count(*) as count'), DB::raw('sum(current_count) as total_items'))
-            ->groupBy('category')
-            ->get();
+        $racksByCategory = $allActiveRacks
+            ->groupBy(fn($r) => $r->category instanceof \BackedEnum ? $r->category->value : $r->category)
+            ->map(function ($group, $catKey) {
+                $firstCat = $group->first()->category;
+                return (object) [
+                    'category' => $firstCat,
+                    'count' => $group->count(),
+                    'total_items' => $group->sum('current_count'),
+                ];
+            })
+            ->values();
 
         // 4. Inventory & Logs
         $lowStockMaterials = Material::where('stock', '<', 5)->get();
@@ -207,14 +217,24 @@ class Dashboard extends Component
         // 5. Operational Queues
         $queues = $apiService->getQueues($this->search);
 
-        // Fetch distinct categories from both services and work_order_services (for custom ones)
-        $categoriesFromServices = \App\Models\Service::whereNotNull('category')->distinct()->pluck('category')->all();
+        // Fetch all services once and derive distinct categories from both services and work_order_services
+        $allServices = \App\Models\Service::orderBy('name')->get();
+        $categoriesFromServices = $allServices->pluck('category')->filter()->unique()->all();
         $categoriesFromPivot = \DB::table('work_order_services')->whereNotNull('category_name')->distinct()->pluck('category_name')->all();
         $serviceCategories = collect(array_merge($categoriesFromServices, $categoriesFromPivot))
             ->filter()
             ->unique()
             ->sort()
             ->values();
+
+        $qcTrends = $this->qcTrends;
+        $qcStats = [
+            'labels' => ['QC Lolos', 'QC Reject'],
+            'data' => [
+                $qcTrends['total_lolos'] ?? 0,
+                $qcTrends['total_reject'] ?? 0,
+            ],
+        ];
 
         return view('livewire.warehouse.dashboard', [
             'stats' => $stats,
@@ -227,15 +247,15 @@ class Dashboard extends Component
             'queues' => $queues,
             'inventoryValue' => $this->inventoryValue,
             'supplierAnalytics' => $this->supplierAnalytics,
-            'qcTrends' => $this->qcTrends,
-            'qcStats' => $this->qcStats,
+            'qcTrends' => $qcTrends,
+            'qcStats' => $qcStats,
             'qcSummary' => $this->qcSummary,
             'materialTrends' => $this->materialTrends,
-            'heatmapData' => $this->heatmapData,
+            'heatmapData' => $apiService->getHeatmapData($allActiveRacks),
             'efficiencyStats' => $this->efficiencyStats,
             'dailyFlow' => $this->dailyFlow,
-            'availableRacks' => StorageRack::active()->available()->get(),
-            'services' => \App\Models\Service::orderBy('name')->get(),
+            'availableRacks' => $allActiveRacks->filter(fn($r) => $r->current_count < $r->capacity)->values(),
+            'services' => $allServices,
             'serviceCategories' => $serviceCategories,
         ])->layout('layouts.app');
     }
@@ -402,29 +422,7 @@ class Dashboard extends Component
     #[Computed]
     public function totalPiutangAmount()
     {
-        $query = Invoice::where('status', '!=', 'Lunas')
-            ->where('spk_status', 'SELESAI');
-
-        if (!$this->ignorePiutangDateFilter) {
-            $query = $this->applyDateFilter($query, 'created_at');
-        }
-
-        return $query->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('invoice_number', 'like', '%' . $this->search . '%')
-                      ->orWhereHas('customer', function ($sub) {
-                          $sub->where('name', 'like', '%' . $this->search . '%')
-                              ->orWhere('phone', 'like', '%' . $this->search . '%');
-                      })
-                      ->orWhereHas('workOrders', function ($sub) {
-                          $sub->where('spk_number', 'like', '%' . $this->search . '%')
-                              ->orWhere('customer_name', 'like', '%' . $this->search . '%')
-                              ->orWhere('customer_phone', 'like', '%' . $this->search . '%');
-                      });
-                });
-            })
-            ->get()
-            ->sum('remaining_balance');
+        return $this->piutangAfterOrders->sum('remaining_balance');
     }
 
     #[Computed]
@@ -471,41 +469,7 @@ class Dashboard extends Component
     #[Computed]
     public function totalPiutangBeforeAmount()
     {
-        $query = Invoice::where('status', '!=', 'Lunas')
-            ->whereHas('workOrders', function ($q) {
-                $q->whereIn('status', [
-                    \App\Enums\WorkOrderStatus::DITERIMA->value,
-                    \App\Enums\WorkOrderStatus::READY_TO_DISPATCH->value,
-                    \App\Enums\WorkOrderStatus::ASSESSMENT->value,
-                    \App\Enums\WorkOrderStatus::WAITING_PAYMENT->value,
-                    \App\Enums\WorkOrderStatus::WAITING_VERIFICATION->value,
-                ]);
-            });
-
-        if ($this->piutangBeforeStatus !== 'all') {
-            $query->where('status', $this->piutangBeforeStatus);
-        }
-
-        if (!$this->ignorePiutangDateFilter) {
-            $query = $this->applyDateFilter($query, 'created_at');
-        }
-
-        return $query->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('invoice_number', 'like', '%' . $this->search . '%')
-                      ->orWhereHas('customer', function ($sub) {
-                          $sub->where('name', 'like', '%' . $this->search . '%')
-                              ->orWhere('phone', 'like', '%' . $this->search . '%');
-                      })
-                      ->orWhereHas('workOrders', function ($sub) {
-                          $sub->where('spk_number', 'like', '%' . $this->search . '%')
-                              ->orWhere('customer_name', 'like', '%' . $this->search . '%')
-                              ->orWhere('customer_phone', 'like', '%' . $this->search . '%');
-                      });
-                });
-            })
-            ->get()
-            ->sum('remaining_balance');
+        return $this->piutangBeforeOrders->sum('remaining_balance');
     }
 
     #[Computed]

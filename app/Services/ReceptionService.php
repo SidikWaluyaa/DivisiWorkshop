@@ -584,6 +584,22 @@ class ReceptionService
             }
         }
 
+        // Pre-fetch inactive tab counts in 1 combined query when neither has active search filters
+        $inactiveCounts = null;
+        if ($activeTab === 'pending' && !$request->filled('search') && !$request->filled('handler_id') && !$request->filled('date_from') && !$request->filled('date_to') && !$request->filled('priority') && !$request->filled('qc_status')) {
+            $qcByFilterSql = (!$user->isAdmin() && !$user->isOwner()) ? ' AND warehouse_qc_by = ' . (int) $user->id : '';
+            $inactiveCounts = WorkOrder::selectRaw("
+                SUM(CASE WHEN status = ?{$qcByFilterSql} THEN 1 ELSE 0 END) as received_count,
+                SUM(CASE WHEN status IN (?, ?, ?, ?) AND warehouse_qc_status IS NOT NULL THEN 1 ELSE 0 END) as processed_count
+            ", [
+                WorkOrderStatus::DITERIMA->value,
+                WorkOrderStatus::ASSESSMENT->value,
+                WorkOrderStatus::WAITING_PAYMENT->value,
+                WorkOrderStatus::CX_FOLLOWUP->value,
+                WorkOrderStatus::PREPARATION->value,
+            ])->first();
+        }
+
         if ($activeTab === 'received') {
             $query->orderByRaw("CASE 
                 WHEN priority IN ('Prioritas', 'Urgent', 'Express', 'OTO') THEN 1 
@@ -593,7 +609,7 @@ class ReceptionService
                             ->paginate(20)
                             ->appends(array_merge($request->except(['page', 'tab']), ['tab' => 'received']));
         } else {
-            $ordersCount = $query->count();
+            $ordersCount = $inactiveCounts !== null ? (int) ($inactiveCounts->received_count ?? 0) : $query->count();
             $orders = new \Illuminate\Pagination\LengthAwarePaginator(
                 collect(),
                 $ordersCount,
@@ -675,7 +691,7 @@ class ReceptionService
                                               ->paginate(15, ['*'], 'processed_page')
                                               ->appends(array_merge($request->except(['processed_page', 'tab']), ['tab' => 'processed']));
         } else {
-            $processedCount = $processedQuery->count();
+            $processedCount = $inactiveCounts !== null ? (int) ($inactiveCounts->processed_count ?? 0) : $processedQuery->count();
             $processedOrders = new \Illuminate\Pagination\LengthAwarePaginator(
                 collect(),
                 $processedCount,
@@ -685,18 +701,16 @@ class ReceptionService
             );
         }
 
-        // 5. Fetch required metadata cleanly
-        $accessoryRacks = StorageRack::accessories()
-            ->available()
-            ->orderBy('rack_code')
-            ->get();
-            
-        $availableBeforeRacks = StorageRack::before()
-            ->active()
+        // 5. Fetch required metadata cleanly (single query for active racks)
+        $racks = StorageRack::active()
+            ->whereIn('category', ['accessories', 'before'])
             ->orderBy('rack_code')
             ->get();
 
-        $services = \App\Models\Service::all();
+        $accessoryRacks = $racks->filter(fn($r) => ($r->category instanceof \BackedEnum ? $r->category->value : $r->category) === 'accessories' && $r->current_count < $r->capacity)->values();
+        $availableBeforeRacks = $racks->filter(fn($r) => ($r->category instanceof \BackedEnum ? $r->category->value : $r->category) === 'before')->values();
+
+        $services = once(fn () => \App\Models\Service::orderBy('name')->get());
         $materials = \App\Models\Material::all();
 
         $csUsers = User::whereNotNull('cs_code')

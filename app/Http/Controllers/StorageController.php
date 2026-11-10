@@ -36,9 +36,12 @@ class StorageController extends Controller
             $category = session('storage_category', 'shoes');
         }
         
+        // Preload active racks once for both utilization and category visualization
+        $allActiveRacks = StorageRack::active()->orderBy('rack_code')->get();
+
         // Get statistics (filtered)
         $stats = $this->storageService->getStatistics($category);
-        $rackUtilization = $this->storageService->getRackUtilization($category);
+        $rackUtilization = $this->storageService->getRackUtilization($category, $allActiveRacks);
         
         // Get stored items
         $storedItems = $search 
@@ -66,11 +69,10 @@ class StorageController extends Controller
         // Get overdue items (filtered)
         $overdueItems = $this->storageService->getOverdueItems(7, $category);
         
-        // Get racks for visualization (Split by category)
         // Get racks for visualization (Split by category) - STRICT MODE
-        $shoeRacks = StorageRack::active()->where('category', 'shoes')->orderBy('rack_code')->get();
-        $accessoryRacks = StorageRack::active()->where('category', 'accessories')->orderBy('rack_code')->get();
-        $beforeRacks = StorageRack::active()->where('category', 'before')->orderBy('rack_code')->get();
+        $shoeRacks = $allActiveRacks->filter(fn($r) => ($r->category instanceof \BackedEnum ? $r->category->value : $r->category) === 'shoes')->values();
+        $accessoryRacks = $allActiveRacks->filter(fn($r) => ($r->category instanceof \BackedEnum ? $r->category->value : $r->category) === 'accessories')->values();
+        $beforeRacks = $allActiveRacks->filter(fn($r) => ($r->category instanceof \BackedEnum ? $r->category->value : $r->category) === 'before')->values();
         
         return view('storage.index', compact(
             'stats',
