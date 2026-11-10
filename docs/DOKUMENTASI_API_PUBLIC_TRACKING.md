@@ -73,6 +73,9 @@ Ketika sepatu sedang dalam proses **OTO**, **Garansi**, atau **Revisi**, sistem 
 
 > **Catatan Pencarian SPK Garansi (`-GR`):**
 > Selama klaim garansi masih berstatus `OPEN` (sedang dikerjakan), pelanggan dapat melacak menggunakan **Nomor SPK Asli (`S-2605-04-0001-SW`)** maupun **Nomor SPK Garansi (`S-2605-04-0001-GR`)**. Keduanya akan mengembalikan data SPK yang sama dengan status `current_status.code = "GARANSI"` dan `is_warranty = true`.
+>
+> **Aturan *Latest Timestamp Winner* (Jika Lebih dari Satu Status Aktif Bersamaan):**
+> Apabila pada satu SPK terdapat lebih dari satu status khusus yang aktif bersamaan (misalnya SPK sedang `OTO`, lalu di tengah jalan masuk `REVISI`, atau sebaliknya), backend secara otomatis **membandingkan tanggal/waktu (*timestamp*) terbaru** dari masing-masing aktivitas (`work_order_warranties`, `otos`, `work_order_revisions`, dan `work_order_logs`). Hanya **1 status dengan tanggal paling baru** yang akan diset `true` (`is_warranty`, `is_oto`, atau `is_revising` bersifat *mutually exclusive*), sehingga frontend dijamin selalu menampilkan status paling mutakhir.
 
 ---
 

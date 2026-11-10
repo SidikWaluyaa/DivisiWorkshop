@@ -2159,5 +2159,137 @@ class WorkOrder extends Model
     {
         return $this->hasMany(\App\Models\CxAfterConfirmation::class);
     }
+
+    /**
+     * Menentukan status pengerjaan khusus aktif (GARANSI, OTO, REVISI)
+     * menggunakan perbandingan timestamp terbaru (Latest Timestamp Winner)
+     * apabila lebih dari satu flag bernilai true.
+     *
+     * @return array{
+     *     winner: string|null,
+     *     is_warranty: bool,
+     *     is_oto: bool,
+     *     is_revising: bool,
+     *     is_special_active: bool,
+     *     open_warranty: \App\Models\WorkOrderWarranty|null,
+     *     is_gr_rework_spk: bool,
+     *     active_oto: \App\Models\OTO|null,
+     *     pending_oto: \App\Models\OTO|null,
+     *     open_revision: \App\Models\WorkOrderRevision|null
+     * }
+     */
+    public function resolveActiveTrackingState(): array
+    {
+        $currentStatusVal = is_object($this->status) ? $this->status->value : (string) $this->status;
+
+        $warranties = $this->relationLoaded('warranties') ? $this->warranties : collect();
+        $otos = $this->relationLoaded('otos') ? $this->otos : collect();
+        $revisions = $this->relationLoaded('revisions') ? $this->revisions : collect();
+        $logs = $this->relationLoaded('logs') ? $this->logs : collect();
+
+        // 1. Evaluasi Kandidat GARANSI
+        $openWarranty = $warranties->where('status', 'OPEN')->sortByDesc('id')->first();
+        $isGrReworkSpk = (bool) preg_match('/-GR(-\d+)?$/i', (string) $this->spk_number) || !empty($this->parent_id);
+        $rawWarranty = (bool) $openWarranty || ($isGrReworkSpk && !in_array($currentStatusVal, ['SELESAI', 'DIAMBIL', 'BATAL', 'CANCELLED']));
+
+        $warrantyTs = 0;
+        if ($rawWarranty) {
+            if ($openWarranty) {
+                $warrantyTs = max(
+                    $openWarranty->updated_at?->getTimestamp() ?? 0,
+                    $openWarranty->created_at?->getTimestamp() ?? 0
+                );
+            } else {
+                $warrantyTs = max(
+                    $this->updated_at?->getTimestamp() ?? 0,
+                    $this->created_at?->getTimestamp() ?? 0
+                );
+            }
+        }
+
+        // 2. Evaluasi Kandidat OTO
+        $activeOto = $otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->sortByDesc('id')->first();
+        $rawOto = (bool) $this->has_active_oto || (bool) $activeOto;
+
+        $otoTs = 0;
+        if ($rawOto) {
+            $otoLogTs = $logs->filter(function ($log) {
+                $step = strtoupper((string) ($log->step ?? ''));
+                $action = strtoupper((string) ($log->action ?? ''));
+                return $step === 'OTO' || str_contains($action, 'OTO_ACCEPT') || str_contains($action, 'OTO_START');
+            })->max(fn ($l) => $l->created_at?->getTimestamp() ?? 0) ?? 0;
+
+            $otoTs = max(
+                $activeOto?->customer_responded_at?->getTimestamp() ?? 0,
+                $activeOto?->started_at?->getTimestamp() ?? 0,
+                $activeOto?->updated_at?->getTimestamp() ?? 0,
+                $activeOto?->created_at?->getTimestamp() ?? 0,
+                (int) $otoLogTs
+            );
+        }
+
+        // 3. Evaluasi Kandidat REVISI
+        $openRevision = $revisions->where('status', 'OPEN')->sortByDesc('id')->first();
+        $rawRevising = ($currentStatusVal === 'REVISI' || (bool) $this->is_revising || (bool) $openRevision);
+
+        $revisionTs = 0;
+        if ($rawRevising) {
+            $revLogTs = $logs->filter(function ($log) {
+                $step = strtoupper((string) ($log->step ?? ''));
+                $action = strtoupper((string) ($log->action ?? ''));
+                return in_array($step, ['REVISI', 'REVISION']) || str_contains($action, 'REVIS');
+            })->max(fn ($l) => $l->created_at?->getTimestamp() ?? 0) ?? 0;
+
+            $revisionTs = max(
+                $openRevision?->updated_at?->getTimestamp() ?? 0,
+                $openRevision?->created_at?->getTimestamp() ?? 0,
+                (int) $revLogTs
+            );
+
+            // Fallback ke updated_at WorkOrder jika direvisi langsung tanpa row/log
+            if ($revisionTs === 0) {
+                $revisionTs = $this->updated_at?->getTimestamp() ?? 0;
+            }
+        }
+
+        // 4. Pilih Pemenang Tunggal Berdasarkan Timestamp Terbaru (Latest Timestamp Winner)
+        $candidates = [];
+        if ($rawWarranty) {
+            $candidates['GARANSI'] = $warrantyTs;
+        }
+        if ($rawOto) {
+            $candidates['OTO'] = $otoTs;
+        }
+        if ($rawRevising) {
+            $candidates['REVISI'] = $revisionTs;
+        }
+
+        $winner = null;
+        if (!empty($candidates)) {
+            arsort($candidates);
+            $winner = array_key_first($candidates);
+        }
+
+        $isWarranty = ($winner === 'GARANSI');
+        $isOto = ($winner === 'OTO');
+        $isRevising = ($winner === 'REVISI');
+
+        $pendingOto = (!$isOto && !$isWarranty && !$isRevising)
+            ? $otos->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])->sortByDesc('id')->first()
+            : null;
+
+        return [
+            'winner' => $winner,
+            'is_warranty' => $isWarranty,
+            'is_oto' => $isOto,
+            'is_revising' => $isRevising,
+            'is_special_active' => ($winner !== null),
+            'open_warranty' => $openWarranty,
+            'is_gr_rework_spk' => $isGrReworkSpk,
+            'active_oto' => $activeOto,
+            'pending_oto' => $pendingOto,
+            'open_revision' => $openRevision,
+        ];
+    }
 }
 

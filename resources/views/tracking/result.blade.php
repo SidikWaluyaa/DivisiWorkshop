@@ -96,15 +96,13 @@
                                 <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
                                     @php
                                         $cardStatusVal = is_object($order->status) ? $order->status->value : $order->status;
-                                        $cardHasWarranty = $order->relationLoaded('warranties') && $order->warranties->where('status', 'OPEN')->isNotEmpty();
-                                        $cardHasOto = (bool)$order->has_active_oto || ($order->relationLoaded('otos') && $order->otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->isNotEmpty());
-                                        $cardHasRevisi = $cardStatusVal === 'REVISI' || (bool)$order->is_revising || ($order->relationLoaded('revisions') && $order->revisions->where('status', 'OPEN')->isNotEmpty());
+                                        $cardActiveState = $order->resolveActiveTrackingState();
 
-                                        if ($cardHasWarranty) {
+                                        if ($cardActiveState['is_warranty']) {
                                             $cardDisplayStatus = 'SERVICE (GARANSI)';
-                                        } elseif ($cardHasOto) {
+                                        } elseif ($cardActiveState['is_oto']) {
                                             $cardDisplayStatus = 'SERVICE (OTO)';
-                                        } elseif ($cardHasRevisi) {
+                                        } elseif ($cardActiveState['is_revising']) {
                                             $cardDisplayStatus = 'SERVICE (REVISI)';
                                         } else {
                                             $cardDisplayStatus = str_replace('_', ' ', $cardStatusVal);
@@ -279,32 +277,16 @@
                             $currentStatusVal = is_object($order->status) ? $order->status->value : $order->status;
                             $isHoldStatus = in_array($currentStatusVal, ['CX_FOLLOWUP', 'HOLD_FOR_CX']);
 
-                            // Deteksi Garansi Aktif (OPEN)
-                            // Catatan: work_orders.is_warranty dipakai CS untuk menandai paket "Bergaransi vs Non-Garansi",
-                            // sehingga klaim garansi aktif hanya diambil dari work_order_warranties (OPEN) atau SPK Rework (-GR / parent_id).
-                            $openWarranty = $order->relationLoaded('warranties')
-                                ? $order->warranties->where('status', 'OPEN')->sortByDesc('id')->first()
-                                : null;
-                            $isGrReworkSpk = (bool) preg_match('/-GR(-\d+)?$/i', (string) $order->spk_number) || !empty($order->parent_id);
-                            $isWarrantyStatus = (bool)$openWarranty || ($isGrReworkSpk && !in_array($currentStatusVal, ['SELESAI', 'DIAMBIL', 'BATAL', 'CANCELLED']));
-
-                            // Deteksi OTO Aktif (ACCEPTED / IN_PROGRESS / has_active_oto) & Penawaran OTO (PENDING)
-                            $activeOto = $order->relationLoaded('otos')
-                                ? $order->otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->sortByDesc('id')->first()
-                                : null;
-                            $isOtoStatus = (bool)$order->has_active_oto || (bool)$activeOto;
-
-                            $pendingOto = (!$isOtoStatus && $order->relationLoaded('otos'))
-                                ? $order->otos->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])->sortByDesc('id')->first()
-                                : null;
-
-                            // Deteksi Revisi Aktif
-                            $openRevision = $order->relationLoaded('revisions')
-                                ? $order->revisions->where('status', 'OPEN')->sortByDesc('id')->first()
-                                : null;
-                            $isRevisingStatus = ($currentStatusVal === 'REVISI' || (bool)$order->is_revising || (bool)$openRevision);
-
-                            $isSpecialServiceActive = ($isWarrantyStatus || $isOtoStatus || $isRevisingStatus);
+                            // Evaluasi Garansi, OTO, dan Revisi menggunakan Latest Timestamp Winner
+                            $activeState = $order->resolveActiveTrackingState();
+                            $isWarrantyStatus = $activeState['is_warranty'];
+                            $isOtoStatus = $activeState['is_oto'];
+                            $isRevisingStatus = $activeState['is_revising'];
+                            $isSpecialServiceActive = $activeState['is_special_active'];
+                            $openWarranty = $activeState['open_warranty'];
+                            $activeOto = $activeState['active_oto'];
+                            $pendingOto = $activeState['pending_oto'];
+                            $openRevision = $activeState['open_revision'];
 
                             if ($isHoldStatus) {
                                 $prevVal = $order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status;

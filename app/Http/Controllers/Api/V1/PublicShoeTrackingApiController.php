@@ -59,7 +59,7 @@ class PublicShoeTrackingApiController extends Controller
             $query->where('id', $id);
         }
 
-        $relations = ['workOrderServices.service', 'otos', 'warranties', 'revisions'];
+        $relations = ['workOrderServices.service', 'otos', 'warranties', 'revisions', 'logs'];
 
         // Eager load workOrderServices and their related service configurations
         $order = $query->with($relations)->first();
@@ -108,23 +108,15 @@ class PublicShoeTrackingApiController extends Controller
             'HOLD_FOR_CX'
         ]);
 
-        // Deteksi Garansi Aktif (OPEN)
-        // Catatan: kolom work_orders.is_warranty digunakan CS sebagai penanda paket "Bergaransi vs Non-Garansi",
-        // sehingga status klaim garansi aktif hanya diambil dari work_order_warranties (OPEN) atau SPK Rework (-GR / parent_id).
-        $openWarranty = $order->warranties->where('status', 'OPEN')->sortByDesc('id')->first();
-        $isGrReworkSpk = (bool) preg_match('/-GR(-\d+)?$/i', (string) $order->spk_number) || !empty($order->parent_id);
-        $isWarranty = (bool)$openWarranty || ($isGrReworkSpk && !in_array($statusVal, ['SELESAI', 'DIAMBIL', 'BATAL', 'CANCELLED']));
-
-        // Deteksi OTO Aktif (ACCEPTED / IN_PROGRESS / has_active_oto) & Penawaran OTO (PENDING)
-        $activeOto = $order->otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->sortByDesc('id')->first();
-        $isOto = (bool)$order->has_active_oto || (bool)$activeOto;
-        $pendingOto = !$isOto
-            ? $order->otos->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])->sortByDesc('id')->first()
-            : null;
-
-        // Deteksi Revisi Aktif
-        $openRevision = $order->revisions->where('status', 'OPEN')->sortByDesc('id')->first();
-        $isRevising = ($statusVal === 'REVISI' || (bool)$order->is_revising || (bool)$openRevision);
+        // Evaluasi Garansi, OTO, dan Revisi menggunakan Latest Timestamp Winner
+        $activeState = $order->resolveActiveTrackingState();
+        $isWarranty = $activeState['is_warranty'];
+        $isOto = $activeState['is_oto'];
+        $isRevising = $activeState['is_revising'];
+        $openWarranty = $activeState['open_warranty'];
+        $isGrReworkSpk = $activeState['is_gr_rework_spk'];
+        $activeOto = $activeState['active_oto'];
+        $pendingOto = $activeState['pending_oto'];
 
         if ($isWarranty) {
             $effectiveCode = 'GARANSI';

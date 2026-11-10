@@ -118,20 +118,8 @@ class TrackingController extends Controller
     private function transformOrdersForAjax(\Illuminate\Support\Collection $orders): \Illuminate\Support\Collection
     {
         return $orders->map(function ($order) {
-            $statusVal = is_object($order->status) ? $order->status->value : $order->status;
-            $hasOpenWarranty = $order->relationLoaded('warranties') && $order->warranties->where('status', 'OPEN')->isNotEmpty();
-            $hasActiveOto = (bool)$order->has_active_oto || ($order->relationLoaded('otos') && $order->otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->isNotEmpty());
-            $hasOpenRevision = $statusVal === 'REVISI' || (bool)$order->is_revising || ($order->relationLoaded('revisions') && $order->revisions->where('status', 'OPEN')->isNotEmpty());
-
-            if ($hasOpenWarranty) {
-                $displayStatus = 'GARANSI';
-            } elseif ($hasActiveOto) {
-                $displayStatus = 'OTO';
-            } elseif ($hasOpenRevision) {
-                $displayStatus = 'REVISI';
-            } else {
-                $displayStatus = $order->status;
-            }
+            $activeState = $order->resolveActiveTrackingState();
+            $displayStatus = $activeState['winner'] ?? $order->status;
 
             return [
                 'id' => $order->id,

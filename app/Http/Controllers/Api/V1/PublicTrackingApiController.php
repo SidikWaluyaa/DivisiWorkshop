@@ -115,25 +115,16 @@ class PublicTrackingApiController extends Controller
             'HOLD_FOR_CX'
         ]);
 
-        // Deteksi Garansi Aktif (OPEN)
-        // Catatan: kolom work_orders.is_warranty digunakan CS sebagai penanda paket "Bergaransi vs Non-Garansi",
-        // sehingga status klaim garansi aktif hanya diambil dari work_order_warranties (OPEN) atau SPK Rework (-GR / parent_id).
-        $openWarranty = $order->warranties->where('status', 'OPEN')->sortByDesc('id')->first();
-        $isGrReworkSpk = (bool) preg_match('/-GR(-\d+)?$/i', (string) $order->spk_number) || !empty($order->parent_id);
-        $isWarranty = (bool)$openWarranty || ($isGrReworkSpk && !in_array($currentStatusVal, ['SELESAI', 'DIAMBIL', 'BATAL', 'CANCELLED']));
-
-        // Deteksi OTO Aktif (ACCEPTED / IN_PROGRESS / has_active_oto) & Penawaran OTO (PENDING)
-        $activeOto = $order->otos->whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->sortByDesc('id')->first();
-        $isOto = (bool)$order->has_active_oto || (bool)$activeOto;
-        $pendingOto = !$isOto
-            ? $order->otos->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])->sortByDesc('id')->first()
-            : null;
-
-        // Deteksi Revisi Aktif
-        $openRevision = $order->revisions->where('status', 'OPEN')->sortByDesc('id')->first();
-        $isRevising = ($currentStatusVal === 'REVISI' || (bool)$order->is_revising || (bool)$openRevision);
-
-        $isSpecialServiceActive = ($isWarranty || $isOto || $isRevising);
+        // Evaluasi Garansi, OTO, dan Revisi menggunakan Latest Timestamp Winner
+        $activeState = $order->resolveActiveTrackingState();
+        $isWarranty = $activeState['is_warranty'];
+        $isOto = $activeState['is_oto'];
+        $isRevising = $activeState['is_revising'];
+        $isSpecialServiceActive = $activeState['is_special_active'];
+        $openWarranty = $activeState['open_warranty'];
+        $isGrReworkSpk = $activeState['is_gr_rework_spk'];
+        $activeOto = $activeState['active_oto'];
+        $pendingOto = $activeState['pending_oto'];
 
         if ($isOnHold) {
             $prevVal = $order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status;
