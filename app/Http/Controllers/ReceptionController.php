@@ -706,7 +706,24 @@ class ReceptionController extends Controller
         $pendingQuery = WorkOrder::with(['workOrderServices.service'])
             ->where('status', WorkOrderStatus::SPK_PENDING->value);
         
-        // Apply Filters (Same as index)
+        // Apply Filters (Same as index & ReceptionService)
+        if ($request->filled('pending_spk')) {
+            $pendingSpk = trim($request->pending_spk);
+            if (preg_match('/^[A-Z]-\d{4}-\d{2}-\d{4}-[A-Z]+$/i', $pendingSpk)) {
+                $pendingQuery->where('spk_number', strtoupper($pendingSpk));
+            } else {
+                $pendingQuery->where('spk_number', 'LIKE', "%{$pendingSpk}%");
+            }
+        }
+
+        if ($request->filled('pending_customer')) {
+            $pendingCustomer = trim($request->pending_customer);
+            $pendingQuery->where(function($q) use ($pendingCustomer) {
+                $q->where('customer_name', 'LIKE', "%{$pendingCustomer}%")
+                  ->orWhere('customer_phone', 'LIKE', "%{$pendingCustomer}%");
+            });
+        }
+
         if ($request->filled('pending_search')) {
              $search = $request->pending_search;
              $pendingQuery->where(function($q) use ($search) {
@@ -996,7 +1013,24 @@ class ReceptionController extends Controller
 
         $pendingQuery = WorkOrder::where('status', WorkOrderStatus::SPK_PENDING->value);
         
-        // Apply Filters (Same logic as PDF)
+        // Apply Filters (Same logic as PDF & ReceptionService)
+        if ($request->filled('pending_spk')) {
+            $pendingSpk = trim($request->pending_spk);
+            if (preg_match('/^[A-Z]-\d{4}-\d{2}-\d{4}-[A-Z]+$/i', $pendingSpk)) {
+                $pendingQuery->where('spk_number', strtoupper($pendingSpk));
+            } else {
+                $pendingQuery->where('spk_number', 'LIKE', "%{$pendingSpk}%");
+            }
+        }
+
+        if ($request->filled('pending_customer')) {
+            $pendingCustomer = trim($request->pending_customer);
+            $pendingQuery->where(function($q) use ($pendingCustomer) {
+                $q->where('customer_name', 'LIKE', "%{$pendingCustomer}%")
+                  ->orWhere('customer_phone', 'LIKE', "%{$pendingCustomer}%");
+            });
+        }
+
         if ($request->filled('pending_search')) {
              $search = $request->pending_search;
              $pendingQuery->where(function($q) use ($search) {

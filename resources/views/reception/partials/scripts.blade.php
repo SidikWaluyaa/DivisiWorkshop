@@ -489,13 +489,15 @@
     }
 
     function downloadBulkPdf() {
-        const search = document.querySelector('input[name="pending_search"]').value;
-        const from = document.querySelector('input[name="pending_date_from"]').value;
-        const to = document.querySelector('input[name="pending_date_to"]').value;
-        const priority = document.querySelector('select[name="pending_priority"]').value;
+        const spk = document.querySelector('input[name="pending_spk"]')?.value || '';
+        const customer = document.querySelector('input[name="pending_customer"]')?.value || '';
+        const from = document.querySelector('input[name="pending_date_from"]')?.value || '';
+        const to = document.querySelector('input[name="pending_date_to"]')?.value || '';
+        const priority = document.querySelector('select[name="pending_priority"]')?.value || '';
 
         const params = new URLSearchParams({
-            pending_search: search,
+            pending_spk: spk,
+            pending_customer: customer,
             pending_date_from: from,
             pending_date_to: to,
             pending_priority: priority
@@ -505,13 +507,15 @@
     }
 
     function downloadBulkExcel() {
-        const search = document.querySelector('input[name="pending_search"]').value;
-        const from = document.querySelector('input[name="pending_date_from"]').value;
-        const to = document.querySelector('input[name="pending_date_to"]').value;
-        const priority = document.querySelector('select[name="pending_priority"]').value;
+        const spk = document.querySelector('input[name="pending_spk"]')?.value || '';
+        const customer = document.querySelector('input[name="pending_customer"]')?.value || '';
+        const from = document.querySelector('input[name="pending_date_from"]')?.value || '';
+        const to = document.querySelector('input[name="pending_date_to"]')?.value || '';
+        const priority = document.querySelector('select[name="pending_priority"]')?.value || '';
 
         const params = new URLSearchParams({
-            pending_search: search,
+            pending_spk: spk,
+            pending_customer: customer,
             pending_date_from: from,
             pending_date_to: to,
             pending_priority: priority

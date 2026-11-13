@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shoe Workshop — Shadcn-Blade Design System Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+
+      /* Light Mode Tokens */
+      --sw-bg: #f8fafc;
+      --sw-card: #ffffff;
+      --sw-muted: #f1f5f9;
+      --sw-border: #e2e8f0;
+      --sw-text: #0f172a;
+      --sw-muted-text: #64748b;
+      --sw-code-inline-bg: #f1f5f9;
+      --sw-code-inline-text: #b45309;
+      --sw-code-inline-border: #cbd5e1;
+
+      /* Default Ergonomic Dark Mode Tokens: Slate Dimmed (GitHub Dark Dimmed / Linear Slate) */
+      --dark-bg: #13171f;
+      --dark-card: #1b202b;
+      --dark-muted: #242b38;
+      --dark-border: #2c3545;
+      --dark-text: #e6edf3;
+      --dark-muted-text: #94a3b8;
+    }
+    html.dark {
+      --sw-bg: var(--dark-bg);
+      --sw-card: var(--dark-card);
+      --sw-muted: var(--dark-muted);
+      --sw-border: var(--dark-border);
+      --sw-text: var(--dark-text);
+      --sw-muted-text: var(--dark-muted-text);
+      --sw-code-inline-bg: #252c3a;
+      --sw-code-inline-text: #fbbf24;
+      --sw-code-inline-border: #384256;
+    }
+    html, body {
+      overflow-x: hidden;
+      max-width: 100vw;
+      font-family: var(--font-sans);
+      letter-spacing: -0.012em;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+    h1, h2, h3, h4 {
+      letter-spacing: -0.025em;
+    }
+    code, pre, .font-mono {
+      font-family: var(--font-mono) !important;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+    /* Inline code pill badge (persis seperti di screenshot!) */
+    :not(pre) > code {
+      display: inline-block;
+      padding: 0.1rem 0.42rem;
+      margin: 0 0.06rem;
+      font-size: 0.86em;
+      font-weight: 500;
+      line-height: 1.45;
+      border-radius: 0.35rem;
+      background-color: var(--sw-code-inline-bg);
+      color: var(--sw-code-inline-text);
+      border: 1px solid var(--sw-code-inline-border);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .sw-surface {
+      background-color: var(--sw-bg);
+      color: var(--sw-text);
+    }
+    .sw-card {
+      background-color: var(--sw-card);
+      border-color: var(--sw-border);
+      color: var(--sw-text);
+    }
+    .sw-muted {
+      background-color: var(--sw-muted);
+      color: var(--sw-muted-text);
+    }
+    .sw-muted-text {
+      color: var(--sw-muted-text);
+    }
+    .sw-border {
+      border-color: var(--sw-border) !important;
+    }
+    /* Outline Button: distinct surface & crisp border in Dark Mode so it never blends in */
+    .sw-btn-outline {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    .sw-btn-outline:hover {
+      background-color: #f1f5f9;
+      border-color: #94a3b8;
+    }
+    html.dark .sw-btn-outline {
+      background-color: #262e3d;
+      border: 1px solid #3f4b63;
+      color: #f1f5f9;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+    html.dark .sw-btn-outline:hover {
+      background-color: #303a4d;
+      border-color: #566685;
+    }
+    /* Secondary Forest Button: luminous emerald border in Dark Mode so it doesn't sink into dark card */
+    .sw-btn-forest {
+      background-color: #1A4D3E;
+      color: #ffffff;
+      border: 1px solid #1A4D3E;
+    }
+    .sw-btn-forest:hover {
+      background-color: #153e32;
+    }
+    html.dark .sw-btn-forest {
+      background-color: #1e5c49;
+      color: #ecfdf5;
+      border: 1px solid rgba(34, 175, 133, 0.65);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    html.dark .sw-btn-forest:hover {
+      background-color: #246e57;
+    }
+    /* Sub-card inside Drawer / Nested boxes */
+    .sw-subcard {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    html.dark .sw-subcard {
+      background-color: #222938;
+      border: 1px solid #364156;
+    }
+    /* Gold / Priority / Accessory Badge */
+    .sw-badge-gold {
+      background-color: rgba(255, 194, 50, 0.22);
+      color: #92400e;
+      border: 1px solid rgba(245, 158, 11, 0.45);
+    }
+    html.dark .sw-badge-gold {
+      background-color: rgba(255, 194, 50, 0.18);
+      color: #ffd15c;
+      border: 1px solid rgba(255, 194, 50, 0.5);
+    }
+    /* Mono SPK Badge */
+    .sw-badge-mono {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+    }
+    html.dark .sw-badge-mono {
+      background-color: #262e3d;
+      color: #f1f5f9;
+      border: 1px solid #3f4b63;
+    }
+    .sw-input {
+      background-color: var(--sw-bg);
+      border-color: var(--sw-border);
+      color: var(--sw-text);
+    }
+    html.dark .sw-input {
+      background-color: #141923;
+      border-color: #384357;
+      color: #f1f5f9;
+    }
+    .sw-input:focus {
+      outline: none;
+      border-color: #22AF85;
+      box-shadow: 0 0 0 3px rgba(34, 175, 133, 0.25);
+    }
+    .sw-code {
+      background-color: #0f141c;
+      color: #e2e8f0;
+      border: 1px solid var(--sw-border);
+    }
+    .sw-tab-active {
+      background-color: #ffffff;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    html.dark .sw-tab-active {
+      background-color: #283142;
+      color: #ffffff;
+      border: 1px solid #435068;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .sw-row-hover:hover {
+      background-color: rgba(148, 163, 184, 0.08);
+    }
+    html.dark .sw-row-hover:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+    }
+    /* Semantic Status Cards & Badges (High-Contrast in Dark Mode) */
+    .sw-status-emerald { background-color: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: #047857; }
+    html.dark .sw-status-emerald { background-color: rgba(16, 185, 129, 0.18); border: 1px solid rgba(52, 211, 153, 0.45); color: #6ee7b7; }
+
+    .sw-status-orange { background-color: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.35); color: #c2410c; }
+    html.dark .sw-status-orange { background-color: rgba(249, 115, 22, 0.18); border: 1px solid rgba(251, 146, 60, 0.48); color: #fdba74; }
+
+    .sw-status-indigo { background-color: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.35); color: #4338ca; }
+    html.dark .sw-status-indigo { background-color: rgba(99, 102, 241, 0.22); border: 1px solid rgba(129, 140, 248, 0.52); color: #a5b4fc; }
+
+    .sw-status-amber { background-color: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.38); color: #b45309; }
+    html.dark .sw-status-amber { background-color: rgba(245, 158, 11, 0.18); border: 1px solid rgba(251, 191, 36, 0.48); color: #fde047; }
+
+    .sw-status-rose { background-color: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.35); color: #be123c; }
+    html.dark .sw-status-rose { background-color: rgba(244, 63, 94, 0.18); border: 1px solid rgba(251, 113, 133, 0.48); color: #fda4af; }
+
+    /* Adaptive Semantic Text Colors */
+    .sw-text-indigo { color: #4338ca; }
+    html.dark .sw-text-indigo { color: #a5b4fc; }
+    .sw-text-amber { color: #b45309; }
+    html.dark .sw-text-amber { color: #fde047; }
+    .sw-text-orange { color: #c2410c; }
+    html.dark .sw-text-orange { color: #fdba74; }
+  </style>
+</head>
+<body class="sw-surface antialiased transition-colors duration-200 min-h-screen w-full overflow-x-hidden">
+
+  <!-- Top Sticky Header (Mobile-First & Zero Overflow) -->
+  <header class="sticky top-0 z-40 border-b sw-border sw-card/95 backdrop-blur w-full">
+    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 py-3 space-y-2.5 lg:space-y-0 lg:flex lg:items-center lg:justify-between gap-4">
+      
+      <!-- Brand Row + Font & Dark Mode Buttons -->
+      <div class="flex items-center justify-between gap-2 min-w-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 shrink-0 rounded-lg sw-btn-forest flex items-center justify-center text-white font-bold text-sm shadow-xs">
+            SW
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-bold text-sm sm:text-base tracking-tight">shadcn/blade</span>
+              <span class="px-2 py-0.5 text-xs font-semibold rounded-md sw-status-emerald whitespace-nowrap">
+                Desember 2026
+              </span>
+            </div>
+            <p class="text-xs sw-muted-text truncate">Shoe Workshop UI Design System • Soft Slate Dark Mode</p>
+          </div>
+        </div>
+
+        <!-- Font Switcher + Dark Mode Toggle -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="cycleFont()" id="font-toggle-btn" title="Klik untuk ganti Font Utama (Inter / Geist / Plus Jakarta Sans)" class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg sw-btn-outline text-xs font-semibold transition-all cursor-pointer">
+            <span class="text-[#22AF85] font-mono font-bold">Aa</span>
+            <span id="font-label">Inter</span>
+          </button>
+          <button onclick="toggleTheme()" id="theme-toggle-btn" class="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-lg sw-btn-outline text-xs font-semibold transition-all cursor-pointer">
+            <span id="theme-icon">🌙</span>
+            <span id="theme-label">Dark (Slate Dimmed)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Horizontal Swipeable Tab Pills (No clipping on 427px Mobile!) -->
+      <div class="w-full lg:w-auto overflow-x-auto no-scrollbar">
+        <div class="inline-flex p-1 rounded-lg sw-muted border sw-border min-w-max gap-0.5">
+          <button onclick="switchMainTab('tokens')" id="tab-btn-tokens" class="main-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all sw-tab-active">
+            1. Color &amp; Tokens
+          </button>
+          <button onclick="switchMainTab('components')" id="tab-btn-components" class="main-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all sw-muted-text cursor-pointer">
+            2. Komponen &lt;x-ui.*&gt;
+          </button>
+          <button onclick="switchMainTab('workshop')" id="tab-btn-workshop" class="main-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all sw-muted-text cursor-pointer">
+            3. Simulasi Tabel &amp; SPK
+          </button>
+          <button onclick="switchMainTab('rules')" id="tab-btn-rules" class="main-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all sw-muted-text cursor-pointer">
+            4. Aturan Mobile &amp; Tabel
+          </button>
+          <button onclick="switchMainTab('compare')" id="tab-btn-compare" class="main-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all sw-muted-text cursor-pointer">
+            5. Before vs After
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-3.5 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 w-full min-w-0">
+
+    <!-- Hero Banner -->
+    <div class="rounded-xl border sw-border sw-card p-4 sm:p-6 shadow-xs relative overflow-hidden min-w-0">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 min-w-0">
+        <div class="space-y-2 max-w-2xl min-w-0">
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border sw-border sw-subcard text-xs font-medium sw-muted-text max-w-full flex-wrap">
+            <span class="w-2 h-2 rounded-full bg-[#22AF85] shrink-0"></span>
+            <span class="break-words">Palet Tetap Sama: Emerald <code>#22AF85</code> • Forest <code>#1A4D3E</code> • Gold <code>#FFC232</code></span>
+          </div>
+          <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight break-words">
+            Arsitektur UI Baru Berbasis <span class="text-[#22AF85]">Shadcn UI</span> + Laravel Blade
+          </h1>
+          <p class="text-xs sm:text-sm sw-muted-text leading-relaxed break-words">
+            100% <strong>Zero Logic Change</strong>: Seluruh direktif Livewire (<code>wire:model</code>, <code>wire:click</code>) dan state Alpine.js (<code>x-data="{ expanded: false }"</code>) tetap utuh—hanya lapisan visual yang ditingkatkan menjadi bersih, responsif, dan konsisten di Mobile maupun Desktop.
+          </p>
+        </div>
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+          <button onclick="openDemoModal()" class="inline-flex items-center justify-center gap-2 rounded-lg text-xs font-semibold h-10 md:h-9 px-4 bg-[#22AF85] text-white hover:bg-[#1c9671] shadow-xs transition-colors cursor-pointer">
+            <span>✨ Coba Adaptive Modal / Bottom Sheet</span>
+          </button>
+          <button onclick="switchMainTab('rules')" class="inline-flex items-center justify-center gap-2 rounded-lg text-xs font-semibold h-10 md:h-9 px-4 sw-btn-outline transition-colors cursor-pointer">
+            <span>Lihat Aturan Mobile &amp; Tabel →</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: COLOR TOKENS & TYPOGRAPHY           -->
+    <!-- ========================================== -->
+    <section id="tab-content-tokens" class="space-y-6 min-w-0">
+      <div class="flex flex-wrap items-center justify-between gap-2 min-w-0">
+        <div class="min-w-0">
+          <h2 class="text-base sm:text-lg font-bold tracking-tight break-words">1. Brand Color Tokens (Shoe Workshop × Shadcn Zinc)</h2>
+          <p class="text-xs sw-muted-text">Klik kartu warna mana saja untuk menyalin kode HEX / CSS Variable.</p>
+        </div>
+        <span id="copy-toast" class="hidden px-3 py-1 rounded-md bg-[#1A4D3E] text-white text-xs font-semibold">
+          ✓ Tersalin!
+        </span>
+      </div>
+
+      <!-- Primary Brand Colors -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 min-w-0">
+        <div onclick="copyToken('#22AF85')" class="rounded-xl border sw-border sw-card p-4 shadow-xs cursor-pointer hover:border-[#22AF85] transition-all min-w-0">
+          <div class="h-20 rounded-lg bg-[#22AF85] mb-3 flex items-end p-2.5 justify-between text-white">
+            <span class="text-xs font-mono font-bold">#22AF85</span>
+            <span class="text-xs bg-black/20 px-2 py-0.5 rounded">--primary</span>
+          </div>
+          <p class="font-semibold text-sm">SW Emerald (Primary)</p>
+          <p class="text-xs sw-muted-text mt-0.5">Tombol utama, active state, focus ring, progress bar.</p>
+        </div>
+
+        <div onclick="copyToken('#1A4D3E')" class="rounded-xl border sw-border sw-card p-4 shadow-xs cursor-pointer hover:border-[#1A4D3E] transition-all min-w-0">
+          <div class="h-20 rounded-lg bg-[#1A4D3E] mb-3 flex items-end p-2.5 justify-between text-white">
+            <span class="text-xs font-mono font-bold">#1A4D3E</span>
+            <span class="text-xs bg-white/15 px-2 py-0.5 rounded">--brand-deep</span>
+          </div>
+          <p class="font-semibold text-sm">SW Deep Forest (Secondary)</p>
+          <p class="text-xs sw-muted-text mt-0.5">Sidebar navigasi, header kartu utama, aksen eksklusif.</p>
+        </div>
+
+        <div onclick="copyToken('#FFC232')" class="rounded-xl border sw-border sw-card p-4 shadow-xs cursor-pointer hover:border-[#FFC232] transition-all min-w-0">
+          <div class="h-20 rounded-lg bg-[#FFC232] mb-3 flex items-end p-2.5 justify-between text-[#1A4D3E]">
+            <span class="text-xs font-mono font-bold">#FFC232</span>
+            <span class="text-xs bg-black/10 px-2 py-0.5 rounded font-semibold">--accent</span>
+          </div>
+          <p class="font-semibold text-sm">SW Gold (Accent Highlight)</p>
+          <p class="text-xs sw-muted-text mt-0.5">Badge aksesoris, CTA prioritas, sorotan metrik penting.</p>
+        </div>
+
+        <div onclick="copyToken('#1B202B')" class="rounded-xl border sw-border sw-card p-4 shadow-xs cursor-pointer hover:border-zinc-400 transition-all min-w-0">
+          <div class="h-20 rounded-lg sw-muted border sw-border mb-3 flex items-end p-2.5 justify-between">
+            <span class="text-xs font-mono font-bold" style="color: var(--sw-text)">Slate / Zinc</span>
+            <span class="text-xs sw-card px-2 py-0.5 rounded border sw-border">--border / --card</span>
+          </div>
+          <p class="font-semibold text-sm">Soft Slate Neutrals</p>
+          <p class="text-xs sw-muted-text mt-0.5">Tidak hitam pekat di mode gelap (#13171F / #1B202B) agar mata tidak cepat lelah.</p>
+        </div>
+      </div>
+
+      <!-- Official Dark Mode Standard: Slate Dimmed -->
+      <div class="rounded-xl border sw-border sw-card p-4 sm:p-5 space-y-3.5 shadow-xs min-w-0">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-semibold">Standar Resmi Dark Mode: <code>Slate Dimmed</code> (Ergonomic Anti-Silau)</h3>
+              <span class="px-2 py-0.5 text-[11px] font-semibold rounded bg-[#22AF85]/15 text-[#22AF85] border border-[#22AF85]/30">Locked Standard</span>
+            </div>
+            <p class="text-xs sw-muted-text mt-0.5">Menggunakan palet <strong>Slate Dimmed</strong> (bukan hitam pekat <code>#000000</code>) agar mata admin, CS, dan teknisi tetap teduh saat menatap tabel SPK berjam-jam. Klik kartu di bawah untuk menyalin kode HEX:</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div onclick="copyToken('#13171F')" class="p-3.5 rounded-xl border border-[#2c3545] bg-[#13171f] text-[#e6edf3] cursor-pointer hover:border-[#22AF85] transition-all">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="text-xs font-bold text-[#22AF85]">Background</span>
+              <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-[#1b202b] border border-[#2c3545]">#13171F</span>
+            </div>
+            <p class="text-[11px] text-[#94a3b8]">Surface halaman utama (<code>--background</code>)</p>
+          </div>
+
+          <div onclick="copyToken('#1B202B')" class="p-3.5 rounded-xl border border-[#2c3545] bg-[#1b202b] text-[#e6edf3] cursor-pointer hover:border-[#22AF85] transition-all">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="text-xs font-bold text-white">Card / Surface</span>
+              <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-[#13171f] border border-[#2c3545]">#1B202B</span>
+            </div>
+            <p class="text-[11px] text-[#94a3b8]">Kartu, tabel, &amp; modal (<code>--card</code>)</p>
+          </div>
+
+          <div onclick="copyToken('#242B38')" class="p-3.5 rounded-xl border border-[#2c3545] bg-[#242b38] text-[#e6edf3] cursor-pointer hover:border-[#22AF85] transition-all">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="text-xs font-bold text-zinc-200">Muted / Hover</span>
+              <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-[#1b202b] border border-[#2c3545]">#242B38</span>
+            </div>
+            <p class="text-[11px] text-[#94a3b8]">Header tabel &amp; hover baris (<code>--muted</code>)</p>
+          </div>
+
+          <div onclick="copyToken('#2C3545')" class="p-3.5 rounded-xl border-2 border-[#2c3545] bg-[#1b202b] text-[#e6edf3] cursor-pointer hover:border-[#22AF85] transition-all">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="text-xs font-bold text-amber-300">Border &amp; Text</span>
+              <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-[#13171f] border border-[#2c3545]">#2C3545</span>
+            </div>
+            <p class="text-[11px] text-[#94a3b8]">Border 1px &amp; Teks <code>#E6EDF3</code></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semantic Status Colors (Tracking & Workshop) -->
+      <div class="rounded-xl border sw-border sw-card p-4 sm:p-6 shadow-xs space-y-4 min-w-0">
+        <div>
+          <h3 class="text-sm font-semibold">Semantic Status Tokens (Standar Status SPK &amp; Tracking)</h3>
+          <p class="text-xs sw-muted-text">Otomatis meredup (<em>translucent tinted surface</em>) saat mode gelap aktif agar tidak menyilaukan mata.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div class="p-3.5 rounded-lg border sw-status-emerald">
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> SELESAI / LUNAS
+            </span>
+            <p class="text-xs opacity-80 mt-1 font-mono">emerald-500/15</p>
+          </div>
+          <div class="p-3.5 rounded-lg border sw-status-orange">
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-orange-500"></span> SERVICE (OTO)
+            </span>
+            <p class="text-xs opacity-80 mt-1 font-mono">orange-500/15</p>
+          </div>
+          <div class="p-3.5 rounded-lg border sw-status-indigo">
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-indigo-500"></span> SERVICE (GARANSI)
+            </span>
+            <p class="text-xs opacity-80 mt-1 font-mono">indigo-500/15</p>
+          </div>
+          <div class="p-3.5 rounded-lg border sw-status-amber">
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span> SERVICE (REVISI)
+            </span>
+            <p class="text-xs opacity-80 mt-1 font-mono">amber-500/15</p>
+          </div>
+          <div class="p-3.5 rounded-lg border sw-status-rose">
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span> HOLD CX / OVERDUE
+            </span>
+            <p class="text-xs opacity-80 mt-1 font-mono">rose-500/15</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typography & Font Pairing Card (Shadcn Standard) -->
+      <div class="rounded-xl border sw-border sw-card p-4 sm:p-5 space-y-4 shadow-xs min-w-0">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-semibold">Tipografi &amp; Pasangan Font Shadcn (<code>Inter</code> / <code>Geist</code> + <code>JetBrains Mono</code>)</h3>
+            <p class="text-xs sw-muted-text">Klik tombol pilihan font di bawah (atau tombol <code>Aa</code> di kanan atas) untuk membandingkan langsung tampilan huruf di seluruh halaman.</p>
+          </div>
+          <div class="inline-flex p-1 rounded-lg sw-muted border sw-border gap-1 flex-wrap">
+            <button onclick="setFont(0)" id="font-pill-0" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#22AF85] text-white shadow-xs cursor-pointer">
+              Inter (Shadcn Default)
+            </button>
+            <button onclick="setFont(1)" id="font-pill-1" class="px-2.5 py-1 rounded-md text-xs font-semibold sw-muted-text hover:text-zinc-900 dark:hover:text-white cursor-pointer">
+              Geist Sans (Vercel)
+            </button>
+            <button onclick="setFont(2)" id="font-pill-2" class="px-2.5 py-1 rounded-md text-xs font-semibold sw-muted-text hover:text-zinc-900 dark:hover:text-white cursor-pointer">
+              Plus Jakarta Sans (SW Lama)
+            </button>
+          </div>
+        </div>
+
+        <!-- Sample Preview Box Matching User's Screenshot -->
+        <div class="rounded-lg border border-zinc-800 bg-[#0d1117] text-zinc-100 p-4 sm:p-5 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] font-mono text-emerald-400 uppercase tracking-wider">Preview Kontras Teks &amp; Inline Code Badge (Seperti Screenshot Anda)</span>
+            <span class="text-[11px] font-mono text-zinc-400">Inter + JetBrains Mono</span>
+          </div>
+          <h4 class="text-sm sm:text-base font-bold text-white tracking-tight">
+            Rencana Implementasi: Standar Mobile, Desktop, &amp; Tabel pada Shadcn-Blade Design System (Zero Logic Change)
+          </h4>
+          <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+            Menetapkan aturan baku <strong class="text-white">Mobile vs Desktop</strong> serta <strong class="text-white">Standar Tabel Responsif</strong> (<code class="!bg-zinc-800 !text-amber-300 !border-zinc-700">station-card</code> &amp; DataTable) dengan prinsip <strong class="text-white">100% Zero Logic Change</strong> (tidak mengubah property Livewire, <code class="!bg-zinc-800 !text-amber-300 !border-zinc-700">wire:model</code>, <code class="!bg-zinc-800 !text-amber-300 !border-zinc-700">wire:click</code>, maupun state Alpine.js <code class="!bg-zinc-800 !text-amber-300 !border-zinc-700">x-data="{ expanded: false }"</code> yang sudah berjalan) pada viewport <code class="!bg-zinc-800 !text-amber-300 !border-zinc-700">Pixel 9 Pro (427 × 952)</code>.
+          </p>
+        </div>
+      </div>
+
+      <!-- CSS Variables Setup Preview -->
+      <div class="rounded-xl border sw-border sw-card overflow-hidden shadow-xs min-w-0">
+        <div class="px-4 sm:px-5 py-3 border-b sw-border flex items-center justify-between gap-2">
+          <span class="text-xs font-semibold truncate">Konfigurasi <code class="font-mono text-[#22AF85]">resources/css/app.css</code> (Light &amp; Slate Dimmed Dark)</span>
+          <span class="text-xs sw-muted-text font-mono shrink-0">CSS Variables</span>
+        </div>
+        <pre class="p-4 sm:p-5 text-xs font-mono sw-code overflow-x-auto max-w-full leading-relaxed"><code>@layer base {
+  :root {
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --background: #F8FAFC;           /* Slate-50 Soft Light */
+    --foreground: #0F172A;           /* Slate-900 Crisp Text */
+    --card: #FFFFFF;                 /* Pure White Card */
+    --muted: #F1F5F9;                /* Slate-100 Muted Surface */
+    --muted-foreground: #64748B;     /* Slate-500 Secondary Text */
+    --border: #E2E8F0;               /* Slate-200 1px Border */
+    --primary: #22AF85;              /* Shoe Workshop Emerald */
+    --secondary: #1A4D3E;            /* Shoe Workshop Deep Forest */
+    --accent: #FFC232;               /* Shoe Workshop Gold */
+    --radius: 0.625rem;              /* 10px Shadcn Radius */
+  }
+
+  .dark {
+    --background: #13171F;           /* Slate Dimmed Surface (Anti-Halation) */
+    --foreground: #E6EDF3;           /* Soft Off-White Text */
+    --card: #1B202B;                 /* Elevated Slate Card */
+    --muted: #242B38;                /* Table Header / Row Hover */
+    --muted-foreground: #94A3B8;     /* Muted Slate Text */
+    --border: #2C3545;               /* Subtle 1px Dark Slate Border */
+  }
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: SHADCN-BLADE CORE COMPONENTS        -->
+    <!-- ========================================== -->
+    <section id="tab-content-components" class="hidden space-y-6 min-w-0">
+      <div>
+        <h2 class="text-base sm:text-lg font-bold tracking-tight">2. Komponen Dasar Blade (&lt;x-ui.*&gt;)</h2>
+        <p class="text-xs sw-muted-text">Ukuran otomatis adaptif: tinggi <code>h-10 (40px)</code> di Mobile agar nyaman disentuh jari, dan <code>md:h-9 (36px)</code> di Desktop.</p>
+      </div>
+
+      <!-- Component A: Buttons -->
+      <div class="rounded-xl border sw-border sw-card overflow-hidden shadow-xs min-w-0">
+        <div class="px-4 sm:px-5 py-3 border-b sw-border flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-semibold">Button Variants (<code class="font-mono text-[#22AF85]">&lt;x-ui.button&gt;</code>)</h3>
+            <p class="text-xs sw-muted-text">Mendukung 6 varian warna dengan tinggi responsif <code>h-10 md:h-9</code> dan border kontras tinggi di Mode Gelap.</p>
+          </div>
+          <div class="inline-flex p-0.5 rounded-lg sw-muted border sw-border">
+            <button onclick="toggleCode('btn', 'preview')" id="btn-tab-preview" class="px-2.5 py-1 rounded-md text-xs font-semibold sw-tab-active">Preview</button>
+            <button onclick="toggleCode('btn', 'code')" id="btn-tab-code" class="px-2.5 py-1 rounded-md text-xs font-semibold sw-muted-text cursor-pointer">Blade Code</button>
+          </div>
+        </div>
+        <div id="btn-panel-preview" class="p-4 sm:p-6 flex flex-wrap items-center gap-2.5 sm:gap-3">
+          <button class="inline-flex items-center justify-center gap-2 rounded-lg text-xs font-semibold h-10 md:h-9 px-4 bg-[#22AF85] text-white hover:bg-[#1c9671] shadow-xs transition-colors cursor-pointer">
+            Simpan SPK (Primary)
+          </button>
+          <button class="inline-flex items-center justify-center gap-2 rounded-lg text-xs font-semibold h-10 md:h-9 px-4 sw-btn-forest shadow-xs transition-colors cursor-pointer">
+            Cetak Manifest (Forest)
+          </button>
+          <button class="inline-flex items-center justify-center gap-2 rounded-lg text-xs font-bold h-10 md:h-9 px-4 bg-[#FFC232] text-[#1A4D3E] hover:bg-[#f0b422] shadow-xs transition-colors cursor-pointer">
+            ⚡ Fast Track OTO (Accent)
+          </button>
+          <button class="inline-flex items-center justify-center gap-2 rounded-lg text-xs font-semibold h-10 md:h-9 px-4 sw-btn-outline transition-colors cursor-pointer">
+            Filter Data (Outline)
+          </button>
+          <button class="inline-flex items-center justify-center gap-2 rounded-lg text-xs font-semibold h-10 md:h-9 px-4 sw-subcard hover:opacity-85 transition-colors cursor-pointer">
+            Batal (Ghost)
+          </button>
+          <button class="inline-flex items-center justify-center gap-2 rounded-lg text-xs font-semibold h-10 md:h-9 px-4 bg-rose-600 text-white hover:bg-rose-700 border border-rose-400/30 shadow-xs transition-colors cursor-pointer">
+            Ajukan Revisi (Destructive)
+          </button>
+        </div>
+        <div id="btn-panel-code" class="hidden">
+          <pre class="p-4 sm:p-5 text-xs font-mono sw-code overflow-x-auto max-w-full leading-relaxed"><code>&lt;!-- Seluruh atribut wire:click / @click diteruskan otomatis via $attributes --&gt;
+&lt;x-ui.button variant="default" wire:click="save"&gt;Simpan SPK (Primary)&lt;/x-ui.button&gt;
+&lt;x-ui.button variant="secondary"&gt;Cetak Manifest (Forest)&lt;/x-ui.button&gt;
+&lt;x-ui.button variant="accent"&gt;⚡ Fast Track OTO (Accent)&lt;/x-ui.button&gt;
+&lt;x-ui.button variant="outline"&gt;Filter Data (Outline)&lt;/x-ui.button&gt;
+&lt;x-ui.button variant="ghost"&gt;Batal (Ghost)&lt;/x-ui.button&gt;
+&lt;x-ui.button variant="destructive" @click="showRevisionModal = true"&gt;Ajukan Revisi&lt;/x-ui.button&gt;</code></pre>
+        </div>
+      </div>
+
+      <!-- Component B: Badges -->
+      <div class="rounded-xl border sw-border sw-card overflow-hidden shadow-xs min-w-0">
+        <div class="px-4 sm:px-5 py-3 border-b sw-border flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-semibold">Status &amp; Priority Badges (<code class="font-mono text-[#22AF85]">&lt;x-ui.badge&gt;</code>)</h3>
+            <p class="text-xs sw-muted-text">Kontras tinggi dengan border tegas 1px baik di mode terang maupun gelap.</p>
+          </div>
+          <div class="inline-flex p-0.5 rounded-lg sw-muted border sw-border">
+            <button onclick="toggleCode('badge', 'preview')" id="badge-tab-preview" class="px-2.5 py-1 rounded-md text-xs font-semibold sw-tab-active">Preview</button>
+            <button onclick="toggleCode('badge', 'code')" id="badge-tab-code" class="px-2.5 py-1 rounded-md text-xs font-semibold sw-muted-text cursor-pointer">Blade Code</button>
+          </div>
+        </div>
+        <div id="badge-panel-preview" class="p-4 sm:p-6 flex flex-wrap items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-semibold sw-status-emerald">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#22AF85]"></span> Selesai Reparasi
+          </span>
+          <span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-semibold sw-status-orange">
+            ⚡ Service (OTO)
+          </span>
+          <span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-semibold sw-status-indigo">
+            🛡️ Service (Garansi • GR)
+          </span>
+          <span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-semibold sw-status-amber">
+            🔄 Service (Revisi)
+          </span>
+          <span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-semibold sw-status-rose">
+            ⚠️ Hold for CX
+          </span>
+          <span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-bold sw-badge-gold">
+            ★ Prioritas Express
+          </span>
+          <span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-mono font-semibold sw-badge-mono">
+            S-2611-04-0002-SW
+          </span>
+        </div>
+        <div id="badge-panel-code" class="hidden">
+          <pre class="p-4 sm:p-5 text-xs font-mono sw-code overflow-x-auto max-w-full leading-relaxed"><code>&lt;x-ui.badge variant="success" dot&gt;Selesai Reparasi&lt;/x-ui.badge&gt;
+&lt;x-ui.badge variant="oto"&gt;⚡ Service (OTO)&lt;/x-ui.badge&gt;
+&lt;x-ui.badge variant="warranty"&gt;🛡️ Service (Garansi • GR)&lt;/x-ui.badge&gt;
+&lt;x-ui.badge variant="revision"&gt;🔄 Service (Revisi)&lt;/x-ui.badge&gt;
+&lt;x-ui.badge variant="destructive"&gt;⚠️ Hold for CX&lt;/x-ui.badge&gt;</code></pre>
+        </div>
+      </div>
+
+      <!-- Component C: Form Inputs, Select & Switch -->
+      <div class="rounded-xl border sw-border sw-card overflow-hidden shadow-xs min-w-0">
+        <div class="px-4 sm:px-5 py-3 border-b sw-border flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-semibold">Form Controls (<code class="font-mono text-[#22AF85]">&lt;x-ui.input&gt;</code>, <code class="font-mono text-[#22AF85]">&lt;x-ui.switch&gt;</code>)</h3>
+            <p class="text-xs sw-muted-text">Mendukung <code>wire:model.live</code> tanpa mengubah logika backend.</p>
+          </div>
+          <div class="inline-flex p-0.5 rounded-lg sw-muted border sw-border">
+            <button onclick="toggleCode('form', 'preview')" id="form-tab-preview" class="px-2.5 py-1 rounded-md text-xs font-semibold sw-tab-active">Preview</button>
+            <button onclick="toggleCode('form', 'code')" id="form-tab-code" class="px-2.5 py-1 rounded-md text-xs font-semibold sw-muted-text cursor-pointer">Blade Code</button>
+          </div>
+        </div>
+        <div id="form-panel-preview" class="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+          <div class="space-y-1.5 min-w-0">
+            <label class="block text-xs font-semibold">Nomor SPK / Barcode</label>
+            <input type="text" value="S-2611-04-0002-SW" class="w-full h-10 md:h-9 px-3 py-1.5 rounded-lg border sw-input text-xs font-mono transition-all" />
+            <p class="text-xs sw-muted-text">Tinggi 40px di HP, 36px di Desktop.</p>
+          </div>
+
+          <div class="space-y-1.5 min-w-0">
+            <label class="block text-xs font-semibold">Stasiun Tujuan</label>
+            <select class="w-full h-10 md:h-9 px-3 py-1.5 rounded-lg border sw-input text-xs font-medium transition-all">
+              <option>Stasiun Produksi (Reparasi Sol)</option>
+              <option>Stasiun Produksi (Upper &amp; Jahit)</option>
+              <option>Stasiun Khusus OTO (Fast Track)</option>
+              <option>Quality Control Terpadu</option>
+            </select>
+            <p class="text-xs sw-muted-text">Pilih sub-stasiun pengerjaan teknisi.</p>
+          </div>
+
+          <div class="space-y-1.5 min-w-0">
+            <label class="block text-xs font-semibold">Opsi Otomatisasi WhatsApp CX</label>
+            <div onclick="toggleSwitchDemo()" class="p-3 rounded-lg sw-subcard flex items-center justify-between cursor-pointer select-none">
+              <div class="min-w-0 pr-2">
+                <p class="text-xs font-semibold">Kirim Notifikasi WA</p>
+                <p class="text-xs sw-muted-text truncate">Saat SPK masuk tahap Selesai</p>
+              </div>
+              <div id="demo-switch-track" class="w-10 h-5 shrink-0 rounded-full bg-[#22AF85] p-0.5 transition-colors flex items-center">
+                <div id="demo-switch-thumb" class="w-4 h-4 rounded-full bg-white shadow-xs transform translate-x-5 transition-transform"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="form-panel-code" class="hidden">
+          <pre class="p-4 sm:p-5 text-xs font-mono sw-code overflow-x-auto max-w-full leading-relaxed"><code>&lt;x-ui.input wire:model.live.debounce.300ms="search" placeholder="Cari SPK / Customer..." /&gt;
+&lt;x-ui.select wire:model.live="activeStation" :options="$stations" /&gt;</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: REAL-WORLD WORKSHOP & HYBRID TABLE  -->
+    <!-- ========================================== -->
+    <section id="tab-content-workshop" class="hidden space-y-6 min-w-0">
+      <div>
+        <h2 class="text-base sm:text-lg font-bold tracking-tight">3. Simulasi Hybrid Responsive Table &amp; Station Card</h2>
+        <p class="text-xs sw-muted-text">
+          <strong>Coba langsung di Mobile vs Desktop:</strong> Klik baris SPK mana saja pada tabel di bawah untuk membuka <em>Expandable Drawer</em> (menggunakan pola <code>@click="expanded = !expanded"</code> yang sama persis dengan kode Anda saat ini!).
+        </p>
+      </div>
+
+      <!-- 3A: Executive KPI Row -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 min-w-0">
+        <div class="rounded-xl border sw-border sw-card p-4 sm:p-5 shadow-xs space-y-1.5 min-w-0">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-xs font-medium sw-muted-text truncate">SPK Aktif</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-semibold sw-status-emerald">+12%</span>
+          </div>
+          <div class="text-xl sm:text-2xl font-bold font-mono tracking-tight">148 Unit</div>
+          <p class="text-xs sw-muted-text truncate">32 Prep • 64 Prod • 52 QC</p>
+        </div>
+
+        <div class="rounded-xl border sw-border sw-card p-4 sm:p-5 shadow-xs space-y-1.5 min-w-0">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-xs font-medium sw-muted-text truncate">OTO &amp; Garansi</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-semibold sw-status-orange">Aktif</span>
+          </div>
+          <div class="text-xl sm:text-2xl font-bold font-mono tracking-tight">19 Unit</div>
+          <p class="text-xs sw-muted-text truncate">11 OTO • 5 GR • 3 Revisi</p>
+        </div>
+
+        <div class="rounded-xl border sw-border sw-card p-4 sm:p-5 shadow-xs space-y-1.5 min-w-0">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-xs font-medium sw-muted-text truncate">SLA Teknisi</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-semibold sw-status-emerald">Optimal</span>
+          </div>
+          <div class="text-xl sm:text-2xl font-bold font-mono tracking-tight">96.8%</div>
+          <p class="text-xs sw-muted-text truncate">Rerata 4.2 Hari Kerja</p>
+        </div>
+
+        <div class="rounded-xl border sw-border sw-card p-4 sm:p-5 shadow-xs space-y-1.5 min-w-0">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-xs font-medium sw-muted-text truncate">Upsell OTO</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-bold sw-badge-gold">Target</span>
+          </div>
+          <div class="text-xl sm:text-2xl font-bold font-mono tracking-tight truncate">Rp 18,4 Jt</div>
+          <p class="text-xs sw-muted-text truncate">42 OTO Disetujui</p>
+        </div>
+      </div>
+
+      <!-- 3B: Hybrid Responsive Table (station-card.blade.php Simulation) -->
+      <div class="rounded-xl border sw-border sw-card shadow-xs overflow-hidden min-w-0">
+        <!-- Toolbar Header with Horizontal Swipe Filter Pills -->
+        <div class="p-4 border-b sw-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-bold">Hybrid Responsive Table (Simulasi <code class="font-mono text-[#22AF85]">station-card.blade.php</code>)</h3>
+            </div>
+            <p class="text-xs sw-muted-text">Klik baris SPK untuk membuka/menutup detail (persis logika <code>@click="expanded = !expanded"</code>).</p>
+          </div>
+          <div class="w-full sm:w-auto overflow-x-auto no-scrollbar">
+            <div class="inline-flex items-center gap-1.5 min-w-max">
+              <button onclick="filterTable('ALL')" class="tbl-filter-btn px-2.5 py-1 rounded-md text-xs font-semibold sw-btn-forest cursor-pointer" data-filter="ALL">Semua (3)</button>
+              <button onclick="filterTable('OTO')" class="tbl-filter-btn px-2.5 py-1 rounded-md text-xs font-semibold sw-btn-outline cursor-pointer" data-filter="OTO">OTO</button>
+              <button onclick="filterTable('GARANSI')" class="tbl-filter-btn px-2.5 py-1 rounded-md text-xs font-semibold sw-btn-outline cursor-pointer" data-filter="GARANSI">Garansi</button>
+              <button onclick="filterTable('REVISI')" class="tbl-filter-btn px-2.5 py-1 rounded-md text-xs font-semibold sw-btn-outline cursor-pointer" data-filter="REVISI">Revisi</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Wrapper -->
+        <div class="w-full overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b sw-border text-xs sw-muted-text font-semibold sw-muted">
+                <th class="py-3 pl-4 pr-2 w-10">
+                  <input type="checkbox" class="w-4 h-4 rounded accent-[#22AF85]" />
+                </th>
+                <th class="py-3 px-3">Nomor SPK &amp; Unit</th>
+                <th class="py-3 px-3 hidden md:table-cell">Pelanggan</th>
+                <th class="py-3 px-3 hidden lg:table-cell">PIC &amp; Sub-Stasiun</th>
+                <th class="py-3 px-3">Status</th>
+                <th class="py-3 px-3 hidden sm:table-cell text-right">Sisa SLA</th>
+                <th class="py-3 pl-2 pr-4 text-right w-10">Detail</th>
+              </tr>
+            </thead>
+
+            <!-- TBODY 1: OTO Row + Expandable Drawer -->
+            <tbody class="spk-tbody text-xs border-b sw-border" data-status="OTO">
+              <tr onclick="toggleRowDrawer('row-1')" class="border-b sw-border sw-row-hover transition-colors cursor-pointer">
+                <td class="py-3.5 pl-4 pr-2 align-top" onclick="event.stopPropagation()">
+                  <input type="checkbox" class="w-4 h-4 rounded accent-[#22AF85]" />
+                </td>
+                <td class="py-3.5 px-3 align-top">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="font-mono font-bold px-2 py-0.5 rounded sw-badge-mono">S-2611-04-0002-SW</span>
+                    <span class="px-2 py-0.5 rounded text-xs font-bold sw-badge-gold">★ Prioritas</span>
+                  </div>
+                  <p class="font-semibold mt-1">Nike Air Jordan 1 High</p>
+                  <p class="sw-muted-text md:hidden">Sidik Waluya • PIC: Kang Deden</p>
+                </td>
+                <td class="py-3.5 px-3 align-top hidden md:table-cell">
+                  <p class="font-semibold">Sidik Waluya</p>
+                  <p class="sw-muted-text">0812-3456-7890</p>
+                </td>
+                <td class="py-3.5 px-3 align-top hidden lg:table-cell">
+                  <p class="font-semibold">Kang Deden</p>
+                  <p class="sw-muted-text">OTO: Repaint &amp; Deep Clean</p>
+                </td>
+                <td class="py-3.5 px-3 align-top">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md font-semibold sw-status-orange whitespace-nowrap">
+                    ⚡ Service (OTO)
+                  </span>
+                </td>
+                <td class="py-3.5 px-3 align-top hidden sm:table-cell text-right font-mono font-bold text-[#22AF85]">
+                  2 HK
+                </td>
+                <td class="py-3.5 pl-2 pr-4 align-top text-right">
+                  <span id="chevron-row-1" class="inline-block transition-transform duration-200 font-bold text-sm">▾</span>
+                </td>
+              </tr>
+              <!-- Expandable Drawer Row (x-show="expanded") -->
+              <tr id="drawer-row-1" class="sw-surface">
+                <td colspan="7" class="p-4">
+                  <div class="rounded-lg border sw-border sw-card p-4 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b sw-border pb-2.5">
+                      <div>
+                        <span class="text-xs font-bold text-[#22AF85]">Detail Stasiun SPK (Drawer Terbuka • x-show="expanded")</span>
+                        <p class="text-xs sw-muted-text">Di layar HP, seluruh kolom yang disembunyikan tampil rapi di sini tanpa menggeser tabel.</p>
+                      </div>
+                      <span class="px-2.5 py-0.5 rounded-md sw-badge-gold font-semibold">Rak Aksesoris: ACC-04</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      <div class="p-3 rounded-lg sw-subcard">
+                        <p class="sw-muted-text">Pelanggan &amp; Sepatu</p>
+                        <p class="font-semibold mt-0.5">Sidik Waluya • Size 42 (White/Red)</p>
+                      </div>
+                      <div class="p-3 rounded-lg sw-subcard">
+                        <p class="sw-muted-text">Layanan Aktif</p>
+                        <p class="font-semibold mt-0.5">OTO: Repaint Midsole, Deep Clean</p>
+                      </div>
+                      <div class="p-3 rounded-lg sw-subcard">
+                        <p class="sw-muted-text">Teknisi PIC &amp; Target</p>
+                        <p class="font-semibold mt-0.5">Kang Deden • Estimasi 12 Nov 2026</p>
+                      </div>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
+                      <button onclick="openDemoModal()" class="h-10 md:h-9 px-3.5 rounded-lg sw-btn-outline text-xs font-semibold transition-all cursor-pointer">
+                        ⚠️ Ajukan Revisi
+                      </button>
+                      <button class="h-10 md:h-9 px-3.5 rounded-lg bg-[#22AF85] hover:bg-[#1c9671] text-white text-xs font-semibold shadow-xs cursor-pointer">
+                        ✓ Selesaikan Stasiun
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+
+            <!-- TBODY 2: GARANSI Row + Expandable Drawer -->
+            <tbody class="spk-tbody text-xs border-b sw-border" data-status="GARANSI">
+              <tr onclick="toggleRowDrawer('row-2')" class="border-b sw-border sw-row-hover transition-colors cursor-pointer">
+                <td class="py-3.5 pl-4 pr-2 align-top" onclick="event.stopPropagation()">
+                  <input type="checkbox" class="w-4 h-4 rounded accent-[#22AF85]" />
+                </td>
+                <td class="py-3.5 px-3 align-top">
+                  <span class="font-mono font-bold px-2 py-0.5 rounded sw-badge-mono">S-2610-19-0114-GR</span>
+                  <p class="font-semibold mt-1">Adidas Samba OG</p>
+                  <p class="sw-muted-text md:hidden">Rizky Pratama • PIC: Mang Oleh</p>
+                </td>
+                <td class="py-3.5 px-3 align-top hidden md:table-cell">
+                  <p class="font-semibold">Rizky Pratama</p>
+                  <p class="sw-muted-text">0813-9988-7766</p>
+                </td>
+                <td class="py-3.5 px-3 align-top hidden lg:table-cell">
+                  <p class="font-semibold">Mang Oleh</p>
+                  <p class="sw-muted-text">Garansi: Reglue Ujung Sol</p>
+                </td>
+                <td class="py-3.5 px-3 align-top">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md font-semibold sw-status-indigo whitespace-nowrap">
+                    🛡️ Service (Garansi)
+                  </span>
+                </td>
+                <td class="py-3.5 px-3 align-top hidden sm:table-cell text-right font-mono font-bold sw-text-indigo">
+                  1 HK
+                </td>
+                <td class="py-3.5 pl-2 pr-4 align-top text-right">
+                  <span id="chevron-row-2" class="inline-block transition-transform duration-200 font-bold text-sm">▸</span>
+                </td>
+              </tr>
+              <tr id="drawer-row-2" class="hidden sw-surface">
+                <td colspan="7" class="p-4">
+                  <div class="rounded-lg border sw-border sw-card p-4 space-y-2 text-xs">
+                    <p class="font-bold sw-text-indigo">Klaim Garansi Aktif (SPK Induk: S-2610-19-0114-SW)</p>
+                    <p class="sw-muted-text">Keluhan: Lem bagian depan kiri sedikit terbuka setelah pemakaian 1 minggu. PIC: Mang Oleh.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+
+            <!-- TBODY 3: REVISI Row + Expandable Drawer -->
+            <tbody class="spk-tbody text-xs border-b sw-border" data-status="REVISI">
+              <tr onclick="toggleRowDrawer('row-3')" class="border-b sw-border sw-row-hover transition-colors cursor-pointer">
+                <td class="py-3.5 pl-4 pr-2 align-top" onclick="event.stopPropagation()">
+                  <input type="checkbox" class="w-4 h-4 rounded accent-[#22AF85]" />
+                </td>
+                <td class="py-3.5 px-3 align-top">
+                  <span class="font-mono font-bold px-2 py-0.5 rounded sw-badge-mono">S-2608-24-0961-QA</span>
+                  <p class="font-semibold mt-1">New Balance 550</p>
+                  <p class="sw-muted-text md:hidden">Andi Firmansyah • PIC: Fikri</p>
+                </td>
+                <td class="py-3.5 px-3 align-top hidden md:table-cell">
+                  <p class="font-semibold">Andi Firmansyah</p>
+                  <p class="sw-muted-text">0857-1122-3344</p>
+                </td>
+                <td class="py-3.5 px-3 align-top hidden lg:table-cell">
+                  <p class="font-semibold">Fikri</p>
+                  <p class="sw-muted-text">Revisi QC: Touch-up Cat</p>
+                </td>
+                <td class="py-3.5 px-3 align-top">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md font-semibold sw-status-amber whitespace-nowrap">
+                    🔄 Service (Revisi)
+                  </span>
+                </td>
+                <td class="py-3.5 px-3 align-top hidden sm:table-cell text-right font-mono font-bold sw-text-amber">
+                  Hari Ini
+                </td>
+                <td class="py-3.5 pl-2 pr-4 align-top text-right">
+                  <span id="chevron-row-3" class="inline-block transition-transform duration-200 font-bold text-sm">▸</span>
+                </td>
+              </tr>
+              <tr id="drawer-row-3" class="hidden sw-surface">
+                <td colspan="7" class="p-4">
+                  <div class="rounded-lg border sw-border sw-card p-4 space-y-2 text-xs">
+                    <p class="font-bold sw-text-amber">Catatan Revisi Kualitas (Stage: QC Akhir)</p>
+                    <p class="sw-muted-text">Rapikan ulang tepi midsole bagian belakang sebelum masuk ke rak Gudang Selesai.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: ATURAN MOBILE, DESKTOP & TABEL      -->
+    <!-- ========================================== -->
+    <section id="tab-content-rules" class="hidden space-y-6 min-w-0">
+      <div>
+        <h2 class="text-base sm:text-lg font-bold tracking-tight">4. Standar Baku Mobile, Desktop, &amp; Tabel (100% Zero Logic Change)</h2>
+        <p class="text-xs sw-muted-text">Panduan teknis bagaimana tampilan beradaptasi otomatis di HP Teknisi vs PC Admin tanpa mengubah satu baris pun logika PHP/Livewire.</p>
+      </div>
+
+      <!-- 4 Rules Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
+        <div class="rounded-xl border sw-border sw-card p-5 space-y-2 shadow-xs min-w-0">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-[#22AF85] uppercase tracking-wider">Aturan 1 • Tabel Responsif</span>
+            <span class="px-2 py-0.5 rounded text-xs font-mono sw-badge-mono">hidden md:table-cell</span>
+          </div>
+          <h3 class="text-sm font-bold">Hybrid Responsive Table + Expandable Drawer</h3>
+          <p class="text-xs sw-muted-text leading-relaxed">
+            Di Desktop (<code>&gt;= 768px</code>), seluruh kolom tampil utuh. Di Mobile (<code>&lt; 768px</code>), kolom sekunder disembunyikan dengan <code>hidden md:table-cell</code> dan dipindahkan ke dalam baris drawer <code>&lt;tr x-show="expanded"&gt;</code> yang sudah ada di <code>station-card.blade.php</code>.
+          </p>
+        </div>
+
+        <div class="rounded-xl border sw-border sw-card p-5 space-y-2 shadow-xs min-w-0">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-[#22AF85] uppercase tracking-wider">Aturan 2 • Modal &amp; Pop-up</span>
+            <span class="px-2 py-0.5 rounded text-xs font-mono sw-badge-mono">items-end sm:items-center</span>
+          </div>
+          <h3 class="text-sm font-bold">Centered Dialog (PC) vs Bottom Sheet (HP)</h3>
+          <p class="text-xs sw-muted-text leading-relaxed">
+            Komponen <code>&lt;x-ui.dialog&gt;</code> otomatis tampil di tengah layar pada Desktop, dan menempel di bagian bawah layar (<em>Bottom Sheet Drawer</em>) pada layar HP sehingga sangat mudah dijangkau satu tangan oleh teknisi.
+          </p>
+        </div>
+
+        <div class="rounded-xl border sw-border sw-card p-5 space-y-2 shadow-xs min-w-0">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-[#22AF85] uppercase tracking-wider">Aturan 3 • Ukuran Sentuh</span>
+            <span class="px-2 py-0.5 rounded text-xs font-mono sw-badge-mono">h-10 md:h-9</span>
+          </div>
+          <h3 class="text-sm font-bold">Touch Target Adaptif (40px Mobile / 36px Desktop)</h3>
+          <p class="text-xs sw-muted-text leading-relaxed">
+            Semua tombol (<code>&lt;x-ui.button&gt;</code>) dan kolom input (<code>&lt;x-ui.input&gt;</code>) memiliki tinggi <code>40px (h-10)</code> di layar HP agar tidak salah pencet, dan mengecil menjadi <code>36px (md:h-9)</code> di layar PC agar tabel terlihat rapi dan padat.
+          </p>
+        </div>
+
+        <div class="rounded-xl border sw-border sw-card p-5 space-y-2 shadow-xs min-w-0">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-[#22AF85] uppercase tracking-wider">Aturan 4 • Navigasi Tab</span>
+            <span class="px-2 py-0.5 rounded text-xs font-mono sw-badge-mono">overflow-x-auto no-scrollbar</span>
+          </div>
+          <h3 class="text-sm font-bold">Horizontal Swipe Pills &amp; Anti-Overflow</h3>
+          <p class="text-xs sw-muted-text leading-relaxed">
+            Deretan 7 tab stasiun di <code>/qc</code>, <code>/production</code>, dan <code>/preparation</code> dibungkus <code>overflow-x-auto no-scrollbar</code> dengan <code>min-w-0</code> pada kartu induk agar halaman tidak pernah terpotong di layar HP sempit.
+          </p>
+        </div>
+      </div>
+
+      <!-- Code Pattern Proof: Zero Logic Change -->
+      <div class="rounded-xl border sw-border sw-card overflow-hidden shadow-xs min-w-0">
+        <div class="px-4 sm:px-5 py-3 border-b sw-border flex items-center justify-between gap-2">
+          <span class="text-xs font-semibold">Bukti Pola Kode: <code class="font-mono text-[#22AF85]">station-card.blade.php</code> (0% Perubahan Logika)</span>
+          <span class="text-xs sw-muted-text font-mono">Blade + Livewire + Alpine</span>
+        </div>
+        <pre class="p-4 sm:p-5 text-xs font-mono sw-code overflow-x-auto max-w-full leading-relaxed"><code>&lt;!-- State Alpine &amp; Livewire TETAP SAMA PERSIS, hanya class CSS yang menjadi Shadcn --&gt;
+&lt;tbody x-data="{ expanded: false, showFinishModal: false }" class="divide-y divide-zinc-200 dark:divide-zinc-800"&gt;
+  &lt;tr @click="expanded = !expanded" class="hover:bg-zinc-50/80 cursor-pointer transition-colors"&gt;
+    &lt;!-- 1. Checkbox Livewire (Tetap Aktif di HP &amp; PC) --&gt;
+    &lt;td class="py-3.5 pl-4 pr-2" @click.stop&gt;
+      &lt;input type="checkbox" value="{{ $order-&gt;id }}" wire:model.live="selectedItems" /&gt;
+    &lt;/td&gt;
+
+    &lt;!-- 2. Kolom SPK + Info Ringkas khusus Mobile (md:hidden) --&gt;
+    &lt;td class="py-3.5 px-3"&gt;
+      &lt;x-ui.badge variant="mono"&gt;{{ $order-&gt;spk_number }}&lt;/x-ui.badge&gt;
+      &lt;div class="md:hidden mt-1 text-xs text-zinc-500"&gt;
+        {{ $order-&gt;shoe_brand }} • {{ $order-&gt;customer_name }}
+      &lt;/div&gt;
+    &lt;/td&gt;
+
+    &lt;!-- 3. Kolom Sekunder (Hanya tampil di Desktop &gt;= 768px) --&gt;
+    &lt;td class="py-3.5 px-3 hidden md:table-cell"&gt;{{ $order-&gt;customer_name }}&lt;/td&gt;
+
+    &lt;!-- 4. Chevron Indicator --&gt;
+    &lt;td class="py-3.5 pr-4 text-right"&gt;
+      &lt;span :class="expanded ? 'rotate-180' : ''" class="inline-block transition-transform"&gt;▾&lt;/span&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+
+  &lt;!-- Baris Drawer (Saat diklik di HP maupun PC) --&gt;
+  &lt;tr x-show="expanded" x-collapse&gt;
+    &lt;td colspan="7" class="p-4 bg-zinc-50/50"&gt;
+      &lt;!-- Isi detail layanan, dropdown teknisi, &amp; tombol aksi tetap sama --&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;</code></pre>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: BEFORE VS AFTER COMPARISON          -->
+    <!-- ========================================== -->
+    <section id="tab-content-compare" class="hidden space-y-6 min-w-0">
+      <div>
+        <h2 class="text-base sm:text-lg font-bold tracking-tight">5. Perbandingan Visual: UI Lama vs Shadcn-Blade</h2>
+        <p class="text-xs sw-muted-text">Mempertahankan DNA warna Shoe Workshop, namun menyederhanakan beban visual agar lebih fokus pada data operasional.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 min-w-0">
+        <!-- BEFORE: Old UI Style -->
+        <div class="rounded-3xl sw-card p-5 sm:p-6 shadow-xl border-t-8 border-teal-500 space-y-4 min-w-0">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <span class="px-3 py-1 rounded-full sw-status-rose text-xs font-extrabold uppercase tracking-wider">
+              SEBELUM (Gaya UI Saat Ini)
+            </span>
+            <span class="text-xs sw-muted-text">Heavy Shadow &amp; Rounded-3xl</span>
+          </div>
+          <div class="p-4 sm:p-5 sw-subcard rounded-2xl border-2 border-teal-500/30 space-y-3">
+            <p class="text-xs font-black sw-muted-text uppercase tracking-widest">NOMOR SPK</p>
+            <p class="text-lg sm:text-xl font-black text-[#22AF85] break-all">S-2611-04-0002-SW</p>
+            <p class="text-xs sw-muted-text">Banyak menggunakan <code>font-black</code>, <code>rounded-3xl</code>, <code>shadow-xl</code>, dan border tebal di setiap seksi.</p>
+            <button class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg">
+              SIMPAN DATA SEKARANG
+            </button>
+          </div>
+        </div>
+
+        <!-- AFTER: Shadcn-Blade Style -->
+        <div class="rounded-xl border sw-border sw-card p-5 sm:p-6 shadow-xs space-y-4 min-w-0">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded-md sw-status-emerald text-xs font-semibold">
+              SESUDAH (Shadcn-Blade • Desember 2026)
+            </span>
+            <span class="text-xs sw-muted-text">Crisp 1px Border &amp; Clean Hierarchy</span>
+          </div>
+          <div class="p-4 sm:p-5 rounded-lg sw-subcard space-y-3">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <span class="text-xs font-medium sw-muted-text">Nomor SPK</span>
+              <span class="px-2 py-0.5 rounded text-xs font-mono font-semibold sw-badge-mono">S-2611-04-0002-SW</span>
+            </div>
+            <p class="text-sm font-semibold">Hierarki Tipografi Lebih Bersih &amp; Cepat Dipindai</p>
+            <p class="text-xs sw-muted-text leading-relaxed">
+              Menggunakan permukaan <code>Slate Dimmed</code>, border tipis <code>1px</code>, ketinggian tombol adaptif <code>h-10 md:h-9</code>, serta warna <strong class="text-[#22AF85]">#22AF85</strong> dan <strong class="sw-text-amber">#FFC232</strong> pada elemen aksi penting.
+            </p>
+            <div class="pt-1 flex justify-end gap-2">
+              <button class="h-10 md:h-9 px-3 rounded-lg sw-btn-outline text-xs font-semibold cursor-pointer">Batal</button>
+              <button class="h-10 md:h-9 px-4 rounded-lg bg-[#22AF85] hover:bg-[#1c9671] text-white text-xs font-semibold shadow-xs cursor-pointer">Simpan Perubahan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Adaptive Shadcn Dialog (Centered Modal on Desktop, Bottom Sheet Drawer on Mobile <640px!) -->
+  <div id="demo-modal" onclick="closeDemoModal()" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div onclick="event.stopPropagation()" class="w-full sm:max-w-md rounded-t-2xl sm:rounded-xl border-t sm:border sw-border sw-card p-5 sm:p-6 shadow-xl space-y-4">
+      <!-- Mobile Bottom-Sheet Handle Bar -->
+      <div class="w-10 h-1.5 rounded-full bg-zinc-400/50 mx-auto sm:hidden"></div>
+
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 class="text-base font-bold tracking-tight">Ajukan Revisi Kualitas (&lt;x-ui.dialog&gt;)</h3>
+          <p class="text-xs sw-muted-text mt-1">
+            Di HP tampil sebagai <strong>Bottom Sheet</strong>, di Desktop tampil sebagai <strong>Centered Modal</strong>.
+          </p>
+        </div>
+        <button onclick="closeDemoModal()" class="text-xs sw-muted-text hover:opacity-80 cursor-pointer p-1">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold">Stasiun Tujuan Revisi</label>
+          <select class="w-full h-10 md:h-9 px-3 rounded-lg border sw-input text-xs font-medium">
+            <option>Stasiun Produksi — Reparasi Sol</option>
+            <option>Stasiun Produksi — Upper &amp; Repaint</option>
+            <option>Stasiun QC — Finishing Cleanup</option>
+          </select>
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold">Catatan Revisi untuk Teknisi</label>
+          <textarea rows="3" class="w-full p-3 rounded-lg border sw-input text-xs">Bagian midsole kiri masih ada sedikit noda cat yang perlu di-touch up ulang.</textarea>
+        </div>
+      </div>
+
+      <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t sw-border">
+        <button onclick="closeDemoModal()" class="h-10 md:h-9 px-3.5 rounded-lg sw-btn-outline text-xs font-semibold cursor-pointer">
+          Batal
+        </button>
+        <button onclick="closeDemoModal()" class="h-10 md:h-9 px-4 rounded-lg bg-[#22AF85] hover:bg-[#1c9671] text-white text-xs font-semibold shadow-xs cursor-pointer">
+          Kirim ke Stasiun Revisi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchMainTab(tab) {
+      ['tokens', 'components', 'workshop', 'rules', 'compare'].forEach((t) => {
+        const section = document.getElementById('tab-content-' + t);
+        const btn = document.getElementById('tab-btn-' + t);
+        if (t === tab) {
+          section.classList.remove('hidden');
+          btn.className = 'main-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all sw-tab-active';
+        } else {
+          section.classList.add('hidden');
+          btn.className = 'main-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all sw-muted-text cursor-pointer';
+        }
+      });
+    }
+
+    function toggleCode(group, mode) {
+      const previewPanel = document.getElementById(group + '-panel-preview');
+      const codePanel = document.getElementById(group + '-panel-code');
+      const previewBtn = document.getElementById(group + '-tab-preview');
+      const codeBtn = document.getElementById(group + '-tab-code');
+
+      if (mode === 'preview') {
+        previewPanel.classList.remove('hidden');
+        codePanel.classList.add('hidden');
+        previewBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold sw-tab-active';
+        codeBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold sw-muted-text cursor-pointer';
+      } else {
+        previewPanel.classList.add('hidden');
+        codePanel.classList.remove('hidden');
+        codeBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold sw-tab-active';
+        previewBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold sw-muted-text cursor-pointer';
+      }
+    }
+
+    function toggleRowDrawer(rowId) {
+      const drawer = document.getElementById('drawer-' + rowId);
+      const chevron = document.getElementById('chevron-' + rowId);
+      const isHidden = drawer.classList.toggle('hidden');
+      chevron.textContent = isHidden ? '▸' : '▾';
+    }
+
+    const darkTones = [
+      {
+        label: 'Slate Dimmed',
+        bg: '#13171f',
+        card: '#1b202b',
+        muted: '#242b38',
+        border: '#2c3545',
+        text: '#e6edf3',
+        mutedText: '#94a3b8'
+      },
+      {
+        label: 'Forest Slate',
+        bg: '#111816',
+        card: '#18221f',
+        muted: '#202d29',
+        border: '#273833',
+        text: '#e4f0ec',
+        mutedText: '#8fa8a1'
+      },
+      {
+        label: 'Warm Graphite',
+        bg: '#18181b',
+        card: '#202024',
+        muted: '#28282d',
+        border: '#323238',
+        text: '#e4e4e7',
+        mutedText: '#a1a1aa'
+      }
+    ];
+    let currentDarkToneIndex = 0;
+
+    function toggleTheme(forceDark) {
+      const html = document.documentElement;
+      const isDark = forceDark === true ? (html.classList.add('dark'), true) : html.classList.toggle('dark');
+      document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
+      document.getElementById('theme-label').textContent = isDark ? 'Light' : 'Dark';
+      const toneBtn = document.getElementById('dark-tone-btn');
+      if (toneBtn) {
+        if (isDark) {
+          toneBtn.classList.remove('hidden');
+          toneBtn.classList.add('inline-flex');
+        } else {
+          toneBtn.classList.add('hidden');
+          toneBtn.classList.remove('inline-flex');
+        }
+      }
+    }
+
+    function setDarkTone(idx, activateDark) {
+      currentDarkToneIndex = idx;
+      const tone = darkTones[idx];
+      const root = document.documentElement;
+      root.style.setProperty('--dark-bg', tone.bg);
+      root.style.setProperty('--dark-card', tone.card);
+      root.style.setProperty('--dark-muted', tone.muted);
+      root.style.setProperty('--dark-border', tone.border);
+      root.style.setProperty('--dark-text', tone.text);
+      root.style.setProperty('--dark-muted-text', tone.mutedText);
+      const labelEl = document.getElementById('dark-tone-label');
+      if (labelEl) labelEl.textContent = tone.label;
+
+      [0, 1, 2].forEach((i) => {
+        const card = document.getElementById('dark-card-' + i);
+        if (!card) return;
+        if (i === idx) {
+          card.style.borderWidth = '2px';
+          card.style.borderColor = '#22AF85';
+        } else {
+          card.style.borderWidth = '1px';
+          card.style.borderColor = '#2c3545';
+        }
+      });
+
+      if (activateDark) {
+        toggleTheme(true);
+      }
+    }
+
+    function cycleDarkTone() {
+      setDarkTone((currentDarkToneIndex + 1) % darkTones.length, true);
+    }
+
+    const fontOptions = [
+      { label: 'Inter', stack: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" },
+      { label: 'Geist', stack: "'Geist', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif" },
+      { label: 'Jakarta', stack: "'Plus Jakarta Sans', 'Inter', sans-serif" }
+    ];
+    let currentFontIndex = 0;
+
+    function setFont(idx) {
+      currentFontIndex = idx;
+      const chosen = fontOptions[idx];
+      document.documentElement.style.setProperty('--font-sans', chosen.stack);
+      document.getElementById('font-label').textContent = chosen.label;
+      [0, 1, 2].forEach((i) => {
+        const pill = document.getElementById('font-pill-' + i);
+        if (!pill) return;
+        if (i === idx) {
+          pill.className = 'px-2.5 py-1 rounded-md text-xs font-semibold bg-[#22AF85] text-white shadow-xs cursor-pointer';
+        } else {
+          pill.className = 'px-2.5 py-1 rounded-md text-xs font-semibold sw-muted-text hover:text-zinc-900 dark:hover:text-white cursor-pointer';
+        }
+      });
+    }
+
+    function cycleFont() {
+      setFont((currentFontIndex + 1) % fontOptions.length);
+    }
+
+    function copyToken(val) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(val);
+      }
+      const toast = document.getElementById('copy-toast');
+      toast.textContent = '✓ Disalin: ' + val;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 1800);
+    }
+
+    let switchOn = true;
+    function toggleSwitchDemo() {
+      switchOn = !switchOn;
+      const track = document.getElementById('demo-switch-track');
+      const thumb = document.getElementById('demo-switch-thumb');
+      if (switchOn) {
+        track.className = 'w-10 h-5 shrink-0 rounded-full bg-[#22AF85] p-0.5 transition-colors flex items-center';
+        thumb.className = 'w-4 h-4 rounded-full bg-white shadow-xs transform translate-x-5 transition-transform';
+      } else {
+        track.className = 'w-10 h-5 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-700 p-0.5 transition-colors flex items-center';
+        thumb.className = 'w-4 h-4 rounded-full bg-white shadow-xs transform translate-x-0 transition-transform';
+      }
+    }
+
+    function filterTable(status) {
+      document.querySelectorAll('.spk-tbody').forEach((tbody) => {
+        if (status === 'ALL' || tbody.getAttribute('data-status') === status) {
+          tbody.classList.remove('hidden');
+        } else {
+          tbody.classList.add('hidden');
+        }
+      });
+      document.querySelectorAll('.tbl-filter-btn').forEach((btn) => {
+        if (btn.getAttribute('data-filter') === status) {
+          btn.className = 'tbl-filter-btn px-2.5 py-1 rounded-md text-xs font-semibold sw-btn-forest cursor-pointer';
+        } else {
+          btn.className = 'tbl-filter-btn px-2.5 py-1 rounded-md text-xs font-semibold sw-btn-outline cursor-pointer';
+        }
+      });
+    }
+
+    function openDemoModal() {
+      document.getElementById('demo-modal').classList.remove('hidden');
+    }
+
+    function closeDemoModal() {
+      document.getElementById('demo-modal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
