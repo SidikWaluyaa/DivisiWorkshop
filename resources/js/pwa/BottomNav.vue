@@ -247,10 +247,39 @@ export default {
             }
         }
 
-        // Fetch Live Badge Counts
+        // ── Live Badge Counts ──────────────────────────────────────────────
+        // Setiap request ke server menulis ulang baris `sessions` (dan `users.last_active_at`),
+        // jadi polling hanya dijalankan saat badge benar-benar terlihat:
+        //  - halaman CS (badge hanya ada di csNavItems) dan bukan layout workshop,
+        //  - viewport mobile (< 1024px, sama dengan CSS .pwa-bottom-nav di pwa-mobile.css),
+        //  - tab sedang dibuka (bukan tab latar belakang).
+        const BADGE_POLL_MS = 45000;
+        const mobileQuery = window.matchMedia('(max-width: 1023px)');
+        let badgeTimer = null;
+        let lastBadgeFetchAt = 0;
+        let badgeDisabled = false; // true bila server menolak (401/403/419) → berhenti polling
+
+        function shouldPollBadges() {
+            return !badgeDisabled &&
+                   isCsRoute.value &&
+                   !isWorkshopLayout.value &&
+                   mobileQuery.matches &&
+                   document.visibilityState === 'visible';
+        }
+
         async function fetchBadgeCounts() {
+            if (!shouldPollBadges()) return;
+            lastBadgeFetchAt = Date.now();
             try {
-                const response = await fetch('/cs/api/badge-counts');
+                const response = await fetch('/cs/api/badge-counts', {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                if ([401, 403, 419].includes(response.status)) {
+                    // Sesi habis / tidak punya akses CS: jangan terus-menerus memanggil server.
+                    badgeDisabled = true;
+                    stopBadgePolling();
+                    return;
+                }
                 if (response.ok) {
                     const json = await response.json();
                     if (json.status === 'success' && typeof json.pending_spk !== 'undefined') {
@@ -259,6 +288,28 @@ export default {
                 }
             } catch (e) {
                 // Silently ignore network failures on PWA
+            }
+        }
+
+        function stopBadgePolling() {
+            if (badgeTimer) {
+                clearInterval(badgeTimer);
+                badgeTimer = null;
+            }
+        }
+
+        // Sinkronkan timer dengan kondisi saat ini (dipanggil saat mount, ganti tab, resize).
+        function syncBadgePolling() {
+            if (!shouldPollBadges()) {
+                stopBadgePolling();
+                return;
+            }
+            // Data sudah basi (mis. baru kembali ke tab) → ambil segera.
+            if (Date.now() - lastBadgeFetchAt >= BADGE_POLL_MS) {
+                fetchBadgeCounts();
+            }
+            if (!badgeTimer) {
+                badgeTimer = setInterval(fetchBadgeCounts, BADGE_POLL_MS);
             }
         }
 
@@ -274,13 +325,16 @@ export default {
 
         onMounted(() => {
             window.addEventListener('scroll', handleScroll, { passive: true });
-            fetchBadgeCounts();
-            // Polling badge counts every 45s
-            setInterval(fetchBadgeCounts, 45000);
+            document.addEventListener('visibilitychange', syncBadgePolling);
+            mobileQuery.addEventListener('change', syncBadgePolling);
+            syncBadgePolling();
         });
 
         onUnmounted(() => {
             window.removeEventListener('scroll', handleScroll);
+            document.removeEventListener('visibilitychange', syncBadgePolling);
+            mobileQuery.removeEventListener('change', syncBadgePolling);
+            stopBadgePolling();
             clearTimeout(scrollTimeout);
         });
 
