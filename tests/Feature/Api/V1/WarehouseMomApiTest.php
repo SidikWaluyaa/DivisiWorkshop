@@ -152,6 +152,7 @@ it('menghitung posisi, sepatu keluar, kedatangan, efisiensi, dan pengiriman per 
         'siap_kirim_aktif' => 1,          // A (finished 20 Okt); F & D di luar 30 hari / tanpa finished_date
         'finished_not_stored' => 2,       // D & F
         'ready_for_pickup' => 1,          // A
+        'ready_for_pickup_sepatu' => 1,   // A (assignment shoes aktif per 31 Okt)
         'shoes_in_rack_count' => 1,       // A (dari created_at, walau stored_at tertimpa 5 Nov)
         'donation_candidates_count' => 0,
         'inbound_inventory' => 0,
@@ -222,4 +223,35 @@ it('sepatu keluar bulan lalu tidak berubah saat SPK lain di invoice yang sama ke
         ->and($nov['pasang_lunas_saat_keluar'])->toBe(1)   // F: invoice lunas 2 Nov
         ->and($nov['pasang_belum_lunas_saat_keluar'])->toBe(0)
         ->and($nov['pasang_tanpa_invoice'])->toBe(1);      // A tanpa invoice
+});
+
+it('ready_for_pickup_sepatu hanya menghitung SPK SELESAI belum diambil yang sepatunya di rak sepatu', function () {
+    momSkenario();
+
+    // R: SELESAI belum diambil, di rak hanya aksesoris → masuk ready_for_pickup, tidak masuk ready_for_pickup_sepatu.
+    $r = momWo(['spk_number' => 'UJI-MOM-R', 'status' => 'SELESAI', 'created_at' => '2026-09-05 10:00:00', 'updated_at' => '2026-10-22 10:00:00',
+        'finished_date' => '2026-10-22 10:00:00']);
+    momLog($r, 'SELESAI', 'STATUS_CHANGE', '2026-10-22 10:00:00');
+    momAssignment($r, 'accessories', '2026-10-22 11:00:00', null);
+
+    // S: sudah diambil 25 Okt tapi assignment sepatunya masih aktif (tidak dikeluarkan dari rak)
+    //    → masuk shoes_in_rack_count, tidak masuk ready_for_pickup_sepatu.
+    $s = momWo(['spk_number' => 'UJI-MOM-S', 'status' => 'SELESAI', 'created_at' => '2026-09-05 10:00:00', 'updated_at' => '2026-10-25 10:00:00',
+        'finished_date' => '2026-10-15 10:00:00', 'taken_date' => '2026-10-25 10:00:00']);
+    momLog($s, 'SELESAI', 'STATUS_CHANGE', '2026-10-15 10:00:00');
+    momAssignment($s, 'shoes', '2026-10-16 10:00:00', null);
+
+    // T: masih PRODUCTION tapi tercatat di rak sepatu → masuk shoes_in_rack_count saja.
+    $t = momWo(['spk_number' => 'UJI-MOM-T', 'status' => 'PRODUCTION', 'created_at' => '2026-10-01 10:00:00', 'updated_at' => '2026-10-10 10:00:00']);
+    momLog($t, 'PRODUCTION', 'STATUS_CHANGE', '2026-10-10 10:00:00');
+    momAssignment($t, 'shoes', '2026-10-11 10:00:00', null);
+
+    $posisi = $this->withHeader('X-API-KEY', 'test-secret-key')
+        ->getJson(MOM_URL.'&as_of_date=2026-10-31')->assertOk()->json('data.posisi_as_of');
+
+    expect($posisi['ready_for_pickup'])->toBe(2)              // A, R (field lama, semua kategori)
+        ->and($posisi['ready_for_pickup_sepatu'])->toBe(1)     // A
+        ->and($posisi['shoes_in_rack_count'])->toBe(3)         // A, S, T
+        ->and($posisi['ready_for_pickup_sepatu'])->toBeLessThanOrEqual($posisi['shoes_in_rack_count'])
+        ->and($posisi['ready_for_pickup_sepatu'])->toBeLessThanOrEqual($posisi['ready_for_pickup']);
 });

@@ -81,7 +81,8 @@ class WarehouseDashboardApiController extends Controller
     {
         $today = now()->startOfDay();
         $isPast = $asOf->lt($today) && $end->lt($today);
-        $key = 'warehouse_mom:v1:' . md5(implode('|', [
+        // v2: posisi_as_of.ready_for_pickup_sepatu (Tahap 2b)
+        $key = 'warehouse_mom:v2:' . md5(implode('|', [
             $start->toDateTimeString(),
             $end->toDateTimeString(),
             $asOf->toDateString(),

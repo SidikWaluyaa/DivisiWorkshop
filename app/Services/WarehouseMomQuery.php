@@ -96,7 +96,7 @@ class WarehouseMomQuery
         $logStep = self::STATUS_LOG_STEP;
 
         $rows = self::select("
-            SELECT x.st, x.prev, x.is_rd, x.not_taken, x.in_rack, x.recent30, x.umur_le30, COUNT(*) AS n
+            SELECT x.st, x.prev, x.is_rd, x.not_taken, x.in_rack, x.in_rack_sepatu, x.recent30, x.umur_le30, COUNT(*) AS n
             FROM (
                 SELECT s.*,
                     -- Ditahan CX: tahap mengikuti status terakhir sebelum ditahan (setara work_orders.previous_status)
@@ -111,6 +111,7 @@ class WarehouseMomQuery
                         y.is_rd,
                         (y.taken_date IS NULL OR y.taken_date > :t) AS not_taken,
                         y.in_rack,
+                        y.in_rack_sepatu,
                         (y.finished_date IS NOT NULL AND y.finished_date >= :t30) AS recent30,
                         (y.created_at > :t30) AS umur_le30
                     FROM (
@@ -128,7 +129,11 @@ class WarehouseMomQuery
                                   WHERE l.work_order_id = w.id AND {$logWhere}) AS has_any_log,
                                 EXISTS (SELECT 1 FROM storage_assignments sa
                                   WHERE sa.work_order_id = w.id AND sa.created_at <= :t
-                                    AND (sa.retrieved_at IS NULL OR sa.retrieved_at > :t)) AS in_rack
+                                    AND (sa.retrieved_at IS NULL OR sa.retrieved_at > :t)) AS in_rack,
+                                -- Khusus rak sepatu (kategori shoes); in_rack di atas mencakup semua kategori.
+                                EXISTS (SELECT 1 FROM storage_assignments sa
+                                  WHERE sa.work_order_id = w.id AND sa.category = 'shoes' AND sa.created_at <= :t
+                                    AND (sa.retrieved_at IS NULL OR sa.retrieved_at > :t)) AS in_rack_sepatu
                             FROM work_orders w
                             WHERE w.created_at <= :t AND (w.deleted_at IS NULL OR w.deleted_at > :t)
                               -- Tidak mungkin terhitung pada T: sudah berstatus akhir sebelum T.
@@ -139,10 +144,10 @@ class WarehouseMomQuery
                     ) y
                 ) s
             ) x
-            GROUP BY x.st, x.prev, x.is_rd, x.not_taken, x.in_rack, x.recent30, x.umur_le30
+            GROUP BY x.st, x.prev, x.is_rd, x.not_taken, x.in_rack, x.in_rack_sepatu, x.recent30, x.umur_le30
         ", $named);
 
-        $pendingLe30 = $pendingGt30 = $siapKirim = $finishedNotStored = $readyForPickup = 0;
+        $pendingLe30 = $pendingGt30 = $siapKirim = $finishedNotStored = $readyForPickup = $readyForPickupSepatu = 0;
         $wip = array_fill_keys(KamusMetrikQuery::WIP_TAHAP_KEYS, 0);
 
         foreach ($rows as $r) {
@@ -155,6 +160,9 @@ class WarehouseMomQuery
             }
             if ($st === 'SELESAI' && $notTaken) {
                 $r->in_rack ? $readyForPickup += $n : $finishedNotStored += $n;
+                if ($r->in_rack_sepatu) {
+                    $readyForPickupSepatu += $n;
+                }
                 if ($r->recent30) {
                     $siapKirim += $n;
                 }
@@ -205,6 +213,8 @@ class WarehouseMomQuery
             'siap_kirim_aktif' => $siapKirim,
             'finished_not_stored' => $finishedNotStored,
             'ready_for_pickup' => $readyForPickup,
+            // SELESAI, belum diambil, dan sepatunya ada di rak sepatu (≤ shoes_in_rack_count).
+            'ready_for_pickup_sepatu' => $readyForPickupSepatu,
             'shoes_in_rack_count' => $shoes,
             'donation_candidates_count' => (int) $sa->donasi,
             'inbound_inventory' => $before,
