@@ -69,86 +69,109 @@ class PerformanceController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Calculate total and complaints for each user manually for maximum reliability, and attach detailed jobs
+        // Pre-fetch complaints count per technician in single query
+        $complaints = \App\Models\Complaint::whereBetween('created_at', [$start, $end])
+            ->with(['workOrder' => function ($q) {
+                $q->select('id', 'prep_washing_by', 'prep_sol_by', 'prep_upper_by', 'pic_sortir_sol_id', 'pic_sortir_upper_id', 'prod_sol_by', 'prod_upper_by', 'prod_cleaning_by', 'qc_jahit_by', 'qc_cleanup_by', 'qc_final_by');
+            }])
+            ->get();
+
+        $techComplaintCounts = [];
+        foreach ($complaints as $complaint) {
+            $wo = $complaint->workOrder;
+            if (!$wo) continue;
+            $techIds = array_filter(array_unique([
+                $wo->prep_washing_by,
+                $wo->prep_sol_by,
+                $wo->prep_upper_by,
+                $wo->pic_sortir_sol_id,
+                $wo->pic_sortir_upper_id,
+                $wo->prod_sol_by,
+                $wo->prod_upper_by,
+                $wo->prod_cleaning_by,
+                $wo->qc_jahit_by,
+                $wo->qc_cleanup_by,
+                $wo->qc_final_by,
+            ]));
+            foreach ($techIds as $tId) {
+                $techComplaintCounts[$tId] = ($techComplaintCounts[$tId] ?? 0) + 1;
+            }
+        }
+
+        // Pre-fetch all completed work orders for technicians in single batch query
+        $userIds = $users->pluck('id')->toArray();
+
+        $allCompletedOrders = \App\Models\WorkOrder::where(function ($q) use ($userIds) {
+            $q->whereIn('prep_washing_by', $userIds)
+                ->orWhereIn('prep_sol_by', $userIds)
+                ->orWhereIn('prep_upper_by', $userIds)
+                ->orWhereIn('pic_sortir_sol_id', $userIds)
+                ->orWhereIn('pic_sortir_upper_id', $userIds)
+                ->orWhereIn('prod_sol_by', $userIds)
+                ->orWhereIn('prod_upper_by', $userIds)
+                ->orWhereIn('prod_cleaning_by', $userIds)
+                ->orWhereIn('qc_jahit_by', $userIds)
+                ->orWhereIn('qc_cleanup_by', $userIds)
+                ->orWhereIn('qc_final_by', $userIds);
+        })->where(function ($q) use ($start, $end) {
+            $q->whereBetween('prep_washing_completed_at', [$start, $end])
+                ->orWhereBetween('prep_sol_completed_at', [$start, $end])
+                ->orWhereBetween('prep_upper_completed_at', [$start, $end])
+                ->orWhereBetween('prod_sol_completed_at', [$start, $end])
+                ->orWhereBetween('prod_upper_completed_at', [$start, $end])
+                ->orWhereBetween('prod_cleaning_completed_at', [$start, $end])
+                ->orWhereBetween('qc_jahit_completed_at', [$start, $end])
+                ->orWhereBetween('qc_cleanup_completed_at', [$start, $end])
+                ->orWhereBetween('qc_final_completed_at', [$start, $end])
+                ->orWhere(function ($sub) use ($start, $end) {
+                    $sub->whereIn('status', [\App\Enums\WorkOrderStatus::PRODUCTION, \App\Enums\WorkOrderStatus::QC, \App\Enums\WorkOrderStatus::SELESAI])
+                        ->whereBetween('updated_at', [$start, $end]);
+                });
+        })
+        ->with(['workOrderServices' => function ($q) {
+            $q->select('id', 'work_order_id', 'custom_service_name');
+        }])
+        ->get();
+
+        $techOrdersMap = [];
+        foreach ($allCompletedOrders as $wo) {
+            $treatment = $wo->workOrderServices->pluck('custom_service_name')->filter()->implode(', ');
+            $date = $wo->updated_at ? $wo->updated_at->format('d M Y H:i') : '-';
+
+            $userStations = [];
+            if ($wo->prep_washing_by && $wo->prep_washing_completed_at) $userStations[$wo->prep_washing_by][] = 'Prep Washing';
+            if ($wo->prep_sol_by && $wo->prep_sol_completed_at) $userStations[$wo->prep_sol_by][] = 'Prep Sol';
+            if ($wo->prep_upper_by && $wo->prep_upper_completed_at) $userStations[$wo->prep_upper_by][] = 'Prep Upper';
+            if ($wo->pic_sortir_sol_id && $wo->status != \App\Enums\WorkOrderStatus::PREPARATION && $wo->status != \App\Enums\WorkOrderStatus::SORTIR) $userStations[$wo->pic_sortir_sol_id][] = 'Sortir Sol';
+            if ($wo->pic_sortir_upper_id && $wo->status != \App\Enums\WorkOrderStatus::PREPARATION && $wo->status != \App\Enums\WorkOrderStatus::SORTIR) $userStations[$wo->pic_sortir_upper_id][] = 'Sortir Upper';
+            if ($wo->prod_sol_by && $wo->prod_sol_completed_at) $userStations[$wo->prod_sol_by][] = 'Prod Sol';
+            if ($wo->prod_upper_by && $wo->prod_upper_completed_at) $userStations[$wo->prod_upper_by][] = 'Prod Upper';
+            if ($wo->prod_cleaning_by && $wo->prod_cleaning_completed_at) $userStations[$wo->prod_cleaning_by][] = 'Prod Cleaning';
+            if ($wo->qc_jahit_by && $wo->qc_jahit_completed_at) $userStations[$wo->qc_jahit_by][] = 'QC Jahit';
+            if ($wo->qc_cleanup_by && $wo->qc_cleanup_completed_at) $userStations[$wo->qc_cleanup_by][] = 'QC Cleanup';
+            if ($wo->qc_final_by && $wo->qc_final_completed_at) $userStations[$wo->qc_final_by][] = 'QC Final';
+
+            foreach ($userStations as $tId => $stations) {
+                $techOrdersMap[$tId][] = [
+                    'spk_number' => $wo->spk_number,
+                    'customer_name' => $wo->customer_name,
+                    'shoe' => $wo->shoe_brand . ' - ' . $wo->shoe_type,
+                    'treatment' => $treatment,
+                    'stations' => implode(', ', $stations),
+                    'date' => $date
+                ];
+            }
+        }
+
+        // Calculate total and complaints for each user, and attach pre-fetched detailed jobs
         foreach ($users as $user) {
             $user->total_jobs = $user->prep_washing_count + $user->prep_sol_count + $user->prep_upper_count +
                                 $user->sortir_sol_count + $user->sortir_upper_count +
                                 $user->prod_sol_count + $user->prod_upper_count + $user->prod_cleaning_count +
                                 $user->qc_jahit_count + $user->qc_cleanup_count + $user->qc_final_count;
 
-            // Fetch actual complaints count on work orders where the user was assigned as a technician
-            $user->complaints_count = \App\Models\Complaint::whereHas('workOrder', function ($q) use ($user) {
-                $q->where(function ($sub) use ($user) {
-                    $sub->where('prep_washing_by', $user->id)
-                        ->orWhere('prep_sol_by', $user->id)
-                        ->orWhere('prep_upper_by', $user->id)
-                        ->orWhere('pic_sortir_sol_id', $user->id)
-                        ->orWhere('pic_sortir_upper_id', $user->id)
-                        ->orWhere('prod_sol_by', $user->id)
-                        ->orWhere('prod_upper_by', $user->id)
-                        ->orWhere('prod_cleaning_by', $user->id)
-                        ->orWhere('qc_jahit_by', $user->id)
-                        ->orWhere('qc_cleanup_by', $user->id)
-                        ->orWhere('qc_final_by', $user->id);
-                });
-            })->whereBetween('created_at', [$start, $end])->count();
-
-            // Fetch detailed completed jobs list
-            $completedOrders = \App\Models\WorkOrder::where(function ($q) use ($user) {
-                $q->where('prep_washing_by', $user->id)
-                    ->orWhere('prep_sol_by', $user->id)
-                    ->orWhere('prep_upper_by', $user->id)
-                    ->orWhere('pic_sortir_sol_id', $user->id)
-                    ->orWhere('pic_sortir_upper_id', $user->id)
-                    ->orWhere('prod_sol_by', $user->id)
-                    ->orWhere('prod_upper_by', $user->id)
-                    ->orWhere('prod_cleaning_by', $user->id)
-                    ->orWhere('qc_jahit_by', $user->id)
-                    ->orWhere('qc_cleanup_by', $user->id)
-                    ->orWhere('qc_final_by', $user->id);
-            })->where(function ($q) use ($start, $end) {
-                $q->whereBetween('prep_washing_completed_at', [$start, $end])
-                    ->orWhereBetween('prep_sol_completed_at', [$start, $end])
-                    ->orWhereBetween('prep_upper_completed_at', [$start, $end])
-                    ->orWhereBetween('prod_sol_completed_at', [$start, $end])
-                    ->orWhereBetween('prod_upper_completed_at', [$start, $end])
-                    ->orWhereBetween('prod_cleaning_completed_at', [$start, $end])
-                    ->orWhereBetween('qc_jahit_completed_at', [$start, $end])
-                    ->orWhereBetween('qc_cleanup_completed_at', [$start, $end])
-                    ->orWhereBetween('qc_final_completed_at', [$start, $end])
-                    ->orWhere(function ($sub) use ($start, $end) {
-                        $sub->whereIn('status', [\App\Enums\WorkOrderStatus::PRODUCTION, \App\Enums\WorkOrderStatus::QC, \App\Enums\WorkOrderStatus::SELESAI])
-                            ->whereBetween('updated_at', [$start, $end]);
-                    });
-            })
-            ->with(['workOrderServices.service'])
-            ->get()
-            ->map(function ($wo) use ($user) {
-                // Determine which station the technician completed
-                $stations = [];
-                if ($wo->prep_washing_by == $user->id && $wo->prep_washing_completed_at) $stations[] = 'Prep Washing';
-                if ($wo->prep_sol_by == $user->id && $wo->prep_sol_completed_at) $stations[] = 'Prep Sol';
-                if ($wo->prep_upper_by == $user->id && $wo->prep_upper_completed_at) $stations[] = 'Prep Upper';
-                if ($wo->pic_sortir_sol_id == $user->id && $wo->status != \App\Enums\WorkOrderStatus::PREPARATION && $wo->status != \App\Enums\WorkOrderStatus::SORTIR) $stations[] = 'Sortir Sol';
-                if ($wo->pic_sortir_upper_id == $user->id && $wo->status != \App\Enums\WorkOrderStatus::PREPARATION && $wo->status != \App\Enums\WorkOrderStatus::SORTIR) $stations[] = 'Sortir Upper';
-                if ($wo->prod_sol_by == $user->id && $wo->prod_sol_completed_at) $stations[] = 'Prod Sol';
-                if ($wo->prod_upper_by == $user->id && $wo->prod_upper_completed_at) $stations[] = 'Prod Upper';
-                if ($wo->prod_cleaning_by == $user->id && $wo->prod_cleaning_completed_at) $stations[] = 'Prod Cleaning';
-                if ($wo->qc_jahit_by == $user->id && $wo->qc_jahit_completed_at) $stations[] = 'QC Jahit';
-                if ($wo->qc_cleanup_by == $user->id && $wo->qc_cleanup_completed_at) $stations[] = 'QC Cleanup';
-                if ($wo->qc_final_by == $user->id && $wo->qc_final_completed_at) $stations[] = 'QC Final';
-
-                return [
-                    'spk_number' => $wo->spk_number,
-                    'customer_name' => $wo->customer_name,
-                    'shoe' => $wo->shoe_brand . ' - ' . $wo->shoe_type,
-                    'treatment' => $wo->workOrderServices->pluck('custom_service_name')->implode(', '),
-                    'stations' => implode(', ', $stations),
-                    'date' => $wo->updated_at->format('d M Y H:i')
-                ];
-            });
-
-            $user->completed_orders_details = $completedOrders;
+            $user->complaints_count = $techComplaintCounts[$user->id] ?? 0;
+            $user->completed_orders_details = collect($techOrdersMap[$user->id] ?? []);
         }
 
         // Sort users by total_jobs descending for leaderboard/stats, then group by specialization

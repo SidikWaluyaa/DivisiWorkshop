@@ -7,15 +7,15 @@
 📄 *Paper Project*
 • *Judul Proyek:* Optimasi Kecepatan Database & Perbaikan N+1 Query di Seluruh Divisi
 • *Tenggat Waktu (Deadline):* 30 November 2026
-• *Kemajuan Kerja (Progress):* 48%
-  ↳ _Catatan Progress:_ Tugas 4 (Optimasi Divisi Workshop) fokus pada Aplikasi Mobile Kontrol Teknisi (/m/production), R&D, dan Sistem Garansi.
+• *Kemajuan Kerja (Progress):* 54%
+  ↳ _Catatan Progress:_ Tugas 4 (Optimasi Divisi Workshop) berhasil menuntaskan 4 area kritis: Hotfix crash HTTP 500 di /sortir, optimasi station-card (Prep, Sortir, Prod, QC), eliminasi 1.457 kueri di /admin/performance, dan perampingan polling HP teknisi (/m/production & /m/spk).
 
 ━━━━━━━━━━━━━━━━━━
 📝 *To Do List Hari Ini (Breakdown Paper Project)*
 1. Setup Alat Deteksi & Baseline Pengukuran (Deadline: 3 Nov) ➔ ✅ *Selesai*
 2. Optimasi Divisi Customer Service (Deadline: 6 Nov) ➔ ✅ *Selesai*
 3. Optimasi Divisi Gudang (Deadline: 11 Nov) ➔ ✅ *Selesai*
-4. Optimasi Divisi Workshop (Deadline: 17 Nov) ➔ 🔄 *Sedang Dikerjakan*
+4. Optimasi Divisi Workshop (Deadline: 17 Nov) ➔ 🔄 *Sedang Dikerjakan (Area Kritis 1-4 Selesai)*
 5. Optimasi Divisi Finance (Deadline: 20 Nov) ➔ ⏳ *Backlog*
 6. Optimasi Divisi Customer Experience (Deadline: 24 Nov) ➔ ⏳ *Backlog*
 7. Optimasi Master Data & System (Deadline: 27 Nov) ➔ ⏳ *Backlog*
@@ -23,8 +23,8 @@
 
 ━━━━━━━━━━━━━━━━━━
 🚀 *Output Hari Ini*
-1. *Stasiun Quality Control (QC) & Revisi Dipercepat*: Halaman pengecekan akhir sepatu selesai kini memuat foto standar kualitas dan form kelolosan QC dalam satu tarikan efisien.
-2. *Aplikasi HP Teknisi Hemat Beban Server*: Pengambilan data otomatis setiap 15 detik pada HP teknisi dioptimalkan agar tidak membebani server saat puluhan teknisi aktif bersamaan.
-3. *Jalur Khusus Prototipe R&D Tetap Gesit*: Antarmuka pengerjaan riset sepatu baru (Divisi R&D) dipastikan tetap terisolasi rapi dan bebas dari kueri berulang.
-4. *Akurasi Stopwatch Kerja Teknisi Terjaga 100%*: Pencatatan durasi menit kerja teknisi per pasang sepatu dipastikan tetap berjalan presisi tanpa ada detik yang terlewat.
-5. *Uji Lapangan di Lantai Bengkel Berjalan Lancar*: Pengecekan langsung di area kerja memastikan teknisi dapat memindai barcode SPK dan menekan tombol kerja tanpa hambatan.
+1. *Fix Crash HTTP 500 di Stasiun Sortir (`/sortir`)*: Mengatasi `LazyLoadingViolationException` relasi `materialRequests` dan menghapus eager load `logs` yang tidak terpakai (kueri terpangkas dari 196 menjadi 64 kueri, waktu respon 12,8x lebih cepat).
+2. *Optimasi Komponen `station-card` di 4 Stasiun Utama*: Menghapus pemanggilan otomatis `autoAssignUnassignedOrders()` pada setiap GET render di `/production` serta menambahkan eager load `'suratJalanItems.suratJalan'` di Preparation & QC (total kueri di 4 stasiun turun dari 1.790 menjadi 185 kueri, eliminasi -89,7% kueri).
+3. *Performa Ekstrem di Laporan Kinerja Teknisi (`/admin/performance`)*: Mengganti loop N+1 kueri komplain dan SPK selesai dengan 1x batch pre-fetch di memori PHP (kueri terpangkas dari 1.496 menjadi 39 kueri, waktu kueri database 92x lebih cepat dari 4,68 detik menjadi 50,9 ms).
+4. *Aplikasi HP Teknisi Hemat Beban Server (`/m/production` & `/m/spk/{spk}`)*: Mengeliminasi ratusan kueri `User::find(null)` dan merampingkan pemuatan data live polling 15 detik (/m/production turun dari 420 ke 15 kueri, /m/spk turun dari 434 ke 13 kueri).
+5. *Pencatatan Rekap Before-After Lengkap*: Seluruh data teknis, durasi query time, wall time, dan status HTTP telah diperbarui rapi di `rekap_pengukuran_before_after_november_2026.md`.

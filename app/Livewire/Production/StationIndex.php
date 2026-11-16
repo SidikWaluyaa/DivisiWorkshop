@@ -406,6 +406,7 @@ class StationIndex extends Component
                        ->where(fn($uq) => $uq->whereNull('unneeded_stations')->orWhere('unneeded_stations', 'not like', '%"qc_jahit"%'));
                 });
             })
+            ->with(['workOrderServices.service', 'prodUpperBy', 'prodSolBy', 'qcJahitBy'])
             ->get();
 
         if ($unassignedOrders->isEmpty()) {
@@ -505,31 +506,9 @@ class StationIndex extends Component
         }
     }
 
-    protected function autoAssignUnassignedOrders()
-    {
-        try {
-            $techService = app(\App\Services\TechnicianAssignmentService::class);
-            $unassignedOrders = WorkOrder::withoutRnd()->where('status', WorkOrderStatus::PRODUCTION->value)
-                ->where(function($q) {
-                    $q->whereNull('prod_upper_by')
-                      ->orWhereNull('prod_sol_by')
-                      ->orWhereNull('qc_jahit_by');
-                })
-                ->get();
-
-            foreach ($unassignedOrders as $order) {
-                $techService->autoAssignProductionTechnicians($order);
-            }
-        } catch (\Exception $e) {
-            Log::error("Auto assign production error: " . $e->getMessage());
-        }
-    }
-
     #[Computed]
     public function orders()
     {
-        $this->autoAssignUnassignedOrders();
-
         $query = WorkOrder::query()
             ->withoutRnd()
             ->with(['customer', 'workOrderServices.service', 'prodUpperBy', 'prodSolBy', 'qcJahitBy', 'cxIssues.resolver', 'photos', 'invoice', 'logs', 'revisions', 'suratJalanItems.suratJalan']);

@@ -522,7 +522,7 @@ class Index extends Component
                 $lq->where('step', 'SORTIR')
                    ->where('action', 'CLASSIFICATION_COMPLETED');
             })
-            ->with(['customer', 'services', 'materials', 'cxIssues', 'logs']);
+            ->with(['customer', 'services', 'materials', 'cxIssues', 'materialRequests']);
         $allSortirOrders = $this->applyFilters(clone $allSortirQuery)->paginate(20, ['*'], 'allPage');
 
         // 2. Priority & Fast Track Queue
@@ -536,7 +536,7 @@ class Index extends Component
                   ->orWhere('fast_track_status', 'yes')
                   ->orWhere('has_active_oto', true);
             })
-            ->with(['customer', 'services', 'materials', 'cxIssues', 'logs']);
+            ->with(['customer', 'services', 'materials', 'cxIssues', 'materialRequests']);
         $priorityOrders = $this->applyFilters(clone $priorityQuery)->paginate(20, ['*'], 'prioPage');
 
         // 3. Waiting Finlog Belanja Queue (Includes SPKs awaiting PO or currently in-flight with Finlog)
@@ -550,7 +550,7 @@ class Index extends Component
                   ->orWhereHas('materials', fn($m) => $m->where('work_order_materials.status', 'REQUESTED'))
                   ->orWhereHas('materialRequests', fn($mr) => $mr->whereNotIn('status', ['RECEIVED', 'CANCELLED', 'REJECTED']));
             })
-            ->with(['customer', 'services', 'materials', 'cxIssues', 'logs', 'materialRequests']);
+            ->with(['customer', 'services', 'materials', 'cxIssues', 'materialRequests']);
         $waitingOrders = $this->applyFilters(clone $waitingQuery)->paginate(20, ['*'], 'waitingPage');
 
         // 4. Ready / Standard Sortir Queue (exclude waiting orders)
@@ -564,7 +564,7 @@ class Index extends Component
                   ->orWhereNull('perlu_belanja');
             })
             ->whereDoesntHave('materials', fn($m) => $m->where('work_order_materials.status', 'REQUESTED'))
-            ->with(['customer', 'services', 'materials', 'cxIssues', 'logs']);
+            ->with(['customer', 'services', 'materials', 'cxIssues', 'materialRequests']);
         $readyOrders = $this->applyFilters(clone $readyQuery)->paginate(20, ['*'], 'readyPage');
 
         // Metric calculations

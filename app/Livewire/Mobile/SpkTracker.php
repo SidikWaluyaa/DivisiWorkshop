@@ -47,7 +47,7 @@ class SpkTracker extends Component
 
     public function getOrderProperty()
     {
-        return WorkOrder::with(['customer', 'workOrderServices.service', 'photos', 'logs.user'])
+        return WorkOrder::with(['customer', 'workOrderServices.service', 'photos', 'logs.user', 'prodSolBy', 'prodUpperBy', 'qcJahitBy', 'prodCleaningBy'])
             ->findOrFail($this->orderId);
     }
 
@@ -290,7 +290,13 @@ class SpkTracker extends Component
                 'started_at' => $startedAt,
                 'completed_at' => $completedAt,
                 'tech_id' => $order->{"{$key}_by"},
-                'tech_name' => optional(User::find($order->{"{$key}_by"}))->name,
+                'tech_name' => match ($key) {
+                    'prod_sol' => $order->prodSolBy?->name,
+                    'prod_upper' => $order->prodUpperBy?->name,
+                    'qc_jahit' => $order->qcJahitBy?->name,
+                    'prod_cleaning' => $order->prodCleaningBy?->name,
+                    default => null
+                },
                 'is_paused' => $pauseInfo['is_paused'] ?? false,
                 'pause_reason' => $pauseInfo['reason'] ?? null,
                 'net_seconds' => $pauseInfo['net_elapsed_seconds'] ?? 0,
