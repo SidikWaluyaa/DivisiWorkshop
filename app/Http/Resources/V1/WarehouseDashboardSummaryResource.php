@@ -14,21 +14,28 @@ class WarehouseDashboardSummaryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $data = [
+            'summary' => $this->resource['metrics'],
+            'qc_analytics' => $this->resource['qc_analytics'],
+            'efficiency' => $this->resource['efficiency'],
+            'inventory' => $this->resource['inventory'],
+            'storage' => $this->resource['storage'],
+            'queues' => $this->resource['queues'],
+            'period' => $this->resource['period'],
+            'metadata' => [
+                'last_updated' => $this->resource['last_updated'],
+                'timezone' => config('app.timezone'),
+            ]
+        ];
+
+        // Kamus MoM (Tahap 2): hanya ada bila request mengirim as_of_date.
+        if (isset($this->resource['mom'])) {
+            $data += $this->resource['mom'];
+        }
+
         return [
             'status' => 'success',
-            'data' => [
-                'summary' => $this->resource['metrics'],
-                'qc_analytics' => $this->resource['qc_analytics'],
-                'efficiency' => $this->resource['efficiency'],
-                'inventory' => $this->resource['inventory'],
-                'storage' => $this->resource['storage'],
-                'queues' => $this->resource['queues'],
-                'period' => $this->resource['period'],
-                'metadata' => [
-                    'last_updated' => $this->resource['last_updated'],
-                    'timezone' => config('app.timezone'),
-                ]
-            ],
+            'data' => $data,
             'message' => 'Warehouse dashboard summary retrieved successfully.'
         ];
     }
