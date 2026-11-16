@@ -75,21 +75,27 @@ class RevisionController extends Controller
             ->paginate(10, ['*'], 'page_history')
             ->withQueryString();
 
-        // Fetch Dropdown Options Dynamically
-        $reporters = \App\Models\User::whereIn('id', WorkOrderRevision::pluck('created_by')->unique())->get(['id', 'name']);
-        $brands = \App\Models\WorkOrder::whereIn('id', WorkOrderRevision::pluck('work_order_id')->unique())
+        // Fetch Dropdown Options Dynamically via subqueries
+        $reporters = \App\Models\User::whereIn('id', WorkOrderRevision::select('created_by')->whereNotNull('created_by')->distinct())->get(['id', 'name']);
+        $brands = \App\Models\WorkOrder::whereIn('id', WorkOrderRevision::select('work_order_id')->whereNotNull('work_order_id')->distinct())
+            ->whereNotNull('shoe_brand')
+            ->distinct()
             ->pluck('shoe_brand')
-            ->unique()
             ->filter()
             ->values();
 
-        // Count metrics for open revisions
-        $qcCount = WorkOrderRevision::where('status', 'OPEN')->where('origin_status', 'QC')->count();
-        $prodCount = WorkOrderRevision::where('status', 'OPEN')->where('origin_status', 'PRODUCTION')->count();
-        $selesaiCount = WorkOrderRevision::where('status', 'OPEN')->where(function($q) {
-            $q->whereNull('origin_status')->orWhere('origin_status', 'SELESAI');
-        })->count();
-        $totalActiveCount = WorkOrderRevision::where('status', 'OPEN')->count();
+        // Count metrics for open revisions in 1 query
+        $revAgg = WorkOrderRevision::where('status', 'OPEN')->selectRaw("
+            COUNT(*) as total_active,
+            SUM(CASE WHEN origin_status = 'QC' THEN 1 ELSE 0 END) as qc_count,
+            SUM(CASE WHEN origin_status = 'PRODUCTION' THEN 1 ELSE 0 END) as prod_count,
+            SUM(CASE WHEN origin_status IS NULL OR origin_status = 'SELESAI' THEN 1 ELSE 0 END) as selesai_count
+        ")->first();
+
+        $qcCount = (int) ($revAgg->qc_count ?? 0);
+        $prodCount = (int) ($revAgg->prod_count ?? 0);
+        $selesaiCount = (int) ($revAgg->selesai_count ?? 0);
+        $totalActiveCount = (int) ($revAgg->total_active ?? 0);
 
         return view('revision.index', compact(
             'active', 

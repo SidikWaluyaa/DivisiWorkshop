@@ -13,29 +13,23 @@
     use Illuminate\Support\Facades\Schema;
     use Illuminate\Support\Facades\Cache;
 
-    // Cache sidebar counts for 15 seconds for ultra-fast response
+    // Cache sidebar counts for 15 seconds for ultra-fast response (consolidated queries)
     $wsCounts = Cache::remember('ws_sidebar_counts', 15, function() {
+        $woAgg = WorkOrder::selectRaw("
+            SUM(CASE WHEN (priority IS NULL OR priority != 'R&D') AND spk_number NOT LIKE 'RD-%' AND status IN ('SORTIR','PREPARATION','PRODUCTION','QC','REVISI') THEN 1 ELSE 0 END) as active_workshop,
+            SUM(CASE WHEN (priority IS NULL OR priority != 'R&D') AND spk_number NOT LIKE 'RD-%' AND fast_track_status = 'yes' AND status NOT IN ('SELESAI','BATAL') THEN 1 ELSE 0 END) as fast_track,
+            SUM(CASE WHEN (priority IS NULL OR priority != 'R&D') AND spk_number NOT LIKE 'RD-%' AND status = 'PREPARATION' THEN 1 ELSE 0 END) as prep,
+            SUM(CASE WHEN (priority IS NULL OR priority != 'R&D') AND spk_number NOT LIKE 'RD-%' AND status = 'QC' THEN 1 ELSE 0 END) as qc,
+            SUM(CASE WHEN warranty_expires_at IS NOT NULL THEN 1 ELSE 0 END) as list_garansi,
+            SUM(CASE WHEN (priority = 'R&D' OR spk_number LIKE 'RD-%') AND status NOT IN ('SELESAI','BATAL') THEN 1 ELSE 0 END) as rnd_active,
+            SUM(CASE WHEN (priority IS NULL OR priority != 'R&D') AND spk_number NOT LIKE 'RD-%' AND status = 'STAGING_OUTBOUND' THEN 1 ELSE 0 END) as outbound_staging
+        ")->first();
+
         return [
-            'activeWorkshop' => WorkOrder::whereIn('status', [
-                WorkOrderStatus::SORTIR, 
-                WorkOrderStatus::PREPARATION, 
-                WorkOrderStatus::PRODUCTION, 
-                WorkOrderStatus::QC, 
-                WorkOrderStatus::REVISI
-            ])->where(function($q) {
-                $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
-            })->where('spk_number', 'not like', 'RD-%')->count(),
-            'fastTrack' => WorkOrder::where('fast_track_status', 'yes')
-                ->where(function($q) {
-                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
-                })->where('spk_number', 'not like', 'RD-%')
-                ->whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL])
-                ->count(),
+            'activeWorkshop' => (int) ($woAgg->active_workshop ?? 0),
+            'fastTrack' => (int) ($woAgg->fast_track ?? 0),
             'inbound' => WorkshopManifest::where('status', 'SENT')->where('manifest_number', 'not like', 'MNF-OUT-%')->count(),
-            'prep' => WorkOrder::where('status', WorkOrderStatus::PREPARATION)
-                ->where(function($q) {
-                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
-                })->where('spk_number', 'not like', 'RD-%')->count(),
+            'prep' => (int) ($woAgg->prep ?? 0),
             // 2. Sortir Active WIP (SPK still being sorted, not yet classification completed)
             'sortir' => WorkOrder::where('status', WorkOrderStatus::SORTIR)
                 ->where(function($q) {
@@ -54,10 +48,7 @@
                     $lq->where('step', 'PRODUCTION')
                        ->where('action', 'PRODUCTION_APPROVED');
                 })->count(),
-            'qc' => WorkOrder::where('status', WorkOrderStatus::QC)
-                ->where(function($q) {
-                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
-                })->where('spk_number', 'not like', 'RD-%')->count(),
+            'qc' => (int) ($woAgg->qc ?? 0),
             'late' => WorkOrder::productionLate()->whereRaw('DATEDIFF(estimation_date, NOW()) <= 0')->count(),
             'suratJalan' => SuratJalan::where('status', 'DIKIRIM')->count(),
             // 3. SJ Sortir -> Produksi Candidates (Completed Sortir ready for Surat Jalan)
@@ -87,23 +78,17 @@
             'revisi' => WorkOrderRevision::where('status', 'OPEN')->count(),
             'followUp' => WorkOrder::getCxActiveCount(),
             'garansiActive' => WorkOrderWarranty::count(),
-            'listGaransi' => WorkOrder::whereNotNull('warranty_expires_at')->count(),
+            'listGaransi' => (int) ($woAgg->list_garansi ?? 0),
             'otoActive' => \App\Models\OTO::whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->count(),
-            'rndActive' => WorkOrder::where(function($q) {
-                    $q->where('priority', 'R&D')->orWhere('spk_number', 'like', 'RD-%');
-                })
-                ->whereNotIn('status', [WorkOrderStatus::SELESAI, WorkOrderStatus::BATAL])
-                ->count(),
+            'rndActive' => (int) ($woAgg->rnd_active ?? 0),
             'materialTotal' => Material::count(),
-            'materialRequests' => Schema::hasTable('material_requests') ? MaterialRequest::where('status', 'PENDING')->count() : 0,
-            'disbursement' => Schema::hasTable('material_disbursements') ? MaterialDisbursement::where('status', 'PENDING')->count() : 0,
-            'mutationsToday' => Schema::hasTable('material_mutations') ? MaterialMutation::whereDate('created_at', today())->count() : 0,
-            'outboundStaging' => WorkOrder::where('status', WorkOrderStatus::STAGING_OUTBOUND)
-                ->where(function($q) {
-                    $q->whereNull('priority')->orWhere('priority', '!=', 'R&D');
-                })->where('spk_number', 'not like', 'RD-%')->count(),
+            'materialRequests' => MaterialRequest::where('status', 'PENDING')->count(),
+            'disbursement' => 0,
+            'mutationsToday' => 0,
+            'outboundStaging' => (int) ($woAgg->outbound_staging ?? 0),
         ];
     });
+    \Illuminate\Support\Facades\View::share('wsCounts', $wsCounts);
 
     $countActiveWorkshop = $wsCounts['activeWorkshop'];
     $countFastTrack = $wsCounts['fastTrack'];

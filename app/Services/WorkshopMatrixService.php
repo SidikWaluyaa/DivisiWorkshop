@@ -105,9 +105,11 @@ class WorkshopMatrixService
                     $this->incrementStage($groups['Sortir'], 'Followup', $hoursStuck);
                 } else {
                     $groups['Sortir']['total']++;
-                    if ($order->readyForProduction()->where('work_orders.id', $order->id)->exists()) {
+                    $hasRequestedMat = $order->materials->contains(fn($m) => ($m->pivot->status ?? '') === 'REQUESTED');
+                    $hasAnyMat = $order->materials->isNotEmpty();
+                    if ($hasAnyMat && !$hasRequestedMat) {
                         $this->incrementStage($groups['Sortir'], 'Siap Produksi', $hoursStuck);
-                    } elseif ($order->waitingForMaterials()->where('work_orders.id', $order->id)->exists()) {
+                    } elseif ($hasRequestedMat) {
                         $this->incrementStage($groups['Sortir'], 'In Procurement', $hoursStuck);
                     } else {
                         $this->incrementStage($groups['Sortir'], 'Belum Request', $hoursStuck);

@@ -38,17 +38,32 @@ class WorkshopRndController extends Controller
             WorkOrderStatus::QC,
         ];
 
-        // Metric Counts
-        $baseRnd = WorkOrder::onlyRnd();
+        // Metric Counts in 1 query
+        $statusCounts = WorkOrder::onlyRnd()
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $countMonitoring = 0;
+        foreach ($prePrepStatuses as $st) {
+            $countMonitoring += (int) ($statusCounts[$st->value] ?? 0);
+        }
+
+        $countPrep = (int) ($statusCounts[WorkOrderStatus::PREPARATION->value] ?? 0);
+        $countSortir = (int) ($statusCounts[WorkOrderStatus::SORTIR->value] ?? 0);
+        $countProd = (int) ($statusCounts[WorkOrderStatus::PRODUCTION->value] ?? 0);
+        $countQc = (int) ($statusCounts[WorkOrderStatus::QC->value] ?? 0);
+        $totalActive = $countPrep + $countSortir + $countProd + $countQc;
+        $totalCompleted = (int) ($statusCounts[WorkOrderStatus::SELESAI->value] ?? 0);
 
         $metrics = [
-            'countMonitoring' => (clone $baseRnd)->whereIn('status', $prePrepStatuses)->count(),
-            'totalActive' => (clone $baseRnd)->whereIn('status', $activeWorkshopStatuses)->count(),
-            'countPrep' => (clone $baseRnd)->where('status', WorkOrderStatus::PREPARATION)->count(),
-            'countSortir' => (clone $baseRnd)->where('status', WorkOrderStatus::SORTIR)->count(),
-            'countProd' => (clone $baseRnd)->where('status', WorkOrderStatus::PRODUCTION)->count(),
-            'countQc' => (clone $baseRnd)->where('status', WorkOrderStatus::QC)->count(),
-            'totalCompleted' => (clone $baseRnd)->where('status', WorkOrderStatus::SELESAI)->count(),
+            'countMonitoring' => $countMonitoring,
+            'totalActive' => $totalActive,
+            'countPrep' => $countPrep,
+            'countSortir' => $countSortir,
+            'countProd' => $countProd,
+            'countQc' => $countQc,
+            'totalCompleted' => $totalCompleted,
         ];
 
         // Intelligent Default Tab

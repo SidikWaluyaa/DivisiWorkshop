@@ -751,12 +751,20 @@ class FinishController extends Controller
             }
         }
 
+        $now = now();
+        $soonLimit = now()->addDays(7);
+        $wAgg = $statsBase->selectRaw("
+            COUNT(*) as total_count,
+            SUM(CASE WHEN warranty_expires_at >= ? THEN 1 ELSE 0 END) as active_count,
+            SUM(CASE WHEN warranty_expires_at < ? THEN 1 ELSE 0 END) as expired_count,
+            SUM(CASE WHEN warranty_expires_at >= ? AND warranty_expires_at <= ? THEN 1 ELSE 0 END) as soon_count
+        ", [$now, $now, $now, $soonLimit])->first();
+
         $stats = [
-            'total'   => (clone $statsBase)->count(),
-            'active'  => (clone $statsBase)->where('warranty_expires_at', '>=', now())->count(),
-            'expired' => (clone $statsBase)->where('warranty_expires_at', '<', now())->count(),
-            'soon'    => (clone $statsBase)->where('warranty_expires_at', '>=', now())
-                                           ->where('warranty_expires_at', '<=', now()->addDays(7))->count(),
+            'total'   => (int) ($wAgg->total_count ?? 0),
+            'active'  => (int) ($wAgg->active_count ?? 0),
+            'expired' => (int) ($wAgg->expired_count ?? 0),
+            'soon'    => (int) ($wAgg->soon_count ?? 0),
         ];
 
         return view('finish.list-garansi', compact('orders', 'stats', 'filter', 'search', 'startDate', 'endDate'));

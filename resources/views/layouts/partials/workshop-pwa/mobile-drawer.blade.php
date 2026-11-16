@@ -43,7 +43,7 @@
                         </div>
                         <p class="text-[10px] font-bold text-slate-500 mt-0.5">Daftar Surat Jalan dari Toko/Gudang ke Workshop</p>
                     </div>
-                    @php $pendingInboundCount = \App\Models\WorkshopManifest::where('status', 'SENT')->where('manifest_number', 'not like', 'MNF-OUT-%')->count(); @endphp
+                    @php $pendingInboundCount = $wsCounts['inbound'] ?? 0; @endphp
                     @if($pendingInboundCount > 0)
                         <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-[#FFC232] text-slate-950 shadow-sm animate-pulse">
                             {{ $pendingInboundCount }}
@@ -167,7 +167,7 @@
                         <div class="font-black text-sm text-[#22AF85]">Staging & Manifest Outbound</div>
                         <p class="text-[10px] font-bold text-slate-500 mt-0.5">Terbitkan Manifest pengiriman kembali ke Gudang Utama</p>
                     </div>
-                    @php $outboundCount = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::STAGING_OUTBOUND)->count(); @endphp
+                    @php $outboundCount = $wsCounts['outboundStaging'] ?? 0; @endphp
                     @if($outboundCount > 0)
                         <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-[#FFC232] text-slate-950 shadow-sm animate-pulse">
                             {{ $outboundCount }} SPK
@@ -195,7 +195,7 @@
                         </div>
                         <p class="text-[10px] font-bold text-slate-500 mt-0.5">Penanganan &amp; rework SPK revisi dari QC/Pelanggan</p>
                     </div>
-                    @php $revCount = \App\Models\WorkOrderRevision::where('status', 'OPEN')->count(); @endphp
+                    @php $revCount = $wsCounts['revisi'] ?? 0; @endphp
                     @if($revCount > 0)
                         <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-[#FFC232] text-slate-950">
                             {{ $revCount }}
@@ -211,7 +211,7 @@
                         </div>
                         <p class="text-[10px] font-bold text-rose-900/70 mt-0.5">Penanganan kendala, tambah jasa &amp; resolusi SPK</p>
                     </div>
-                    @php $cxActiveCount = \App\Models\WorkOrder::getCxActiveCount(); @endphp
+                    @php $cxActiveCount = $wsCounts['followUp'] ?? 0; @endphp
                     @if($cxActiveCount > 0)
                         <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-rose-600 text-white shadow-xs animate-pulse">
                             {{ $cxActiveCount }}
@@ -254,9 +254,7 @@
                         <p class="text-[10px] font-bold text-emerald-900/70 mt-0.5">Riset produk, formulasi baru &amp; pengujian reparasi</p>
                     </div>
                     @php 
-                        $rndActiveCount = \App\Models\WorkOrder::where(function($q) {
-                            $q->where('priority', 'R&D')->orWhere('spk_number', 'like', 'RD-%');
-                        })->whereNotIn('status', [\App\Enums\WorkOrderStatus::SELESAI, \App\Enums\WorkOrderStatus::BATAL])->count();
+                        $rndActiveCount = $wsCounts['rndActive'] ?? 0;
                     @endphp
                     @if($rndActiveCount > 0)
                         <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-[#FFC232] text-slate-950 shadow-sm">

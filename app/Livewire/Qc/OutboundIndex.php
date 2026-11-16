@@ -59,7 +59,7 @@ class OutboundIndex extends Component
     public function stagingOrders()
     {
         $query = WorkOrder::query()
-            ->with(['customer', 'workOrderServices.service', 'cxIssues', 'photos', 'revisions', 'workshopManifest'])
+            ->select('id', 'spk_number', 'customer_name', 'shoe_brand', 'priority', 'status', 'workshop_manifest_id', 'updated_at')
             ->where('status', WorkOrderStatus::STAGING_OUTBOUND)
             ->where(function($q) {
                 $q->whereNull('workshop_manifest_id')
@@ -93,7 +93,7 @@ class OutboundIndex extends Component
     #[Computed]
     public function outboundManifests()
     {
-        return WorkshopManifest::with(['dispatcher', 'receiver', 'workOrders.customer'])
+        return WorkshopManifest::with(['dispatcher', 'receiver', 'workOrders'])
             ->where('manifest_number', 'like', 'MNF-OUT-%')
             ->orderBy('created_at', 'desc')
             ->paginate(15);

@@ -27,12 +27,24 @@ class WorkloadHeatmap extends Component
         $start = Carbon::parse($this->startDate);
         $end = Carbon::parse($this->endDate)->endOfDay();
 
+        $rawCounts = WorkOrder::withoutRnd()
+            ->whereIn('status', [
+                WorkOrderStatus::ASSESSMENT,
+                WorkOrderStatus::PREPARATION,
+                WorkOrderStatus::SORTIR,
+                WorkOrderStatus::PRODUCTION,
+                WorkOrderStatus::QC,
+            ])
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         $stations = [
-            'Assessment' => WorkOrder::withoutRnd()->where('status', WorkOrderStatus::ASSESSMENT)->count(),
-            'Preparation' => WorkOrder::withoutRnd()->where('status', WorkOrderStatus::PREPARATION)->count(),
-            'Sortir' => WorkOrder::withoutRnd()->where('status', WorkOrderStatus::SORTIR)->count(),
-            'Production' => WorkOrder::withoutRnd()->where('status', WorkOrderStatus::PRODUCTION)->count(),
-            'QC' => WorkOrder::withoutRnd()->where('status', WorkOrderStatus::QC)->count(),
+            'Assessment' => (int) ($rawCounts[WorkOrderStatus::ASSESSMENT->value] ?? 0),
+            'Preparation' => (int) ($rawCounts[WorkOrderStatus::PREPARATION->value] ?? 0),
+            'Sortir' => (int) ($rawCounts[WorkOrderStatus::SORTIR->value] ?? 0),
+            'Production' => (int) ($rawCounts[WorkOrderStatus::PRODUCTION->value] ?? 0),
+            'QC' => (int) ($rawCounts[WorkOrderStatus::QC->value] ?? 0),
         ];
 
         $this->stationData = $stations;
@@ -41,18 +53,32 @@ class WorkloadHeatmap extends Component
         $this->bottleneck = $sorted->keys()->first();
         $this->bottleneckCount = $sorted->first();
 
+        $activeWos = WorkOrder::whereDate('entry_date', '>=', $start)
+            ->whereDate('entry_date', '<=', $end)
+            ->whereIn('status', [WorkOrderStatus::PRODUCTION, WorkOrderStatus::QC])
+            ->select('id', 'technician_production_id', 'qc_final_pic_id', 'prod_sol_by', 'prod_upper_by', 'prod_cleaning_by')
+            ->get();
+
+        $techLoadMap = [];
+        foreach ($activeWos as $wo) {
+            $tIds = array_filter(array_unique([
+                $wo->technician_production_id,
+                $wo->qc_final_pic_id,
+                $wo->prod_sol_by,
+                $wo->prod_upper_by,
+                $wo->prod_cleaning_by,
+            ]));
+            foreach ($tIds as $tId) {
+                $techLoadMap[$tId] = ($techLoadMap[$tId] ?? 0) + 1;
+            }
+        }
+
         $this->technicianLoad = User::where('role', '!=', 'customer')
+            ->select('id', 'name')
             ->get()
             ->map(fn($user) => [
                 'name' => $user->name,
-                'count' => WorkOrder::whereDate('entry_date', '>=', $start)->whereDate('entry_date', '<=', $end)
-                    ->whereIn('status', [WorkOrderStatus::PRODUCTION, WorkOrderStatus::QC])
-                    ->where(fn($q) => $q->where('technician_production_id', $user->id)
-                        ->orWhere('qc_final_pic_id', $user->id)
-                        ->orWhere('prod_sol_by', $user->id)
-                        ->orWhere('prod_upper_by', $user->id)
-                        ->orWhere('prod_cleaning_by', $user->id))
-                    ->count()
+                'count' => $techLoadMap[$user->id] ?? 0,
             ])
             ->where('count', '>', 0)
             ->sortByDesc('count')

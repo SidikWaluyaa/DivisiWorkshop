@@ -333,9 +333,15 @@ class Index extends Component
         $baseQuery = \App\Models\WorkOrderWarranty::query();
         $this->applyFilters($baseQuery);
 
-        $total = (clone $baseQuery)->count();
-        $open = (clone $baseQuery)->where('status', 'OPEN')->count();
-        $finished = (clone $baseQuery)->where('status', 'FINISHED')->count();
+        $agg = (clone $baseQuery)->selectRaw("
+            COUNT(*) as total_count,
+            SUM(CASE WHEN work_order_warranties.status = 'OPEN' THEN 1 ELSE 0 END) as open_count,
+            SUM(CASE WHEN work_order_warranties.status = 'FINISHED' THEN 1 ELSE 0 END) as finished_count
+        ")->first();
+
+        $total = (int) ($agg->total_count ?? 0);
+        $open = (int) ($agg->open_count ?? 0);
+        $finished = (int) ($agg->finished_count ?? 0);
         
         $topCategory = (clone $baseQuery)->join('work_orders', 'work_order_warranties.work_order_id', '=', 'work_orders.id')
             ->select('work_orders.category_spk', \DB::raw('count(*) as count'))

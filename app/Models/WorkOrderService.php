@@ -57,7 +57,11 @@ class WorkOrderService extends Pivot
      */
     public function getServiceNameAttribute(): string
     {
-        return (string) ($this->custom_service_name ?: ($this->service?->name ?? $this->category_name ?? 'Layanan Workshop'));
+        if (array_key_exists('service_name', $this->attributes) && $this->attributes['service_name'] !== null) {
+            return (string) $this->attributes['service_name'];
+        }
+        $relName = $this->relationLoaded('service') ? $this->service?->name : null;
+        return (string) ($this->custom_service_name ?: ($relName ?? $this->category_name ?? 'Layanan Workshop'));
     }
 
     /**

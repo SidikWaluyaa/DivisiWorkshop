@@ -78,9 +78,12 @@ class OtoStationIndex extends Component
     #[Computed]
     public function counts()
     {
-        $baseActiveQuery = OTO::whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])
-            ->whereHas('workOrder', fn($q) => $q->whereNull('taken_date'));
-        $antreanCount = (clone $baseActiveQuery)->count();
+        $activeOtos = OTO::whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])
+            ->whereHas('workOrder', fn($q) => $q->whereNull('taken_date'))
+            ->select('id', 'total_oto_price')
+            ->get();
+        $antreanCount = $activeOtos->count();
+
         $completedCount = OTO::where(function($q) {
             $q->where('status', 'COMPLETED')
               ->orWhereHas('workOrder', fn($wq) => $wq->whereNotNull('taken_date'));
@@ -88,7 +91,6 @@ class OtoStationIndex extends Component
 
         // Financial Calculation Helper
         $parsePrice = fn($str) => (int) preg_replace('/[^0-9]/', '', (string) $str);
-        $activeOtos = (clone $baseActiveQuery)->get();
         $totalPotentialRevenue = $activeOtos->sum(fn($o) => $parsePrice($o->total_oto_price));
 
         $completedTodayCount = OTO::where('status', 'COMPLETED')

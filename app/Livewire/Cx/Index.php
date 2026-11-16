@@ -684,7 +684,7 @@ class Index extends Component
 
         $categories = CxIssue::select('category')->whereNotNull('category')->distinct()->pluck('category');
         $masterServices = Service::all();
-        $masterCategories = Service::select('category')->distinct()->pluck('category');
+        $masterCategories = $masterServices->pluck('category')->filter()->unique()->values();
         $warrantyCount = WorkOrderWarranty::where('status', 'OPEN')->count();
         $isWorkshop = $this->isWorkshopContext;
         $layout = $isWorkshop ? 'layouts.workshop-pwa' : 'layouts.app';

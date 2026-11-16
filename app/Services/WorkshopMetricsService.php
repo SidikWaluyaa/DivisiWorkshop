@@ -49,7 +49,8 @@ class WorkshopMetricsService
         $cacheKey = 'workshop_historical_' . $start->format('Y-m-d') . '_' . $end->format('Y-m-d');
 
         return Cache::remember($cacheKey, 300, function() use ($start, $end) {
-            $completed = WorkOrder::where('status', WorkOrderStatus::SELESAI)
+            $completed = WorkOrder::with('workOrderServices')
+                ->where('status', WorkOrderStatus::SELESAI)
                 ->whereDate('finished_date', '>=', $start)
                 ->whereDate('finished_date', '<=', $end->endOfDay())
                 ->get();

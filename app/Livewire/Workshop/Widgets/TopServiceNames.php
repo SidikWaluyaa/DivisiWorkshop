@@ -32,11 +32,11 @@ class TopServiceNames extends Component
             })
             ->leftJoin('services', 'work_order_services.service_id', '=', 'services.id')
             ->select(
-                DB::raw("COALESCE(services.name, custom_service_name, 'Layanan Kustom') as service_name"),
+                DB::raw("COALESCE(services.name, custom_service_name, 'Layanan Kustom') as grp_service_name"),
                 DB::raw("COUNT(*) as total_count"),
                 DB::raw("SUM(cost) as total_revenue")
             )
-            ->groupBy('service_name')
+            ->groupBy('grp_service_name')
             ->orderByDesc('total_revenue')
             ->take(7)
             ->get();
@@ -44,7 +44,7 @@ class TopServiceNames extends Component
         $maxRevenue = $results->max('total_revenue') ?: 1;
 
         $this->services = $results->map(fn($item) => [
-            'name' => $item->service_name,
+            'name' => $item->grp_service_name,
             'count' => $item->total_count,
             'revenue' => $item->total_revenue,
             'percentage' => ($item->total_revenue / $maxRevenue) * 100

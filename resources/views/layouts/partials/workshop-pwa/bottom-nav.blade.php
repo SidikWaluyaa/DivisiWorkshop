@@ -14,7 +14,7 @@
 
         {{-- 2. Inbound --}}
         @php
-            $inboundCount = \App\Models\WorkshopManifest::where('status', 'SENT')->where('manifest_number', 'not like', 'MNF-OUT-%')->count();
+            $inboundCount = $wsCounts['inbound'] ?? 0;
             $isInboundActive = request()->routeIs('manifest.*');
         @endphp
         <a href="{{ route('manifest.index', ['status' => 'SENT', 'mode' => 'pwa']) }}" 
@@ -63,7 +63,7 @@
 
         {{-- 5. Outbound / Drawer --}}
         @php
-            $outboundStagingCount = \App\Models\WorkOrder::where('status', \App\Enums\WorkOrderStatus::STAGING_OUTBOUND)->count();
+            $outboundStagingCount = $wsCounts['outboundStaging'] ?? 0;
             $isOutboundActive = request()->routeIs('qc.outbound*');
         @endphp
         <button @click="activeDrawer = (activeDrawer === 'outbound') ? null : 'outbound'" 

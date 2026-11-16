@@ -77,15 +77,21 @@ class SuratJalanController extends Controller
                 ->get();
         }
 
-        // Compute metrics
+        // Compute metrics in 1 query
         $baseMetricQuery = SuratJalan::query();
         if (!empty($jenis) && $jenis !== 'all') {
             $baseMetricQuery->where('jenis_serah_terima', $jenis);
         }
 
-        $totalCount = (clone $baseMetricQuery)->count();
-        $dikirimCount = (clone $baseMetricQuery)->where('status', 'DIKIRIM')->count();
-        $diterimaCount = (clone $baseMetricQuery)->where('status', 'DITERIMA')->count();
+        $sjAgg = $baseMetricQuery->selectRaw("
+            COUNT(*) as total_count,
+            SUM(CASE WHEN status = 'DIKIRIM' THEN 1 ELSE 0 END) as dikirim_count,
+            SUM(CASE WHEN status = 'DITERIMA' THEN 1 ELSE 0 END) as diterima_count
+        ")->first();
+
+        $totalCount = (int) ($sjAgg->total_count ?? 0);
+        $dikirimCount = (int) ($sjAgg->dikirim_count ?? 0);
+        $diterimaCount = (int) ($sjAgg->diterima_count ?? 0);
         $candidateCount = $availableOrders->count();
 
         // Smart Tab Selection: prioritize where action or pending work is needed
