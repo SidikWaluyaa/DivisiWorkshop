@@ -96,7 +96,8 @@ class WarehouseMomQuery
         $logStep = self::STATUS_LOG_STEP;
 
         $rows = self::select("
-            SELECT x.st, x.prev, x.is_rd, x.not_taken, x.in_rack, x.in_rack_sepatu, x.recent30, x.umur_le30, COUNT(*) AS n
+            SELECT x.st, x.prev, x.is_rd, x.not_taken, x.in_rack, x.in_rack_sepatu, x.recent30, x.umur_le30,
+                x.selesai_menit, x.selesai_invoice, x.selesai_basis, COUNT(*) AS n
             FROM (
                 SELECT s.*,
                     -- Ditahan CX: tahap mengikuti status terakhir sebelum ditahan (setara work_orders.previous_status)
@@ -105,7 +106,18 @@ class WarehouseMomQuery
                           WHERE l.work_order_id = s.id AND {$logWhere} AND l.created_at <= :t
                             AND l.step NOT IN ('CX_FOLLOWUP', 'HOLD_FOR_CX') AND l.action <> 'QC_REJECTED'
                           ORDER BY l.created_at DESC, l.id DESC LIMIT 1)
-                    END AS prev
+                    END AS prev,
+                    -- Rak selesai (SELESAI, belum keluar pada T): umur dan invoice untuk aging (No. 50) dan piutang (No. 90).
+                    -- Umur dari finished_date; bila kosong / setelah T: waktu log SELESAI, lalu created_at (SPK GR).
+                    CASE WHEN s.st = 'SELESAI' AND s.not_taken THEN TIMESTAMPDIFF(MINUTE,
+                        CASE WHEN s.finished_date IS NOT NULL AND s.finished_date <= :t THEN s.finished_date
+                             WHEN s.log_step = 'SELESAI' THEN s.log_at
+                             ELSE s.wo_created END, :t) END AS selesai_menit,
+                    CASE WHEN s.st = 'SELESAI' AND s.not_taken THEN s.invoice_id END AS selesai_invoice,
+                    CASE WHEN s.st = 'SELESAI' AND s.not_taken THEN
+                        CASE WHEN s.finished_date IS NOT NULL AND s.finished_date <= :t THEN 'finished_date'
+                             WHEN s.log_step = 'SELESAI' THEN 'log_selesai'
+                             ELSE 'created_at' END END AS selesai_basis
                 FROM (
                     SELECT y.id, ".self::STATUS_AT_T_SQL." AS st,
                         y.is_rd,
@@ -113,13 +125,15 @@ class WarehouseMomQuery
                         y.in_rack,
                         y.in_rack_sepatu,
                         (y.finished_date IS NOT NULL AND y.finished_date >= :t30) AS recent30,
-                        (y.created_at > :t30) AS umur_le30
+                        (y.created_at > :t30) AS umur_le30,
+                        y.finished_date, y.log_step, y.log_at, y.created_at AS wo_created, y.invoice_id
                     FROM (
                         SELECT b.*,
                             SUBSTRING(b.log_x, 32) AS log_step,
                             CAST(LEFT(b.log_x, 19) AS DATETIME) AS log_at
                         FROM (
                             SELECT w.id, w.status, w.spk_number, w.finished_date, w.taken_date, w.updated_at, w.donated_at, w.created_at,
+                                w.invoice_id,
                                 {$rdSql} AS is_rd,
                                 -- Log status terakhir <= T dalam satu subquery: 'Y-m-d H:i:s' + id (12 digit) + step
                                 (SELECT MAX(CONCAT(DATE_FORMAT(l.created_at, '%Y-%m-%d %H:%i:%s'), LPAD(l.id, 12, '0'), {$logStep}))
@@ -144,11 +158,14 @@ class WarehouseMomQuery
                     ) y
                 ) s
             ) x
-            GROUP BY x.st, x.prev, x.is_rd, x.not_taken, x.in_rack, x.in_rack_sepatu, x.recent30, x.umur_le30
+            GROUP BY x.st, x.prev, x.is_rd, x.not_taken, x.in_rack, x.in_rack_sepatu, x.recent30, x.umur_le30,
+                x.selesai_menit, x.selesai_invoice, x.selesai_basis
         ", $named);
 
         $pendingLe30 = $pendingGt30 = $siapKirim = $finishedNotStored = $readyForPickup = $readyForPickupSepatu = 0;
         $wip = array_fill_keys(KamusMetrikQuery::WIP_TAHAP_KEYS, 0);
+        $agingHari = [];      // umur (hari) tiap SPK di rak selesai
+        $rakInvoice = [];     // invoice_id => jumlah SPK di rak selesai
 
         foreach ($rows as $r) {
             $n = (int) $r->n;
@@ -165,6 +182,12 @@ class WarehouseMomQuery
                 }
                 if ($r->recent30) {
                     $siapKirim += $n;
+                }
+                for ($i = 0; $i < $n; $i++) {
+                    $agingHari[] = max(0, (int) $r->selesai_menit) / 1440;
+                }
+                if ($r->selesai_invoice !== null) {
+                    $rakInvoice[(int) $r->selesai_invoice] = ($rakInvoice[(int) $r->selesai_invoice] ?? 0) + $n;
                 }
             }
             // Pemetaan sama dengan wipSnapshot(); prev = status sebelum ditahan CX (null → reject QC awal → fisik_tiba).
@@ -226,7 +249,68 @@ class WarehouseMomQuery
             'shipping_pending' => $shipping,
             'wip_tahap' => $wip,
             'metode' => self::METODE_POSISI,
+            // Kamus v3 No. 50 & No. 90 (Tahap 3)
+            'aging_rak_selesai' => self::agingSummary($agingHari, [3, 14, 30]),
+            'piutang_rak_selesai' => self::piutangRakSelesai($rakInvoice, $t),
         ];
+    }
+
+    /** Ringkasan umur (hari): n, rata-rata, median, dan jumlah yang lebih dari tiap ambang. */
+    private static function agingSummary(array $hari, array $ambang): array
+    {
+        $out = [
+            'n' => count($hari),
+            'avg_hari' => self::avg($hari),
+            'median_hari' => self::percentile($hari, 0.5),
+        ];
+        foreach ($ambang as $a) {
+            $out["lebih_{$a}_hari"] = count(array_filter($hari, fn ($h) => $h > $a));
+        }
+
+        return $out;
+    }
+
+    /**
+     * Kamus v3 No. 90 di level invoice: invoice (bukan Batal) yang punya SPK di rak selesai pada T dan belum lunas pada T.
+     * Tagihan = total_amount + shipping_cost − discount (nilai sekarang); dibayar = pembayaran terverifikasi dengan paid_at <= T.
+     * Sisa tiap invoice dihitung sekali walau SPK-nya di rak lebih dari satu.
+     *
+     * @param  array<int,int>  $rakInvoice  invoice_id => jumlah SPK di rak selesai
+     */
+    private static function piutangRakSelesai(array $rakInvoice, string $t): array
+    {
+        $out = ['invoice' => 0, 'pasang_di_rak' => 0, 'rupiah_tagihan' => 0.0, 'rupiah_dibayar' => 0.0,
+            'rupiah_sisa' => 0.0, 'invoice_sebagian_spk_sudah_keluar' => 0];
+        if (! $rakInvoice) {
+            return $out;
+        }
+
+        $ids = implode(',', array_map('intval', array_keys($rakInvoice)));
+        $rows = self::select('
+            SELECT i.id,
+                   i.total_amount + COALESCE(i.shipping_cost, 0) - COALESCE(i.discount, 0) AS tagihan,
+                   '.self::paidAtSql('i.id', ':t')." AS dibayar,
+                   EXISTS (SELECT 1 FROM work_orders wk
+                            WHERE wk.invoice_id = i.id AND wk.deleted_at IS NULL AND wk.taken_date <= :t) AS ada_keluar
+            FROM invoices i
+            WHERE i.id IN ({$ids}) AND COALESCE(i.status, '') NOT IN ('Batal', 'BATAL')
+        ", ['t' => $t]);
+
+        foreach ($rows as $r) {
+            $tagihan = (float) $r->tagihan;
+            $dibayar = (float) $r->dibayar;
+            if ($dibayar >= $tagihan) {
+                continue; // sudah lunas pada T
+            }
+            $out['invoice']++;
+            $out['pasang_di_rak'] += $rakInvoice[(int) $r->id];
+            $out['rupiah_tagihan'] += $tagihan;
+            $out['rupiah_dibayar'] += $dibayar;
+            $out['rupiah_sisa'] += $tagihan - $dibayar;
+            $out['invoice_sebagian_spk_sudah_keluar'] += (int) $r->ada_keluar;
+        }
+
+        return $out;
     }
 
     /**
@@ -302,7 +386,96 @@ class WarehouseMomQuery
             'rupiah_sisa_saat_keluar' => (float) $rupiah->sisa,
             'invoice_belum_lunas_saat_keluar' => (int) $rupiah->belum_lunas,
             'aturan_atribusi_invoice' => 'keluar_pertama',
+            // Kamus v3 No. 50 (Tahap 3): umur = taken_date − finished_date, SPK tanpa finished_date tidak dihitung.
+            'aging_selesai_ke_keluar' => self::agingSelesaiKeKeluar($named),
         ];
+    }
+
+    private static function agingSelesaiKeKeluar(array $named): array
+    {
+        $rows = self::select('
+            SELECT TIMESTAMPDIFF(MINUTE, w.finished_date, w.taken_date) AS menit
+            FROM work_orders w
+            WHERE w.deleted_at IS NULL AND w.taken_date BETWEEN :s AND :e AND w.finished_date IS NOT NULL
+        ', $named);
+
+        // Selisih negatif (taken_date sebelum finished_date, data tidak urut) dihitung 0.
+        return self::agingSummary(array_map(fn ($r) => max(0, (int) $r->menit) / 1440, $rows), [3]);
+    }
+
+    /**
+     * Kamus v3 No. 43 (Inbound Transit Time-Lag): SPK non-GR yang TIBA di gudang pada [$start, $end].
+     * Tiba = log DITERIMA/STATUS_CHANGE pertama, fallback warehouse_qc_at (sama dengan kedatangan).
+     * Tanpa SPK terhapus (pada akhir periode) dan BATAL (updated_at <= akhir periode).
+     */
+    public static function transitPeriode(Carbon $start, Carbon $end): array
+    {
+        $named = ['s' => $start->toDateTimeString(), 'e' => $end->toDateTimeString()];
+
+        // Kandidat dipersempit dengan entry_date / warehouse_qc_at: entry_date ditimpa saat DITERIMA,
+        // jadi SPK yang tiba di periode pasti punya salah satunya >= awal periode.
+        $rows = self::select("
+            SELECT z.created_at, z.tiba_at, DATEDIFF(COALESCE(z.warehouse_qc_at, z.entry_date), z.created_at) AS hari_kamus
+            FROM (
+                SELECT w.created_at, w.entry_date, w.warehouse_qc_at,
+                    COALESCE(
+                        (SELECT MIN(l.created_at) FROM work_order_logs l
+                          WHERE l.work_order_id = w.id AND l.step = 'DITERIMA' AND l.action = 'STATUS_CHANGE'),
+                        w.warehouse_qc_at
+                    ) AS tiba_at
+                FROM work_orders w
+                WHERE w.created_at <= :e
+                  AND (w.entry_date >= :s OR w.warehouse_qc_at >= :s)
+                  AND (w.deleted_at IS NULL OR w.deleted_at > :e)
+                  AND NOT (w.status = 'BATAL' AND w.updated_at <= :e)
+                  AND NOT ".self::gr('w').'
+            ) z
+            WHERE z.tiba_at BETWEEN :s AND :e
+        ', $named);
+
+        $hari = $hariKerja = $hariKamus = [];
+        foreach ($rows as $r) {
+            $created = Carbon::parse($r->created_at);
+            $tiba = Carbon::parse($r->tiba_at);
+            $hari[] = max(0, $created->diffInMinutes($tiba, false)) / 1440;
+            $hariKerja[] = self::hariKerja($created, $tiba);
+            $hariKamus[] = (int) $r->hari_kamus;
+        }
+
+        return [
+            'spk_tiba' => count($rows),
+            'avg_hari' => self::avg($hari),
+            'median_hari' => self::percentile($hari, 0.5),
+            'p80_hari' => self::percentile($hari, 0.8),
+            'p90_hari' => self::percentile($hari, 0.9),
+            'avg_hari_kerja' => self::avg($hariKerja),
+            'avg_hari_rumus_kamus' => self::avg($hariKamus),
+            'penanda_tiba' => 'log_diterima_status_change_fallback_warehouse_qc_at',
+            'hari_kerja' => 'tanpa_minggu_tanpa_libur_nasional',
+        ];
+    }
+
+    /**
+     * Selisih hari (desimal) tanpa hari Minggu, sama dengan aturan Invoice::addWorkingDays().
+     * ERP tidak punya tabel hari libur, jadi libur nasional tidak dikecualikan.
+     */
+    public static function hariKerja(Carbon $from, Carbon $to): float
+    {
+        if ($to->lte($from)) {
+            return 0.0;
+        }
+        $detik = 0;
+        $cursor = $from->copy();
+        while ($cursor->lt($to)) {
+            $akhirHari = $cursor->copy()->addDay()->startOfDay();
+            $batas = $akhirHari->lt($to) ? $akhirHari : $to;
+            if (! $cursor->isSunday()) {
+                $detik += $cursor->diffInSeconds($batas);
+            }
+            $cursor = $batas;
+        }
+
+        return $detik / 86400;
     }
 
     /**

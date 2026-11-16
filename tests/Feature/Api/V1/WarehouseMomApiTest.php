@@ -77,6 +77,7 @@ function momSkenario(): void
     // A: terbit 2 Okt, tiba 3 Okt (1 hari), dikirim ke workshop 4 Okt (log ganda), SELESAI 20 Okt,
     //    masuk rak sepatu 21 Okt, diambil 5 Nov → per 31 Okt: ready_for_pickup & di rak.
     $a = momWo(['spk_number' => 'UJI-MOM-A', 'status' => 'SELESAI', 'created_at' => '2026-10-02 10:00:00', 'updated_at' => '2026-11-05 10:00:00',
+        'entry_date' => '2026-10-03 10:00:00', // ditimpa saat DITERIMA, seperti di production
         'finished_date' => '2026-10-20 10:00:00', 'taken_date' => '2026-11-05 10:00:00']);
     momLog($a, 'DITERIMA', 'STATUS_CHANGE', '2026-10-03 10:00:00');
     momLog($a, 'OTW_WORKSHOP', 'STATUS_CHANGE', '2026-10-04 09:00:00');
@@ -254,4 +255,65 @@ it('ready_for_pickup_sepatu hanya menghitung SPK SELESAI belum diambil yang sepa
         ->and($posisi['shoes_in_rack_count'])->toBe(3)         // A, S, T
         ->and($posisi['ready_for_pickup_sepatu'])->toBeLessThanOrEqual($posisi['shoes_in_rack_count'])
         ->and($posisi['ready_for_pickup_sepatu'])->toBeLessThanOrEqual($posisi['ready_for_pickup']);
+});
+
+it('menghitung Kamus v3 No. 43, 50, dan 90: transit, aging rak selesai, dan piutang rak selesai', function () {
+    momSkenario();
+
+    // K: terbit Sabtu 10 Okt 10:00, tiba Senin 12 Okt 10:00 → 2 hari kalender, 1 hari kerja (Minggu tidak dihitung).
+    $k = momWo(['spk_number' => 'UJI-MOM-K', 'status' => 'ASSESSMENT', 'created_at' => '2026-10-10 10:00:00', 'updated_at' => '2026-10-12 10:00:00',
+        'entry_date' => '2026-10-12 10:00:00']);
+    momLog($k, 'DITERIMA', 'STATUS_CHANGE', '2026-10-12 10:00:00');
+
+    $data = $this->withHeader('X-API-KEY', 'test-secret-key')
+        ->getJson(MOM_URL.'&as_of_date=2026-10-31')->assertOk()->json('data');
+
+    // No. 43: A (Jumat→Sabtu, 1 hari) dan K (Sabtu→Senin, 2 hari kalender / 1 hari kerja).
+    expect($data['transit_periode'])->toMatchArray([
+        'spk_tiba' => 2,
+        'avg_hari' => 1.5,
+        'median_hari' => 1.5,
+        'p80_hari' => 1.8,
+        'p90_hari' => 1.9,
+        'avg_hari_kerja' => 1,
+        'avg_hari_rumus_kamus' => 1.5,
+    ]);
+
+    // No. 50a: rak selesai per 31 Okt 23:59:59 = A (finished 20 Okt), D (GR tanpa finished_date → created 10 Okt),
+    // F (finished 20 Sep). Populasi = finished_not_stored + ready_for_pickup.
+    $posisi = $data['posisi_as_of'];
+    expect($posisi['aging_rak_selesai'])->toMatchArray([
+        'n' => 3,
+        'avg_hari' => 24.9,
+        'median_hari' => 21.58,
+        'lebih_3_hari' => 3,
+        'lebih_14_hari' => 2,
+        'lebih_30_hari' => 1,
+    ]);
+    expect($posisi['aging_rak_selesai']['n'])->toBe($posisi['finished_not_stored'] + $posisi['ready_for_pickup']);
+
+    // No. 50b: keluar Oktober = E (25 hari), G (1 hari), H (12 hari).
+    expect($data['sepatu_keluar_detail']['aging_selesai_ke_keluar'])->toMatchArray([
+        'n' => 3,
+        'avg_hari' => 12.7,
+        'median_hari' => 12,
+        'lebih_3_hari' => 2,
+    ]);
+
+    // No. 90: hanya F (invoice I1) yang di rak selesai dan punya invoice. Per 31 Okt baru dibayar 60rb dari 100rb;
+    // SPK lain di invoice yang sama (E) sudah keluar 15 Okt.
+    expect($posisi['piutang_rak_selesai'])->toMatchArray([
+        'invoice' => 1,
+        'pasang_di_rak' => 1,
+        'rupiah_tagihan' => 100000,
+        'rupiah_dibayar' => 60000,
+        'rupiah_sisa' => 40000,
+        'invoice_sebagian_spk_sudah_keluar' => 1,
+    ]);
+
+    // Per 15 Nov invoice I1 sudah lunas (pelunasan 2 Nov) → tidak masuk piutang.
+    $nov = $this->withHeader('X-API-KEY', 'test-secret-key')
+        ->getJson('/api/v1/warehouse-summary?start_date=2026-11-01&end_date=2026-11-15&as_of_date=2026-11-15')
+        ->assertOk()->json('data.posisi_as_of.piutang_rak_selesai');
+    expect($nov['invoice'])->toBe(0)->and($nov['rupiah_sisa'])->toEqual(0);
 });
