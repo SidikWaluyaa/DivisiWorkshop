@@ -81,7 +81,9 @@ class WarehouseDashboardApiController extends Controller
     {
         $today = now()->startOfDay();
         $isPast = $asOf->lt($today) && $end->lt($today);
-        $key = 'warehouse_mom:v1:' . md5(implode('|', [
+        // v2: posisi_as_of.ready_for_pickup_sepatu (Tahap 2b)
+        // v3: transit_periode, aging_rak_selesai, piutang_rak_selesai, aging_selesai_ke_keluar (Tahap 3)
+        $key = 'warehouse_mom:v3:' . md5(implode('|', [
             $start->toDateTimeString(),
             $end->toDateTimeString(),
             $asOf->toDateString(),
@@ -93,6 +95,7 @@ class WarehouseDashboardApiController extends Controller
             'kedatangan' => WarehouseMomQuery::kedatangan($start, $end, $asOf),
             'efisiensi_v2' => WarehouseMomQuery::efisiensiV2($start, $end),
             'pengiriman_workshop' => WarehouseMomQuery::pengirimanWorkshop($start, $end),
+            'transit_periode' => WarehouseMomQuery::transitPeriode($start, $end),
         ]);
     }
 }
