@@ -35,7 +35,7 @@ class WarehouseMomQuery
      * Ubah placeholder :nama menjadi ? positional. PDO (emulate prepares off) tidak mengizinkan
      * placeholder bernama yang sama dipakai berulang.
      */
-    private static function select(string $sql, array $named): array
+    public static function select(string $sql, array $named): array
     {
         $bindings = [];
         $sql = preg_replace_callback('/:([a-z_][a-z0-9_]*)/i', function ($m) use ($named, &$bindings) {
@@ -50,7 +50,7 @@ class WarehouseMomQuery
         return DB::select($sql, $bindings);
     }
 
-    private static function gr(string $alias): string
+    public static function gr(string $alias): string
     {
         return sprintf(self::GR_SQL, $alias, $alias);
     }
@@ -59,15 +59,15 @@ class WarehouseMomQuery
      * Log yang menandai perpindahan status. Selain STATUS_CHANGE, QC penerimaan gudang (QC_PASSED → ASSESSMENT,
      * QC_REJECTED → CX_FOLLOWUP) dipakai karena log STATUS_CHANGE ASSESSMENT baru tercatat sejak 2 Jul 2026.
      */
-    private const STATUS_LOG_WHERE = "(l.action = 'STATUS_CHANGE' OR l.action IN ('QC_PASSED', 'QC_REJECTED'))";
+    public const STATUS_LOG_WHERE = "(l.action = 'STATUS_CHANGE' OR l.action IN ('QC_PASSED', 'QC_REJECTED'))";
 
-    private const STATUS_LOG_STEP = "CASE l.action WHEN 'QC_PASSED' THEN 'ASSESSMENT' WHEN 'QC_REJECTED' THEN 'CX_FOLLOWUP' ELSE l.step END";
+    public const STATUS_LOG_STEP = "CASE l.action WHEN 'QC_PASSED' THEN 'ASSESSMENT' WHEN 'QC_REJECTED' THEN 'CX_FOLLOWUP' ELSE l.step END";
 
     /**
      * Ekspresi status SPK pada :t (lihat Tahap 1 A.5). Kolom yang dibutuhkan dari subquery y:
      * status, spk_number, finished_date, updated_at, donated_at, log_step, log_at, has_any_log.
      */
-    private const STATUS_AT_T_SQL = "CASE
+    public const STATUS_AT_T_SQL = "CASE
             WHEN y.status IN ('BATAL','DONASI','HISTORY') AND (y.log_step IS NULL OR y.log_step <> y.status)
                  AND COALESCE(y.donated_at, y.updated_at) <= :t THEN y.status
             WHEN y.finished_date IS NOT NULL AND y.finished_date <= :t
