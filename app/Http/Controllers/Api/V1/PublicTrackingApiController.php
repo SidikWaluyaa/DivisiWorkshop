@@ -44,6 +44,7 @@ class PublicTrackingApiController extends Controller
             'otos',
             'warranties',
             'revisions',
+            'additionalServices',
         ];
 
         // Query the WorkOrder with relationships
@@ -120,11 +121,13 @@ class PublicTrackingApiController extends Controller
         $isWarranty = $activeState['is_warranty'];
         $isOto = $activeState['is_oto'];
         $isRevising = $activeState['is_revising'];
+        $isTambahJasa = $activeState['is_tambah_jasa'];
         $isSpecialServiceActive = $activeState['is_special_active'];
         $openWarranty = $activeState['open_warranty'];
         $isGrReworkSpk = $activeState['is_gr_rework_spk'];
         $activeOto = $activeState['active_oto'];
         $pendingOto = $activeState['pending_oto'];
+        $activeTambahJasaList = $activeState['active_tambah_jasa_list'];
 
         if ($isOnHold) {
             $prevVal = $order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status;
@@ -173,6 +176,11 @@ class PublicTrackingApiController extends Controller
             $currentStatusDetails['code'] = 'REVISI';
             $currentStatusDetails['label'] = 'Service (Revisi)';
             $currentStatusDetails['description'] = 'Order Anda sedang dalam penyesuaian pengerjaan ulang (revisi).';
+        } elseif ($isTambahJasa) {
+            $serviceNames = $activeTambahJasaList->pluck('service_name')->implode(', ');
+            $currentStatusDetails['code'] = 'TAMBAH_JASA';
+            $currentStatusDetails['label'] = 'Production (Sedang Mengerjakan Tambah Jasa)';
+            $currentStatusDetails['description'] = 'Order Anda sedang dalam proses pengerjaan layanan tambahan (Tambah Jasa)' . ($serviceNames ? ': ' . $serviceNames . '.' : '.');
         } elseif ($currentIndex !== false && isset($stageKeys[$currentIndex])) {
             $activeKey = $stageKeys[$currentIndex];
             $currentStatusDetails['label'] = $stages[$activeKey]['label'];

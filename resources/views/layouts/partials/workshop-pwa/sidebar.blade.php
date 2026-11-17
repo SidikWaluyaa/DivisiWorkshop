@@ -80,6 +80,7 @@
             'garansiActive' => WorkOrderWarranty::count(),
             'listGaransi' => (int) ($woAgg->list_garansi ?? 0),
             'otoActive' => \App\Models\OTO::whereIn('status', ['ACCEPTED', 'IN_PROGRESS'])->count(),
+            'tambahJasaActive' => \App\Models\WorkOrderAdditionalService::where('status', 'IN_PROGRESS')->count(),
             'rndActive' => (int) ($woAgg->rnd_active ?? 0),
             'materialTotal' => Material::count(),
             'materialRequests' => MaterialRequest::where('status', 'PENDING')->count(),
@@ -106,6 +107,7 @@
     $countGaransiActive = $wsCounts['garansiActive'];
     $countListGaransi = $wsCounts['listGaransi'];
     $countOtoActive = $wsCounts['otoActive'];
+    $countTambahJasaActive = $wsCounts['tambahJasaActive'] ?? 0;
     $countRndActive = $wsCounts['rndActive'] ?? 0;
     $countMaterialTotal = $wsCounts['materialTotal'];
     $countMaterialRequests = $wsCounts['materialRequests'];
@@ -148,7 +150,7 @@
              openDashboard: {{ request()->routeIs('dashboard', 'workshop.dashboard-v2', 'workshop.fast-track.*', 'internal-tracking.*') ? 'true' : 'false' }},
              openLayanan: {{ request()->routeIs('production.technician-assistant', 'admin.technicians.index', 'admin.technician-skills', 'admin.services.*', 'admin.performance.*') ? 'true' : 'false' }},
              openUtilitas: {{ request()->routeIs('production.late-info', 'surat-jalan.*') ? 'true' : 'false' }},
-             openGaransi: {{ request()->routeIs('revision.*', 'garansi.*', 'finish.list-garansi', 'oto.*', 'workshop.followup.*', 'workshop.rnd.*') ? 'true' : 'false' }},
+             openGaransi: {{ request()->routeIs('revision.*', 'garansi.*', 'finish.list-garansi', 'oto.*', 'tambah-jasa.*', 'workshop.followup.*', 'workshop.rnd.*') ? 'true' : 'false' }},
              openMaterial: {{ request()->routeIs('admin.materials.*', 'material-requests.*', 'storage.disbursement.*', 'storage.history') ? 'true' : 'false' }}
          }"
          x-init="
@@ -1042,6 +1044,34 @@
                          class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
                         <span>Stasiun OTO</span>
                         <span class="px-1.5 py-0.5 rounded-md bg-[#FFC232] text-slate-950 text-[10px] font-black">{{ $countOtoActive }}</span>
+                    </div>
+                </a>
+
+                {{-- Stasiun Tambah Jasa (Non-OTO) --}}
+                <a href="{{ route('tambah-jasa.index') }}" 
+                   title="Tambah Jasa ({{ $countTambahJasaActive }})"
+                   class="flex items-center transition-all duration-200 ease-out text-xs font-extrabold group relative
+                   {{ request()->routeIs('tambah-jasa.*') ? 'bg-[#FFC232] text-slate-950 shadow-lg shadow-emerald-950/20 font-black' : 'text-white hover:bg-white/15 hover:translate-x-1' }}"
+                   :class="sidebarCollapsed ? 'w-11 h-11 justify-center rounded-2xl mx-auto' : 'px-3.5 py-2.5 rounded-xl'">
+                    @if(request()->routeIs('tambah-jasa.*'))
+                        <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-slate-950 rounded-r-full shadow-sm" x-show="!sidebarCollapsed"></span>
+                    @endif
+                    <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('tambah-jasa.*') ? 'text-slate-950' : 'text-emerald-200' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span x-show="!sidebarCollapsed" x-cloak class="ml-3 flex-1">Tambah Jasa</span>
+                    @if($countTambahJasaActive > 0)
+                        <span x-show="!sidebarCollapsed" x-cloak class="ml-2 py-0.5 px-2 rounded-full text-[10px] font-black {{ request()->routeIs('tambah-jasa.*') ? 'bg-slate-950 text-[#FFC232]' : 'bg-emerald-400 text-slate-950' }}">
+                            {{ $countTambahJasaActive }}
+                        </span>
+                        <span x-show="sidebarCollapsed" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-400 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm border-2 border-white">
+                            {{ $countTambahJasaActive }}
+                        </span>
+                    @endif
+                    <div x-show="sidebarCollapsed" x-cloak 
+                         class="absolute left-16 px-3 py-1.5 bg-slate-900/95 text-white font-black text-xs rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex items-center gap-2">
+                        <span>Tambah Jasa</span>
+                        <span class="px-1.5 py-0.5 rounded-md bg-emerald-400 text-slate-950 text-[10px] font-black">{{ $countTambahJasaActive }}</span>
                     </div>
                 </a>
 

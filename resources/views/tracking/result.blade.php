@@ -104,6 +104,8 @@
                                             $cardDisplayStatus = 'SERVICE (OTO)';
                                         } elseif ($cardActiveState['is_revising']) {
                                             $cardDisplayStatus = 'SERVICE (REVISI)';
+                                        } elseif ($cardActiveState['is_tambah_jasa']) {
+                                            $cardDisplayStatus = 'PRODUCTION (TAMBAH JASA)';
                                         } else {
                                             $cardDisplayStatus = str_replace('_', ' ', $cardStatusVal);
                                         }
@@ -282,11 +284,13 @@
                             $isWarrantyStatus = $activeState['is_warranty'];
                             $isOtoStatus = $activeState['is_oto'];
                             $isRevisingStatus = $activeState['is_revising'];
+                            $isTambahJasaStatus = $activeState['is_tambah_jasa'];
                             $isSpecialServiceActive = $activeState['is_special_active'];
                             $openWarranty = $activeState['open_warranty'];
                             $activeOto = $activeState['active_oto'];
                             $pendingOto = $activeState['pending_oto'];
                             $openRevision = $activeState['open_revision'];
+                            $activeTambahJasaList = $activeState['active_tambah_jasa_list'];
 
                             if ($isHoldStatus) {
                                 $prevVal = $order->previous_status instanceof \App\Enums\WorkOrderStatus ? $order->previous_status->value : $order->previous_status;
@@ -384,6 +388,28 @@
                                     </div>
                                 </div>
                             </div>
+                        @elseif($isTambahJasaStatus)
+                            <div class="mb-8 p-6 bg-teal-50 border border-teal-200 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+                                <div class="flex items-start gap-4">
+                                    <div class="p-3 bg-teal-100 text-teal-600 rounded-full shrink-0">
+                                        <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h3 class="font-extrabold text-teal-900 text-base">Sedang Mengerjakan Tambah Jasa</h3>
+                                            <span class="px-2.5 py-0.5 bg-[#22B086] text-white rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                                Production • Tambah Jasa
+                                            </span>
+                                        </div>
+                                        <p class="text-teal-800/90 text-xs mt-1 font-semibold leading-relaxed">
+                                            Sepatu Anda saat ini sedang berada di Stasiun Produksi untuk pengerjaan layanan tambahan (Tambah Jasa) yang telah diajukan.
+                                            @if($activeTambahJasaList->isNotEmpty())
+                                                <span class="block mt-1 text-teal-950 font-bold">Layanan: {{ $activeTambahJasaList->pluck('service_name')->implode(', ') }}</span>
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         @elseif($isRevisingStatus)
                             <div class="mb-8 p-6 bg-amber-50 border border-amber-200 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
                                 <div class="flex items-start gap-4">
@@ -451,6 +477,9 @@
                                             } elseif ($isRevisingStatus) {
                                                 $circleColorClass = 'bg-amber-500 text-white border-amber-600 shadow-lg scale-110 animate-pulse';
                                                 $iconColorClass = 'text-amber-600 drop-shadow-md';
+                                            } elseif ($isTambahJasaStatus) {
+                                                $circleColorClass = 'bg-teal-600 text-white border-teal-700 shadow-lg scale-110 animate-pulse';
+                                                $iconColorClass = 'text-teal-600 drop-shadow-md';
                                             } else {
                                                 $circleColorClass = 'bg-teal-500 text-white border-teal-600 shadow-lg scale-110';
                                                 $iconColorClass = 'text-teal-600 drop-shadow-md';
@@ -574,6 +603,11 @@
                                              <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: Service (Revisi)</h3>
                                              <p class="text-teal-700/80 text-sm mt-1">
                                                  Order Anda sedang dalam penyesuaian pengerjaan ulang (revisi). Langkah berikutnya: <strong>{{ $statuses[$statusKeys[$currentIndex+1]]['label'] }}</strong>.
+                                             </p>
+                                         @elseif($isTambahJasaStatus)
+                                             <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: Production (Sedang Mengerjakan Tambah Jasa)</h3>
+                                             <p class="text-teal-700/80 text-sm mt-1">
+                                                 Order Anda sedang dalam pengerjaan layanan tambahan (Tambah Jasa): <strong>{{ $activeTambahJasaList->pluck('service_name')->implode(', ') }}</strong>. Langkah berikutnya: <strong>{{ $statuses[$statusKeys[$currentIndex+1]]['label'] }}</strong>.
                                              </p>
                                          @else
                                              <h3 class="font-bold text-teal-800 text-lg">Status Saat Ini: {{ $statuses[$statusKeys[$currentIndex]]['label'] }}</h3>

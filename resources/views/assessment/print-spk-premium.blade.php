@@ -454,7 +454,7 @@
                                      </div>
                                  </div>
                                  <div class="flex items-center shrink-0 gap-1.5">
-                                     @if(!empty($service->service_details['is_cx_additional']) && $service->service_details['is_cx_additional'])
+                                     @if((!empty($service->service_details['is_cx_additional']) && $service->service_details['is_cx_additional']) || (!empty($service->service_details['is_tambah_jasa']) && $service->service_details['is_tambah_jasa']))
                                          <span class="text-amber-800 bg-amber-100/90 border border-amber-300 rounded px-1.5 py-0.5 font-bold uppercase tracking-wider shrink-0" style="font-size: {{ $servicesCount >= 8 ? '7px' : ($servicesCount >= 5 ? '8px' : '9px') }};">
                                              JASA TAMBAHAN
                                          </span>
@@ -462,7 +462,7 @@
                                      <span class="px-1.5 py-0.5 rounded bg-slate-900/10 font-bold uppercase tracking-wide border border-slate-900/15 shrink-0" style="font-size: {{ $servicesCount >= 8 ? '7px' : ($servicesCount >= 5 ? '8px' : '9px') }};">
                                          {{ strtoupper($service->category_name ?? ($service->service ? $service->service->category : 'S')) }}
                                      </span>
-                                     @if($servicesCount < 8 && (empty($service->service_details['is_cx_additional']) || !$service->service_details['is_cx_additional']))
+                                     @if($servicesCount < 8 && empty($service->service_details['is_cx_additional']) && empty($service->service_details['is_tambah_jasa']))
                                          <span class="text-[8px] font-black opacity-40 tracking-tighter shrink-0 ml-1">PROSES WORKSHOP</span>
                                      @endif
                                  </div>
@@ -477,7 +477,7 @@
                                         <div class="text-gray-700 font-bold leading-tight" style="{{ $nbTextStyle }}">
                                             @if(is_array($service->service_details))
                                                 @foreach($service->service_details as $key => $val)
-                                                    @if($key !== 'is_cx_additional' && $key !== 'hk_days')
+                                                    @if(!in_array($key, ['is_cx_additional', 'is_tambah_jasa', 'hk_days'], true))
                                                         @if(is_array($val))
                                                             @foreach($val as $line)
                                                                 <div style="margin-bottom: 1px;">• {{ strtoupper($line) }}</div>

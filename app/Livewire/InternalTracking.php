@@ -32,7 +32,7 @@ class InternalTracking extends Component
                           $sub->where('garansi_spk_number', 'like', '%' . $keyword . '%');
                       });
                 })
-                ->with(['customer', 'invoice', 'photos', 'logs', 'storageAssignments.rack', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'workOrderServices', 'latestOto.otoSolBy', 'latestOto.otoUpperBy', 'latestOto.otoTreatmentBy', 'warranties'])
+                ->with(['customer', 'invoice', 'photos', 'logs', 'storageAssignments.rack', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'workOrderServices', 'latestOto.otoSolBy', 'latestOto.otoUpperBy', 'latestOto.otoTreatmentBy', 'warranties', 'additionalServices'])
                 // Prioritaskan hasil pencarian jika namanya SAMA PERSIS, atau SPK-nya SAMA PERSIS (termasuk -GR)
                 ->orderByRaw("
                     CASE 

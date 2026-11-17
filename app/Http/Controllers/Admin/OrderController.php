@@ -35,6 +35,7 @@ class OrderController extends Controller
             'warranties.creator', 'warranties.finisher', 'warranties.reworkWorkOrder',
             'cxIssues.reporter', 'cxIssues.resolver',
             'otos.creator',
+            'additionalServices.creator',
             'lead',
             'rndProgresses.user',
             'complaints',
@@ -279,6 +280,102 @@ class OrderController extends Controller
     }
 
     /**
+     * Create Tambah Jasa (Non-OTO) ticket(s) from /admin/orders/{id}:
+     * adds WorkOrderService + syncs Invoice + opens active WorkOrderAdditionalService station ticket.
+     */
+    public function storeTambahJasa(Request $request, $id)
+    {
+        $this->authorize('manageServices', WorkOrder::class);
+
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.service_id' => 'nullable|exists:services,id',
+            'items.*.custom_service_name' => 'nullable|string|max:255',
+            'items.*.category_name' => 'nullable|string|max:255',
+            'items.*.cost' => 'required|numeric|min:0',
+            'items.*.notes' => 'nullable|string|max:1000',
+            'items.*.notes_list' => 'nullable|array',
+            'items.*.notes_list.*' => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $order = WorkOrder::findOrFail($id);
+        $serviceIds = collect($validated['items'])->pluck('service_id')->filter()->unique()->values();
+        $masterServices = $serviceIds->isNotEmpty()
+            ? Service::whereIn('id', $serviceIds)->get()->keyBy('id')
+            : collect();
+
+        $createdNames = [];
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $order, $masterServices, &$createdNames) {
+            foreach ($validated['items'] as $item) {
+                $master = !empty($item['service_id']) ? $masterServices->get($item['service_id']) : null;
+                $serviceName = $master ? $master->name : ($item['custom_service_name'] ?? 'Layanan Tambahan');
+                $categoryName = $master ? $master->category : ($item['category_name'] ?? 'Custom');
+                $cost = (float) ($item['cost'] ?? 0);
+                $noteLines = collect($item['notes_list'] ?? [])
+                    ->map(fn($n) => trim((string) $n))
+                    ->filter()
+                    ->values()
+                    ->toArray();
+                $itemNote = !empty($noteLines)
+                    ? implode(' | ', $noteLines)
+                    : (!empty($item['notes']) ? $item['notes'] : ($validated['notes'] ?? null));
+
+                $serviceDetails = ['is_tambah_jasa' => true];
+                if (!empty($noteLines)) {
+                    $serviceDetails['manual_detail'] = $noteLines;
+                }
+
+                WorkOrderService::create([
+                    'work_order_id' => $order->id,
+                    'service_id' => $master?->id,
+                    'custom_service_name' => $serviceName,
+                    'category_name' => $categoryName,
+                    'cost' => $cost,
+                    'notes' => !empty($noteLines) ? null : $itemNote,
+                    'service_details' => $serviceDetails,
+                    'created_by' => auth()->id(),
+                ]);
+
+                \App\Models\WorkOrderAdditionalService::create([
+                    'work_order_id' => $order->id,
+                    'spk_number' => $order->spk_number,
+                    'customer_name' => $order->customer_name,
+                    'customer_phone' => $order->customer_phone,
+                    'service_id' => $master?->id,
+                    'service_name' => $serviceName,
+                    'category_name' => $categoryName,
+                    'cost' => $cost,
+                    'notes' => $itemNote,
+                    'status' => 'IN_PROGRESS',
+                    'started_at' => now(),
+                    'created_by' => auth()->id(),
+                ]);
+
+                $createdNames[] = $serviceName;
+            }
+
+            \App\Models\WorkOrderLog::create([
+                'work_order_id' => $order->id,
+                'user_id' => auth()->id(),
+                'step' => 'PRODUCTION',
+                'action' => 'TAMBAH_JASA_CREATED',
+                'description' => 'Membuat antrean Tambah Jasa (Non-OTO): ' . implode(', ', $createdNames),
+            ]);
+
+            $order->recalculateTotalPrice(true);
+            if ($order->invoice) {
+                $order->invoice->syncFinancials();
+            }
+        });
+
+        return redirect()
+            ->route('admin.orders.show', $order->id)
+            ->with('success', 'Tambah Jasa (' . implode(', ', $createdNames) . ') berhasil dibuat dan masuk antrean Stasiun Tambah Jasa!');
+    }
+
+    /**
      * Update a service's cost or name on a work order.
      */
     public function updateService(Request $request, $id, $serviceId)
@@ -314,7 +411,26 @@ class OrderController extends Controller
             $updateData['service_details'] = $existing;
         }
 
+        $oldServiceName = $wos->custom_service_name;
         $wos->update($updateData);
+
+        // Sync matching active Tambah Jasa ticket on /tambah-jasa
+        if (!empty($wos->service_details['is_tambah_jasa'])) {
+            $detailLines = $updateData['service_details']['manual_detail'] ?? ($wos->service_details['manual_detail'] ?? ($wos->service_details['catatan'] ?? []));
+            $mergedNotes = !empty($detailLines)
+                ? implode(' | ', array_filter((array) $detailLines))
+                : ($updateData['notes'] ?? $wos->notes);
+
+            \App\Models\WorkOrderAdditionalService::where('work_order_id', $order->id)
+                ->where('service_name', $oldServiceName)
+                ->where('status', 'IN_PROGRESS')
+                ->update([
+                    'service_name' => $updateData['custom_service_name'],
+                    'category_name' => $updateData['category_name'],
+                    'cost' => $updateData['cost'],
+                    'notes' => $mergedNotes,
+                ]);
+        }
 
         // [AUDIT LOG] Record service update
         \App\Models\WorkOrderLog::create([
@@ -322,11 +438,14 @@ class OrderController extends Controller
             'user_id' => auth()->id(),
             'step' => $order->status->value,
             'action' => 'SERVICE_UPDATED',
-            'description' => "Admin mengubah layanan [{$wos->custom_service_name}] menjadi: " . $updateData['custom_service_name'] . " (Rp " . number_format($updateData['cost'], 0, ',', '.') . ")"
+            'description' => "Admin mengubah layanan [{$oldServiceName}] menjadi: " . $updateData['custom_service_name'] . " (Rp " . number_format($updateData['cost'], 0, ',', '.') . ")"
         ]);
 
-        // Recalculate finance
+        // Recalculate finance & sync invoice
         $order->recalculateTotalPrice(true);
+        if ($order->invoice) {
+            $order->invoice->syncFinancials();
+        }
         $order->refresh();
 
         return response()->json([
@@ -351,11 +470,21 @@ class OrderController extends Controller
             ->firstOrFail();
 
         $oldServiceName = $wos->custom_service_name;
+        $isTambahJasaItem = !empty($wos->service_details['is_tambah_jasa']);
         
         // Ambil HK yang akan dikurangi dari estimasi
         $hkToSubtract = (int) ($wos->service_details['hk_days'] ?? ($wos->service?->hk_days ?? 0));
 
         $wos->delete();
+
+        // Remove matching active Tambah Jasa ticket permanently so it immediately disappears from /tambah-jasa & DB table
+        if ($isTambahJasaItem) {
+            \App\Models\WorkOrderAdditionalService::where('work_order_id', $order->id)
+                ->where('service_name', $oldServiceName)
+                ->where('status', 'IN_PROGRESS')
+                ->limit(1)
+                ->forceDelete();
+        }
 
         // [AUDIT LOG] Record service removal
         \App\Models\WorkOrderLog::create([

@@ -2449,6 +2449,215 @@
                 {{-- RIGHT COLUMN: Items & Services (Span 2) --}}
                 <div class="lg:col-span-2 space-y-8">
 
+                    {{-- ✨ Stasiun Tambah Jasa (Non-OTO) Card & Modal --}}
+                    @php
+                        $activeTambahJasaItems = $order->additionalServices->where('status', 'IN_PROGRESS');
+                    @endphp
+                    <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border {{ $activeTambahJasaItems->isNotEmpty() ? 'border-teal-300 ring-2 ring-teal-500/15' : 'border-slate-200/80' }} overflow-hidden"
+                         x-data="{
+                            showTambahJasaModal: false,
+                            masterServices: @js(($allServices ?? collect())->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'category' => $s->category, 'price' => (float) $s->price])->values()),
+                            categories: @js(($allServices ?? collect())->pluck('category')->filter()->unique()->values()->push('Custom')->values()),
+                            items: [{ category_name: @js(($allServices ?? collect())->pluck('category')->filter()->first() ?? 'Custom'), service_id: '', custom_service_name: '', cost: 0, notes_list: [''] }],
+                            filteredServices(cat) {
+                                if (!cat || cat === 'Custom') return [];
+                                return this.masterServices.filter(s => String(s.category) === String(cat));
+                            },
+                            addRow() {
+                                const defaultCat = this.categories[0] || 'Custom';
+                                this.items.push({ category_name: defaultCat, service_id: '', custom_service_name: '', cost: 0, notes_list: [''] });
+                            },
+                            addNoteRow(idx) {
+                                this.items[idx].notes_list.push('');
+                            },
+                            removeNoteRow(idx, nIdx) {
+                                if (this.items[idx].notes_list.length > 1) {
+                                    this.items[idx].notes_list.splice(nIdx, 1);
+                                }
+                            },
+                            removeRow(idx) {
+                                if (this.items.length > 1) this.items.splice(idx, 1);
+                            },
+                            onSelectCategory(idx) {
+                                const row = this.items[idx];
+                                row.service_id = '';
+                                row.custom_service_name = '';
+                                row.cost = 0;
+                            },
+                            onSelectService(idx) {
+                                const row = this.items[idx];
+                                const found = this.masterServices.find(s => String(s.id) === String(row.service_id));
+                                if (found) {
+                                    row.custom_service_name = found.name;
+                                    row.category_name = found.category || row.category_name;
+                                    row.cost = found.price;
+                                }
+                            },
+                            get totalTambahJasaCost() {
+                                return this.items.reduce((sum, r) => sum + (Number(r.cost) || 0), 0);
+                            }
+                         }">
+                        <div class="px-6 sm:px-8 py-5 bg-gradient-to-r from-teal-50/70 via-white to-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-11 h-11 rounded-2xl bg-[#22B086]/15 text-[#22B086] flex items-center justify-center border border-[#22B086]/25 shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h3 class="font-black text-slate-900 text-base sm:text-lg tracking-tight">Tambah Jasa (Non-OTO)</h3>
+                                        @if($activeTambahJasaItems->isNotEmpty())
+                                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
+                                                Sedang Dikerjakan ({{ $activeTambahJasaItems->count() }})
+                                            </span>
+                                        @else
+                                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                                {{ $order->additionalServices->count() }} Riwayat
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <p class="text-xs text-slate-500 font-medium mt-0.5">Tambahkan jasa baru di luar OTO — otomatis masuk antrean Stasiun Tambah Jasa &amp; terpantau di Tracking.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+                                <button type="button" @click="showTambahJasaModal = true"
+                                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#22B086] hover:bg-[#1C8D6C] text-white text-xs font-bold rounded-xl shadow-md shadow-[#22B086]/20 transition-all active:scale-95 whitespace-nowrap cursor-pointer">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                    <span>Buat Tambah Jasa</span>
+                                </button>
+                                <a href="{{ route('tambah-jasa.index', ['search' => $order->spk_number]) }}" target="_blank"
+                                    class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-2xs whitespace-nowrap">
+                                    <span>Buka Stasiun</span>
+                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        @if($order->additionalServices->isNotEmpty())
+                            <div class="p-5 sm:p-6 space-y-2.5">
+                                @foreach($order->additionalServices as $tj)
+                                    <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border {{ $tj->status === 'IN_PROGRESS' ? 'bg-amber-50/70 border-amber-200' : 'bg-slate-50 border-slate-200/80' }}">
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-black text-slate-900">{{ $tj->service_name }}</span>
+                                                <span class="text-[10px] font-bold text-slate-400">({{ $tj->category_name }})</span>
+                                                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase {{ $tj->status === 'IN_PROGRESS' ? 'bg-amber-200/80 text-amber-900' : 'bg-emerald-100 text-emerald-800' }}">
+                                                    {{ $tj->status === 'IN_PROGRESS' ? 'Sedang Dikerjakan' : 'Selesai' }}
+                                                </span>
+                                            </div>
+                                            <p class="text-[11px] text-slate-500 mt-0.5">
+                                                Rp {{ number_format($tj->cost, 0, ',', '.') }}
+                                                @if($tj->notes) • {{ $tj->notes }} @endif
+                                            </p>
+                                        </div>
+                                        <span class="text-[10px] font-mono text-slate-400 shrink-0">{{ $tj->created_at?->format('d M H:i') }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        {{-- Modal Buat Tambah Jasa --}}
+                        <template x-teleport="body">
+                            <div x-show="showTambahJasaModal" class="fixed inset-0 z-[999] overflow-y-auto flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs" style="display: none;">
+                                <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden" @click.away="showTambahJasaModal = false">
+                                    <div class="px-6 py-4 bg-gradient-to-r from-[#22B086] to-[#178a68] text-white flex items-center justify-between">
+                                        <div>
+                                            <h3 class="font-black text-base uppercase tracking-wide">Buat Tambah Jasa (Non-OTO)</h3>
+                                            <p class="text-xs text-white/80">SPK {{ $order->spk_number }} • {{ $order->customer_name }}</p>
+                                        </div>
+                                        <button type="button" @click="showTambahJasaModal = false" class="text-white/80 hover:text-white font-black text-lg px-2 cursor-pointer">✕</button>
+                                    </div>
+
+                                    <form action="{{ route('admin.orders.tambah-jasa.store', $order->id) }}" method="POST" class="p-6 space-y-4">
+                                        @csrf
+                                        <div class="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+                                            <template x-for="(row, idx) in items" :key="idx">
+                                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-500" x-text="'Layanan #' + (idx + 1)"></span>
+                                                        <button type="button" x-show="items.length > 1" @click="removeRow(idx)" class="text-rose-500 hover:text-rose-700 text-xs font-bold cursor-pointer">Hapus</button>
+                                                    </div>
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">1. Kategori (dari Master Services) *</label>
+                                                            <select :name="'items[' + idx + '][category_name]'" x-model="row.category_name" @change="onSelectCategory(idx)" required class="w-full rounded-xl border-slate-200 text-xs font-semibold">
+                                                                <template x-for="cat in categories" :key="cat">
+                                                                    <option :value="cat" x-text="cat === 'Custom' ? '-- Custom / Manual --' : cat"></option>
+                                                                </template>
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">2. Pilih Jasa (Sesuai Kategori)</label>
+                                                            <select :name="'items[' + idx + '][service_id]'" x-model="row.service_id" @change="onSelectService(idx)" :disabled="row.category_name === 'Custom'" class="w-full rounded-xl border-slate-200 text-xs font-semibold disabled:bg-slate-100 disabled:text-slate-400">
+                                                                <option value="">-- Pilih Jasa / Isi Manual --</option>
+                                                                <template x-for="srv in filteredServices(row.category_name)" :key="srv.id">
+                                                                    <option :value="srv.id" x-text="srv.name + ' (Rp ' + srv.price.toLocaleString('id-ID') + ')'"></option>
+                                                                </template>
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">3. Nama Layanan *</label>
+                                                            <input type="text" :name="'items[' + idx + '][custom_service_name]'" x-model="row.custom_service_name" required placeholder="Contoh: Jahit Sol Tambahan" class="w-full rounded-xl border-slate-200 text-xs font-semibold">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">4. Biaya (Rp) *</label>
+                                                            <input type="number" min="0" step="1000" :name="'items[' + idx + '][cost]'" x-model="row.cost" required class="w-full rounded-xl border-slate-200 text-xs font-bold">
+                                                        </div>
+                                                        <div class="sm:col-span-2 space-y-2">
+                                                            <div class="flex items-center justify-between">
+                                                                <label class="block text-[10px] font-bold text-slate-500 uppercase">5. Catatan / NB Jasa Ini (Bisa lebih dari 1)</label>
+                                                                <button type="button" @click="addNoteRow(idx)" class="text-[10px] font-black text-[#22B086] hover:text-[#178a68] cursor-pointer">
+                                                                    + Tambah Catatan
+                                                                </button>
+                                                            </div>
+                                                            <template x-for="(noteVal, nIdx) in row.notes_list" :key="nIdx">
+                                                                <div class="flex items-center gap-2">
+                                                                    <input type="text"
+                                                                           :name="'items[' + idx + '][notes_list][' + nIdx + ']'"
+                                                                           x-model="row.notes_list[nIdx]"
+                                                                           :placeholder="'Catatan #' + (nIdx + 1) + ' (tampil berpoin di Print SPK)...'"
+                                                                           class="flex-1 rounded-xl border-slate-200 text-xs font-medium">
+                                                                    <button type="button"
+                                                                            x-show="row.notes_list.length > 1"
+                                                                            @click="removeNoteRow(idx, nIdx)"
+                                                                            class="px-2 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-black cursor-pointer">
+                                                                        ✕
+                                                                    </button>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <button type="button" @click="addRow()" class="w-full py-2 border-2 border-dashed border-slate-300 hover:border-[#22B086] text-slate-600 hover:text-[#22B086] rounded-xl text-xs font-black transition-all cursor-pointer">
+                                            + Tambah Baris Layanan
+                                        </button>
+
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Catatan Tambah Jasa (Opsional)</label>
+                                            <textarea name="notes" rows="2" placeholder="Instruksi pengerjaan untuk teknisi..." class="w-full rounded-xl border-slate-200 text-xs font-medium"></textarea>
+                                        </div>
+
+                                        <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                                            <div class="text-xs">
+                                                <span class="font-bold text-slate-500">Total (<span x-text="items.length"></span> Layanan): </span>
+                                                <span class="font-black text-[#22B086] text-sm" x-text="'Rp ' + totalTambahJasaCost.toLocaleString('id-ID')"></span>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button type="button" @click="showTambahJasaModal = false" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer">Batal</button>
+                                                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#22B086] hover:bg-[#198f6b] text-white text-xs font-black uppercase tracking-wider shadow-md cursor-pointer">
+                                                    Simpan &amp; Masuk Antrean
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
                     {{-- 🚨 Keluhan & Janji Temu Pelanggan (Internal Complaints Hub) --}}
                     <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200/80 overflow-hidden transition-all" x-data="{ showComplaintModal: false, hasAppointment: false }">
                         {{-- Header --}}
@@ -4027,12 +4236,12 @@
                                             @can('manageServices', \App\Models\WorkOrder::class)
                                             <div class="flex items-center justify-center gap-1">
                                                 <button @click="startEdit(svc)" :disabled="isLoading"
-                                                        class="p-1.5 text-gray-400 hover:text-[#22B086] hover:bg-emerald-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                                                        class="p-1.5 text-gray-500 hover:text-[#22B086] hover:bg-emerald-50 rounded-lg transition-all opacity-75 group-hover:opacity-100 disabled:opacity-50"
                                                         title="Edit detail jasa">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                                 </button>
                                                 <button @click="confirmRemove(svc)" :disabled="isLoading"
-                                                        class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                                                        class="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-75 group-hover:opacity-100 disabled:opacity-50"
                                                         title="Hapus layanan">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                 </button>
@@ -5369,7 +5578,7 @@
                 $details = is_array($mDetail) ? $mDetail : [$mDetail];
             } else {
                 foreach ($s->service_details as $k => $v) {
-                    if (!empty($v) && $k !== 'manual_detail' && $k !== 'is_cx_additional' && $k !== 'hk_days') {
+                    if (!empty($v) && !in_array($k, ['manual_detail', 'is_cx_additional', 'is_tambah_jasa', 'hk_days'], true)) {
                         if (is_array($v)) foreach($v as $val) $details[] = $val;
                         else $details[] = $v;
                     }

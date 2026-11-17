@@ -998,6 +998,11 @@ class WorkOrder extends Model
         return $this->hasMany(WorkOrderWarranty::class);
     }
 
+    public function additionalServices()
+    {
+        return $this->hasMany(WorkOrderAdditionalService::class);
+    }
+
     // Station-Specific Needs Accessors
     public function getNeedsPrepSolAttribute(): bool
     {
@@ -2215,6 +2220,7 @@ class WorkOrder extends Model
         $warranties = $this->relationLoaded('warranties') ? $this->warranties : collect();
         $otos = $this->relationLoaded('otos') ? $this->otos : collect();
         $revisions = $this->relationLoaded('revisions') ? $this->revisions : collect();
+        $additionalServices = $this->relationLoaded('additionalServices') ? $this->additionalServices : collect();
         $logs = $this->relationLoaded('logs') ? $this->logs : collect();
 
         // 1. Evaluasi Kandidat GARANSI
@@ -2282,7 +2288,21 @@ class WorkOrder extends Model
             }
         }
 
-        // 4. Pilih Pemenang Tunggal Berdasarkan Timestamp Terbaru (Latest Timestamp Winner)
+        // 4. Evaluasi Kandidat TAMBAH_JASA (Stasiun Tambah Jasa Non-OTO)
+        $activeTambahJasaList = $additionalServices->where('status', 'IN_PROGRESS')->sortByDesc('id');
+        $activeTambahJasa = $activeTambahJasaList->first();
+        $rawTambahJasa = (bool) $activeTambahJasa;
+
+        $tambahJasaTs = 0;
+        if ($rawTambahJasa) {
+            $tambahJasaTs = max(
+                $activeTambahJasa->started_at?->getTimestamp() ?? 0,
+                $activeTambahJasa->updated_at?->getTimestamp() ?? 0,
+                $activeTambahJasa->created_at?->getTimestamp() ?? 0
+            );
+        }
+
+        // 5. Pilih Pemenang Tunggal Berdasarkan Timestamp Terbaru (Latest Timestamp Winner)
         $candidates = [];
         if ($rawWarranty) {
             $candidates['GARANSI'] = $warrantyTs;
@@ -2292,6 +2312,9 @@ class WorkOrder extends Model
         }
         if ($rawRevising) {
             $candidates['REVISI'] = $revisionTs;
+        }
+        if ($rawTambahJasa) {
+            $candidates['TAMBAH_JASA'] = $tambahJasaTs;
         }
 
         $winner = null;
@@ -2303,8 +2326,9 @@ class WorkOrder extends Model
         $isWarranty = ($winner === 'GARANSI');
         $isOto = ($winner === 'OTO');
         $isRevising = ($winner === 'REVISI');
+        $isTambahJasa = ($winner === 'TAMBAH_JASA');
 
-        $pendingOto = (!$isOto && !$isWarranty && !$isRevising)
+        $pendingOto = (!$isOto && !$isWarranty && !$isRevising && !$isTambahJasa)
             ? $otos->whereIn('status', ['PENDING_CX', 'CONTACTED', 'PENDING_CUSTOMER'])->sortByDesc('id')->first()
             : null;
 
@@ -2313,12 +2337,15 @@ class WorkOrder extends Model
             'is_warranty' => $isWarranty,
             'is_oto' => $isOto,
             'is_revising' => $isRevising,
+            'is_tambah_jasa' => $isTambahJasa,
             'is_special_active' => ($winner !== null),
             'open_warranty' => $openWarranty,
             'is_gr_rework_spk' => $isGrReworkSpk,
             'active_oto' => $activeOto,
             'pending_oto' => $pendingOto,
             'open_revision' => $openRevision,
+            'active_tambah_jasa' => $activeTambahJasa,
+            'active_tambah_jasa_list' => $activeTambahJasaList->values(),
         ];
     }
 }

@@ -481,6 +481,31 @@
                                     </div>
                                 @endif
 
+                                {{-- Blok Status Tambah Jasa (Non-OTO) --}}
+                                @php
+                                    $activeTambahJasaList = $spk->additionalServices->where('status', 'IN_PROGRESS');
+                                @endphp
+                                @if($activeTambahJasaList->isNotEmpty())
+                                    <div class="mb-3 p-3 rounded-xl border bg-teal-50/70 border-teal-200 shadow-2xs">
+                                        <div class="flex items-center justify-between gap-2 mb-1">
+                                            <span class="text-[11px] font-black text-teal-900 uppercase tracking-wider">
+                                                ➕ Sedang Tambah Jasa ({{ $activeTambahJasaList->count() }})
+                                            </span>
+                                            <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-[#22AF85] text-white">
+                                                Production
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] font-semibold text-teal-800 line-clamp-2 mb-2">
+                                            {{ $activeTambahJasaList->pluck('service_name')->implode(', ') }}
+                                        </p>
+                                        <div class="flex justify-end">
+                                            <a href="{{ route('tambah-jasa.index', ['search' => $spk->spk_number]) }}" class="px-2.5 py-1 rounded-lg bg-white border border-teal-200 hover:border-[#22AF85] text-[10px] font-black text-teal-800 hover:text-[#22AF85] transition-colors">
+                                                Buka Stasiun Tambah Jasa →
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+
                                 {{-- Blok Status & Riwayat Garansi (-GR) --}}
                                 @if($spk->warranties->isNotEmpty())
                                     <div class="mb-3 space-y-2">

@@ -85,6 +85,9 @@ class FinishController extends Controller
                         ->whereNull('taken_date') // Ensure only items still in shop
                         ->whereDoesntHave('otos', function($q) {
                             $q->whereIn('status', ['ACCEPTED', 'IN_PROGRESS']);
+                        })
+                        ->whereDoesntHave('additionalServices', function($q) {
+                            $q->where('status', 'IN_PROGRESS');
                         });
 
         $applyFilters($readyQuery);

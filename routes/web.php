@@ -121,6 +121,7 @@ Route::middleware('auth')->group(function () {
         Route::post('orders/{id}/restore', [App\Http\Controllers\Admin\OrderController::class, 'restore'])->name('orders.restore');
         Route::get('custom-label', [App\Http\Controllers\Admin\CustomLabelController::class, 'index'])->name('custom-label.index');
         Route::post('orders/{id}/services', [App\Http\Controllers\Admin\OrderController::class, 'addService'])->name('orders.services.add');
+        Route::post('orders/{id}/tambah-jasa', [App\Http\Controllers\Admin\OrderController::class, 'storeTambahJasa'])->name('orders.tambah-jasa.store');
         Route::put('orders/{id}/services/{serviceId}', [App\Http\Controllers\Admin\OrderController::class, 'updateService'])->name('orders.services.update');
         Route::delete('orders/{id}/services/{serviceId}', [App\Http\Controllers\Admin\OrderController::class, 'removeService'])->name('orders.services.remove');
         Route::post('orders/{id}/manage-stations', [App\Http\Controllers\Admin\OrderController::class, 'manageStations'])->name('orders.manage-stations');
@@ -466,6 +467,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/', App\Livewire\Warranty\Index::class)->name('index');
         Route::get('/export-pdf', [App\Http\Controllers\WarrantyController::class, 'exportPdf'])->name('export-pdf');
         Route::get('/{id}/print', [App\Http\Controllers\WarrantyController::class, 'printSpk'])->name('print');
+    });
+
+    // Tambah Jasa Station (Non-OTO, Workshop PWA)
+    Route::prefix('tambah-jasa')->name('tambah-jasa.')->middleware('access:finish')->group(function () {
+        Route::get('/', App\Livewire\TambahJasa\TambahJasaStationIndex::class)->name('index');
     });
 
     // Dedicated OTO Station (Livewire)

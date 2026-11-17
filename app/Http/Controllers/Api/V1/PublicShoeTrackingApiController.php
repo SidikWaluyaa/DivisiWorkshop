@@ -59,7 +59,7 @@ class PublicShoeTrackingApiController extends Controller
             $query->where('id', $id);
         }
 
-        $relations = ['workOrderServices.service', 'otos', 'warranties', 'revisions', 'logs'];
+        $relations = ['workOrderServices.service', 'otos', 'warranties', 'revisions', 'additionalServices', 'logs'];
 
         // Eager load workOrderServices and their related service configurations
         $order = $query->with($relations)->first();
@@ -113,10 +113,12 @@ class PublicShoeTrackingApiController extends Controller
         $isWarranty = $activeState['is_warranty'];
         $isOto = $activeState['is_oto'];
         $isRevising = $activeState['is_revising'];
+        $isTambahJasa = $activeState['is_tambah_jasa'];
         $openWarranty = $activeState['open_warranty'];
         $isGrReworkSpk = $activeState['is_gr_rework_spk'];
         $activeOto = $activeState['active_oto'];
         $pendingOto = $activeState['pending_oto'];
+        $activeTambahJasaList = $activeState['active_tambah_jasa_list'];
 
         if ($isWarranty) {
             $effectiveCode = 'GARANSI';
@@ -127,6 +129,9 @@ class PublicShoeTrackingApiController extends Controller
         } elseif ($isRevising) {
             $effectiveCode = 'REVISI';
             $effectiveLabel = 'Service (Revisi)';
+        } elseif ($isTambahJasa) {
+            $effectiveCode = 'TAMBAH_JASA';
+            $effectiveLabel = 'Production (Sedang Mengerjakan Tambah Jasa)';
         } else {
             $effectiveCode = $statusVal;
             $effectiveLabel = is_object($order->status) ? $order->status->label() : '-';
@@ -167,6 +172,12 @@ class PublicShoeTrackingApiController extends Controller
                 'is_revising' => $isRevising,
                 'revision_title' => $isRevising ? 'Pengerjaan Ulang & Penyesuaian Kualitas (Revisi)' : null,
                 'revision_message' => $isRevising ? 'Sepatu Anda saat ini sedang dalam proses penyesuaian pengerjaan ulang oleh tim spesialis kami untuk memastikan hasil akhir memenuhi standar mutu terbaik.' : null,
+                'is_tambah_jasa' => $isTambahJasa,
+                'tambah_jasa_title' => $isTambahJasa ? 'Sedang Mengerjakan Tambah Jasa' : null,
+                'tambah_jasa_message' => $isTambahJasa
+                    ? 'Sepatu Anda saat ini sedang berada di Stasiun Produksi untuk pengerjaan layanan tambahan (Tambah Jasa): ' . $activeTambahJasaList->pluck('service_name')->implode(', ') . '.'
+                    : null,
+                'tambah_jasa_services' => $isTambahJasa ? $activeTambahJasaList->pluck('service_name')->values()->toArray() : [],
                 'services' => $services
             ]
         ]);

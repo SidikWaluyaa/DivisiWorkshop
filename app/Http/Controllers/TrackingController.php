@@ -73,6 +73,7 @@ class TrackingController extends Controller
             'otos',
             'warranties',
             'revisions',
+            'additionalServices',
         ];
     }
 
