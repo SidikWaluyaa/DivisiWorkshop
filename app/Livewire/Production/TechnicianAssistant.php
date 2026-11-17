@@ -575,7 +575,9 @@ class TechnicianAssistant extends Component
     public function render()
     {
         $allTechnicians = $this->getFilteredTechnicians('ALL');
-        $filteredTechnicians = $this->getFilteredTechnicians($this->stationCategory);
+        $filteredTechnicians = $this->stationCategory === 'ALL'
+            ? $allTechnicians
+            : $allTechnicians->filter(fn($t) => $t->computed_category === $this->stationCategory)->values();
 
         $countAll = $allTechnicians->count();
         $countPrep = $allTechnicians->where('computed_category', 'PREPARATION')->count();
@@ -584,7 +586,8 @@ class TechnicianAssistant extends Component
         $countTreatment = $allTechnicians->where('computed_category', 'TREATMENT')->count();
         $countQc = $allTechnicians->where('computed_category', 'QC')->count();
 
-        $selectedTech = User::find($this->selectedTechnicianId);
+        $selectedTech = $allTechnicians->firstWhere('id', $this->selectedTechnicianId)
+            ?? ($this->selectedTechnicianId ? User::find($this->selectedTechnicianId) : null);
 
         // Fetch All Jobs assigned to this technician (both work_orders and work_order_services)
         $allJobs = $this->getTechAssignedJobs($this->selectedTechnicianId);

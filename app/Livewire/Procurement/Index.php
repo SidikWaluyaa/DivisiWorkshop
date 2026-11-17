@@ -170,14 +170,23 @@ class Index extends Component
         
         $requests = $query->paginate(10);
 
-        // Compute Summary Metrics
+        // Compute Summary Metrics (1 single aggregate query)
+        $metricRow = MaterialRequest::selectRaw("
+            COUNT(*) as total_requests,
+            COALESCE(SUM(CASE WHEN status NOT IN ('CANCELLED', 'REJECTED') THEN total_estimated_cost ELSE 0 END), 0) as total_cost,
+            SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) as pending_count,
+            SUM(CASE WHEN status IN ('APPROVED', 'PURCHASED') THEN 1 ELSE 0 END) as shipping_count,
+            SUM(CASE WHEN status = 'RECEIVED' THEN 1 ELSE 0 END) as received_count,
+            SUM(CASE WHEN status IN ('REJECTED', 'CANCELLED') THEN 1 ELSE 0 END) as rejected_count
+        ")->first();
+
         $metrics = [
-            'total_requests'   => MaterialRequest::count(),
-            'total_cost'       => (float) MaterialRequest::where('status', '!=', 'CANCELLED')->where('status', '!=', 'REJECTED')->sum('total_estimated_cost'),
-            'pending_count'    => MaterialRequest::where('status', 'PENDING')->count(),
-            'shipping_count'   => MaterialRequest::whereIn('status', ['APPROVED', 'PURCHASED'])->count(),
-            'received_count'   => MaterialRequest::where('status', 'RECEIVED')->count(),
-            'rejected_count'   => MaterialRequest::whereIn('status', ['REJECTED', 'CANCELLED'])->count(),
+            'total_requests'   => (int) ($metricRow->total_requests ?? 0),
+            'total_cost'       => (float) ($metricRow->total_cost ?? 0),
+            'pending_count'    => (int) ($metricRow->pending_count ?? 0),
+            'shipping_count'   => (int) ($metricRow->shipping_count ?? 0),
+            'received_count'   => (int) ($metricRow->received_count ?? 0),
+            'rejected_count'   => (int) ($metricRow->rejected_count ?? 0),
         ];
 
         return view('livewire.procurement.index', [

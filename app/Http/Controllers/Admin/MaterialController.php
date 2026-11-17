@@ -32,9 +32,13 @@ class MaterialController extends Controller
         
         $pics = User::whereIn('role', ['admin', 'pic', 'gudang'])->get();
         
-        // Count for the badge
-        $totalCount = Material::count();
-        $trashCount = Material::onlyTrashed()->count();
+        // Count for the badge (1 query for both active & trashed counts)
+        $counts = Material::withTrashed()->selectRaw("
+            SUM(CASE WHEN deleted_at IS NULL THEN 1 ELSE 0 END) as total_count,
+            SUM(CASE WHEN deleted_at IS NOT NULL THEN 1 ELSE 0 END) as trash_count
+        ")->first();
+        $totalCount = (int) ($counts->total_count ?? 0);
+        $trashCount = (int) ($counts->trash_count ?? 0);
 
         return view('admin.materials.index', compact('materials', 'pics', 'totalCount', 'trashCount'));
     }

@@ -257,17 +257,29 @@ class TechnicianManagement extends Component
 
         $technicians = $query->orderBy('name', 'asc')->paginate(12);
 
-        // Stats Summary synchronized 100% with base technician query
+        // Stats Summary synchronized 100% with base technician query (1 single aggregate query)
+        $statRow = (clone $baseQuery)->selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active,
+            SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as inactive,
+            SUM(CASE WHEN station = 'PREPARATION' THEN 1 ELSE 0 END) as cuci,
+            SUM(CASE WHEN station = 'SORTIR' THEN 1 ELSE 0 END) as sortir,
+            SUM(CASE WHEN station = 'SOLING' THEN 1 ELSE 0 END) as soling,
+            SUM(CASE WHEN station = 'UPPER' THEN 1 ELSE 0 END) as upper,
+            SUM(CASE WHEN station = 'TREATMENT' THEN 1 ELSE 0 END) as treatment,
+            SUM(CASE WHEN station = 'QC' THEN 1 ELSE 0 END) as qc
+        ")->first();
+
         $stats = [
-            'total' => (clone $baseQuery)->count(),
-            'active' => (clone $baseQuery)->where('is_active', true)->count(),
-            'inactive' => (clone $baseQuery)->where('is_active', false)->count(),
-            'cuci' => (clone $baseQuery)->where('station', 'PREPARATION')->count(),
-            'sortir' => (clone $baseQuery)->where('station', 'SORTIR')->count(),
-            'soling' => (clone $baseQuery)->where('station', 'SOLING')->count(),
-            'upper' => (clone $baseQuery)->where('station', 'UPPER')->count(),
-            'treatment' => (clone $baseQuery)->where('station', 'TREATMENT')->count(),
-            'qc' => (clone $baseQuery)->where('station', 'QC')->count(),
+            'total' => (int) ($statRow->total ?? 0),
+            'active' => (int) ($statRow->active ?? 0),
+            'inactive' => (int) ($statRow->inactive ?? 0),
+            'cuci' => (int) ($statRow->cuci ?? 0),
+            'sortir' => (int) ($statRow->sortir ?? 0),
+            'soling' => (int) ($statRow->soling ?? 0),
+            'upper' => (int) ($statRow->upper ?? 0),
+            'treatment' => (int) ($statRow->treatment ?? 0),
+            'qc' => (int) ($statRow->qc ?? 0),
         ];
 
         return view('livewire.admin.technician-management', [

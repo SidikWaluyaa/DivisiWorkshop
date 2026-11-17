@@ -1,11 +1,11 @@
 {
     "schema_version": 2,
-    "commit": "b08faa5e8d5f1122183652b261120e3b6934bd92",
-    "indexed_at": "2026-11-17T02:25:31Z",
+    "commit": "b9ff532fb93bb30ba2922dc77ae11b953dd134fd",
+    "indexed_at": "2026-11-17T03:14:50Z",
     "project": "C-laragon-www-SistemWorkshop",
     "nodes": 12072,
-    "edges": 42709,
-    "original_size": 45219840,
-    "compressed_size": 8315004,
+    "edges": 42698,
+    "original_size": 45285376,
+    "compressed_size": 8298984,
     "compression_level": 3
 }
