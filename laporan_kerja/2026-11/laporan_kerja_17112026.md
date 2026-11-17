@@ -23,8 +23,8 @@
 
 ━━━━━━━━━━━━━━━━━━
 🚀 *Output Hari Ini*
-1. *Halaman Stok Material & Onderdil Workshop Tuntas Diperbaiki*: Daftar penggunaan sol, lem, dan bahan baku pembantu di bengkel kini termuat rapi tanpa kueri ganda.
-2. *Modul Garansi Reparasi Berjalan Sangat Cepat*: Form penerimaan klaim garansi dari konsumen kini langsung menampilkan riwayat pengerjaan teknisi terdahulu tanpa loading lama.
-3. *Pengujian Menyeluruh Divisi Workshop Sukses 100%*: Seluruh 6 stasiun kerja bengkel, dashboard pengawas, dan mobile scanner dipastikan bebas total dari masalah N+1 query.
-4. *Rekap Perbandingan Kecepatan Workshop Tercatat*: Penurunan drastis beban permintaan data di divisi workshop resmi dibukukan sebagai bukti keberhasilan optimasi.
-5. *Tugas 4 Selesai Tepat Waktu*: Tahapan optimasi Divisi Workshop rampung 100% sesuai target 17 November, siap beralih ke audit Divisi Keuangan (Finance) besok.
+1. *Penuntasan 8 Rute Terakhir Divisi Workshop (Teknisi & Material)*: Optimasi `/production/technician-assistant` (286 ➔ 32 kueri), `/admin/technicians` (280 ➔ 6 kueri, konsolidasi 9 `count()` menjadi 1 `selectRaw`), `/admin/technician-skills` (225 ➔ 9 kueri), `/admin/services` (192 ➔ 6 kueri, render 27,7x lebih cepat), `/admin/materials` (364 ➔ 7 kueri), `/material-requests` (594 ➔ 11 kueri, konsolidasi 6 metrik menjadi 1 `selectRaw`), `/warehouse/disbursement` (336 ➔ 7 kueri), dan `/warehouse/history` (319 ➔ 5 kueri) — total hemat 2.513 kueri (-96,8%).
+2. *Perbaikan Bug & Antrean di Asisten Data Teknisi (`TechnicianAssistant.php`)*: Memperbaiki error SQL `Unknown column 'production_started_at'` saat klik *Mulai Pengerjaan* serta mengecualikan SPK yang sudah `PRODUCTION_APPROVED` dari antrean aktif teknisi.
+3. *Fitur Penanda "Sudah Dicek" pada `/cx/verified-addresses`*: Menambahkan kolom permanen `address_checked_at` & `address_checked_by` di tabel `customers`, tombol toggle 1-klik dengan audit nama staf & waktu, filter Status Cek (`Belum Dicek`/`Sudah Dicek`), serta integrasi ke Cetak List & Cetak Label Masal.
+4. *Rekap Perbandingan Before-After Tugas 4 Tuntas*: Seluruh 31 rute Divisi Workshop resmi tercatat tuntas 100% di `rekap_pengukuran_before_after_november_2026.md`.
+5. *Tugas 4 Selesai Tepat Waktu (50% Kumulatif)*: Tahapan optimasi Divisi Workshop rampung 100% sesuai target 17 November, siap beralih ke audit Divisi Finance (Keuangan) besok (18–20 Nov).

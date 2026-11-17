@@ -638,11 +638,11 @@ class ReceptionService
         }
         
         if ($request->filled('pending_date_from')) {
-            $pendingQuery->whereDate('entry_date', '>=', $request->pending_date_from);
+            $pendingQuery->whereDate('created_at', '>=', $request->pending_date_from);
         }
         
         if ($request->filled('pending_date_to')) {
-            $pendingQuery->whereDate('entry_date', '<=', $request->pending_date_to);
+            $pendingQuery->whereDate('created_at', '<=', $request->pending_date_to);
         }
         
         if ($request->filled('pending_priority')) {

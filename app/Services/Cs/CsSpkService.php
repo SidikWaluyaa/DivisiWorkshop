@@ -249,7 +249,7 @@ class CsSpkService
                     'customer_phone' => $spk->lead->customer_phone,
                     'customer_email' => $spk->lead->customer_email,
                     'customer_address' => $spk->lead->customer_address,
-                    'entry_date' => now(),
+                    'entry_date' => null,
                     'estimation_date' => $spk->expected_delivery_date && $spk->expected_delivery_date->year > 2000 
                                         ? $spk->expected_delivery_date 
                                         : now()->addDays($spkItem->hk_days),

@@ -734,17 +734,11 @@ class ReceptionController extends Controller
         }
         
         if ($request->filled('pending_date_from')) {
-            $pendingQuery->where(function($q) use ($request) {
-                $q->whereDate('entry_date', '>=', $request->pending_date_from)
-                  ->orWhereDate('created_at', '>=', $request->pending_date_from);
-            });
+            $pendingQuery->whereDate('created_at', '>=', $request->pending_date_from);
         }
         
         if ($request->filled('pending_date_to')) {
-            $pendingQuery->where(function($q) use ($request) {
-                $q->whereDate('entry_date', '<=', $request->pending_date_to)
-                  ->orWhereDate('created_at', '<=', $request->pending_date_to);
-            });
+            $pendingQuery->whereDate('created_at', '<=', $request->pending_date_to);
         }
         
         if ($request->filled('pending_priority')) {
@@ -757,7 +751,7 @@ class ReceptionController extends Controller
             }
         }
 
-        $orders = $pendingQuery->orderBy('entry_date', 'asc')->get();
+        $orders = $pendingQuery->orderBy('created_at', 'asc')->get();
 
         if ($orders->isEmpty()) {
             return redirect()->back()->with('error', 'Tidak ada data SPK yang sesuai filter untuk diunduh.');
@@ -1041,17 +1035,11 @@ class ReceptionController extends Controller
         }
         
         if ($request->filled('pending_date_from')) {
-            $pendingQuery->where(function($q) use ($request) {
-                $q->whereDate('entry_date', '>=', $request->pending_date_from)
-                  ->orWhereDate('created_at', '>=', $request->pending_date_from);
-            });
+            $pendingQuery->whereDate('created_at', '>=', $request->pending_date_from);
         }
         
         if ($request->filled('pending_date_to')) {
-            $pendingQuery->where(function($q) use ($request) {
-                $q->whereDate('entry_date', '<=', $request->pending_date_to)
-                  ->orWhereDate('created_at', '<=', $request->pending_date_to);
-            });
+            $pendingQuery->whereDate('created_at', '<=', $request->pending_date_to);
         }
         
         if ($request->filled('pending_priority')) {
@@ -1064,7 +1052,7 @@ class ReceptionController extends Controller
             }
         }
 
-        $orders = $pendingQuery->orderBy('entry_date', 'asc')->get();
+        $orders = $pendingQuery->orderBy('created_at', 'asc')->get();
 
         if ($orders->isEmpty()) {
             return redirect()->back()->with('error', 'Tidak ada data SPK yang sesuai filter untuk diunduh.');
