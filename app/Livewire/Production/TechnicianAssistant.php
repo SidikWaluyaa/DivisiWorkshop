@@ -162,9 +162,6 @@ class TechnicianAssistant extends Component
             $stationName = 'Stasiun Produksi';
         }
 
-        if (!$wo->production_started_at) {
-            $wo->production_started_at = $now;
-        }
         $wo->save();
 
         // Also start pivot service if matching
@@ -493,6 +490,12 @@ class TechnicianAssistant extends Component
 
         // Pre-load work_order_logs for all unique work orders in jobs to avoid N+1
         $workOrderIds = $jobs->pluck('work_order_id')->unique()->values()->toArray();
+        $approvedWoIds = WorkOrderLog::whereIn('work_order_id', $workOrderIds)
+            ->where('step', 'PRODUCTION')
+            ->where('action', 'PRODUCTION_APPROVED')
+            ->pluck('work_order_id')
+            ->flip();
+
         $allPauseLogs = WorkOrderLog::whereIn('work_order_id', $workOrderIds)
             ->where(function ($q) {
                 $q->where('action', 'like', '%_pause')
@@ -502,7 +505,8 @@ class TechnicianAssistant extends Component
             ->get()
             ->groupBy('work_order_id');
 
-        $jobs = $jobs->map(function ($job) use ($stationColumnMap, $allPauseLogs) {
+        $jobs = $jobs->map(function ($job) use ($stationColumnMap, $allPauseLogs, $approvedWoIds) {
+            $job['is_production_approved'] = $approvedWoIds->has($job['work_order_id']);
             $stationType = $job['station_type'] ?? 'service';
             $station = $stationColumnMap[$stationType] ?? null;
 
@@ -593,9 +597,10 @@ class TechnicianAssistant extends Component
         $allJobs = $this->getTechAssignedJobs($this->selectedTechnicianId);
 
         // Classify into 3 Tabs: Running (In Progress), Paused, Assigned (Queued), History (Completed)
-        $runningJobs = $allJobs->filter(fn($j) => $j['started_at'] !== null && $j['completed_at'] === null && !$j['is_paused']);
-        $pausedJobs  = $allJobs->filter(fn($j) => $j['started_at'] !== null && $j['completed_at'] === null && $j['is_paused']);
-        $assignedJobs = $allJobs->filter(fn($j) => $j['completed_at'] === null && $j['started_at'] === null);
+        // Exclude jobs whose WorkOrder is already PRODUCTION_APPROVED from active technician queues
+        $runningJobs = $allJobs->filter(fn($j) => !$j['is_production_approved'] && $j['started_at'] !== null && $j['completed_at'] === null && !$j['is_paused']);
+        $pausedJobs  = $allJobs->filter(fn($j) => !$j['is_production_approved'] && $j['started_at'] !== null && $j['completed_at'] === null && $j['is_paused']);
+        $assignedJobs = $allJobs->filter(fn($j) => !$j['is_production_approved'] && $j['completed_at'] === null && $j['started_at'] === null);
         $completedJobs = $allJobs->filter(fn($j) => $j['completed_at'] !== null);
 
         $runningCount = $runningJobs->count();
