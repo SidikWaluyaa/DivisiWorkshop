@@ -24,7 +24,7 @@
 <body>
     <div class="header">
         <div class="spk">{{ $order->spk_number }}</div>
-        <div class="date">{{ $order->entry_date->format('d/m/Y H:i') }}</div>
+        <div class="date">{{ ($order->entry_date ?? $order->created_at)?->format('d/m/Y H:i') ?? '-' }}</div>
     </div>
     
     <div class="customer">{{ $order->customer_name }}</div>

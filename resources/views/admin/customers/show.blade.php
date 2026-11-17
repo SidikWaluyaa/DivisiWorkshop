@@ -348,8 +348,8 @@
                                 <h4 class="font-extrabold text-gray-900 text-base leading-tight mt-0.5">{{ $order->spk_number }}</h4>
                             </div>
                             <div class="text-right">
-                                <span class="text-xs font-bold text-gray-800 block">{{ $order->entry_date->format('d M Y') }}</span>
-                                <span class="text-[10px] font-semibold text-gray-400 block mt-0.5">{{ $order->entry_date->format('H:i') }} WIB</span>
+                                <span class="text-xs font-bold text-gray-800 block">{{ $order->entry_date ? $order->entry_date->format('d M Y') : 'Pending' }}</span>
+                                <span class="text-[10px] font-semibold text-gray-400 block mt-0.5">{{ $order->entry_date ? $order->entry_date->format('H:i') . ' WIB' : ($order->created_at?->format('d M H:i') ?? '-') }}</span>
                             </div>
                         </div>
 
@@ -469,8 +469,8 @@
                                     <div class="font-bold text-gray-900">{{ $order->spk_number }}</div>
                                 </td>
                                 <td class="px-8 py-5">
-                                    <div class="text-sm font-medium text-gray-600">{{ $order->entry_date->format('d M Y') }}</div>
-                                    <div class="text-xs text-gray-400">{{ $order->entry_date->format('H:i') }} WIB</div>
+                                    <div class="text-sm font-medium text-gray-600">{{ $order->entry_date ? $order->entry_date->format('d M Y') : 'Pending' }}</div>
+                                    <div class="text-xs text-gray-400">{{ $order->entry_date ? $order->entry_date->format('H:i') . ' WIB' : '-' }}</div>
                                 </td>
                                 <td class="px-8 py-5">
                                     <div class="flex items-center gap-3">
@@ -807,7 +807,7 @@
                         <div class="flex justify-between items-start mb-3">
                             <div>
                                 <p class="text-xs font-bold text-gray-900">{{ $order->spk_number }}</p>
-                                <p class="text-[10px] text-gray-400">{{ $order->entry_date->format('d M Y, H:i') }} WIB</p>
+                                <p class="text-[10px] text-gray-400">{{ $order->entry_date ? $order->entry_date->format('d M Y, H:i') . ' WIB' : ($order->created_at?->format('d M Y, H:i') . ' WIB' ?? '-') }}</p>
                             </div>
                             <span class="text-[10px] font-bold px-2 py-1 bg-gray-100 text-gray-500 rounded">{{ $order->status }}</span>
                         </div>

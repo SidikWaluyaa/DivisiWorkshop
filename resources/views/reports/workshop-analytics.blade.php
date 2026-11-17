@@ -240,7 +240,7 @@
                     <tr>
                         <td><strong>{{ $order->spk_number }}</strong></td>
                         <td>{{ $order->services->pluck('name')->implode(', ') }}</td>
-                        <td>{{ $order->entry_date->format('d/m/y') }}</td>
+                        <td>{{ $order->entry_date ? $order->entry_date->format('d/m/y') : '-' }}</td>
                         <td>{{ $order->finished_date->format('d/m/y') }}</td>
                         <td>{{ $order->qcFinalPic->name ?? '-' }}</td>
                         <td style="text-align: right;">Rp {{ number_format($order->total_service_price, 0, ',', '.') }}</td>

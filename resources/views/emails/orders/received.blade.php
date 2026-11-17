@@ -40,7 +40,7 @@
                 </tr>
                 <tr>
                     <th>Tanggal Masuk</th>
-                    <td>{{ $order->entry_date->format('d M Y') }}</td>
+                    <td>{{ $order->entry_date ? $order->entry_date->format('d M Y') : '-' }}</td>
                 </tr>
                 <tr>
                     <th>Estimasi Selesai</th>

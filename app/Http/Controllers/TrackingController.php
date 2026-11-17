@@ -129,7 +129,7 @@ class TrackingController extends Controller
                 'shoe_color' => $order->shoe_color,
                 'status' => $displayStatus,
                 'total_price' => number_format($order->total_price ?? 0, 0, ',', '.'),
-                'entry_date' => $order->entry_date->format('d/m/Y'),
+                'entry_date' => $order->entry_date ? $order->entry_date->format('d/m/Y') : '-',
                 'estimation_date' => $order->estimation_date ? $order->estimation_date->format('d/m/Y') : '-',
                 'detail_url' => route('tracking.index') . '?spk_number=' . $order->spk_number
             ];

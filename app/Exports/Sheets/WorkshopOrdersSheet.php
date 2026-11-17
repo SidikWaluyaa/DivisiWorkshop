@@ -30,7 +30,7 @@ class WorkshopOrdersSheet implements FromCollection, WithTitle, WithHeadings, Wi
             $order->customer_phone,
             $order->services->pluck('name')->implode(', '),
             'Rp ' . number_format($order->total_service_price, 0, ',', '.'),
-            $order->entry_date->format('d/m/Y'),
+            $order->entry_date ? $order->entry_date->format('d/m/Y') : '-',
             $order->estimation_date->format('d/m/Y'),
             $order->finished_date ? $order->finished_date->format('d/m/Y H:i') : '-',
             $order->status->label(),
