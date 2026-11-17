@@ -78,7 +78,7 @@
                         placeholder="Cari Nama Pelanggan atau Nomor Telepon...">
                 </div>
 
-                <div class="flex items-center gap-3 w-full lg:w-auto">
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                     <!-- Shipping Status Filter -->
                     <div class="relative">
                         <select wire:model.live="shipping_status" class="bg-gray-50/50 rounded-[2rem] px-5 py-3.5 text-xs font-black text-gray-700 border border-transparent focus:border-emerald-500 focus:ring-0 cursor-pointer shadow-none">
@@ -86,6 +86,15 @@
                             <option value="shipped">🟢 Sudah Dikirim (Verified/Resi)</option>
                             <option value="preparing">📦 Sedang Disiapkan (Gudang Shipping)</option>
                             <option value="workshop">🟡 Masih di Workshop</option>
+                        </select>
+                    </div>
+
+                    <!-- Address Check Status Filter -->
+                    <div class="relative">
+                        <select wire:model.live="check_status" class="bg-gray-50/50 rounded-[2rem] px-5 py-3.5 text-xs font-black text-gray-700 border border-transparent focus:border-emerald-500 focus:ring-0 cursor-pointer shadow-none">
+                            <option value="all">☑️ Semua Status Cek</option>
+                            <option value="unchecked">⏳ Belum Dicek</option>
+                            <option value="checked">✅ Sudah Dicek</option>
                         </select>
                     </div>
 
@@ -137,7 +146,7 @@
                     </div>
 
                     <!-- Reset Filter Button -->
-                    @if($search || $date_start || $date_end || $shipping_status !== 'all')
+                    @if($search || $date_start || $date_end || $shipping_status !== 'all' || $check_status !== 'all')
                         <button wire:click="resetFilters" 
                             class="px-5 py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-xs uppercase tracking-widest rounded-[2rem] transition-all flex items-center gap-2 border border-rose-100/50 shadow-sm shrink-0">
                             🔄 Reset Filter
@@ -148,13 +157,13 @@
 
                     <!-- Print Buttons -->
                     <div class="flex items-center gap-2">
-                        <a href="{{ route('cx.verified-addresses.print-report') }}?search={{ urlencode($search) }}&date_start={{ urlencode($date_start) }}&date_end={{ urlencode($date_end) }}" 
+                        <a href="{{ route('cx.verified-addresses.print-report') }}?search={{ urlencode($search) }}&date_start={{ urlencode($date_start) }}&date_end={{ urlencode($date_end) }}&check_status={{ urlencode($check_status) }}" 
                             target="_blank"
                             class="px-5 py-3.5 bg-[#22B086] hover:bg-[#1fa17a] text-white font-extrabold text-[10px] uppercase tracking-widest rounded-[2rem] transition-all flex items-center gap-2 shadow-sm shrink-0">
                             🖨️ Cetak List
                         </a>
                         
-                        <a href="{{ route('cx.verified-addresses.print-bulk-labels') }}?search={{ urlencode($search) }}&date_start={{ urlencode($date_start) }}&date_end={{ urlencode($date_end) }}" 
+                        <a href="{{ route('cx.verified-addresses.print-bulk-labels') }}?search={{ urlencode($search) }}&date_start={{ urlencode($date_start) }}&date_end={{ urlencode($date_end) }}&check_status={{ urlencode($check_status) }}" 
                             target="_blank"
                             class="px-5 py-3.5 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-[10px] uppercase tracking-widest rounded-[2rem] transition-all flex items-center gap-2 shadow-sm shrink-0">
                             🏷️ Cetak Label Masal
@@ -195,6 +204,7 @@
                                         <th class="py-4 px-6">Alamat Pengiriman</th>
                                         <th class="py-4 px-6 w-32 text-center">SPK Aktif</th>
                                         <th class="py-4 px-6 w-52 text-center">Status Pengiriman</th>
+                                        <th class="py-4 px-6 w-48 text-center">Status Cek</th>
                                         <th class="py-4 px-6 w-32 text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -222,7 +232,7 @@
                                             $firstPrep = $preparingOrders->first()?->shipping;
                                             $firstShipped = $shippedOrders->first()?->shipping;
                                         @endphp
-                                        <tr class="hover:bg-slate-50/30 transition-colors text-slate-700">
+                                        <tr class="transition-colors text-slate-700 {{ $customer->address_checked_at ? 'bg-emerald-50/40 hover:bg-emerald-50/70' : 'hover:bg-slate-50/30' }}">
                                             {{-- No --}}
                                             <td class="py-4 px-6 text-center text-xs font-bold text-gray-400">
                                                 {{ $loop->iteration }}
@@ -312,6 +322,31 @@
                                                         <span class="text-[9px] text-amber-600 font-bold">Proses Pengerjaan</span>
                                                     </div>
                                                 @endif
+                                            </td>
+
+                                            {{-- Status Cek (1-Klik Toggle + Audit Trail) --}}
+                                            <td class="py-4 px-6 text-center text-xs">
+                                                <div class="flex flex-col items-center gap-1.5">
+                                                    <button type="button"
+                                                        wire:click="toggleAddressCheck({{ $customer->id }})"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="toggleAddressCheck({{ $customer->id }})"
+                                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border {{ $customer->address_checked_at ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200 shadow-xs' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-emerald-700 hover:bg-emerald-50/50' }}">
+                                                        @if($customer->address_checked_at)
+                                                            <span class="w-3.5 h-3.5 rounded bg-emerald-600 text-white inline-flex items-center justify-center text-[9px]">✓</span>
+                                                            <span>Sudah Dicek</span>
+                                                        @else
+                                                            <span class="w-3.5 h-3.5 rounded border-2 border-gray-300 inline-block"></span>
+                                                            <span>Tandai Dicek</span>
+                                                        @endif
+                                                    </button>
+                                                    @if($customer->address_checked_at)
+                                                        <span class="text-[9.5px] font-semibold text-emerald-700 leading-tight">
+                                                            Oleh: <span class="font-bold">{{ $customer->addressChecker?->name ?? 'Admin' }}</span><br>
+                                                            <span class="font-mono text-[9px] text-emerald-600/80">{{ $customer->address_checked_at->format('d M H:i') }}</span>
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </td>
 
                                             {{-- Aksi (Cetak Label) --}}

@@ -111,6 +111,7 @@
         @else
             Hari Ini ({{ date('d/m/Y') }})
         @endif
+        | Status Cek: {{ ($checkStatus ?? 'all') === 'checked' ? 'Sudah Dicek' : (($checkStatus ?? 'all') === 'unchecked' ? 'Belum Dicek' : 'Semua') }}
         | Total Data: {{ $customers->count() }} Pelanggan
     </div>
 
@@ -118,11 +119,12 @@
         <thead>
             <tr>
                 <th style="text-align: center; width: 30px;">No</th>
-                <th style="width: 100px;">Waktu Verifikasi</th>
-                <th style="width: 130px;">Nama Pelanggan</th>
-                <th style="width: 90px;">No. Telepon</th>
+                <th style="width: 90px;">Waktu Verifikasi</th>
+                <th style="width: 120px;">Nama Pelanggan</th>
+                <th style="width: 85px;">No. Telepon</th>
                 <th>Alamat Pengiriman</th>
-                <th style="width: 150px;">SPK Aktif</th>
+                <th style="width: 130px;">SPK Aktif</th>
+                <th style="width: 110px;">Status Cek</th>
             </tr>
         </thead>
         <tbody>
@@ -144,10 +146,21 @@
                             <span style="color: #999; font-style: italic;">Tidak ada SPK aktif</span>
                         @endforelse
                     </td>
+                    <td>
+                        @if($customer->address_checked_at)
+                            <strong style="color: #065f46;">Sudah Dicek</strong><br>
+                            <span style="font-size: 8px; color: #555;">
+                                {{ $customer->addressChecker?->name ?? 'Admin' }}<br>
+                                {{ $customer->address_checked_at->format('d/m/Y H:i') }}
+                            </span>
+                        @else
+                            <span style="color: #999; font-style: italic;">Belum Dicek</span>
+                        @endif
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" style="text-align: center; color: #999; font-style: italic;">Tidak ada data pelanggan yang cocok dengan kriteria pencarian Anda.</td>
+                    <td colspan="7" style="text-align: center; color: #999; font-style: italic;">Tidak ada data pelanggan yang cocok dengan kriteria pencarian Anda.</td>
                 </tr>
             @endforelse
         </tbody>

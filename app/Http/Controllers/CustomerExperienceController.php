@@ -664,25 +664,28 @@ class CustomerExperienceController extends Controller
     }
 
     /**
-     * Print verified addresses report (HTML Print)
+     * Build filtered query for verified addresses print & bulk labels.
      */
-    public function printVerifiedAddressesReport(Request $request)
+    private function buildVerifiedAddressesQuery(Request $request, array $with = []): array
     {
         $search = $request->input('search');
         $dateStart = $request->input('date_start');
         $dateEnd = $request->input('date_end');
+        $checkStatus = $request->input('check_status', 'all');
 
         $query = \App\Models\Customer::query()
-            ->with(['workOrders' => function($q) {
-                $q->whereNotIn('status', ['BATAL', 'SELESAI', 'DIANTAR', 'HISTORY', 'DONASI'])
-                  ->orderBy('created_at', 'desc');
-            }])
+            ->with(array_merge([
+                'workOrders' => function ($q) {
+                    $q->whereNotIn('status', ['BATAL', 'SELESAI', 'DIANTAR', 'HISTORY', 'DONASI'])
+                        ->orderBy('created_at', 'desc');
+                },
+            ], $with))
             ->where('is_address_verified', 1);
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('phone', 'like', '%' . $search . '%');
+                    ->orWhere('phone', 'like', '%' . $search . '%');
             });
         }
 
@@ -694,13 +697,29 @@ class CustomerExperienceController extends Controller
             $query->whereDate('address_verified_at', '<=', $dateEnd);
         }
 
-        if (!$search && !$dateStart && !$dateEnd) {
+        if (!$search && !$dateStart && !$dateEnd && $checkStatus === 'all') {
             $query->whereDate('address_verified_at', \Carbon\Carbon::today());
         }
 
+        if ($checkStatus === 'checked') {
+            $query->whereNotNull('address_checked_at');
+        } elseif ($checkStatus === 'unchecked') {
+            $query->whereNull('address_checked_at');
+        }
+
+        return [$query, $search, $dateStart, $dateEnd, $checkStatus];
+    }
+
+    /**
+     * Print verified addresses report (HTML Print)
+     */
+    public function printVerifiedAddressesReport(Request $request)
+    {
+        [$query, $search, $dateStart, $dateEnd, $checkStatus] = $this->buildVerifiedAddressesQuery($request, ['addressChecker']);
+
         $customers = $query->orderBy('address_verified_at', 'desc')->get();
 
-        return view('admin.orders.verified-addresses-print', compact('customers', 'search', 'dateStart', 'dateEnd'));
+        return view('admin.orders.verified-addresses-print', compact('customers', 'search', 'dateStart', 'dateEnd', 'checkStatus'));
     }
 
     /**
@@ -708,35 +727,7 @@ class CustomerExperienceController extends Controller
      */
     public function printBulkShippingLabels(Request $request)
     {
-        $search = $request->input('search');
-        $dateStart = $request->input('date_start');
-        $dateEnd = $request->input('date_end');
-
-        $query = \App\Models\Customer::query()
-            ->with(['workOrders' => function($q) {
-                $q->whereNotIn('status', ['BATAL', 'SELESAI', 'DIANTAR', 'HISTORY', 'DONASI'])
-                  ->orderBy('created_at', 'desc');
-            }])
-            ->where('is_address_verified', 1);
-
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('phone', 'like', '%' . $search . '%');
-            });
-        }
-
-        if ($dateStart) {
-            $query->whereDate('address_verified_at', '>=', $dateStart);
-        }
-
-        if ($dateEnd) {
-            $query->whereDate('address_verified_at', '<=', $dateEnd);
-        }
-
-        if (!$search && !$dateStart && !$dateEnd) {
-            $query->whereDate('address_verified_at', \Carbon\Carbon::today());
-        }
+        [$query] = $this->buildVerifiedAddressesQuery($request);
 
         $customers = $query->orderBy('address_verified_at', 'desc')->get();
 

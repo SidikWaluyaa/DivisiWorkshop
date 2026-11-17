@@ -15,6 +15,7 @@ class AddressVerificationList extends Component
     public $date_start = '';
     public $date_end = '';
     public $shipping_status = 'all'; // 'all', 'shipped', 'preparing', 'workshop'
+    public $check_status = 'all'; // 'all', 'unchecked', 'checked'
 
     // Modal State properties
     public $showSpkModal = false;
@@ -71,6 +72,7 @@ class AddressVerificationList extends Component
         'date_start' => ['except' => ''],
         'date_end' => ['except' => ''],
         'shipping_status' => ['except' => 'all'],
+        'check_status' => ['except' => 'all'],
     ];
 
     public function mount()
@@ -78,6 +80,7 @@ class AddressVerificationList extends Component
         $this->date_start = '';
         $this->date_end = '';
         $this->shipping_status = 'all';
+        $this->check_status = 'all';
     }
 
     public function updatingSearch()
@@ -86,6 +89,11 @@ class AddressVerificationList extends Component
     }
 
     public function updatingShippingStatus()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingCheckStatus()
     {
         $this->resetPage();
     }
@@ -115,13 +123,34 @@ class AddressVerificationList extends Component
         $this->date_start = '';
         $this->date_end = '';
         $this->shipping_status = 'all';
+        $this->check_status = 'all';
         $this->resetPage();
+    }
+
+    public function toggleAddressCheck($customerId)
+    {
+        $customer = Customer::find($customerId);
+        if (!$customer) {
+            return;
+        }
+
+        if ($customer->address_checked_at) {
+            $customer->update([
+                'address_checked_at' => null,
+                'address_checked_by' => null,
+            ]);
+        } else {
+            $customer->update([
+                'address_checked_at' => now(),
+                'address_checked_by' => auth()->id(),
+            ]);
+        }
     }
 
     public function render()
     {
         $query = Customer::query()
-            ->with(['workOrders.shipping'])
+            ->with(['workOrders.shipping', 'addressChecker'])
             ->where('is_address_verified', 1);
 
         if ($this->search) {
@@ -140,8 +169,15 @@ class AddressVerificationList extends Component
         }
 
         // Default to showing only today's verified addresses if no filters are active
-        if (!$this->search && !$this->date_start && !$this->date_end && $this->shipping_status === 'all') {
+        if (!$this->search && !$this->date_start && !$this->date_end && $this->shipping_status === 'all' && $this->check_status === 'all') {
             $query->whereDate('address_verified_at', Carbon::today());
+        }
+
+        // Filter by Address Check Status
+        if ($this->check_status === 'checked') {
+            $query->whereNotNull('address_checked_at');
+        } elseif ($this->check_status === 'unchecked') {
+            $query->whereNull('address_checked_at');
         }
 
         // Filter by Detailed Shipping Status

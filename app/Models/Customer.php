@@ -31,11 +31,14 @@ class Customer extends Model
         'address_verification_url',
         'address_verified_at',
         'is_address_verified',
+        'address_checked_at',
+        'address_checked_by',
     ];
 
     protected $casts = [
         'address_verified_at' => 'datetime',
         'is_address_verified' => 'boolean',
+        'address_checked_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -76,6 +79,11 @@ class Customer extends Model
                 // Simpan nomor lama sebelum record database di-update
                 $customer->old_phone_for_cascade = $customer->getOriginal('phone');
             }
+
+            if ($customer->isDirty('address_verified_at') && !$customer->isDirty('address_checked_at')) {
+                $customer->address_checked_at = null;
+                $customer->address_checked_by = null;
+            }
         });
 
         static::updated(function ($customer) {
@@ -103,6 +111,14 @@ class Customer extends Model
     public function photos()
     {
         return $this->hasMany(CustomerPhoto::class);
+    }
+
+    /**
+     * Get the staff user who verified/checked the address
+     */
+    public function addressChecker()
+    {
+        return $this->belongsTo(User::class, 'address_checked_by');
     }
 
     /**
