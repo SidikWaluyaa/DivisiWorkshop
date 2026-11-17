@@ -27,18 +27,22 @@ class InternalTracking extends Component
                       })
                       ->orWhereHas('invoice', function($sub) use ($keyword) {
                           $sub->where('invoice_number', 'like', '%' . $keyword . '%');
+                      })
+                      ->orWhereHas('warranties', function($sub) use ($keyword) {
+                          $sub->where('garansi_spk_number', 'like', '%' . $keyword . '%');
                       });
                 })
-                ->with(['customer', 'invoice', 'photos', 'logs', 'storageAssignments.rack', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'workOrderServices', 'latestOto.otoSolBy', 'latestOto.otoUpperBy', 'latestOto.otoTreatmentBy'])
-                // Prioritaskan hasil pencarian jika namanya SAMA PERSIS, atau SPK-nya SAMA PERSIS
+                ->with(['customer', 'invoice', 'photos', 'logs', 'storageAssignments.rack', 'prodSolBy', 'prodUpperBy', 'prodCleaningBy', 'workOrderServices', 'latestOto.otoSolBy', 'latestOto.otoUpperBy', 'latestOto.otoTreatmentBy', 'warranties'])
+                // Prioritaskan hasil pencarian jika namanya SAMA PERSIS, atau SPK-nya SAMA PERSIS (termasuk -GR)
                 ->orderByRaw("
                     CASE 
                         WHEN spk_number = ? THEN 1 
+                        WHEN EXISTS (SELECT 1 FROM work_order_warranties WHERE work_order_warranties.work_order_id = work_orders.id AND work_order_warranties.garansi_spk_number = ?) THEN 1
                         WHEN customer_name = ? THEN 2
                         WHEN customer_name LIKE ? THEN 3
                         ELSE 4 
                     END
-                ", [$keyword, $keyword, $keyword.'%'])
+                ", [$keyword, $keyword, $keyword, $keyword.'%'])
                 ->latest()
                 ->take(24) // Tampilkan lebih banyak hasil (kelipatan 4, misal 24)
                 ->get();

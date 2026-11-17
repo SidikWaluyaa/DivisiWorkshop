@@ -1,4 +1,26 @@
-<div class="min-h-screen bg-[#f8fafc] pb-20" x-data="{ showExportModal: false, exportMode: 'month', exportMonth: '{{ now()->month }}', exportYear: '{{ now()->year }}', exportStartDate: '', exportEndDate: '' }">
+<div class="min-h-screen bg-[#f8fafc] pb-20" x-data="{
+    showExportModal: false,
+    exportMode: 'month',
+    exportMonth: '{{ now()->month }}',
+    exportYear: '{{ now()->year }}',
+    exportStartDate: '',
+    exportEndDate: '',
+    slideImages: [],
+    slideIndex: 0,
+    slideTitle: '',
+    get slideOpen() { return this.slideImages.length > 0; },
+    get currentSlideUrl() { return this.slideImages[this.slideIndex] || ''; },
+    openSlide(images, title = 'Foto After SPK Asli', index = 0) {
+        const list = Array.isArray(images) ? images.filter(Boolean) : [images].filter(Boolean);
+        if (!list.length) return;
+        this.slideImages = list;
+        this.slideTitle = title;
+        this.slideIndex = index;
+    },
+    closeSlide() { this.slideImages = []; this.slideIndex = 0; },
+    nextSlide() { if (this.slideImages.length > 1) this.slideIndex = (this.slideIndex + 1) % this.slideImages.length; },
+    prevSlide() { if (this.slideImages.length > 1) this.slideIndex = (this.slideIndex - 1 + this.slideImages.length) % this.slideImages.length; }
+}">
     {{-- Header Section --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
         {{-- Error Flash Message --}}
@@ -309,14 +331,42 @@
                                 </span>
                                 <p class="text-sm font-bold text-gray-700 leading-relaxed relative z-10 whitespace-pre-line">{{ $warranty->description }}</p>
                                 
-                                {{-- Gallery Masalah --}}
-                                @if($warranty->photos && count($warranty->photos) > 0)
-                                    <div class="mt-4 flex flex-wrap gap-2 relative z-10">
-                                        @foreach($warranty->photos as $path)
-                                            <a href="{{ asset($path) }}" target="_blank" class="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:scale-105 transition-transform">
-                                                <img src="{{ asset($path) }}" class="w-full h-full object-cover">
-                                            </a>
-                                        @endforeach
+                                {{-- Foto Before Garansi (After SPK Asli) & Foto Keluhan --}}
+                                @php
+                                    $beforeWarrantyPhotos = $warranty->workOrder?->warranty_before_photo_urls ?? [];
+                                    $beforeWarrantyPhotoUrl = $beforeWarrantyPhotos[0] ?? null;
+                                @endphp
+                                @if($beforeWarrantyPhotoUrl || ($warranty->photos && count($warranty->photos) > 0))
+                                    <div class="mt-4 flex flex-wrap items-start gap-4 relative z-10">
+                                        @if($beforeWarrantyPhotoUrl)
+                                            <div>
+                                                <span class="block text-[9px] font-black text-emerald-700 uppercase tracking-wider mb-1.5">Foto Before (After SPK Asli)</span>
+                                                <button type="button"
+                                                        @click='openSlide(@json($beforeWarrantyPhotos), "Foto Before Garansi (After SPK Asli)")'
+                                                        class="relative block w-16 h-16 rounded-xl overflow-hidden border-2 border-emerald-300 shadow-sm hover:scale-105 transition-transform cursor-pointer group/before"
+                                                        title="Klik untuk lihat slide semua foto After SPK Asli">
+                                                    <img src="{{ $beforeWarrantyPhotoUrl }}" class="w-full h-full object-cover" alt="Before Garansi">
+                                                    @if(count($beforeWarrantyPhotos) > 1)
+                                                        <span class="absolute bottom-0.5 right-0.5 px-1.5 py-0.5 bg-slate-900/80 text-white text-[8px] font-black rounded-md">
+                                                            +{{ count($beforeWarrantyPhotos) - 1 }}
+                                                        </span>
+                                                    @endif
+                                                </button>
+                                            </div>
+                                        @endif
+
+                                        @if($warranty->photos && count($warranty->photos) > 0)
+                                            <div>
+                                                <span class="block text-[9px] font-black text-rose-600 uppercase tracking-wider mb-1.5">Foto Keluhan Garansi</span>
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach($warranty->photos as $path)
+                                                        <a href="{{ asset($path) }}" target="_blank" class="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:scale-105 transition-transform">
+                                                            <img src="{{ asset($path) }}" class="w-full h-full object-cover">
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 @endif
 
@@ -950,6 +1000,58 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+    {{-- Slide Lightbox Modal (Foto After SPK Asli) --}}
+    <div x-show="slideOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm"
+         @keydown.escape.window="closeSlide()"
+         @keydown.arrow-right.window="if (slideOpen) nextSlide()"
+         @keydown.arrow-left.window="if (slideOpen) prevSlide()"
+         style="display: none;">
+        <div class="relative max-w-4xl w-full bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100" @click.away="closeSlide()">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-lg font-black text-gray-900" x-text="slideTitle"></h3>
+                    <span x-show="slideImages.length > 1" class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#22AF85] text-xs font-black border border-emerald-200" x-text="(slideIndex + 1) + ' / ' + slideImages.length"></span>
+                </div>
+                <button type="button" @click="closeSlide()" class="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-xl transition-all cursor-pointer">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="relative p-6 bg-gray-50 flex items-center justify-center min-h-[320px] max-h-[68vh] overflow-y-auto select-none">
+                <button x-show="slideImages.length > 1" type="button" @click="prevSlide()"
+                        class="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-gray-800 shadow-lg border border-gray-200 flex items-center justify-center transition-all hover:scale-105 cursor-pointer z-10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+
+                <img :src="currentSlideUrl" alt="Foto After SPK Asli" class="max-w-full max-h-[58vh] object-contain rounded-2xl shadow-md border border-gray-200">
+
+                <button x-show="slideImages.length > 1" type="button" @click="nextSlide()"
+                        class="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-gray-800 shadow-lg border border-gray-200 flex items-center justify-center transition-all hover:scale-105 cursor-pointer z-10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+
+            <div x-show="slideImages.length > 1" class="px-6 py-3 bg-white border-t border-gray-100 flex items-center justify-center gap-2 overflow-x-auto">
+                <template x-for="(imgUrl, idx) in slideImages" :key="idx">
+                    <button type="button" @click="slideIndex = idx"
+                            class="w-12 h-12 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer"
+                            :class="slideIndex === idx ? 'border-[#22AF85] ring-2 ring-[#22AF85]/30 scale-105' : 'border-gray-200 opacity-60 hover:opacity-100'">
+                        <img :src="imgUrl" class="w-full h-full object-cover">
+                    </button>
+                </template>
+            </div>
+
+            <div class="px-6 py-4 bg-white border-t border-gray-100 flex justify-end">
+                <button type="button" @click="closeSlide()" class="py-2.5 px-5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-black transition-all shadow-sm cursor-pointer">
+                    Tutup
+                </button>
+            </div>
         </div>
     </div>
 </div>

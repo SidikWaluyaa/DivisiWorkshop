@@ -408,7 +408,8 @@ class Index extends Component
             'creator', 
             'finisher',
             'reworkWorkOrder',
-            'workOrder.customer'
+            'workOrder.customer',
+            'workOrder.photos'
         ])->latest();
 
         $this->applyFilters($query);

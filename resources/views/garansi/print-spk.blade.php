@@ -93,11 +93,17 @@
                 </div>
             </div>
 
-            {{-- Main Photo --}}
+            {{-- Main Photo (Foto Before Garansi dari Foto After SPK Asli) --}}
             <div class="relative avoid-break">
                 <div class="aspect-square bg-white/10 rounded-xl overflow-hidden border border-white/20 relative group">
-                     @if($order->spk_cover_photo)
-                        <img src="{{ $order->spk_cover_photo_url }}" class="w-full h-full object-contain">
+                    @php
+                        $warrantyBeforePhotoUrl = $order?->warranty_before_photo_url;
+                    @endphp
+                    @if($warrantyBeforePhotoUrl)
+                        <img src="{{ $warrantyBeforePhotoUrl }}" class="w-full h-full object-contain">
+                        <div class="absolute bottom-1.5 left-1.5 bg-slate-900/75 text-white text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded">
+                            Foto Before (After SPK Asli)
+                        </div>
                     @else
                         <div class="flex flex-col items-center justify-center h-full text-white/20">
                             <svg class="w-12 h-12 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>

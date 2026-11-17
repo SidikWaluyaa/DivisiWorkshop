@@ -1,6 +1,20 @@
 <div class="px-4 pb-12 pt-8 sm:px-6 lg:px-8 max-w-7xl mx-auto"
     x-data="{
-        lightboxUrl: '',
+        lightboxImages: [],
+        lightboxIndex: 0,
+        lightboxTitle: 'Cover SPK Original',
+        get lightboxOpen() { return this.lightboxImages.length > 0; },
+        get currentLightboxUrl() { return this.lightboxImages[this.lightboxIndex] || ''; },
+        openLightbox(images, title = 'Cover SPK Original', index = 0) {
+            const list = Array.isArray(images) ? images.filter(Boolean) : [images].filter(Boolean);
+            if (!list.length) return;
+            this.lightboxImages = list;
+            this.lightboxTitle = title;
+            this.lightboxIndex = index;
+        },
+        closeLightbox() { this.lightboxImages = []; this.lightboxIndex = 0; },
+        nextSlide() { if (this.lightboxImages.length > 1) this.lightboxIndex = (this.lightboxIndex + 1) % this.lightboxImages.length; },
+        prevSlide() { if (this.lightboxImages.length > 1) this.lightboxIndex = (this.lightboxIndex - 1 + this.lightboxImages.length) % this.lightboxImages.length; },
         init() {
             // Hotkey '/' or 'Ctrl+K'
             document.addEventListener('keydown', (e) => {
@@ -221,7 +235,7 @@
                             <div class="relative h-32 w-full overflow-hidden bg-slate-50 border-b border-slate-100 flex-shrink-0">
                                 @if($spk->spk_cover_photo_url)
                                     <button 
-                                        @click="lightboxUrl = '{{ $spk->spk_cover_photo_url }}'"
+                                        @click="openLightbox([{{ Js::from($spk->spk_cover_photo_url) }}], 'Cover SPK Original')"
                                         class="w-full h-full focus:outline-none cursor-pointer group/img relative block"
                                         title="Klik untuk memperbesar"
                                     >
@@ -464,6 +478,51 @@
                                             {{ $billingStatus === 'DP/Cicil' ? 'DP / CICIL' : 'BELUM BAYAR' }}
                                         </span>
                                         <span class="text-rose-700 font-extrabold font-mono text-sm">Rp {{ number_format($billingAmount, 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
+
+                                {{-- Blok Status & Riwayat Garansi (-GR) --}}
+                                @if($spk->warranties->isNotEmpty())
+                                    <div class="mb-3 space-y-2">
+                                        @foreach($spk->warranties as $warrantyItem)
+                                            @php
+                                                $isWarrantyOpen = $warrantyItem->status === 'OPEN';
+                                                $warrantyBeforePhotos = $spk->warranty_before_photo_urls;
+                                                $warrantyBeforePhoto = $warrantyBeforePhotos[0] ?? null;
+                                                $warrantyUrl = route('garansi.index', [
+                                                    'search' => $warrantyItem->garansi_spk_number,
+                                                    'activeTab' => $isWarrantyOpen ? 'active' : 'history',
+                                                ]);
+                                            @endphp
+                                            <div class="p-3 rounded-xl border {{ $isWarrantyOpen ? 'bg-amber-50/70 border-amber-200' : 'bg-emerald-50/60 border-emerald-200' }} shadow-2xs">
+                                                <div class="flex items-center justify-between gap-2 mb-1.5">
+                                                    <span class="font-mono text-[11px] font-black {{ $isWarrantyOpen ? 'text-amber-800' : 'text-emerald-800' }}">
+                                                        🛡️ {{ $warrantyItem->garansi_spk_number }}
+                                                    </span>
+                                                    <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider {{ $isWarrantyOpen ? 'bg-amber-200/80 text-amber-900' : 'bg-emerald-200/80 text-emerald-900' }}">
+                                                        {{ $isWarrantyOpen ? 'Garansi Aktif' : 'Garansi Selesai' }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-[11px] font-semibold text-slate-700 line-clamp-2 mb-2">{{ $warrantyItem->description }}</p>
+                                                <div class="flex items-center justify-between gap-2">
+                                                    @if($warrantyBeforePhoto)
+                                                        <button type="button"
+                                                                @click='openLightbox(@json($warrantyBeforePhotos), "Foto Before Garansi (After SPK Asli)")'
+                                                                class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-600 hover:text-[#22AF85] transition-colors cursor-pointer text-left">
+                                                            <img src="{{ $warrantyBeforePhoto }}" alt="Before Garansi" class="w-6 h-6 rounded object-cover border border-slate-300 shrink-0">
+                                                            <span>Foto Before ({{ count($warrantyBeforePhotos) }} foto)</span>
+                                                        </button>
+                                                    @else
+                                                        <span class="text-[10px] text-slate-400 font-semibold">
+                                                            {{ $warrantyItem->finished_at ? 'Selesai: ' . $warrantyItem->finished_at->format('d M Y') : 'Sedang diproses' }}
+                                                        </span>
+                                                    @endif
+                                                    <a href="{{ $warrantyUrl }}" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-[#22AF85] text-[10px] font-black text-slate-700 hover:text-[#22AF85] transition-colors shrink-0">
+                                                        Buka Garansi →
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @endif
 
@@ -726,9 +785,9 @@
         @endif
     </div>
 
-    {{-- Premium Lightbox Modal --}}
+    {{-- Alpine Lightbox Carousel Modal --}}
     <div 
-        x-show="lightboxUrl" 
+        x-show="lightboxOpen" 
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 scale-95"
         x-transition:enter-end="opacity-100 scale-100"
@@ -736,18 +795,23 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/80 backdrop-blur-sm"
-        @keydown.escape.window="lightboxUrl = ''"
+        @keydown.escape.window="closeLightbox()"
+        @keydown.arrow-right.window="if (lightboxOpen) nextSlide()"
+        @keydown.arrow-left.window="if (lightboxOpen) prevSlide()"
         style="display: none;"
     >
         <div 
             class="relative max-w-4xl w-full bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100"
-            @click.away="lightboxUrl = ''"
+            @click.away="closeLightbox()"
         >
             {{-- Header --}}
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="text-lg font-black text-gray-900">Cover SPK Original</h3>
+                <div class="flex items-center gap-3">
+                    <h3 class="text-lg font-black text-gray-900" x-text="lightboxTitle"></h3>
+                    <span x-show="lightboxImages.length > 1" class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#0f766e] text-xs font-black border border-emerald-200" x-text="(lightboxIndex + 1) + ' / ' + lightboxImages.length"></span>
+                </div>
                 <button 
-                    @click="lightboxUrl = ''"
+                    @click="closeLightbox()"
                     class="text-gray-400 hover:text-gray-600 focus:outline-none p-1.5 hover:bg-gray-100 rounded-xl transition-all"
                 >
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -756,15 +820,49 @@
                 </button>
             </div>
             
-            {{-- Image container --}}
-            <div class="p-6 bg-gray-50 flex items-center justify-center min-h-[300px] max-h-[70vh] overflow-y-auto">
-                <img :src="lightboxUrl" alt="Zoomed Cover SPK" class="max-w-full max-h-[60vh] object-contain rounded-2xl shadow-md border border-gray-200">
+            {{-- Image container with Prev / Next Slide Controls --}}
+            <div class="relative p-6 bg-gray-50 flex items-center justify-center min-h-[320px] max-h-[68vh] overflow-y-auto select-none">
+                <button
+                    x-show="lightboxImages.length > 1"
+                    type="button"
+                    @click="prevSlide()"
+                    class="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-gray-800 shadow-lg border border-gray-200 flex items-center justify-center transition-all hover:scale-105 cursor-pointer z-10"
+                    title="Foto Sebelumnya"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+
+                <img :src="currentLightboxUrl" alt="Zoomed Photo" class="max-w-full max-h-[58vh] object-contain rounded-2xl shadow-md border border-gray-200">
+
+                <button
+                    x-show="lightboxImages.length > 1"
+                    type="button"
+                    @click="nextSlide()"
+                    class="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-gray-800 shadow-lg border border-gray-200 flex items-center justify-center transition-all hover:scale-105 cursor-pointer z-10"
+                    title="Foto Berikutnya"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+
+            {{-- Thumbnail Strip when multiple photos --}}
+            <div x-show="lightboxImages.length > 1" class="px-6 py-3 bg-white border-t border-gray-100 flex items-center justify-center gap-2 overflow-x-auto">
+                <template x-for="(imgUrl, idx) in lightboxImages" :key="idx">
+                    <button
+                        type="button"
+                        @click="lightboxIndex = idx"
+                        class="w-12 h-12 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer"
+                        :class="lightboxIndex === idx ? 'border-[#22AF85] ring-2 ring-[#22AF85]/30 scale-105' : 'border-gray-200 opacity-60 hover:opacity-100'"
+                    >
+                        <img :src="imgUrl" class="w-full h-full object-cover">
+                    </button>
+                </template>
             </div>
             
             {{-- Footer --}}
             <div class="px-6 py-4 bg-white border-t border-gray-100 flex justify-end">
                 <button 
-                    @click="lightboxUrl = ''"
+                    @click="closeLightbox()"
                     class="py-2.5 px-5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-black transition-all shadow-sm"
                 >
                     Tutup

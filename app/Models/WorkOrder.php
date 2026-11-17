@@ -1489,6 +1489,36 @@ class WorkOrder extends Model
     }
 
     /**
+     * Get all "Before" photo URLs for a Warranty (-GR) SPK,
+     * sourced from all After photos (QC_FINAL/SELESAI/FINISH) of the original SPK, with fallback to cover photo.
+     */
+    public function getWarrantyBeforePhotoUrlsAttribute(): array
+    {
+        $photos = $this->relationLoaded('photos') ? $this->photos : $this->photos()->get();
+        $afterUrls = $photos->whereIn('step', ['QC_FINAL', 'SELESAI', 'FINISH'])
+            ->sortByDesc('id')
+            ->map(fn($p) => $p->photo_url)
+            ->filter()
+            ->values()
+            ->toArray();
+
+        if (!empty($afterUrls)) {
+            return $afterUrls;
+        }
+
+        return $this->spk_cover_photo_url ? [$this->spk_cover_photo_url] : [];
+    }
+
+    /**
+     * Get the primary "Before" photo URL for a Warranty (-GR) SPK.
+     */
+    public function getWarrantyBeforePhotoUrlAttribute(): ?string
+    {
+        $urls = $this->warranty_before_photo_urls;
+        return $urls[0] ?? null;
+    }
+
+    /**
      * Generate unique code between 100-999 if not exists.
      * Logic: Ensures that the resulting TOTAL TRANSAKSI is unique among active transactions.
      * This guarantees Bank/Sheet sync identification.
