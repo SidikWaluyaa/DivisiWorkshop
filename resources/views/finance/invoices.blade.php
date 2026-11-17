@@ -1,4 +1,5 @@
 <x-app-layout>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <div class="min-h-screen bg-[#F8FAFC]">
         {{-- Elite Premium Header --}}
         <div class="bg-white/95 shadow-sm border-b border-gray-100 sticky top-0 z-40 backdrop-blur-xl">
@@ -33,50 +34,98 @@
                     </div>
 
                     {{-- Bottom Row: Filters --}}
-                    <form action="{{ route('finance.invoices.index') }}" method="GET" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
-                        {{-- Gateway Filter --}}
-                        <div class="relative">
-                            <select name="gateway" onchange="this.form.submit()" class="w-full sm:w-auto pl-4 pr-9 py-2.5 sm:py-3 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1B8A68] focus:ring-2 focus:ring-[#1B8A68]/20 text-xs sm:text-sm font-bold text-gray-700 transition-all cursor-pointer appearance-none outline-none">
-                                <option value="">Semua Gateway</option>
-                                @foreach($gateways as $gw)
-                                    <option value="{{ $gw }}" {{ request('gateway') === $gw ? 'selected' : '' }}>Gateway: {{ $gw }}</option>
-                                @endforeach
-                            </select>
-                            <svg class="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
+                    <form id="invoiceFilterForm" action="{{ route('finance.invoices.index') }}" method="GET" class="flex flex-col gap-3">
+                        <input type="hidden" name="date_scope" id="dateScopeInput" value="{{ $dateScope }}">
+                        <input type="hidden" name="per_page" value="{{ request('per_page', 20) }}">
+
+                        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5 sm:gap-3">
+                            {{-- Gateway Filter --}}
+                            <div class="relative">
+                                <select name="gateway" onchange="this.form.submit()" class="w-full lg:w-auto pl-4 pr-9 py-2.5 sm:py-3 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1B8A68] focus:ring-2 focus:ring-[#1B8A68]/20 text-xs sm:text-sm font-bold text-gray-700 transition-all cursor-pointer appearance-none outline-none">
+                                    <option value="">Semua Gateway</option>
+                                    @foreach($gateways as $gw)
+                                        <option value="{{ $gw }}" {{ request('gateway') === $gw ? 'selected' : '' }}>Gateway: {{ $gw }}</option>
+                                    @endforeach
+                                </select>
+                                <svg class="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+
+                            {{-- Payment Status Filter --}}
+                            <div class="relative">
+                                <select name="payment_status" onchange="this.form.submit()" class="w-full lg:w-auto pl-4 pr-9 py-2.5 sm:py-3 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1B8A68] focus:ring-2 focus:ring-[#1B8A68]/20 text-xs sm:text-sm font-bold text-gray-700 transition-all cursor-pointer appearance-none outline-none">
+                                    <option value="">Semua Status Pembayaran</option>
+                                    <option value="Belum Bayar" {{ request('payment_status') === 'Belum Bayar' ? 'selected' : '' }}>⚪ Belum Bayar</option>
+                                    <option value="DP/Cicil" {{ request('payment_status') === 'DP/Cicil' ? 'selected' : '' }}>🟡 DP / Cicil</option>
+                                    <option value="Lunas" {{ request('payment_status') === 'Lunas' ? 'selected' : '' }}>🟢 Lunas</option>
+                                    <option value="Batal" {{ request('payment_status') === 'Batal' ? 'selected' : '' }}>🔴 Batal</option>
+                                </select>
+                                <svg class="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+
+                            {{-- Date Range Picker (Flatpickr, created_at) --}}
+                            <input type="hidden" name="date_from" id="dateFromInput" value="{{ $dateFrom }}">
+                            <input type="hidden" name="date_to" id="dateToInput" value="{{ $dateTo }}">
+                            <div class="relative flex items-center bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl px-3.5 py-2.5 sm:py-3 gap-2 focus-within:bg-white focus-within:border-[#1B8A68] focus-within:ring-2 focus-within:ring-[#1B8A68]/20 transition-all">
+                                <svg class="w-4 h-4 text-[#1B8A68] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="text-[10px] font-black text-gray-400 uppercase tracking-wider shrink-0">Tgl Buat:</span>
+                                <input type="text"
+                                       id="invoiceDateRangePicker"
+                                       readonly
+                                       placeholder="Semua Tanggal..."
+                                       class="bg-transparent border-0 p-0 text-xs sm:text-sm font-bold text-gray-700 focus:ring-0 cursor-pointer w-56 sm:w-60">
+                            </div>
+
+                            {{-- Search Input --}}
+                            <div class="relative group/search flex-1">
+                                <input type="text" 
+                                       name="search" 
+                                       value="{{ request('search') }}" 
+                                       placeholder="Cari nomor invoice, no SPK, nama pelanggan, merek sepatu, kode unik..." 
+                                       class="w-full pl-11 pr-10 py-2.5 sm:py-3 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1B8A68] focus:ring-2 focus:ring-[#1B8A68]/20 text-xs sm:text-sm font-semibold text-gray-800 placeholder-gray-400 transition-all outline-none">
+                                <svg class="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within/search:text-[#1B8A68] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                @if(request('search') || request('gateway') || request('payment_status') || $dateScope !== 'today')
+                                    <a href="{{ route('finance.invoices.index') }}" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded transition-colors" title="Reset ke Hari Ini">
+                                        ✕
+                                    </a>
+                                @endif
+                            </div>
                         </div>
 
-                        {{-- Payment Status Filter --}}
-                        <div class="relative">
-                            <select name="payment_status" onchange="this.form.submit()" class="w-full sm:w-auto pl-4 pr-9 py-2.5 sm:py-3 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1B8A68] focus:ring-2 focus:ring-[#1B8A68]/20 text-xs sm:text-sm font-bold text-gray-700 transition-all cursor-pointer appearance-none outline-none">
-                                <option value="">Semua Status Pembayaran</option>
-                                <option value="Belum Bayar" {{ request('payment_status') === 'Belum Bayar' ? 'selected' : '' }}>⚪ Belum Bayar</option>
-                                <option value="DP/Cicil" {{ request('payment_status') === 'DP/Cicil' ? 'selected' : '' }}>🟡 DP / Cicil</option>
-                                <option value="Lunas" {{ request('payment_status') === 'Lunas' ? 'selected' : '' }}>🟢 Lunas</option>
-                                <option value="Batal" {{ request('payment_status') === 'Batal' ? 'selected' : '' }}>🔴 Batal</option>
-                            </select>
-                            <svg class="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </div>
-
-                        {{-- Search Input --}}
-                        <div class="relative group/search flex-1">
-                            <input type="hidden" name="per_page" value="{{ request('per_page', 20) }}">
-                            <input type="text" 
-                                   name="search" 
-                                   value="{{ request('search') }}" 
-                                   placeholder="Cari nomor invoice, no SPK, nama pelanggan, merek sepatu, kode unik..." 
-                                   class="w-full pl-11 pr-10 py-2.5 sm:py-3 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1B8A68] focus:ring-2 focus:ring-[#1B8A68]/20 text-xs sm:text-sm font-semibold text-gray-800 placeholder-gray-400 transition-all outline-none">
-                            <svg class="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within/search:text-[#1B8A68] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                            @if(request('search') || request('gateway') || request('payment_status'))
-                                <a href="{{ route('finance.invoices.index') }}" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded transition-colors" title="Reset Filter">
-                                    ✕
-                                </a>
-                            @endif
+                        {{-- Quick Date Presets --}}
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-wider mr-1">Periode:</span>
+                            @php
+                                $presetParams = array_filter([
+                                    'gateway' => request('gateway'),
+                                    'payment_status' => request('payment_status'),
+                                    'search' => request('search'),
+                                    'per_page' => request('per_page', 20),
+                                ]);
+                            @endphp
+                            <a href="{{ route('finance.invoices.index', array_merge($presetParams, ['date_scope' => 'today'])) }}"
+                               class="px-3 py-1 rounded-lg text-[11px] font-extrabold transition-all border {{ $dateScope === 'today' ? 'bg-[#1B8A68] text-white border-[#1B8A68] shadow-sm' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }}">
+                                📅 Hari Ini
+                            </a>
+                            <a href="{{ route('finance.invoices.index', array_merge($presetParams, ['date_scope' => 'week'])) }}"
+                               class="px-3 py-1 rounded-lg text-[11px] font-extrabold transition-all border {{ $dateScope === 'week' ? 'bg-[#1B8A68] text-white border-[#1B8A68] shadow-sm' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }}">
+                                🗓️ Minggu Ini
+                            </a>
+                            <a href="{{ route('finance.invoices.index', array_merge($presetParams, ['date_scope' => 'month'])) }}"
+                               class="px-3 py-1 rounded-lg text-[11px] font-extrabold transition-all border {{ $dateScope === 'month' ? 'bg-[#1B8A68] text-white border-[#1B8A68] shadow-sm' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }}">
+                                📆 Bulan Ini
+                            </a>
+                            <a href="{{ route('finance.invoices.index', array_merge($presetParams, ['date_scope' => 'all'])) }}"
+                               class="px-3 py-1 rounded-lg text-[11px] font-extrabold transition-all border {{ $dateScope === 'all' ? 'bg-gray-900 text-white border-gray-900 shadow-sm' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }}">
+                                🌐 Semua Tanggal
+                            </a>
                         </div>
                     </form>
                 </div>
@@ -108,6 +157,65 @@
                     });
                 }
              }">
+
+            {{-- KPI Summary Cards (1 SQL selectRaw query) --}}
+            @php
+                $paidPercent = $summary['total_tagihan'] > 0
+                    ? round(($summary['total_terbayar'] / $summary['total_tagihan']) * 100, 1)
+                    : 0;
+            @endphp
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                {{-- Card 1: Total Tagihan --}}
+                <div class="bg-white border border-gray-200/80 rounded-2xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Tagihan</p>
+                        <p class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+                            Rp {{ number_format($summary['total_tagihan'], 0, ',', '.') }}
+                        </p>
+                        <p class="text-[11px] font-bold text-gray-500 mt-1">
+                            {{ $summary['invoice_count'] }} Invoice aktif
+                            @if($summary['batal_count'] > 0)
+                                <span class="text-rose-500 font-semibold">({{ $summary['batal_count'] }} Batal dikecualikan)</span>
+                            @endif
+                        </p>
+                    </div>
+                    <div class="w-11 h-11 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
+                    </div>
+                </div>
+
+                {{-- Card 2: Sudah Terbayar --}}
+                <div class="bg-white border border-emerald-200/80 rounded-2xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Sudah Terbayar</p>
+                        <p class="text-xl sm:text-2xl font-black text-emerald-700 tracking-tight">
+                            Rp {{ number_format($summary['total_terbayar'], 0, ',', '.') }}
+                        </p>
+                        <p class="text-[11px] font-bold text-emerald-600/80 mt-1">
+                            {{ $paidPercent }}% dari total tagihan
+                        </p>
+                    </div>
+                    <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                </div>
+
+                {{-- Card 3: Sisa Tagihan --}}
+                <div class="bg-white border border-amber-200/80 rounded-2xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">Sisa Tagihan</p>
+                        <p class="text-xl sm:text-2xl font-black text-amber-700 tracking-tight">
+                            Rp {{ number_format($summary['sisa_tagihan'], 0, ',', '.') }}
+                        </p>
+                        <p class="text-[11px] font-bold text-amber-600/80 mt-1">
+                            {{ $summary['sisa_tagihan'] > 0 ? 'Menunggu pelunasan' : 'Seluruh tagihan lunas' }}
+                        </p>
+                    </div>
+                    <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                </div>
+            </div>
 
             {{-- Toolbar: Summary & Expand/Collapse Controls --}}
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 px-1">
@@ -803,6 +911,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         function updatePerPage(val) {
             const url = new URL(window.location.href);
@@ -810,5 +919,49 @@
             url.searchParams.set('page', 1);
             window.location.href = url.toString();
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const pickerEl = document.getElementById('invoiceDateRangePicker');
+            if (!pickerEl || typeof flatpickr === 'undefined') return;
+
+            const dateFromVal = @json($dateFrom);
+            const dateToVal = @json($dateTo);
+            const defaultDates = (dateFromVal && dateToVal) ? [dateFromVal, dateToVal] : (dateFromVal ? [dateFromVal] : []);
+
+            flatpickr(pickerEl, {
+                mode: 'range',
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd M Y',
+                defaultDate: defaultDates,
+                locale: {
+                    rangeSeparator: ' s/d '
+                },
+                onClose: function (selectedDates, dateStr, instance) {
+                    const form = document.getElementById('invoiceFilterForm');
+                    const scopeInput = document.getElementById('dateScopeInput');
+                    const fromInput = document.getElementById('dateFromInput');
+                    const toInput = document.getElementById('dateToInput');
+
+                    if (selectedDates.length === 2) {
+                        const start = instance.formatDate(selectedDates[0], 'Y-m-d');
+                        const end = instance.formatDate(selectedDates[1], 'Y-m-d');
+                        if (start === fromInput.value && end === toInput.value && scopeInput.value !== 'all') {
+                            return;
+                        }
+                        fromInput.value = start;
+                        toInput.value = end;
+                        scopeInput.value = 'custom';
+                        form.submit();
+                    } else if (selectedDates.length === 1) {
+                        const single = instance.formatDate(selectedDates[0], 'Y-m-d');
+                        fromInput.value = single;
+                        toInput.value = single;
+                        scopeInput.value = 'custom';
+                        form.submit();
+                    }
+                }
+            });
+        });
     </script>
 </x-app-layout>

@@ -36,14 +36,49 @@ class FinanceController extends Controller
     public function indexInvoices(Request $request)
     {
         $search = $request->input('search');
-
         $paymentStatus = $request->input('payment_status'); // Get Payment Status filter
         $gateway = $request->input('gateway'); // Get Gateway filter
-        
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        $dateScope = $request->input('date_scope');
+
+        if (!$dateScope) {
+            if ($dateFrom || $dateTo) {
+                $dateScope = 'custom';
+            } elseif ($search) {
+                $dateScope = 'all';
+            } else {
+                $dateScope = 'today';
+            }
+        }
+
+        if ($dateScope === 'today') {
+            $dateFrom = now()->toDateString();
+            $dateTo = $dateFrom;
+        } elseif ($dateScope === 'week') {
+            $dateFrom = now()->startOfWeek()->toDateString();
+            $dateTo = now()->endOfWeek()->toDateString();
+        } elseif ($dateScope === 'month') {
+            $dateFrom = now()->startOfMonth()->toDateString();
+            $dateTo = now()->endOfMonth()->toDateString();
+        } elseif ($dateScope === 'all') {
+            $dateFrom = null;
+            $dateTo = null;
+        }
+
         $query = Invoice::with(['customer', 'workOrders' => function($q) {
             $q->select('id', 'invoice_id', 'spk_number', 'cs_code', 'shoe_brand', 'shoe_type', 'status', 'total_transaksi')
               ->with(['workOrderServices.service']);
         }]);
+
+        if ($dateScope !== 'all') {
+            if ($dateFrom) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+        }
 
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -72,6 +107,32 @@ class FinanceController extends Controller
             });
         }
 
+        // Single aggregate query for KPI cards (excludes 'Batal' unless explicitly filtered)
+        $summaryQuery = (clone $query);
+        $summaryRow = $paymentStatus !== 'Batal'
+            ? $summaryQuery->selectRaw("
+                COUNT(CASE WHEN status != 'Batal' THEN 1 END) as active_count,
+                COUNT(CASE WHEN status = 'Batal' THEN 1 END) as batal_count,
+                COALESCE(SUM(CASE WHEN status != 'Batal' THEN total_amount ELSE 0 END), 0) as total_tagihan,
+                COALESCE(SUM(CASE WHEN status != 'Batal' THEN paid_amount ELSE 0 END), 0) as total_terbayar,
+                COALESCE(SUM(CASE WHEN status != 'Batal' THEN GREATEST(total_amount - paid_amount, 0) ELSE 0 END), 0) as sisa_tagihan
+            ")->first()
+            : $summaryQuery->selectRaw("
+                COUNT(*) as active_count,
+                COUNT(*) as batal_count,
+                COALESCE(SUM(total_amount), 0) as total_tagihan,
+                COALESCE(SUM(paid_amount), 0) as total_terbayar,
+                COALESCE(SUM(GREATEST(total_amount - paid_amount, 0)), 0) as sisa_tagihan
+            ")->first();
+
+        $summary = [
+            'invoice_count' => (int) ($summaryRow->active_count ?? 0),
+            'batal_count' => $paymentStatus !== 'Batal' ? (int) ($summaryRow->batal_count ?? 0) : 0,
+            'total_tagihan' => (float) ($summaryRow->total_tagihan ?? 0),
+            'total_terbayar' => (float) ($summaryRow->total_terbayar ?? 0),
+            'sisa_tagihan' => (float) ($summaryRow->sisa_tagihan ?? 0),
+        ];
+
         $perPage = (int) $request->input('per_page', 20);
         if (!in_array($perPage, [10, 20, 50, 100])) {
             $perPage = 20;
@@ -86,7 +147,18 @@ class FinanceController extends Controller
             ->orderBy('cs_code')
             ->pluck('cs_code');
 
-        return view('finance.invoices', compact('invoices', 'search', 'paymentStatus', 'gateway', 'gateways', 'perPage'));
+        return view('finance.invoices', compact(
+            'invoices',
+            'search',
+            'paymentStatus',
+            'gateway',
+            'gateways',
+            'perPage',
+            'dateScope',
+            'dateFrom',
+            'dateTo',
+            'summary'
+        ));
     }
 
     /**
