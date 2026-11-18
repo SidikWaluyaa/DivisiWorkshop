@@ -44,7 +44,7 @@
 
                 {{-- Primary Action Slot --}}
                 <div class="flex items-center gap-6">
-                    @if($invoice->status === 'Belum Bayar' && !$invoice->payments()->exists() && !$invoice->invoicePayments()->exists())
+                    @if($invoice->status === 'Belum Bayar' && $invoice->payments->isEmpty() && $invoice->invoicePayments->isEmpty())
                     <div class="flex flex-col items-center group">
                         <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.5em] italic mb-4 group-hover:text-red-400 transition-colors">Hapus Invoice</span>
                         <button @click="$dispatch('open-delete-modal')" class="w-16 h-16 rounded-[2rem] bg-red-500/20 flex items-center justify-center text-red-400 border-2 border-red-500/30 hover:bg-red-500 hover:text-white hover:scale-110 transition-all duration-500 active:scale-95 group-hover:rotate-6">

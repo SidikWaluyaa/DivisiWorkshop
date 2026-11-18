@@ -46,7 +46,7 @@ class CustomerPortalApiController extends Controller
         $customer = Customer::where('phone', $normalizedPhone)->first();
 
         // Fetch WorkOrders linked to this phone (safer than relying solely on customer relation)
-        $workOrders = WorkOrder::with(['workOrderServices.service', 'photos'])
+        $workOrders = WorkOrder::with(['workOrderServices.service', 'photos', 'warranties', 'otos', 'revisions', 'additionalServices', 'logs'])
             ->where('customer_phone', $normalizedPhone)
             ->orderBy('created_at', 'desc')
             ->get();

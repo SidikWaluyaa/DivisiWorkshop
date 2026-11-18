@@ -172,33 +172,26 @@ class Dashboard extends Component
         }
 
         $types = ['BEFORE', 'AFTER', 'TAMBAH_JASA', 'LUNAS_AWAL', 'ONGKIR', 'OTO'];
+        $rows = $query->selectRaw("
+                CASE
+                    WHEN `type` IN ('BEFORE', 'AFTER', 'TAMBAH_JASA', 'LUNAS_AWAL', 'ONGKIR', 'OTO') THEN `type`
+                    ELSE 'LAINNYA'
+                END as type_group,
+                COUNT(*) as count,
+                COALESCE(SUM(amount), 0) as total_amount
+            ")
+            ->groupBy('type_group')
+            ->get()
+            ->keyBy('type_group');
+
         $breakdown = [];
-
-        foreach ($types as $type) {
-            $clone = clone $query;
-            $result = $clone->where('type', $type)
-                ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total_amount')
-                ->first();
-
+        foreach (array_merge($types, ['LAINNYA']) as $type) {
+            $row = $rows->get($type);
             $breakdown[$type] = [
-                'count' => $result->count ?? 0,
-                'total_amount' => $result->total_amount ?? 0,
+                'count' => (int) ($row->count ?? 0),
+                'total_amount' => (float) ($row->total_amount ?? 0),
             ];
         }
-
-        // Add 'LAINNYA' category for payments with NULL type or not in the recognized list
-        $clone = clone $query;
-        $result = $clone->where(function($q) use ($types) {
-                $q->whereNull('type')
-                  ->orWhereNotIn('type', $types);
-            })
-            ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total_amount')
-            ->first();
-
-        $breakdown['LAINNYA'] = [
-            'count' => $result->count ?? 0,
-            'total_amount' => $result->total_amount ?? 0,
-        ];
 
         // Calculate grand total for percentage bars
         $grandTotal = collect($breakdown)->sum('total_amount');

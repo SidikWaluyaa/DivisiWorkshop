@@ -167,31 +167,31 @@ class PublicTrackingApiController extends Controller
         if ($isWarranty) {
             $currentStatusDetails['code'] = 'GARANSI';
             $currentStatusDetails['label'] = 'Service (Garansi)';
-            $currentStatusDetails['description'] = 'Order Anda sedang dalam proses pengerjaan klaim garansi.';
+            $currentStatusDetails['description'] = 'Order kamu sedang dalam proses pengerjaan klaim garansi.';
         } elseif ($isOto) {
             $currentStatusDetails['code'] = 'OTO';
             $currentStatusDetails['label'] = 'Service (OTO)';
-            $currentStatusDetails['description'] = 'Order Anda sedang dalam proses pengerjaan layanan tambahan One Time Offer (OTO).';
+            $currentStatusDetails['description'] = 'Order kamu sedang dalam proses pengerjaan layanan tambahan One Time Offer (OTO).';
         } elseif ($isRevising) {
             $currentStatusDetails['code'] = 'REVISI';
             $currentStatusDetails['label'] = 'Service (Revisi)';
-            $currentStatusDetails['description'] = 'Order Anda sedang dalam penyesuaian pengerjaan ulang (revisi).';
+            $currentStatusDetails['description'] = 'Order kamu sedang dalam penyesuaian pengerjaan ulang (revisi).';
         } elseif ($isTambahJasa) {
             $serviceNames = $activeTambahJasaList->pluck('service_name')->implode(', ');
             $currentStatusDetails['code'] = 'TAMBAH_JASA';
             $currentStatusDetails['label'] = 'Production (Sedang Mengerjakan Tambah Jasa)';
-            $currentStatusDetails['description'] = 'Order Anda sedang dalam proses pengerjaan layanan tambahan (Tambah Jasa)' . ($serviceNames ? ': ' . $serviceNames . '.' : '.');
+            $currentStatusDetails['description'] = 'Order kamu sedang dalam proses pengerjaan layanan tambahan (Tambah Jasa)' . ($serviceNames ? ': ' . $serviceNames . '.' : '.');
         } elseif ($currentIndex !== false && isset($stageKeys[$currentIndex])) {
             $activeKey = $stageKeys[$currentIndex];
             $currentStatusDetails['label'] = $stages[$activeKey]['label'];
 
             $nextLabel = ($currentIndex < count($stages) - 1) ? $stages[$stageKeys[$currentIndex + 1]]['label'] : null;
             
-            $desc = "Order Anda sedang dalam proses " . strtolower($stages[$activeKey]['label']) . ".";
+            $desc = "Order kamu sedang dalam proses " . strtolower($stages[$activeKey]['label']) . ".";
             if ($nextLabel) {
                 $desc .= " Langkah berikutnya: " . $nextLabel . ".";
             } else {
-                $desc .= " Terima kasih telah mempercayakan sepatu Anda kepada kami!";
+                $desc .= " Terima kasih telah mempercayakan sepatu kamu kepada kami!";
             }
             $currentStatusDetails['description'] = $desc;
         }
@@ -262,26 +262,32 @@ class PublicTrackingApiController extends Controller
                 'current_status' => $currentStatusDetails,
                 'is_on_hold' => $isOnHold,
                 'hold_title' => $isOnHold ? 'Konfirmasi Kendala Diperlukan' : null,
-                'hold_message' => $isOnHold ? 'Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu Anda. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.' : null,
+                'hold_message' => $isOnHold ? 'Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu kamu. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.' : null,
                 'report_issue_url' => $isOnHold ? route('cx-issues.report', $order->spk_number) : null,
                 'is_oto' => $isOto,
                 'oto_title' => $isOto ? 'Pengerjaan Layanan Tambahan (OTO)' : null,
                 'oto_message' => $isOto
-                    ? 'Sepatu Anda saat ini sedang berada di Stasiun Khusus OTO untuk pengerjaan layanan tambahan (One Time Offer) yang telah Anda setujui.' . ($activeOto && $activeOto->proposed_services ? ' Layanan OTO: ' . $activeOto->proposed_services . '.' : '')
+                    ? 'Sepatu kamu saat ini sedang berada di Stasiun Khusus OTO untuk pengerjaan layanan tambahan (One Time Offer) yang telah kamu setujui.' . ($activeOto && $activeOto->proposed_services ? ' Layanan OTO: ' . $activeOto->proposed_services . '.' : '')
                     : null,
                 'has_oto_offer' => (bool)$pendingOto,
                 'oto_offer_message' => $pendingOto
-                    ? 'Layanan utama sepatu Anda telah selesai. Tim kami merekomendasikan penawaran khusus layanan tambahan: ' . $pendingOto->proposed_services . '. Silakan hubungi admin CX kami untuk konfirmasi.'
+                    ? 'Layanan utama sepatu kamu telah selesai. Tim kami merekomendasikan penawaran khusus layanan tambahan: ' . $pendingOto->proposed_services . '. Silakan hubungi admin CX kami untuk konfirmasi.'
                     : null,
                 'is_warranty' => $isWarranty,
                 'warranty_spk_number' => $openWarranty ? $openWarranty->garansi_spk_number : ($isGrReworkSpk ? $order->spk_number : null),
                 'warranty_title' => $isWarranty ? 'Pengerjaan Klaim Garansi' : null,
                 'warranty_message' => $isWarranty
-                    ? 'Sepatu Anda saat ini sedang dalam proses penanganan klaim garansi oleh tim teknisi kami untuk memastikan hasil perbaikan kembali optimal.' . ($openWarranty && $openWarranty->description ? ' Catatan Garansi: "' . $openWarranty->description . '"' : '')
+                    ? 'Sepatu kamu saat ini sedang dalam proses penanganan klaim garansi oleh tim teknisi kami untuk memastikan hasil perbaikan kembali optimal.' . ($openWarranty && $openWarranty->description ? ' Catatan Garansi: "' . $openWarranty->description . '"' : '')
                     : null,
                 'is_revising' => $isRevising,
                 'revision_title' => $isRevising ? 'Pengerjaan Ulang & Penyesuaian Kualitas (Revisi)' : null,
-                'revision_message' => $isRevising ? 'Sepatu Anda saat ini sedang dalam proses penyesuaian pengerjaan ulang oleh tim spesialis kami untuk memastikan hasil akhir memenuhi standar mutu terbaik.' : null,
+                'revision_message' => $isRevising ? 'Sepatu kamu saat ini sedang dalam proses penyesuaian pengerjaan ulang oleh tim spesialis kami untuk memastikan hasil akhir memenuhi standar mutu terbaik.' : null,
+                'is_tambah_jasa' => $isTambahJasa,
+                'tambah_jasa_title' => $isTambahJasa ? 'Sedang Mengerjakan Tambah Jasa' : null,
+                'tambah_jasa_message' => $isTambahJasa
+                    ? 'Sepatu kamu saat ini sedang berada di Stasiun Produksi untuk pengerjaan layanan tambahan (Tambah Jasa): ' . $activeTambahJasaList->pluck('service_name')->implode(', ') . '.'
+                    : null,
+                'tambah_jasa_services' => $isTambahJasa ? $activeTambahJasaList->pluck('service_name')->values()->toArray() : [],
                 'visual_photos' => [
                     'before_photo_url' => $beforePhotoUrl,
                     'after_photo_url' => $afterPhotoUrl,

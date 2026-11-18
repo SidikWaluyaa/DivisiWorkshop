@@ -334,8 +334,8 @@ class FinanceController extends Controller
 
     public function showInvoice(Invoice $invoice)
     {
-        $invoice->load(['customer', 'workOrders' => function($q) {
-            $q->with(['payments', 'workOrderServices']);
+        $invoice->load(['customer', 'payments', 'workOrders' => function($q) {
+            $q->with(['payments', 'workOrderServices.service', 'customer']);
         }, 'invoicePayments' => function($q) {
             $q->with(['creator', 'verification.mutation'])->orderByDesc('created_at');
         }]);
@@ -815,7 +815,7 @@ class FinanceController extends Controller
         $query->orderBy('created_at', 'DESC');
 
         // Eager load everything to prevent N+1
-        $orders = $query->with(['services', 'payments', 'customer', 'invoice'])
+        $orders = $query->with(['services', 'workOrderServices.service', 'payments', 'customer', 'invoice'])
                         ->paginate(20)
                         ->withQueryString();
 
@@ -825,17 +825,31 @@ class FinanceController extends Controller
             return $order;
         });
 
-        // Get Finance Team for dropdowns
-        $financeTeam = User::where('role', 'finance')->get(); 
-        if($financeTeam->isEmpty()) $financeTeam = User::where('role', 'admin')->get(); // Fallback to admin if finance empty
+        // Get Finance Team for dropdowns (1 query instead of fallback query)
+        $teamUsers = User::whereIn('role', ['finance', 'admin'])->select('id', 'name', 'role')->get();
+        $financeTeam = $teamUsers->where('role', 'finance')->values();
+        if ($financeTeam->isEmpty()) {
+            $financeTeam = $teamUsers->where('role', 'admin')->values();
+        }
 
-        // Dynamic Stats for High-Volume Management
+        // Dynamic Stats for High-Volume Management (1 consolidated WorkOrder query)
+        $today = Carbon::today()->toDateString();
+        $woStats = WorkOrder::selectRaw("
+            SUM(CASE WHEN DATE(created_at) = ? THEN 1 ELSE 0 END) as total_today,
+            SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END) as pending_dp,
+            SUM(CASE WHEN status IN (?, ?) AND sisa_tagihan > 0 THEN 1 ELSE 0 END) as ready_pickup
+        ", [
+            $today,
+            WorkOrderStatus::WAITING_PAYMENT->value,
+            WorkOrderStatus::WAITING_VERIFICATION->value,
+            WorkOrderStatus::SELESAI->value,
+            WorkOrderStatus::DIANTAR->value,
+        ])->first();
+
         $stats = [
-            'total_today' => WorkOrder::whereDate('created_at', Carbon::today())->count(),
-            'pending_dp' => WorkOrder::whereIn('status', [WorkOrderStatus::WAITING_PAYMENT->value, WorkOrderStatus::WAITING_VERIFICATION->value])->count(),
-            'ready_pickup' => WorkOrder::whereIn('status', [WorkOrderStatus::SELESAI->value, WorkOrderStatus::DIANTAR->value])
-                                       ->where('sisa_tagihan', '>', 0)
-                                       ->count(),
+            'total_today' => (int) ($woStats->total_today ?? 0),
+            'pending_dp' => (int) ($woStats->pending_dp ?? 0),
+            'ready_pickup' => (int) ($woStats->ready_pickup ?? 0),
             'revenue_today' => OrderPayment::whereDate('paid_at', Carbon::today())->sum('amount_total'),
         ];
 
@@ -847,12 +861,15 @@ class FinanceController extends Controller
         $order = $workOrder;
         $this->calculateFinanceFields($order);
         
-        // Eager load payments and invoice if not already
-        $order->load(['payments.pic', 'services', 'customer', 'invoice']);
+        // Eager load payments, photos, services, and invoice to prevent lazy loading / duplicates
+        $order->load(['payments.pic', 'services', 'workOrderServices.service', 'customer', 'invoice', 'photos', 'spkCoverPhoto']);
 
-        // Get Finance Team
-        $financeTeam = User::where('role', 'finance')->get();
-        if($financeTeam->isEmpty()) $financeTeam = User::where('role', 'admin')->get();
+        // Get Finance Team (1 query)
+        $teamUsers = User::whereIn('role', ['finance', 'admin'])->select('id', 'name', 'role')->get();
+        $financeTeam = $teamUsers->where('role', 'finance')->values();
+        if ($financeTeam->isEmpty()) {
+            $financeTeam = $teamUsers->where('role', 'admin')->values();
+        }
 
         return view('finance.show', compact('order', 'financeTeam'));
     }
@@ -1132,9 +1149,13 @@ class FinanceController extends Controller
                            ->orderBy('donated_at', 'DESC')
                            ->paginate(20);
         
+        $donationStats = WorkOrder::where('status', WorkOrderStatus::DONASI)
+            ->selectRaw('COUNT(*) as total_archived, COALESCE(SUM(total_transaksi), 0) as total_value')
+            ->first();
+
         $stats = [
-            'total_archived' => WorkOrder::where('status', WorkOrderStatus::DONASI)->count(),
-            'total_value' => WorkOrder::where('status', WorkOrderStatus::DONASI)->sum('total_transaksi'),
+            'total_archived' => (int) ($donationStats->total_archived ?? 0),
+            'total_value' => (float) ($donationStats->total_value ?? 0),
         ];
 
         return view('finance.donations.index', compact('orders', 'stats'));
@@ -1169,14 +1190,24 @@ class FinanceController extends Controller
             $query->whereDate('updated_at', '<=', $dateTo);
         }
 
-        // Stats calculation
-        $cancelledCount = WorkOrder::where('status', WorkOrderStatus::BATAL)->count();
-        $totalLost = WorkOrder::where('status', WorkOrderStatus::BATAL)->sum('total_transaksi');
-        $totalRefund = WorkOrder::where('status', WorkOrderStatus::BATAL)->sum('refund_amount');
+        // Stats calculation (1 consolidated query)
+        $agg = WorkOrder::selectRaw("
+            COUNT(*) as total_all_orders,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as cancelled_count,
+            COALESCE(SUM(CASE WHEN status = ? THEN total_transaksi ELSE 0 END), 0) as total_lost,
+            COALESCE(SUM(CASE WHEN status = ? THEN refund_amount ELSE 0 END), 0) as total_refund
+        ", [
+            WorkOrderStatus::BATAL->value,
+            WorkOrderStatus::BATAL->value,
+            WorkOrderStatus::BATAL->value,
+        ])->first();
+
+        $cancelledCount = (int) ($agg->cancelled_count ?? 0);
+        $totalLost = (float) ($agg->total_lost ?? 0);
+        $totalRefund = (float) ($agg->total_refund ?? 0);
         $averageLost = $cancelledCount > 0 ? $totalLost / $cancelledCount : 0;
 
-        // Total orders count (active + cancelled)
-        $totalAllOrders = WorkOrder::count();
+        $totalAllOrders = (int) ($agg->total_all_orders ?? 0);
         $cancellationRate = $totalAllOrders > 0 ? ($cancelledCount / $totalAllOrders) * 100 : 0;
 
         $orders = $query->orderBy('updated_at', 'desc')->paginate(20)->withQueryString();

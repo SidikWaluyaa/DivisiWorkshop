@@ -43,6 +43,24 @@ class CustomerPortalResource extends JsonResource
                     'postal_code' => null,
                 ],
                 'work_orders' => $workOrders->map(function($wo) {
+                    $activeState = $wo->resolveActiveTrackingState();
+                    $statusCode = $wo->status->value ?? $wo->status;
+                    $statusLabel = method_exists($wo->status, 'label') ? $wo->status->label() : $statusCode;
+
+                    if ($activeState['is_warranty']) {
+                        $statusCode = 'GARANSI';
+                        $statusLabel = 'Service (Garansi)';
+                    } elseif ($activeState['is_oto']) {
+                        $statusCode = 'OTO';
+                        $statusLabel = 'Service (OTO)';
+                    } elseif ($activeState['is_revising']) {
+                        $statusCode = 'REVISI';
+                        $statusLabel = 'Service (Revisi)';
+                    } elseif ($activeState['is_tambah_jasa']) {
+                        $statusCode = 'TAMBAH_JASA';
+                        $statusLabel = 'Sedang Mengerjakan Tambah Jasa';
+                    }
+
                     return [
                         'id' => $wo->id,
                         'spk_number' => $wo->spk_number,
@@ -52,9 +70,13 @@ class CustomerPortalResource extends JsonResource
                         'shoe_size' => $wo->shoe_size,
                         'category' => $wo->category,
                         'status' => [
-                            'code' => $wo->status->value ?? $wo->status,
-                            'label' => method_exists($wo->status, 'label') ? $wo->status->label() : ($wo->status->value ?? $wo->status),
+                            'code' => $statusCode,
+                            'label' => $statusLabel,
                         ],
+                        'is_tambah_jasa' => $activeState['is_tambah_jasa'],
+                        'tambah_jasa_services' => $activeState['is_tambah_jasa']
+                            ? $activeState['active_tambah_jasa_list']->pluck('service_name')->values()->toArray()
+                            : [],
                         'priority' => $wo->priority,
                         'notes' => $wo->notes,
                         'entry_date' => $wo->entry_date ? $wo->entry_date->toDateTimeString() : null,

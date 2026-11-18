@@ -1146,7 +1146,9 @@ class WorkOrder extends Model
     public function recalculateTotalPrice($save = true)
     {
         // 1. Calculate Transaction Total
-        $jasa = $this->workOrderServices()->sum('cost');
+        $jasa = (!$save && $this->relationLoaded('workOrderServices'))
+            ? $this->workOrderServices->sum('cost')
+            : $this->workOrderServices()->sum('cost');
         $oto = $this->cost_oto ?? 0;
         $add = $this->cost_add_service ?? 0;
         $ongkir = $this->shipping_cost ?? 0;
@@ -1168,8 +1170,10 @@ class WorkOrder extends Model
             $totalTransaksi = $baseTotal;
         }
 
-        // 2. FRESH Query for payments - CRITICAL: Only count VERIFIED payments for audit integrity
-        $paid = $this->payments()->where('is_verified', true)->sum('amount_total');
+        // 2. FRESH Query for payments when saving - use eager-loaded collection when only calculating for display ($save = false)
+        $paid = (!$save && $this->relationLoaded('payments'))
+            ? $this->payments->where('is_verified', true)->sum('amount_total')
+            : $this->payments()->where('is_verified', true)->sum('amount_total');
         $sisa = $totalTransaksi - $paid;
 
         // 3. Determine Payment Status

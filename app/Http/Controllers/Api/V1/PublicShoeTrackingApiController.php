@@ -152,30 +152,30 @@ class PublicShoeTrackingApiController extends Controller
                 'status_label' => $effectiveLabel,
                 'is_on_hold' => $isOnHold,
                 'hold_title' => $isOnHold ? 'Konfirmasi Kendala Diperlukan' : null,
-                'hold_message' => $isOnHold ? 'Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu Anda. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.' : null,
+                'hold_message' => $isOnHold ? 'Tim workshop kami menemukan kendala teknis atau kondisi khusus pada sepatu kamu. Silakan lihat Laporan Kendala (CX Report) dan hubungi admin kami untuk konfirmasi tindakan.' : null,
                 'report_issue_url' => $isOnHold ? route('cx-issues.report', $order->spk_number) : null,
                 'is_oto' => $isOto,
                 'oto_title' => $isOto ? 'Pengerjaan Layanan Tambahan (OTO)' : null,
                 'oto_message' => $isOto
-                    ? 'Sepatu Anda saat ini sedang berada di Stasiun Khusus OTO untuk pengerjaan layanan tambahan (One Time Offer) yang telah Anda setujui.' . ($activeOto && $activeOto->proposed_services ? ' Layanan OTO: ' . $activeOto->proposed_services . '.' : '')
+                    ? 'Sepatu kamu saat ini sedang berada di Stasiun Khusus OTO untuk pengerjaan layanan tambahan (One Time Offer) yang telah kamu setujui.' . ($activeOto && $activeOto->proposed_services ? ' Layanan OTO: ' . $activeOto->proposed_services . '.' : '')
                     : null,
                 'has_oto_offer' => (bool)$pendingOto,
                 'oto_offer_message' => $pendingOto
-                    ? 'Layanan utama sepatu Anda telah selesai. Tim kami merekomendasikan penawaran khusus layanan tambahan: ' . $pendingOto->proposed_services . '. Silakan hubungi admin CX kami untuk konfirmasi.'
+                    ? 'Layanan utama sepatu kamu telah selesai. Tim kami merekomendasikan penawaran khusus layanan tambahan: ' . $pendingOto->proposed_services . '. Silakan hubungi admin CX kami untuk konfirmasi.'
                     : null,
                 'is_warranty' => $isWarranty,
                 'warranty_spk_number' => $openWarranty ? $openWarranty->garansi_spk_number : ($isGrReworkSpk ? $order->spk_number : null),
                 'warranty_title' => $isWarranty ? 'Pengerjaan Klaim Garansi' : null,
                 'warranty_message' => $isWarranty
-                    ? 'Sepatu Anda saat ini sedang dalam proses penanganan klaim garansi oleh tim teknisi kami untuk memastikan hasil perbaikan kembali optimal.' . ($openWarranty && $openWarranty->description ? ' Catatan Garansi: "' . $openWarranty->description . '"' : '')
+                    ? 'Sepatu kamu saat ini sedang dalam proses penanganan klaim garansi oleh tim teknisi kami untuk memastikan hasil perbaikan kembali optimal.' . ($openWarranty && $openWarranty->description ? ' Catatan Garansi: "' . $openWarranty->description . '"' : '')
                     : null,
                 'is_revising' => $isRevising,
                 'revision_title' => $isRevising ? 'Pengerjaan Ulang & Penyesuaian Kualitas (Revisi)' : null,
-                'revision_message' => $isRevising ? 'Sepatu Anda saat ini sedang dalam proses penyesuaian pengerjaan ulang oleh tim spesialis kami untuk memastikan hasil akhir memenuhi standar mutu terbaik.' : null,
+                'revision_message' => $isRevising ? 'Sepatu kamu saat ini sedang dalam proses penyesuaian pengerjaan ulang oleh tim spesialis kami untuk memastikan hasil akhir memenuhi standar mutu terbaik.' : null,
                 'is_tambah_jasa' => $isTambahJasa,
                 'tambah_jasa_title' => $isTambahJasa ? 'Sedang Mengerjakan Tambah Jasa' : null,
                 'tambah_jasa_message' => $isTambahJasa
-                    ? 'Sepatu Anda saat ini sedang berada di Stasiun Produksi untuk pengerjaan layanan tambahan (Tambah Jasa): ' . $activeTambahJasaList->pluck('service_name')->implode(', ') . '.'
+                    ? 'Sepatu kamu saat ini sedang berada di Stasiun Produksi untuk pengerjaan layanan tambahan (Tambah Jasa): ' . $activeTambahJasaList->pluck('service_name')->implode(', ') . '.'
                     : null,
                 'tambah_jasa_services' => $isTambahJasa ? $activeTambahJasaList->pluck('service_name')->values()->toArray() : [],
                 'services' => $services
