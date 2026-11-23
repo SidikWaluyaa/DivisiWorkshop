@@ -70,6 +70,15 @@ return [
     'dashboard_api_key' => env('DASHBOARD_API_KEY'),
 
     /*
+    | Akun yang menerima "Panggilan Pengambilan" (popup, bel, suara, dan notifikasi browser).
+    */
+    'pickup_call_receivers' => [
+        'sandi@workshop.com',
+        'indra@workshop.com',
+        'siska@workshop.com',
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
