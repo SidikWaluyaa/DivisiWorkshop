@@ -102,7 +102,7 @@
         @stack('modals')
         @livewireScripts
         @stack('scripts')
-        @if(auth()->check() && in_array(auth()->user()->email, ['sandi@workshop.com', 'indra@workshop.com']))
+        @if(auth()->check() && in_array(auth()->user()->email, config('app.pickup_call_receivers', [])))
             @include('layouts.partials.sandi-bell-listener')
         @endif
         @include('admin.customers.partials.toast-alert')
