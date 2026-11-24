@@ -21,6 +21,7 @@ class DailyReportController extends Controller
         'tambah_jasa' => 'tambahJasa',
         'qc_after' => 'qcAfter',
         'pendukung' => 'pendukung',
+        'gudang' => 'gudang',
     ];
 
     public function index(Request $request): JsonResponse

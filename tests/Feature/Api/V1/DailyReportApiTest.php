@@ -179,7 +179,7 @@ it('menghitung semua blok report harian', function () {
     $d = $res->json('data');
 
     expect($d['tanggal'])->toBe('2026-11-19')
-        ->and(array_keys($d))->toBe(['tanggal', 'dibuat_pada', 'cs', 'oto', 'tambah_jasa', 'qc_after', 'pendukung']);
+        ->and(array_keys($d))->toBe(['tanggal', 'dibuat_pada', 'cs', 'oto', 'tambah_jasa', 'qc_after', 'pendukung', 'gudang']);
 
     $cs = $d['cs'];
     expect(array_sum($cs['closing_per_jam']))->toBe(6)
@@ -205,4 +205,76 @@ it('menghitung semua blok report harian', function () {
     expect($d['tambah_jasa'])->toBe(['spk' => 2, 'jasa' => 3, 'nominal' => 225000]);
     expect($d['qc_after'])->toBe(['after' => 2, 'sudah_qc' => 1]);
     expect($d['pendukung'])->toBe(['cuci' => 2, 'clean_up' => 1, 'jahit_sol' => 0, 'bongkar_sol' => 1, 'bongkar_upper' => 1]);
+});
+
+function gdWo(string $spk, string $status, ?string $entryDate = null, array $attributes = []): int
+{
+    return drWo($spk, array_merge(['status' => $status, 'entry_date' => $entryDate ?? '2020-01-01 00:00:00'], $attributes));
+}
+
+function gdSpk(int $woId, int $leadId, string $at): void
+{
+    static $n = 0;
+    $customerId = DB::table('customers')->insertGetId([
+        'name' => 'Uji', 'phone' => '0812'.random_int(100000, 999999), 'created_at' => $at, 'updated_at' => $at,
+    ]);
+    DB::table('cs_spk')->insert([
+        'cs_lead_id' => $leadId, 'work_order_id' => $woId, 'spk_number' => 'UJI-GD-'.(++$n), 'customer_id' => $customerId,
+        'services' => '[]', 'total_price' => 0, 'status' => 'HANDED_TO_WORKSHOP', 'created_at' => $at, 'updated_at' => $at,
+    ]);
+}
+
+it('menghitung blok gudang: sepatu masuk, arus harian, dan kontrol status', function () {
+    // Sepatu masuk 18 Nov.
+    [$offline, $online, $fu] = [drLead('OFFLINE'), drLead('ONLINE'), drLead('FOLLOW_UP')];
+    gdSpk(gdWo('UJI-GD-M1', 'PRODUCTION', '2026-11-18 09:00:00'), $offline, '2026-11-16 09:00:00');
+    gdSpk(gdWo('UJI-GD-M2', 'PRODUCTION', '2026-11-18 10:00:00'), $online, '2026-11-16 09:00:00');
+    gdSpk(gdWo('UJI-GD-M3', 'PRODUCTION', '2026-11-18 19:00:00'), $online, '2026-11-16 09:00:00');       // setelah 18.00
+    gdSpk(gdWo('UJI-GD-M4', 'PRODUCTION', '2026-11-18 17:59:59'), $fu, '2026-11-16 09:00:00');
+    gdWo('UJI-GD-M5', 'PRODUCTION', '2026-11-18 11:00:00');                                               // tanpa lead
+    gdSpk(gdWo('UJI-GD-M6', 'BATAL', '2026-11-18 12:00:00'), $online, '2026-11-16 09:00:00');            // batal
+    gdWo('UJI-GD-M7', 'PRODUCTION', '2026-11-18 12:00:00', ['deleted_at' => '2026-11-18 13:00:00']);       // dihapus
+    gdWo('UJI-GD-M8', 'PRODUCTION', '2026-11-17 12:00:00');                                               // hari lain
+
+    // Arus gudang (log STATUS_CHANGE).
+    $a = gdWo('UJI-GD-A', 'PRODUCTION');
+    $b = gdWo('UJI-GD-B', 'PRODUCTION');
+    $c = gdWo('UJI-GD-C', 'PRODUCTION');
+    drLog($a, 'DITERIMA', 'STATUS_CHANGE', '2026-11-18 08:00:00');
+    drLog($a, 'DITERIMA', 'STATUS_CHANGE', '2026-11-18 08:00:02');        // dobel → 1
+    drLog($b, 'DITERIMA', 'STATUS_CHANGE', '2026-11-18 09:00:00');
+    drLog($b, 'DITERIMA', 'SERVICE_ADDED', '2026-11-18 09:10:00');        // bukan STATUS_CHANGE
+    drLog($a, 'READY_TO_DISPATCH', 'STATUS_CHANGE', '2026-11-18 10:00:00');
+    drLog($a, 'OTW_WORKSHOP', 'STATUS_CHANGE', '2026-11-18 17:05:16');
+    drLog($a, 'OTW_WORKSHOP', 'STATUS_CHANGE', '2026-11-18 17:05:19');    // dobel → 1
+    drLog($b, 'PREPARATION', 'STATUS_CHANGE', '2026-11-18 11:00:00');
+    drLog($c, 'PREPARATION', 'STATUS_CHANGE', '2026-11-18 11:30:00');
+    drLog($c, 'DITERIMA', 'STATUS_CHANGE', '2026-11-02 08:00:00');
+    drLog($c, 'DITERIMA', 'STATUS_CHANGE', '2026-10-31 08:00:00');        // bulan lalu
+
+    // Kontrol status saat ini.
+    foreach (['DITERIMA', 'DITERIMA', 'ASSESSMENT', 'WAITING_PAYMENT', 'READY_TO_DISPATCH', 'CX_FOLLOWUP', 'WAITING_VERIFICATION'] as $i => $st) {
+        gdWo('UJI-GD-K'.$i, $st);
+    }
+    gdWo('UJI-GD-KX', 'DITERIMA', null, ['deleted_at' => '2026-11-18 13:00:00']);
+
+    $g = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson(DR_URL.'?date=2026-11-18')->assertOk()->json('data.gudang');
+
+    expect($g['sepatu_masuk'])->toBe([
+        'offline' => 1, 'online' => 2, 'follow_up' => 1, 'lainnya' => 1, 'total' => 5,
+        'sd_18' => ['offline' => 1, 'online' => 1, 'follow_up' => 1, 'lainnya' => 1, 'total' => 4],
+    ]);
+    expect([$g['before'], $g['print_spk'], $g['kirim_ws'], $g['diterima_ws']])->toBe([2, 1, 1, 2]);
+
+    $perHari = $g['bulan_ini']['per_hari'];
+    expect($perHari)->toHaveCount(18)
+        ->and($perHari[0])->toBe(['tanggal' => '2026-11-01', 'before' => 0, 'print_spk' => 0, 'kirim_ws' => 0, 'diterima_ws' => 0])
+        ->and($perHari[1])->toBe(['tanggal' => '2026-11-02', 'before' => 1, 'print_spk' => 0, 'kirim_ws' => 0, 'diterima_ws' => 0])
+        ->and($perHari[17])->toBe(['tanggal' => '2026-11-18', 'before' => 2, 'print_spk' => 1, 'kirim_ws' => 1, 'diterima_ws' => 2]);
+
+    $k = $g['kontrol'];
+    expect($k['tertahan'])->toBe(['DITERIMA' => 2, 'ASSESSMENT' => 1, 'WAITING_PAYMENT' => 1, 'total' => 4])
+        ->and($k['belum_kirim'])->toBe(['READY_TO_DISPATCH' => 1, 'CX_FOLLOWUP' => 1, 'total' => 6])
+        ->and($k['waiting_verification'])->toBe(1)
+        ->and($k['diambil_pada'])->toBeString();
 });
