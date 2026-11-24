@@ -170,6 +170,122 @@ class DailyReportQuery
         return $out;
     }
 
+    /** Status gudang yang dipantau Kontrol Algoritma (posisi saat request). */
+    private const STATUS_TERTAHAN = ['DITERIMA', 'ASSESSMENT', 'WAITING_PAYMENT'];
+
+    private const STATUS_BELUM_KIRIM = ['READY_TO_DISPATCH', 'CX_FOLLOWUP'];
+
+    /** Arus gudang per hari: step log STATUS_CHANGE → key response. */
+    private const ARUS_GUDANG = [
+        'DITERIMA' => 'before',
+        'READY_TO_DISPATCH' => 'print_spk',
+        'OTW_WORKSHOP' => 'kirim_ws',
+        'PREPARATION' => 'diterima_ws',
+    ];
+
+    /**
+     * Blok Gudang: sepatu masuk per channel, arus harian (before → print SPK → kirim WS → diterima WS)
+     * dari tanggal 1 sampai $date, dan Kontrol Algoritma (jumlah SPK per status saat ini).
+     */
+    public static function gudang(Carbon $date): array
+    {
+        $perHari = self::arusGudangPerHari($date->copy()->startOfMonth(), $date);
+        $hariIni = end($perHari);
+
+        return [
+            'sepatu_masuk' => self::sepatuMasuk($date),
+            'before' => $hariIni['before'],
+            'print_spk' => $hariIni['print_spk'],
+            'kirim_ws' => $hariIni['kirim_ws'],
+            'diterima_ws' => $hariIni['diterima_ws'],
+            'bulan_ini' => ['per_hari' => $perHari],
+            'kontrol' => self::kontrolGudang(),
+        ];
+    }
+
+    /**
+     * Sepatu masuk = SPK (bukan BATAL, tidak dihapus) dengan entry_date pada tanggal itu, menurut channel lead CS
+     * (cs_spk.work_order_id → cs_spk.cs_lead_id; spk_number tidak dipakai karena prefix-nya beda).
+     * sd_18 = hanya entry_date sebelum 18.00 (cut-off report manual).
+     */
+    private static function sepatuMasuk(Carbon $date): array
+    {
+        [$s, $e] = self::range($date);
+        $kosong = ['offline' => 0, 'online' => 0, 'follow_up' => 0, 'lainnya' => 0, 'total' => 0];
+        $semua = $kosong;
+        $sd18 = $kosong;
+
+        $rows = DB::select("SELECT CASE UPPER(TRIM(COALESCE(l.channel, '')))
+                    WHEN 'OFFLINE' THEN 'offline' WHEN 'ONLINE' THEN 'online' WHEN 'FOLLOW_UP' THEN 'follow_up' ELSE 'lainnya' END AS ch,
+                COUNT(*) AS n, COALESCE(SUM(TIME(w.entry_date) < '18:00:00'), 0) AS n18
+            FROM work_orders w
+            LEFT JOIN cs_spk s ON s.work_order_id = w.id AND s.deleted_at IS NULL
+            LEFT JOIN cs_leads l ON l.id = s.cs_lead_id
+            WHERE w.deleted_at IS NULL AND w.status <> 'BATAL' AND w.entry_date BETWEEN ? AND ?
+            GROUP BY ch", [$s, $e]);
+        foreach ($rows as $r) {
+            $semua[$r->ch] += (int) $r->n;
+            $sd18[$r->ch] += (int) $r->n18;
+        }
+        $semua['total'] = $semua['offline'] + $semua['online'] + $semua['follow_up'] + $semua['lainnya'];
+        $sd18['total'] = $sd18['offline'] + $sd18['online'] + $sd18['follow_up'] + $sd18['lainnya'];
+
+        return $semua + ['sd_18' => $sd18];
+    }
+
+    /**
+     * Jumlah SPK unik per hari dengan log STATUS_CHANGE ke step terkait (log OTW_WORKSHOP/PREPARATION sering tercatat
+     * dobel, sehingga dihitung unik per SPK per hari). Setiap tanggal dari $start s.d. $end ikut, termasuk yang 0.
+     */
+    private static function arusGudangPerHari(Carbon $start, Carbon $end): array
+    {
+        $steps = "'".implode("', '", array_keys(self::ARUS_GUDANG))."'";
+        $data = [];
+        foreach (DB::select("SELECT DATE(created_at) AS tgl, step, COUNT(DISTINCT work_order_id) AS n
+                FROM work_order_logs
+                WHERE action = 'STATUS_CHANGE' AND step IN ($steps) AND created_at BETWEEN ? AND ?
+                GROUP BY DATE(created_at), step", [
+            $start->copy()->startOfDay()->toDateTimeString(), $end->copy()->endOfDay()->toDateTimeString(),
+        ]) as $r) {
+            $data[$r->tgl][self::ARUS_GUDANG[$r->step]] = (int) $r->n;
+        }
+
+        $perHari = [];
+        for ($d = $start->copy()->startOfDay(); $d->lte($end); $d->addDay()) {
+            $baris = ['tanggal' => $d->toDateString()];
+            foreach (self::ARUS_GUDANG as $key) {
+                $baris[$key] = $data[$d->toDateString()][$key] ?? 0;
+            }
+            $perHari[] = $baris;
+        }
+
+        return $perHari;
+    }
+
+    /** Kontrol Algoritma: jumlah SPK (tidak dihapus) per status saat request, apa pun tanggal yang diminta. */
+    private static function kontrolGudang(): array
+    {
+        $status = array_merge(self::STATUS_TERTAHAN, self::STATUS_BELUM_KIRIM, ['WAITING_VERIFICATION']);
+        $n = array_fill_keys($status, 0);
+        $in = "'".implode("', '", $status)."'";
+        foreach (DB::select("SELECT status, COUNT(*) AS n FROM work_orders
+                WHERE deleted_at IS NULL AND status IN ($in) GROUP BY status") as $r) {
+            $n[$r->status] = (int) $r->n;
+        }
+
+        $tertahan = array_intersect_key($n, array_flip(self::STATUS_TERTAHAN));
+        $tertahan['total'] = array_sum($tertahan);
+        $belumKirim = array_intersect_key($n, array_flip(self::STATUS_BELUM_KIRIM));
+        $belumKirim['total'] = $tertahan['total'] + array_sum($belumKirim);
+
+        return [
+            'diambil_pada' => now()->toDateTimeString(),
+            'tertahan' => $tertahan,
+            'belum_kirim' => $belumKirim,
+            'waiting_verification' => $n['WAITING_VERIFICATION'],
+        ];
+    }
+
     /** @return array{0: string, 1: string} awal dan akhir hari (WIB). */
     private static function range(Carbon $date): array
     {
