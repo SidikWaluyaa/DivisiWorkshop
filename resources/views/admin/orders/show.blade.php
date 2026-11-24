@@ -2452,13 +2452,16 @@
                     {{-- ✨ Stasiun Tambah Jasa (Non-OTO) Card & Modal --}}
                     @php
                         $activeTambahJasaItems = $order->additionalServices->where('status', 'IN_PROGRESS');
+                        $tambahJasaCategories = ($allServices ?? collect())->pluck('category')->filter()
+                            ->reject(fn ($c) => strcasecmp(trim($c), 'Custom') === 0)->unique()->values();
                     @endphp
                     <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border {{ $activeTambahJasaItems->isNotEmpty() ? 'border-teal-300 ring-2 ring-teal-500/15' : 'border-slate-200/80' }} overflow-hidden"
                          x-data="{
                             showTambahJasaModal: false,
                             masterServices: @js(($allServices ?? collect())->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'category' => $s->category, 'price' => (float) $s->price])->values()),
-                            categories: @js(($allServices ?? collect())->pluck('category')->filter()->unique()->values()->push('Custom')->values()),
-                            items: [{ category_name: @js(($allServices ?? collect())->pluck('category')->filter()->first() ?? 'Custom'), service_id: '', custom_service_name: '', cost: 0, notes_list: [''] }],
+                            {{-- 'Custom' (isi manual) ditambahkan sekali saja; kategori master bernama 'Custom' tidak boleh membuatnya dobel (key x-for duplikat membuat dropdown kosong). --}}
+                            categories: @js($tambahJasaCategories->push('Custom')->values()),
+                            items: [{ category_name: @js($tambahJasaCategories->first() ?? 'Custom'), service_id: '', custom_service_name: '', cost: 0, notes_list: [''] }],
                             filteredServices(cat) {
                                 if (!cat || cat === 'Custom') return [];
                                 return this.masterServices.filter(s => String(s.category) === String(cat));
@@ -2582,7 +2585,7 @@
                                                             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">1. Kategori (dari Master Services) *</label>
                                                             <select :name="'items[' + idx + '][category_name]'" x-model="row.category_name" @change="onSelectCategory(idx)" required class="w-full rounded-xl border-slate-200 text-xs font-semibold">
                                                                 <template x-for="cat in categories" :key="cat">
-                                                                    <option :value="cat" x-text="cat === 'Custom' ? '-- Custom / Manual --' : cat"></option>
+                                                                    <option :value="cat" :selected="cat === row.category_name" x-text="cat === 'Custom' ? '-- Custom / Manual --' : cat"></option>
                                                                 </template>
                                                             </select>
                                                         </div>
