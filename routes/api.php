@@ -102,6 +102,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/workshop-sync', 'App\Http\Controllers\Api\V1\WorkshopSyncController@index')
         ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
 
+    // Report Harian per divisi (InsightSW), read-only
+    Route::get('/daily-report', [\App\Http\Controllers\Api\V1\DailyReportController::class, 'index'])
+        ->middleware(\App\Http\Middleware\ApiKeyMiddleware::class);
+
     // Customer Portal Integration (Secure client API with throttling)
     Route::get('/customer-portal/orders', [\App\Http\Controllers\Api\V1\CustomerPortalApiController::class, 'getOrdersByPhone'])
         ->middleware([\App\Http\Middleware\ApiKeyMiddleware::class, 'throttle:60,1']);
