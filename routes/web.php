@@ -890,6 +890,7 @@ Route::post('/rnd-upload/{token}', [\App\Http\Controllers\RndProgressController:
 // Workshop Dedicated R&D Station Routes
 Route::prefix('workshop/rnd')->name('workshop.rnd.')->middleware(['auth'])->group(function () {
     Route::get('/', [\App\Http\Controllers\WorkshopRndController::class, 'index'])->name('index');
+    Route::get('/export-pdf', [\App\Http\Controllers\WorkshopRndController::class, 'exportPdf'])->name('export-pdf');
     Route::post('/{id}/start-research', [\App\Http\Controllers\WorkshopRndController::class, 'startResearch'])->name('start-research');
     Route::post('/{id}/stage', [\App\Http\Controllers\WorkshopRndController::class, 'updateStage'])->name('stage');
     Route::post('/{id}/technician', [\App\Http\Controllers\WorkshopRndController::class, 'assignTechnician'])->name('technician');

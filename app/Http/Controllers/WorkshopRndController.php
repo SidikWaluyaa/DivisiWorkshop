@@ -539,4 +539,135 @@ class WorkshopRndController extends Controller
         return redirect()->route('workshop.rnd.index', ['tab' => 'completed'])
             ->with('success', "Proyek Riset SPK #{$order->spk_number} telah berhasil diselesaikan.");
     }
+
+    /** Sub-stasiun yang ditampilkan di PDF: kolom prefix => [label, relasi teknisi]. */
+    private const PDF_SUB_STATIONS = [
+        'prep_washing' => ['Cuci (Washing)', 'prepWashingBy'],
+        'prep_sol' => ['Bongkar Sol', 'prepSolBy'],
+        'prep_upper' => ['Prep Upper', 'prepUpperBy'],
+        'prod_sol' => ['Reparasi Soling', 'prodSolBy'],
+        'prod_upper' => ['Reparasi Upper', 'prodUpperBy'],
+        'prod_cleaning' => ['Treatment / Repaint', 'prodCleaningBy'],
+        'qc_jahit' => ['QC Jahit', 'qcJahitBy'],
+        'qc_cleanup' => ['QC Cleanup', 'qcCleanupBy'],
+        'qc_final' => ['QC Final', 'qcFinalBy'],
+    ];
+
+    /**
+     * Export PDF laporan R&D: ringkasan, daftar SPK per kelompok (Pra-Riset, Riset Aktif, Selesai), dan rincian per SPK
+     * (jasa & biaya, teknisi per sub-stasiun, jurnal riset beserta foto, riwayat alur). Mengikuti filter search & stage.
+     */
+    public function exportPdf(Request $request)
+    {
+        $selectedStage = $request->get('stage', 'all');
+        $search = $request->get('search');
+
+        $groups = [
+            'monitoring' => [
+                'label' => 'Monitoring Pra-Riset (sebelum masuk workshop)',
+                'statuses' => [
+                    WorkOrderStatus::SPK_PENDING, WorkOrderStatus::DITERIMA, WorkOrderStatus::ASSESSMENT,
+                    WorkOrderStatus::WAITING_PAYMENT, WorkOrderStatus::WAITING_VERIFICATION,
+                    WorkOrderStatus::READY_TO_DISPATCH, WorkOrderStatus::OTW_WORKSHOP,
+                ],
+            ],
+            'active' => [
+                'label' => 'Riset Berjalan (Active WIP)',
+                'statuses' => [WorkOrderStatus::PREPARATION, WorkOrderStatus::SORTIR, WorkOrderStatus::PRODUCTION, WorkOrderStatus::QC],
+            ],
+            'completed' => [
+                'label' => 'Riwayat Selesai',
+                'statuses' => [WorkOrderStatus::SELESAI],
+            ],
+        ];
+
+        $with = [
+            'workOrderServices.service',
+            'rndProgresses.user',
+            'invoice',
+            'logs' => fn ($q) => $q->where(function ($q) {
+                $q->where('action', 'like', 'RND_%')->orWhere('action', 'STATUS_CHANGE');
+            })->orderBy('created_at'),
+        ];
+        foreach (self::PDF_SUB_STATIONS as [, $relation]) {
+            $with[] = $relation;
+        }
+
+        foreach ($groups as $key => &$group) {
+            $query = WorkOrder::onlyRnd()->whereIn('status', $group['statuses'])->with($with);
+            if ($key === 'active' && $selectedStage !== 'all') {
+                $query->where('status', $selectedStage);
+            }
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('spk_number', 'like', "%{$search}%")
+                        ->orWhere('customer_name', 'like', "%{$search}%")
+                        ->orWhere('shoe_brand', 'like', "%{$search}%")
+                        ->orWhere('shoe_type', 'like', "%{$search}%");
+                });
+            }
+            $group['orders'] = $query->orderBy($key === 'completed' ? 'finished_date' : 'created_at', 'desc')->get();
+
+            // Foto progres diperkecil di memori: foto asli (±900x1600) membuat dompdf sangat lambat.
+            foreach ($group['orders'] as $order) {
+                foreach ($order->rndProgresses as $progress) {
+                    $progress->setAttribute('pdf_photo', self::pdfThumbnail($progress->photo_path));
+                }
+            }
+        }
+        unset($group);
+
+        // Ringkasan per tahap dihitung dari data yang diekspor (mengikuti filter).
+        $active = $groups['active']['orders'];
+        $summary = [
+            'Pra-Riset' => $groups['monitoring']['orders']->count(),
+            'Riset Aktif' => $active->count(),
+            '1. Prep' => $active->filter(fn ($o) => $o->status === WorkOrderStatus::PREPARATION)->count(),
+            '2. Sortir' => $active->filter(fn ($o) => $o->status === WorkOrderStatus::SORTIR)->count(),
+            '3. Produksi' => $active->filter(fn ($o) => $o->status === WorkOrderStatus::PRODUCTION)->count(),
+            '4. QC Lab' => $active->filter(fn ($o) => $o->status === WorkOrderStatus::QC)->count(),
+            'Selesai' => $groups['completed']['orders']->count(),
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('workshop.rnd.export_pdf', [
+            'groups' => $groups,
+            'summary' => $summary,
+            'subStations' => self::PDF_SUB_STATIONS,
+            'filters' => ['search' => $search, 'stage' => $selectedStage],
+            'printedAt' => now(),
+            'printedBy' => Auth::user()?->name,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('Laporan_RnD_'.now()->format('Ymd_His').'.pdf');
+    }
+
+    /** Thumbnail JPEG (lebar maks. 240 px) sebagai data URI untuk PDF; null bila file tidak ada atau gagal dibaca. */
+    private static function pdfThumbnail(?string $photoPath): ?string
+    {
+        if (! $photoPath) {
+            return null;
+        }
+        $file = storage_path('app/public/'.$photoPath);
+        if (! is_file($file) || ! function_exists('imagecreatefromstring')) {
+            return null;
+        }
+
+        $src = @imagecreatefromstring((string) file_get_contents($file));
+        if (! $src) {
+            return null;
+        }
+        $w = imagesx($src);
+        $h = imagesy($src);
+        $tw = min(240, $w);
+        $th = max(1, (int) round($h * $tw / $w));
+        $dst = imagecreatetruecolor($tw, $th);
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $tw, $th, $w, $h);
+
+        ob_start();
+        imagejpeg($dst, null, 70);
+        $jpeg = ob_get_clean();
+        unset($src, $dst); // GdImage dibebaskan otomatis (imagedestroy sudah deprecated)
+
+        return 'data:image/jpeg;base64,'.base64_encode($jpeg);
+    }
 }

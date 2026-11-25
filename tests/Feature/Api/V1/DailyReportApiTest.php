@@ -268,13 +268,90 @@ it('menghitung blok gudang: sepatu masuk, arus harian, dan kontrol status', func
 
     $perHari = $g['bulan_ini']['per_hari'];
     expect($perHari)->toHaveCount(18)
-        ->and($perHari[0])->toBe(['tanggal' => '2026-11-01', 'before' => 0, 'print_spk' => 0, 'kirim_ws' => 0, 'diterima_ws' => 0])
-        ->and($perHari[1])->toBe(['tanggal' => '2026-11-02', 'before' => 1, 'print_spk' => 0, 'kirim_ws' => 0, 'diterima_ws' => 0])
-        ->and($perHari[17])->toBe(['tanggal' => '2026-11-18', 'before' => 2, 'print_spk' => 1, 'kirim_ws' => 1, 'diterima_ws' => 2]);
+        ->and($perHari[0])->toBe(['tanggal' => '2026-11-01', 'before' => 0, 'print_spk' => 0, 'kirim_ws' => 0, 'diterima_ws' => 0, 'otw_ws' => 0])
+        ->and($perHari[1])->toBe(['tanggal' => '2026-11-02', 'before' => 1, 'print_spk' => 0, 'kirim_ws' => 0, 'diterima_ws' => 0, 'otw_ws' => 0])
+        // otw_ws 0: log OTW di skenario ini tidak menyebut manifest MFST.
+        ->and($perHari[17])->toBe(['tanggal' => '2026-11-18', 'before' => 2, 'print_spk' => 1, 'kirim_ws' => 1, 'diterima_ws' => 2, 'otw_ws' => 0]);
 
     $k = $g['kontrol'];
     expect($k['tertahan'])->toBe(['DITERIMA' => 2, 'ASSESSMENT' => 1, 'WAITING_PAYMENT' => 1, 'total' => 4])
         ->and($k['belum_kirim'])->toBe(['READY_TO_DISPATCH' => 1, 'CX_FOLLOWUP' => 1, 'total' => 6])
         ->and($k['waiting_verification'])->toBe(1)
         ->and($k['diambil_pada'])->toBeString();
+});
+
+function gdKlaim(int $woId, string $status, string $at): void
+{
+    DB::table('warranty_claims')->insert([
+        'work_order_id' => $woId, 'customer_name' => 'Uji', 'customer_phone' => '0800', 'spk_number' => 'UJI',
+        'problem_description' => 'uji', 'problem_photo' => '[]', 'google_review_photo' => 'uji.jpg',
+        'status' => $status, 'created_at' => $at, 'updated_at' => $at,
+    ]);
+}
+
+it('menghitung key Tahap 3 di blok gudang: jenis SPK, OTW WS dari manifest, keluar, klaim, cancel', function () {
+    $reg = ['priority' => 'Reguler'];
+
+    // Sepatu masuk per jenis (18 Nov).
+    gdWo('UJI-T3-REG', 'PRODUCTION', '2026-11-18 09:00:00', $reg);
+    gdWo('UJI-T3-RND', 'PRODUCTION', '2026-11-18 10:00:00', ['priority' => 'R&D']);
+    gdWo('S-2611-01-0001-AB-GR', 'PRODUCTION', '2026-11-18 11:00:00', $reg);
+    gdWo('S-2611-01-0002-AB-GR', 'PRODUCTION', '2026-11-18 19:00:00', ['priority' => 'R&D']);   // GR + R&D → rnd, setelah 18.00
+    gdWo('S-2611-01-0003-AB-GR', 'BATAL', '2026-11-18 12:00:00', $reg);                        // batal
+
+    // Manifest gudang → workshop.
+    drManifest('MFST-20261118-AAA', '2026-11-18 17:05:00');
+    drManifest('MFST-20261118-DEL', '2026-11-18 17:30:00', '2026-11-18 18:00:00');
+    drManifest('MFST-20261117-BBB', '2026-11-17 16:00:00');
+    $via = fn ($m) => "Status berubah dari READY_TO_DISPATCH ke OTW_WORKSHOP. Note: Sent to Workshop Hijau via Manifest #{$m}";
+    [$a, $b, $c, $d, $e, $f, $g] = array_map(fn ($i) => gdWo('UJI-T3-W'.$i, 'PREPARATION', null, $reg), range(1, 7));
+    drLog($a, 'OTW_WORKSHOP', 'STATUS_CHANGE', '2026-11-18 17:05:16', $via('MFST-20261118-AAA'));
+    drLog($a, 'OTW_WORKSHOP', 'STATUS_CHANGE', '2026-11-18 17:05:19', $via('MFST-20261118-AAA'));   // dobel
+    drLog($b, 'OTW_WORKSHOP', 'STATUS_CHANGE', '2026-11-18 17:05:16', $via('MFST-20261118-AAA'));
+    drLog($c, 'LOGISTICS', 'ADDED_TO_MANIFEST', '2026-11-19 09:00:00', 'SPK ditambahkan ke Manifest #MFST-20261118-AAA oleh Super Admin (admin@workshop.com).');
+    drLog($d, 'OTW_WORKSHOP', 'STATUS_CHANGE', '2026-11-18 17:05:16', $via('MFST-20261118-AAA'));
+    drLog($d, 'LOGISTICS', 'REMOVED_FROM_MANIFEST', '2026-11-18 17:20:00', 'SPK dikeluarkan dari Manifest #MFST-20261118-AAA dan dikembalikan ke antrian siap kirim oleh Super Admin.');
+    drLog($e, 'OTW_WORKSHOP', 'STATUS_CHANGE', '2026-11-18 17:30:00', $via('MFST-20261118-DEL'));   // manifest dihapus
+    drLog($f, 'OTW_WORKSHOP', 'STATUS_CHANGE', '2026-11-17 16:00:00', $via('MFST-20261117-BBB'));
+    drLog($g, 'OTW_WORKSHOP', 'STATUS_CHANGE', '2026-11-18 15:00:00');                                // tanpa manifest
+
+    // Sepatu keluar.
+    gdWo('UJI-T3-K1', 'SELESAI', null, $reg + ['taken_date' => '2026-11-18 10:00:00']);
+    gdWo('UJI-T3-K2', 'SELESAI', null, $reg + ['taken_date' => '2026-11-18 16:00:00']);
+    gdWo('UJI-T3-K3', 'SELESAI', null, $reg + ['taken_date' => '2026-11-17 16:00:00']);
+    gdWo('UJI-T3-K4', 'SELESAI', null, $reg + ['taken_date' => '2026-11-18 16:00:00', 'deleted_at' => '2026-11-18 17:00:00']);
+
+    // Klaim garansi.
+    gdKlaim($a, 'PENDING', '2026-11-18 09:00:00');
+    gdKlaim($b, 'REJECTED', '2026-11-18 10:00:00');
+    gdKlaim($c, 'APPROVED', '2026-11-17 10:00:00');
+
+    // Cancel.
+    $x1 = gdWo('UJI-T3-X1', 'BATAL', null, $reg);
+    drLog($x1, 'BATAL', 'ORDER_CANCELLED', '2026-11-18 10:00:00');
+    drLog($x1, 'BATAL', 'STATUS_CHANGE', '2026-11-18 18:00:00');                                      // log kedua, tetap 1 SPK
+    drLog(gdWo('UJI-T3-X2', 'BATAL', null, $reg), 'BATAL', 'ORDER_CANCELLED', '2026-11-17 10:00:00');
+    drLog(gdWo('UJI-T3-X3', 'BATAL', null, $reg + ['deleted_at' => '2026-11-18 12:00:00']), 'BATAL', 'ORDER_CANCELLED', '2026-11-18 10:00:00');
+    drLog(gdWo('UJI-T3-X4', 'PRODUCTION', null, $reg), 'BATAL', 'ORDER_CANCELLED', '2026-11-18 11:00:00'); // sudah dipulihkan
+
+    $gd = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson(DR_URL.'?date=2026-11-18')->assertOk()->json('data.gudang');
+
+    expect($gd['sepatu_masuk_jenis'])->toBe([
+        'rnd' => 2, 'garansi' => 1, 'reguler' => 1, 'total' => 4,
+        'sd_18' => ['rnd' => 1, 'garansi' => 1, 'reguler' => 1, 'total' => 3],
+    ])->and($gd['sepatu_masuk_jenis']['total'])->toBe($gd['sepatu_masuk']['total']);
+
+    expect($gd['otw_ws'])->toBe(3)                     // a, b, c (d dikeluarkan, e manifest dihapus, g tanpa manifest)
+        ->and($gd['kirim_ws'])->toBe(5)                 // log OTW 18 Nov: a, b, d, e, g
+        ->and($gd['sepatu_keluar'])->toBe(2)
+        ->and($gd['klaim_garansi'])->toBe(2)
+        ->and($gd['cancel'])->toBe(1);
+
+    $perHari = collect($gd['bulan_ini']['per_hari'])->keyBy('tanggal');
+    expect($perHari['2026-11-17']['otw_ws'])->toBe(1)
+        ->and($perHari['2026-11-18']['otw_ws'])->toBe(3);
+
+    // Sebelum log pembatalan tercatat konsisten → null, bukan 0.
+    $juni = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson(DR_URL.'?date=2026-06-30')->assertOk()->json('data.gudang');
+    expect($juni)->toHaveKey('cancel')->and($juni['cancel'])->toBeNull();
 });
