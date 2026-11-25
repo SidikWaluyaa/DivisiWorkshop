@@ -191,6 +191,8 @@ class DailyReportQuery
     {
         $perHari = self::arusGudangPerHari($date->copy()->startOfMonth(), $date);
         $hariIni = end($perHari);
+        // Intake Fisik Kamus No. 32 (sama dengan Dashboard Gudang), dihitung sekali untuk garansi_masuk & intake_fisik.
+        $intakeFisik = KamusMetrikQuery::intakeFisik($date->copy()->startOfDay(), $date->copy()->endOfDay());
 
         return [
             'sepatu_masuk' => self::sepatuMasuk($date),
@@ -208,7 +210,13 @@ class DailyReportQuery
             'cancel' => self::cancel($date),
             // Tahap 4: sama dengan Intake Fisik Garansi Dashboard Gudang (Kamus No. 32): klaim garansi didaftarkan
             // + SPK -GR lama tanpa klaim menurut entry_date. Memanggil fungsi yang sama agar angkanya selalu identik.
-            'garansi_masuk' => KamusMetrikQuery::intakeFisik($date->copy()->startOfDay(), $date->copy()->endOfDay())['garansi'],
+            'garansi_masuk' => (int) $intakeFisik['garansi'],
+            // Tahap 5: seluruh Sepatu Masuk (berbayar/garansi/rd) mengikuti Intake Fisik Dashboard Gudang.
+            'intake_fisik' => [
+                'berbayar' => (int) $intakeFisik['berbayar'],
+                'garansi' => (int) $intakeFisik['garansi'],
+                'rd' => (int) $intakeFisik['rd'],
+            ],
         ];
     }
 
