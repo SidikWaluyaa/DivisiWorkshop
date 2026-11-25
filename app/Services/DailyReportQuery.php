@@ -200,6 +200,12 @@ class DailyReportQuery
             'diterima_ws' => $hariIni['diterima_ws'],
             'bulan_ini' => ['per_hari' => $perHari],
             'kontrol' => self::kontrolGudang(),
+            // Tahap 3 (revisi owner): key tambahan, key di atas tetap sama.
+            'sepatu_masuk_jenis' => self::sepatuMasukJenis($date),
+            'otw_ws' => $hariIni['otw_ws'],
+            'sepatu_keluar' => self::sepatuKeluar($date),
+            'klaim_garansi' => self::klaimGaransi($date),
+            'cancel' => self::cancel($date),
         ];
     }
 
@@ -249,17 +255,123 @@ class DailyReportQuery
         ]) as $r) {
             $data[$r->tgl][self::ARUS_GUDANG[$r->step]] = (int) $r->n;
         }
+        foreach (self::otwWsPerHari($start, $end) as $tgl => $n) {
+            $data[$tgl]['otw_ws'] = $n;
+        }
 
         $perHari = [];
         for ($d = $start->copy()->startOfDay(); $d->lte($end); $d->addDay()) {
             $baris = ['tanggal' => $d->toDateString()];
-            foreach (self::ARUS_GUDANG as $key) {
+            foreach ([...array_values(self::ARUS_GUDANG), 'otw_ws'] as $key) {
                 $baris[$key] = $data[$d->toDateString()][$key] ?? 0;
             }
             $perHari[] = $baris;
         }
 
         return $perHari;
+    }
+
+    /**
+     * SPK Print OTW WS = SPK unik dalam manifest gudang → workshop (MFST-*, bukan MNF-OUT-*) menurut tanggal manifest
+     * dikirim (dispatched_at). workshop_manifest_id ditimpa manifest outbound, jadi isi manifest dilacak dari log
+     * OTW_WORKSHOP ("Sent to Workshop Hijau via Manifest #MFST-…") dan ADDED_TO_MANIFEST; SPK yang kemudian
+     * dikeluarkan dari manifest yang sama (REMOVED_FROM_MANIFEST) tidak dihitung. Manifest yang dihapus tidak dihitung.
+     *
+     * @return array<string, int> tanggal => jumlah
+     */
+    private static function otwWsPerHari(Carbon $start, Carbon $end): array
+    {
+        $nomor = "SUBSTRING_INDEX(SUBSTRING_INDEX(l.description, '#', -1), ' ', 1)";
+        $out = [];
+        foreach (DB::select("SELECT DATE(m.dispatched_at) AS tgl, COUNT(DISTINCT l.work_order_id) AS n
+                FROM work_order_logs l
+                JOIN workshop_manifests m ON m.manifest_number = $nomor
+                WHERE ((l.action = 'STATUS_CHANGE' AND l.step = 'OTW_WORKSHOP') OR l.action = 'ADDED_TO_MANIFEST')
+                  AND l.description LIKE '%#MFST-%'
+                  AND m.deleted_at IS NULL AND m.manifest_number NOT LIKE 'MNF-OUT-%'
+                  AND m.dispatched_at BETWEEN ? AND ?
+                  AND NOT EXISTS (
+                        SELECT 1 FROM work_order_logs r
+                        WHERE r.work_order_id = l.work_order_id AND r.action = 'REMOVED_FROM_MANIFEST'
+                          AND r.description LIKE CONCAT('%#', m.manifest_number, ' %')
+                  )
+                GROUP BY DATE(m.dispatched_at)", [
+            $start->copy()->startOfDay()->toDateTimeString(), $end->copy()->endOfDay()->toDateTimeString(),
+        ]) as $r) {
+            $out[$r->tgl] = (int) $r->n;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Sepatu masuk per jenis SPK (basis sama dengan sepatuMasuk()): R&D (priority R&D), garansi (SPK -GR, kecuali
+     * yang sekaligus R&D), dan reguler.
+     */
+    private static function sepatuMasukJenis(Carbon $date): array
+    {
+        [$s, $e] = self::range($date);
+        $gr = WarehouseMomQuery::gr('w');
+        $kosong = ['rnd' => 0, 'garansi' => 0, 'reguler' => 0, 'total' => 0];
+        $semua = $kosong;
+        $sd18 = $kosong;
+
+        foreach (DB::select("SELECT CASE WHEN w.priority = 'R&D' THEN 'rnd' WHEN $gr THEN 'garansi' ELSE 'reguler' END AS jenis,
+                    COUNT(*) AS n, COALESCE(SUM(TIME(w.entry_date) < '18:00:00'), 0) AS n18
+                FROM work_orders w
+                WHERE w.deleted_at IS NULL AND w.status <> 'BATAL' AND w.entry_date BETWEEN ? AND ?
+                GROUP BY jenis", [$s, $e]) as $r) {
+            $semua[$r->jenis] = (int) $r->n;
+            $sd18[$r->jenis] = (int) $r->n18;
+        }
+        $semua['total'] = $semua['rnd'] + $semua['garansi'] + $semua['reguler'];
+        $sd18['total'] = $sd18['rnd'] + $sd18['garansi'] + $sd18['reguler'];
+
+        return $semua + ['sd_18' => $sd18];
+    }
+
+    /** Sepatu keluar gudang ke customer = taken_date pada tanggal itu (sama dengan sepatu_keluar_detail.total MoM Gudang). */
+    private static function sepatuKeluar(Carbon $date): int
+    {
+        [$s, $e] = self::range($date);
+
+        return (int) DB::selectOne('SELECT COUNT(*) AS n FROM work_orders
+            WHERE deleted_at IS NULL AND taken_date BETWEEN ? AND ?', [$s, $e])->n;
+    }
+
+    /**
+     * Klaim garansi masuk = klaim dari portal customer (warranty_claims) yang dibuat pada tanggal itu, apa pun statusnya
+     * (PENDING/APPROVED/REJECTED). Setiap SPK garansi (work_order_warranties) berasal dari klaim yang disetujui di sini.
+     */
+    private static function klaimGaransi(Carbon $date): int
+    {
+        [$s, $e] = self::range($date);
+
+        return (int) DB::selectOne('SELECT COUNT(*) AS n FROM warranty_claims WHERE created_at BETWEEN ? AND ?', [$s, $e])->n;
+    }
+
+    /** Log pembatalan (BATAL STATUS_CHANGE/ORDER_CANCELLED) baru tercatat konsisten sejak tanggal ini. */
+    private const LOG_BATAL_SEJAK = '2026-07-04';
+
+    /**
+     * Cancel = SPK berstatus BATAL (tidak dihapus) yang log pembatalan pertamanya jatuh pada tanggal itu.
+     * Sebelum LOG_BATAL_SEJAK tidak ada penanda waktu batal yang bisa dipercaya → null.
+     */
+    private static function cancel(Carbon $date): ?int
+    {
+        if ($date->lt(Carbon::parse(self::LOG_BATAL_SEJAK)->startOfDay())) {
+            return null;
+        }
+        [$s, $e] = self::range($date);
+
+        return (int) DB::selectOne("SELECT COUNT(*) AS n FROM (
+                SELECT w.id, MIN(l.created_at) AS batal_at
+                FROM work_orders w
+                JOIN work_order_logs l ON l.work_order_id = w.id
+                    AND l.step IN ('BATAL', 'CANCELLED') AND l.action IN ('STATUS_CHANGE', 'ORDER_CANCELLED')
+                WHERE w.deleted_at IS NULL AND w.status IN ('BATAL', 'CANCELLED')
+                GROUP BY w.id
+            ) x WHERE x.batal_at BETWEEN ? AND ?", [$s, $e])->n;
     }
 
     /** Kontrol Algoritma: jumlah SPK (tidak dihapus) per status saat request, apa pun tanggal yang diminta. */
