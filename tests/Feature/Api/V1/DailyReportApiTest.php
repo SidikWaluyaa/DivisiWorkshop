@@ -355,3 +355,24 @@ it('menghitung key Tahap 3 di blok gudang: jenis SPK, OTW WS dari manifest, kelu
     $juni = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson(DR_URL.'?date=2026-06-30')->assertOk()->json('data.gudang');
     expect($juni)->toHaveKey('cancel')->and($juni['cancel'])->toBeNull();
 });
+
+it('garansi_masuk sama dengan Intake Fisik Garansi Kamus No. 32 (Dashboard Gudang)', function () {
+    $asal = gdWo('S-2611-02-0001-AB', 'SELESAI', null, ['priority' => 'Reguler']);
+    // Klaim didaftarkan 18 Nov (SPK -GR-nya baru dibuat & masuk 25 Nov) → dihitung pada 18 Nov.
+    DB::table('work_order_warranties')->insert([
+        'work_order_id' => $asal, 'garansi_spk_number' => 'S-2611-02-0001-AB-GR', 'status' => 'PENDING',
+        'description' => 'uji', 'created_by' => \App\Models\User::factory()->create()->id,
+        'created_at' => '2026-11-18 10:00:00', 'updated_at' => '2026-11-18 10:00:00',
+    ]);
+    gdWo('S-2611-02-0001-AB-GR', 'PRODUCTION', '2026-11-25 09:00:00', ['priority' => 'Reguler']);
+    gdWo('S-2611-02-0002-AB-GR', 'PRODUCTION', '2026-11-18 11:00:00', ['priority' => 'Reguler']);   // -GR lama tanpa klaim
+    gdWo('S-2611-02-0003-AB-GR', 'PRODUCTION', '2026-11-17 11:00:00', ['priority' => 'Reguler']);   // hari lain
+
+    $gd = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson(DR_URL.'?date=2026-11-18')->assertOk()->json('data.gudang');
+
+    $kamus = \App\Services\KamusMetrikQuery::intakeFisik(
+        \Carbon\Carbon::parse('2026-11-18')->startOfDay(), \Carbon\Carbon::parse('2026-11-18')->endOfDay()
+    )['garansi'];
+    expect($gd['garansi_masuk'])->toBe(2)->and($gd['garansi_masuk'])->toBe($kamus)
+        ->and($gd['sepatu_masuk_jenis']['garansi'])->toBe(1);   // key Tahap 3 tidak berubah
+});

@@ -206,6 +206,9 @@ class DailyReportQuery
             'sepatu_keluar' => self::sepatuKeluar($date),
             'klaim_garansi' => self::klaimGaransi($date),
             'cancel' => self::cancel($date),
+            // Tahap 4: sama dengan Intake Fisik Garansi Dashboard Gudang (Kamus No. 32): klaim garansi didaftarkan
+            // + SPK -GR lama tanpa klaim menurut entry_date. Memanggil fungsi yang sama agar angkanya selalu identik.
+            'garansi_masuk' => KamusMetrikQuery::intakeFisik($date->copy()->startOfDay(), $date->copy()->endOfDay())['garansi'],
         ];
     }
 
