@@ -45,6 +45,19 @@
                            class="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-700 font-bold" title="Reset pencarian">✕</a>
                     @endif
                 </form>
+
+                {{-- Export PDF: ringkasan + rincian semua SPK R&D, mengikuti pencarian & filter tahap --}}
+                <a href="{{ route('workshop.rnd.export-pdf', array_filter(['stage' => $selectedStage, 'search' => $search])) }}"
+                   class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#22B086] hover:bg-[#1C8D6C] text-white text-xs font-black shadow-sm transition-all whitespace-nowrap"
+                   title="Unduh laporan PDF semua SPK R&D (ringkasan, jasa, teknisi, jurnal riset, riwayat)"
+                   x-data="{ loading: false }"
+                   @click="if (loading) { $event.preventDefault(); return; } loading = true; setTimeout(() => loading = false, 40000)"
+                   :class="loading ? 'opacity-70 cursor-wait' : ''">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3M6 20h12a2 2 0 002-2V8.828a2 2 0 00-.586-1.414l-4.828-4.828A2 2 0 0013.172 2H6a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    <span x-text="loading ? 'Menyiapkan PDF… (±30 detik)' : 'Export PDF'">Export PDF</span>
+                </a>
             </div>
         </div>
     </div>
