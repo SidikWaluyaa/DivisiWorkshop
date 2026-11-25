@@ -376,3 +376,21 @@ it('garansi_masuk sama dengan Intake Fisik Garansi Kamus No. 32 (Dashboard Gudan
     expect($gd['garansi_masuk'])->toBe(2)->and($gd['garansi_masuk'])->toBe($kamus)
         ->and($gd['sepatu_masuk_jenis']['garansi'])->toBe(1);   // key Tahap 3 tidak berubah
 });
+
+it('intake_fisik = hasil lengkap Intake Fisik Kamus No. 32 dan konsisten dengan garansi_masuk', function () {
+    $qc = ['warehouse_qc_status' => 'lolos', 'warehouse_qc_at' => '2026-11-18 10:00:00'];
+    gdWo('S-2611-03-0001-AB', 'ASSESSMENT', '2026-11-17 09:00:00', ['priority' => 'Reguler'] + $qc);   // berbayar
+    gdWo('S-2611-03-0002-AB', 'ASSESSMENT', '2026-11-18 09:00:00', ['priority' => 'Reguler'] + $qc);   // berbayar
+    gdWo('RD-2611-18-0001-AB', 'ASSESSMENT', '2026-11-18 09:00:00', ['priority' => 'R&D'] + $qc);      // rd
+    gdWo('S-2611-03-0003-AB', 'ASSESSMENT', '2026-11-18 09:00:00', ['priority' => 'Reguler']);          // belum QC gudang
+    gdWo('S-2611-03-0004-AB-GR', 'PRODUCTION', '2026-11-18 11:00:00', ['priority' => 'Reguler']);      // garansi tanpa klaim
+
+    $gd = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson(DR_URL.'?date=2026-11-18')->assertOk()->json('data.gudang');
+
+    $kamus = \App\Services\KamusMetrikQuery::intakeFisik(
+        \Carbon\Carbon::parse('2026-11-18')->startOfDay(), \Carbon\Carbon::parse('2026-11-18')->endOfDay()
+    );
+    expect($gd['intake_fisik'])->toBe(['berbayar' => 2, 'garansi' => 1, 'rd' => 1])
+        ->and($gd['intake_fisik'])->toBe(array_map('intval', $kamus))
+        ->and($gd['garansi_masuk'])->toBe($gd['intake_fisik']['garansi']);
+});
