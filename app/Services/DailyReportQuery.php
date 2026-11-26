@@ -542,6 +542,56 @@ class DailyReportQuery
         ];
     }
 
+    /** Status WIP aktif di Workshop untuk metrik Sisa Hutang SPK (posisi saat request). */
+    private const STATUS_HUTANG_WS = ['SORTIR', 'PRODUCTION', 'QC'];
+
+    /**
+     * Blok Workshop / Ringkasan WS (Tahap 7).
+     * Rentang bulan berjalan = tanggal 1 bulan $date 00:00:00 s.d. akhir hari $date 23:59:59 WIB.
+     * masuk_reguler_bulan & keluar_sol_upper_bulan mengecualikan BATAL, R&D, dan SPK garansi (-GR / GR-);
+     * is_warranty tidak dipakai karena menandakan hak garansi pada SPK reguler.
+     * hutang = WIP aktif saat request (non-R&D, status SORTIR/PRODUCTION/QC), pola sama dengan gudang.kontrol.
+     */
+    public static function workshop(Carbon $date): array
+    {
+        [$s, $e] = self::range($date);
+        $ms = $date->copy()->startOfMonth()->toDateTimeString();
+        $bukanGr = 'NOT ('.WarehouseMomQuery::gr('w')." OR w.spk_number LIKE 'GR-%')";
+        $reguler = "w.deleted_at IS NULL AND w.status <> 'BATAL' AND COALESCE(w.priority, '') <> 'R&D' AND $bukanGr";
+
+        $agregat = DB::selectOne("SELECT
+                (SELECT COUNT(*) FROM work_orders w WHERE $reguler AND w.entry_date BETWEEN ? AND ?) AS masuk_reguler_bulan,
+                (SELECT COUNT(*) FROM work_orders w WHERE $reguler AND w.prod_sol_completed_at BETWEEN ? AND ?) AS sol_bulan,
+                (SELECT COUNT(*) FROM work_orders w WHERE $reguler AND w.prod_upper_completed_at BETWEEN ? AND ?) AS upper_bulan,
+                (SELECT COUNT(*) FROM work_orders w WHERE w.deleted_at IS NULL AND w.status <> 'BATAL' AND w.prod_upper_completed_at BETWEEN ? AND ?) AS keluar_upper,
+                (SELECT COUNT(*) FROM work_orders w WHERE w.deleted_at IS NULL AND w.status <> 'BATAL' AND w.prod_sol_completed_at BETWEEN ? AND ?) AS keluar_sol",
+            [$ms, $e, $ms, $e, $ms, $e, $s, $e, $s, $e]
+        );
+
+        $hutang = array_fill_keys(self::STATUS_HUTANG_WS, 0);
+        $in = "'".implode("', '", self::STATUS_HUTANG_WS)."'";
+        foreach (DB::select("SELECT status, COUNT(*) AS n FROM work_orders
+                WHERE deleted_at IS NULL AND COALESCE(priority, '') <> 'R&D' AND status IN ($in)
+                GROUP BY status") as $r) {
+            $hutang[$r->status] = (int) $r->n;
+        }
+
+        return [
+            'masuk_reguler_bulan' => (int) $agregat->masuk_reguler_bulan,
+            'keluar_fisik_bulan' => self::sepatuKeluarWs($ms, $e),
+            'keluar_sol_upper_bulan' => (int) $agregat->sol_bulan + (int) $agregat->upper_bulan,
+            'keluar_upper' => (int) $agregat->keluar_upper,
+            'keluar_sol' => (int) $agregat->keluar_sol,
+            'hutang' => [
+                'diambil_pada' => now()->toDateTimeString(),
+                'SORTIR' => $hutang['SORTIR'],
+                'PRODUCTION' => $hutang['PRODUCTION'],
+                'QC' => $hutang['QC'],
+                'total' => $hutang['SORTIR'] + $hutang['PRODUCTION'] + $hutang['QC'],
+            ],
+        ];
+    }
+
     /** @return array{0: string, 1: string} awal dan akhir hari (WIB). */
     private static function range(Carbon $date): array
     {

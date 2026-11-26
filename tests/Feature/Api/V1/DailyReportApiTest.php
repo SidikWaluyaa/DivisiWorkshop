@@ -181,7 +181,7 @@ it('menghitung semua blok report harian', function () {
     expect($d['tanggal'])->toBe('2026-11-19')
         ->and(array_keys($d))->toBe([
             'tanggal', 'dibuat_pada', 'cs', 'oto', 'tambah_jasa', 'qc_after', 'pendukung', 'gudang',
-            'followup', 'garansi', 'komplain',
+            'followup', 'garansi', 'komplain', 'workshop',
         ]);
 
     $cs = $d['cs'];
@@ -504,4 +504,49 @@ it('menghitung blok CC Tahap 6: tambah_jasa.bulan_ini, followup, garansi, dan ko
 
     expect($d['garansi'])->toBe(['pending' => 2, 'disetujui' => 1, 'ditolak' => 1, 'total' => 4]);
     expect($d['komplain'])->toBe(['total' => 5, 'pending' => 2, 'diproses' => 1, 'selesai' => 1]);
+});
+
+it('menghitung blok workshop Tahap 7: masuk/keluar bulan berjalan, keluar harian, dan hutang WIP', function () {
+    $reg = ['priority' => 'Reguler'];
+
+    // Masuk reguler bulan berjalan (1-24 Nov): 2 valid (termasuk is_warranty=1 reguler), sisanya dikecualikan.
+    $w1 = gdWo('S-2611-05-0001-AB', 'SORTIR', '2026-11-05 09:00:00', $reg + [
+        'is_warranty' => 1, 'prod_sol_completed_at' => '2026-11-24 10:00:00', 'prod_upper_completed_at' => '2026-11-24 11:00:00',
+    ]);
+    $w2 = gdWo('S-2611-24-0002-AB', 'PRODUCTION', '2026-11-24 10:00:00', $reg + [
+        'prod_sol_completed_at' => '2026-11-20 14:00:00',
+    ]);
+    // Dikecualikan dari masuk_reguler_bulan & keluar_sol_upper_bulan:
+    $wGr1 = gdWo('S-2611-10-0003-AB-GR', 'QC', '2026-11-10 09:00:00', $reg + [
+        'prod_sol_completed_at' => '2026-11-24 12:00:00', // tetap dihitung di keluar_sol harian
+    ]);
+    gdWo('GR-2611-11-0004-AB', 'QC', '2026-11-11 09:00:00', $reg + ['prod_upper_completed_at' => '2026-11-24 13:00:00']);
+    gdWo('RD-2611-12-0005-AB', 'PRODUCTION', '2026-11-12 09:00:00', ['priority' => 'R&D', 'prod_sol_completed_at' => '2026-11-24 14:00:00']);
+    gdWo('S-2611-13-0006-AB', 'BATAL', '2026-11-13 09:00:00', $reg + ['prod_sol_completed_at' => '2026-11-24 15:00:00']);
+    gdWo('S-2611-14-0007-AB', 'SORTIR', '2026-11-14 09:00:00', $reg + ['deleted_at' => '2026-11-15 00:00:00']);
+    gdWo('S-2610-31-0008-AB', 'SELESAI', '2026-10-31 09:00:00', $reg + ['prod_sol_completed_at' => '2026-10-31 15:00:00']);
+    gdWo('S-2611-25-0009-AB', 'PREPARATION', '2026-11-25 09:00:00', $reg); // setelah 24 Nov, bukan status hutang
+
+    // Keluar fisik (MNF-OUT) 1-24 Nov: w1 & w2 valid, manifest dihapus tidak dihitung, bulan lalu tidak dihitung.
+    drManifest('MNF-OUT-20261124-AAA', '2026-11-24 16:00:00');
+    drManifest('MNF-OUT-20261124-DEL', '2026-11-24 16:30:00', '2026-11-24 17:00:00');
+    $desc = fn ($m) => "Diterbitkan dalam Manifest Outbound #{$m} oleh uji";
+    drLog($w1, 'OUTBOUND_QC', 'MANIFEST_GENERATED', '2026-11-10 16:00:00', $desc('MNF-OUT-20261124-AAA'));
+    drLog($w2, 'OUTBOUND_QC', 'MANIFEST_GENERATED', '2026-11-24 16:00:00', $desc('MNF-OUT-20261124-AAA'));
+    drLog($w2, 'OUTBOUND_QC', 'MANIFEST_GENERATED', '2026-11-24 16:00:05', $desc('MNF-OUT-20261124-AAA')); // dobel hari sama
+    drLog($wGr1, 'OUTBOUND_QC', 'MANIFEST_GENERATED', '2026-11-24 16:30:00', $desc('MNF-OUT-20261124-DEL')); // manifest dihapus
+    drLog($w1, 'OUTBOUND_QC', 'MANIFEST_GENERATED', '2026-10-31 16:00:00', $desc('MNF-OUT-20261124-AAA')); // bulan lalu
+
+    $ws = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson(DR_URL.'?date=2026-11-24')->assertOk()->json('data.workshop');
+
+    expect($ws['masuk_reguler_bulan'])->toBe(2)
+        ->and($ws['keluar_fisik_bulan'])->toBe(2)
+        ->and($ws['keluar_sol_upper_bulan'])->toBe(3) // w1 sol+upper (2) + w2 sol (1)
+        ->and($ws['keluar_sol'])->toBe(3)             // 24 Nov non-BATAL: w1 + wGr1 + RD
+        ->and($ws['keluar_upper'])->toBe(2)           // 24 Nov non-BATAL: w1 + GR-
+        ->and($ws['hutang']['SORTIR'])->toBe(1)       // w1 (w deleted excluded)
+        ->and($ws['hutang']['PRODUCTION'])->toBe(1)   // w2 (RD excluded)
+        ->and($ws['hutang']['QC'])->toBe(2)           // wGr1 + GR-
+        ->and($ws['hutang']['total'])->toBe(4)
+        ->and($ws['hutang']['diambil_pada'])->toBeString();
 });

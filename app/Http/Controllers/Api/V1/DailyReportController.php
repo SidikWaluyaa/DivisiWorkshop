@@ -26,6 +26,8 @@ class DailyReportController extends Controller
         'followup' => 'followup',
         'garansi' => 'garansi',
         'komplain' => 'komplain',
+        // Tahap 7: blok Workshop / Ringkasan WS
+        'workshop' => 'workshop',
     ];
 
     public function index(Request $request): JsonResponse
