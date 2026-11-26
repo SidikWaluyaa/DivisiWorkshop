@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Report Harian per divisi untuk InsightSW (GET /api/v1/daily-report). Hanya SELECT agregat.
@@ -113,7 +114,23 @@ class DailyReportQuery
     public static function tambahJasa(Carbon $date): array
     {
         [$s, $e] = self::range($date);
+        $out = self::tambahJasaRange($s, $e);
 
+        // Tahap 6: akumulasi tanggal 1 s.d. $date dengan rumus yang sama. Bila gagal, key harian tetap dikirim.
+        try {
+            $out['bulan_ini'] = self::tambahJasaRange($date->copy()->startOfMonth()->toDateTimeString(), $e);
+        } catch (\Throwable $ex) {
+            Log::error('daily-report: tambah_jasa.bulan_ini gagal dihitung', [
+                'tanggal' => $date->toDateString(),
+                'error' => $ex->getMessage(),
+            ]);
+        }
+
+        return $out;
+    }
+
+    private static function tambahJasaRange(string $s, string $e): array
+    {
         $r = DB::selectOne("SELECT COUNT(DISTINCT s.work_order_id) AS spk, COUNT(*) AS jasa, COALESCE(SUM(s.cost), 0) AS nominal
             FROM work_order_services s
             WHERE s.created_at BETWEEN ? AND ?
@@ -406,6 +423,122 @@ class DailyReportQuery
             'tertahan' => $tertahan,
             'belum_kirim' => $belumKirim,
             'waiting_verification' => $n['WAITING_VERIFICATION'],
+        ];
+    }
+
+    /** Status work order yang tampil di tabel "Butuh Follow Up" modul CX. */
+    private const STATUS_BUTUH_FOLLOWUP = "('CX_FOLLOWUP', 'HOLD_FOR_CX')";
+
+    /**
+     * Blok Follow Up CX (Tahap 6). masuk/resolve/riwayat menurut tanggal created_at/resolved_at.
+     * butuh_followup: hari ini = isi tabel "Butuh Follow Up" saat request (SPK tidak dihapus berstatus CX_FOLLOWUP /
+     * HOLD_FOR_CX); tanggal lampau = rumus kpi.open /cx-summary?start=date&end=date (SPK yang kini masih di status itu
+     * dan issue-nya dibuat pada tanggal tersebut). Riwayat status work order tidak disimpan, jadi posisi lampau tidak
+     * bisa direkonstruksi persis.
+     */
+    public static function followup(Carbon $date): array
+    {
+        [$s, $e] = self::range($date);
+
+        if ($date->isSameDay(now())) {
+            $butuh = DB::selectOne('SELECT COUNT(*) AS n FROM work_orders
+                WHERE deleted_at IS NULL AND status IN '.self::STATUS_BUTUH_FOLLOWUP)->n;
+        } else {
+            $butuh = DB::selectOne('SELECT COUNT(*) AS n FROM work_orders w
+                WHERE w.deleted_at IS NULL AND w.status IN '.self::STATUS_BUTUH_FOLLOWUP.'
+                  AND (
+                        EXISTS (SELECT 1 FROM cx_issues c WHERE c.work_order_id = w.id AND c.created_at BETWEEN ? AND ?)
+                     OR (NOT EXISTS (SELECT 1 FROM cx_issues c WHERE c.work_order_id = w.id) AND w.updated_at BETWEEN ? AND ?)
+                  )', [$s, $e, $s, $e])->n;
+        }
+
+        $masuk = DB::selectOne('SELECT COUNT(*) AS n FROM cx_issues WHERE created_at BETWEEN ? AND ?', [$s, $e])->n;
+
+        $riwayat = DB::select("SELECT c.spk_number, c.customer_name, c.source, c.category,
+                    c.kendala, c.kendala_1, c.description,
+                    c.opsi_solusi, c.opsi_solusi_1,
+                    c.resolution_type, c.resolution_notes, c.resolution,
+                    u.name AS pic, DATE_FORMAT(c.resolved_at, '%H.%i') AS waktu
+                FROM cx_issues c
+                LEFT JOIN users u ON u.id = c.resolved_by
+                WHERE c.status = 'RESOLVED' AND c.resolved_at BETWEEN ? AND ?
+                ORDER BY c.resolved_at DESC", [$s, $e]);
+
+        $tipe = array_count_values(array_map(fn ($r) => (string) $r->resolution_type, $riwayat));
+
+        return [
+            'butuh_followup' => (int) $butuh,
+            'masuk' => (int) $masuk,
+            'resolve' => count($riwayat),
+            'resolve_tambah_jasa' => (int) ($tipe['tambah_jasa'] ?? 0),
+            'resolve_lanjut' => (int) ($tipe['lanjut'] ?? 0),
+            'riwayat_resolusi' => array_map(fn ($r) => [
+                'spk' => $r->spk_number,
+                'customer' => $r->customer_name,
+                'source' => $r->source,
+                'category' => $r->category,
+                'kendala' => self::firstText($r->kendala, $r->kendala_1, $r->description),
+                'opsi_solusi' => self::firstText($r->opsi_solusi, $r->opsi_solusi_1),
+                'tipe' => $r->resolution_type,
+                'catatan' => self::firstText($r->resolution_notes, $r->resolution),
+                'pic' => $r->pic,
+                'waktu' => $r->waktu,
+            ], $riwayat),
+        ];
+    }
+
+    /** Ambil teks pertama yang tidak kosong setelah trim (membuang spasi/CR/LF berlebih). */
+    private static function firstText(?string ...$values): ?string
+    {
+        foreach ($values as $v) {
+            if ($v !== null && ($trimmed = trim($v)) !== '') {
+                return $trimmed;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Blok Garansi (Inbox Klaim Garansi Mandiri, Tahap 6).
+     * pending = klaim yang masih menunggu di akhir hari $date (dibuat ≤ akhir hari dan belum diproses saat itu);
+     * untuk hari ini sama dengan tab PENDING. disetujui/ditolak = klaim yang diproses (processed_at) pada tanggal itu.
+     */
+    public static function garansi(Carbon $date): array
+    {
+        [$s, $e] = self::range($date);
+
+        $r = DB::selectOne("SELECT
+                COALESCE(SUM(created_at <= ? AND (status = 'PENDING' OR processed_at > ?)), 0) AS pending,
+                COALESCE(SUM(status = 'APPROVED' AND processed_at BETWEEN ? AND ?), 0) AS disetujui,
+                COALESCE(SUM(status = 'REJECTED' AND processed_at BETWEEN ? AND ?), 0) AS ditolak
+            FROM warranty_claims", [$e, $e, $s, $e, $s, $e]);
+
+        $out = ['pending' => (int) $r->pending, 'disetujui' => (int) $r->disetujui, 'ditolak' => (int) $r->ditolak];
+
+        return $out + ['total' => $out['pending'] + $out['disetujui'] + $out['ditolak']];
+    }
+
+    /**
+     * Blok Komplain (kartu ringkasan halaman Keluhan & Janji Temu, Tahap 6): kasus aktif yang dibuat ≤ akhir hari $date,
+     * menurut status saat ini (riwayat perubahan status tidak disimpan). Untuk hari ini identik dengan kartu di halaman.
+     * total mencakup semua status termasuk REJECTED, sama seperti kartu TOTAL KASUS.
+     */
+    public static function komplain(Carbon $date): array
+    {
+        [, $e] = self::range($date);
+
+        $r = DB::selectOne("SELECT COUNT(*) AS total,
+                COALESCE(SUM(status = 'PENDING'), 0) AS pending,
+                COALESCE(SUM(status = 'PROCESS'), 0) AS diproses,
+                COALESCE(SUM(status = 'RESOLVED'), 0) AS selesai
+            FROM complaints WHERE deleted_at IS NULL AND created_at <= ?", [$e]);
+
+        return [
+            'total' => (int) $r->total,
+            'pending' => (int) $r->pending,
+            'diproses' => (int) $r->diproses,
+            'selesai' => (int) $r->selesai,
         ];
     }
 

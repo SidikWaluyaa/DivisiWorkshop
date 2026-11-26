@@ -179,7 +179,10 @@ it('menghitung semua blok report harian', function () {
     $d = $res->json('data');
 
     expect($d['tanggal'])->toBe('2026-11-19')
-        ->and(array_keys($d))->toBe(['tanggal', 'dibuat_pada', 'cs', 'oto', 'tambah_jasa', 'qc_after', 'pendukung', 'gudang']);
+        ->and(array_keys($d))->toBe([
+            'tanggal', 'dibuat_pada', 'cs', 'oto', 'tambah_jasa', 'qc_after', 'pendukung', 'gudang',
+            'followup', 'garansi', 'komplain',
+        ]);
 
     $cs = $d['cs'];
     expect(array_sum($cs['closing_per_jam']))->toBe(6)
@@ -202,7 +205,10 @@ it('menghitung semua blok report harian', function () {
         ],
     ]);
 
-    expect($d['tambah_jasa'])->toBe(['spk' => 2, 'jasa' => 3, 'nominal' => 225000]);
+    expect($d['tambah_jasa'])->toBe([
+        'spk' => 2, 'jasa' => 3, 'nominal' => 225000,
+        'bulan_ini' => ['spk' => 2, 'jasa' => 4, 'nominal' => 265000],
+    ]);
     expect($d['qc_after'])->toBe(['after' => 2, 'sudah_qc' => 1]);
     expect($d['pendukung'])->toBe(['cuci' => 2, 'clean_up' => 1, 'jahit_sol' => 0, 'bongkar_sol' => 1, 'bongkar_upper' => 1]);
 });
@@ -393,4 +399,109 @@ it('intake_fisik = hasil lengkap Intake Fisik Kamus No. 32 dan konsisten dengan 
     expect($gd['intake_fisik'])->toBe(['berbayar' => 2, 'garansi' => 1, 'rd' => 1])
         ->and($gd['intake_fisik'])->toBe(array_map('intval', $kamus))
         ->and($gd['garansi_masuk'])->toBe($gd['intake_fisik']['garansi']);
+});
+
+it('menghitung blok CC Tahap 6: tambah_jasa.bulan_ini, followup, garansi, dan komplain', function () {
+    $pic = \App\Models\User::factory()->create(['name' => 'Sandi']);
+
+    // Tambah jasa lintas tanggal (bulan lalu tidak masuk bulan_ini, tanggal sesudahnya tidak masuk).
+    $w1 = gdWo('UJI-CC-1', 'PRODUCTION');
+    $w2 = gdWo('UJI-CC-2', 'CX_FOLLOWUP');
+    $w3 = gdWo('UJI-CC-3', 'HOLD_FOR_CX');
+    $w4 = gdWo('UJI-CC-4', 'CX_FOLLOWUP', null, ['deleted_at' => '2026-11-25 10:00:00']);
+    $w5 = gdWo('UJI-CC-5', 'PRODUCTION');
+
+    drService($w1, 100000, '2026-10-31 15:00:00', ['is_tambah_jasa' => true]); // bulan lalu
+    drService($w1, 120000, '2026-11-05 10:00:00', ['is_tambah_jasa' => true]); // bulan ini
+    drService($w1, 80000, '2026-11-25 11:00:00', ['is_cx_additional' => true]); // hari ini (SPK sama)
+    drService($w2, 50000, '2026-11-25 12:00:00', ['is_tambah_jasa' => true]);   // hari ini
+    drService($w5, 90000, '2026-11-26 09:00:00', ['is_tambah_jasa' => true]);   // besok
+
+    // Follow up CX (cx_issues).
+    $issue = fn (int $woId, string $spk, array $extra) => DB::table('cx_issues')->insert(array_merge([
+        'work_order_id' => $woId, 'spk_number' => $spk, 'customer_name' => 'Cust', 'customer_phone' => '0800',
+        'type' => 'FOLLOW_UP', 'source' => 'WORKSHOP_PROD', 'category' => 'TEKNIS', 'status' => 'OPEN',
+        'created_at' => '2026-11-25 09:00:00', 'updated_at' => '2026-11-25 09:00:00',
+    ], $extra));
+
+    // 1) OPEN dibuat 25 Nov di WO CX_FOLLOWUP (masuk butuh_followup 25 Nov & masuk=1)
+    $issue($w2, 'UJI-CC-2', ['created_at' => '2026-11-25 10:00:00']);
+    // 2) OPEN dibuat 24 Nov di WO HOLD_FOR_CX (tidak masuk butuh_followup 25 Nov karena lampau, tidak masuk `masuk` 25 Nov)
+    $issue($w3, 'UJI-CC-3', ['created_at' => '2026-11-24 10:00:00']);
+    // 3) OPEN di WO dihapus (tidak masuk butuh_followup, tapi tetap masuk `masuk` karena baris cx_issues dibuat 25 Nov)
+    $issue($w4, 'UJI-CC-4', ['created_at' => '2026-11-25 11:00:00']);
+    // 4) RESOLVED pada 25 Nov jam 08.32 (lanjut, dengan trailing CRLF)
+    $issue($w1, 'UJI-CC-1', [
+        'customer_name' => 'Zeinn', 'kendala' => "bemper retak\r\n", 'opsi_solusi' => "ganti bemper\r\n",
+        'status' => 'RESOLVED', 'resolution_type' => 'lanjut', 'resolution_notes' => 'LANJUT GANTI',
+        'resolved_by' => $pic->id, 'resolved_at' => '2026-11-25 08:32:00', 'created_at' => '2026-11-24 16:00:00',
+    ]);
+    // 5) RESOLVED pada 25 Nov jam 13.58 (tambah_jasa, pakai fallback kendala_1, opsi_solusi_1, resolution)
+    $issue($w5, 'UJI-CC-5', [
+        'customer_name' => 'Vincent', 'kendala' => '', 'kendala_1' => 'sol renggang',
+        'opsi_solusi' => null, 'opsi_solusi_1' => 'lapis kulit',
+        'status' => 'RESOLVED', 'resolution_type' => 'tambah_jasa', 'resolution_notes' => '  ', 'resolution' => 'ACC LAPIS',
+        'resolved_by' => $pic->id, 'resolved_at' => '2026-11-25 13:58:00', 'created_at' => '2026-11-25 09:00:00',
+    ]);
+    // 6) RESOLVED pada 24 Nov (bukan 25 Nov)
+    $issue($w1, 'UJI-CC-1', [
+        'status' => 'RESOLVED', 'resolution_type' => 'lanjut',
+        'resolved_by' => $pic->id, 'resolved_at' => '2026-11-24 17:00:00', 'created_at' => '2026-11-24 15:00:00',
+    ]);
+
+    // Garansi (warranty_claims).
+    $klaim = fn (string $status, string $createdAt, ?string $processedAt) => DB::table('warranty_claims')->insert([
+        'work_order_id' => $w1, 'customer_name' => 'Uji', 'customer_phone' => '0800', 'spk_number' => 'UJI-CC-1',
+        'problem_description' => 'uji', 'problem_photo' => '[]', 'google_review_photo' => 'uji.jpg',
+        'status' => $status, 'created_at' => $createdAt, 'processed_at' => $processedAt, 'updated_at' => $processedAt ?? $createdAt,
+    ]);
+    $klaim('PENDING', '2026-11-09 18:00:00', null);                        // masih pending di akhir 25 Nov
+    $klaim('APPROVED', '2026-11-24 10:00:00', '2026-11-26 09:00:00');      // baru diproses 26 Nov → masih pending di akhir 25 Nov
+    $klaim('APPROVED', '2026-11-24 12:00:00', '2026-11-25 15:59:00');      // disetujui 25 Nov
+    $klaim('REJECTED', '2026-11-25 08:00:00', '2026-11-25 16:00:00');      // ditolak 25 Nov
+    $klaim('APPROVED', '2026-11-23 10:00:00', '2026-11-24 12:00:00');      // sudah selesai sebelum 25 Nov
+    $klaim('PENDING', '2026-11-26 08:00:00', null);                        // baru masuk 26 Nov
+
+    // Komplain (complaints).
+    $komp = fn (string $status, string $createdAt, ?string $deletedAt = null) => DB::table('complaints')->insert([
+        'work_order_id' => $w1, 'customer_name' => 'Uji', 'customer_phone' => '0800', 'category' => 'QUALITY',
+        'description' => 'uji', 'status' => $status, 'created_at' => $createdAt, 'updated_at' => $createdAt, 'deleted_at' => $deletedAt,
+    ]);
+    $komp('PENDING', '2026-11-20 10:00:00');
+    $komp('PENDING', '2026-11-25 15:00:00');
+    $komp('PROCESS', '2026-11-24 10:00:00');
+    $komp('RESOLVED', '2026-11-22 10:00:00');
+    $komp('REJECTED', '2026-11-21 10:00:00');                              // masuk total
+    $komp('PENDING', '2026-11-25 11:00:00', '2026-11-25 12:00:00');        // dihapus
+    $komp('PENDING', '2026-11-26 09:00:00');                               // dibuat setelah 25 Nov
+
+    $d = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson(DR_URL.'?date=2026-11-25')->assertOk()->json('data');
+
+    expect($d['tambah_jasa'])->toBe([
+        'spk' => 2, 'jasa' => 2, 'nominal' => 130000,
+        'bulan_ini' => ['spk' => 2, 'jasa' => 3, 'nominal' => 250000],
+    ]);
+
+    expect($d['followup'])->toBe([
+        'butuh_followup' => 1,
+        'masuk' => 3,
+        'resolve' => 2,
+        'resolve_tambah_jasa' => 1,
+        'resolve_lanjut' => 1,
+        'riwayat_resolusi' => [
+            [
+                'spk' => 'UJI-CC-5', 'customer' => 'Vincent', 'source' => 'WORKSHOP_PROD', 'category' => 'TEKNIS',
+                'kendala' => 'sol renggang', 'opsi_solusi' => 'lapis kulit', 'tipe' => 'tambah_jasa',
+                'catatan' => 'ACC LAPIS', 'pic' => 'Sandi', 'waktu' => '13.58',
+            ],
+            [
+                'spk' => 'UJI-CC-1', 'customer' => 'Zeinn', 'source' => 'WORKSHOP_PROD', 'category' => 'TEKNIS',
+                'kendala' => 'bemper retak', 'opsi_solusi' => 'ganti bemper', 'tipe' => 'lanjut',
+                'catatan' => 'LANJUT GANTI', 'pic' => 'Sandi', 'waktu' => '08.32',
+            ],
+        ],
+    ]);
+
+    expect($d['garansi'])->toBe(['pending' => 2, 'disetujui' => 1, 'ditolak' => 1, 'total' => 4]);
+    expect($d['komplain'])->toBe(['total' => 5, 'pending' => 2, 'diproses' => 1, 'selesai' => 1]);
 });
