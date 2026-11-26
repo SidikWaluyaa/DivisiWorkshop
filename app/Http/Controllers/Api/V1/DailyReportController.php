@@ -22,6 +22,10 @@ class DailyReportController extends Controller
         'qc_after' => 'qcAfter',
         'pendukung' => 'pendukung',
         'gudang' => 'gudang',
+        // Tahap 6: blok CC
+        'followup' => 'followup',
+        'garansi' => 'garansi',
+        'komplain' => 'komplain',
     ];
 
     public function index(Request $request): JsonResponse
