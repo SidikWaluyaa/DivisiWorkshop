@@ -162,6 +162,35 @@ class DailyReportQuery
         return ['after' => (int) $r->after_n, 'sudah_qc' => (int) $r->qc];
     }
 
+    /**
+     * QC Before (QC Gatekeeper menu Penerimaan → Diterima Warehouse, Report Harian Tahap 8).
+     * masuk = SPK yang berubah status ke DITERIMA hari itu (log STATUS_CHANGE, sama dengan gudang.before);
+     * sudah_qc = SPK yang di-QC gudang hari itu (warehouse_qc_at), dipecah: lolos (tanpa catatan QC gudang),
+     * lolos_catatan (lolos + catatan QC gudang terisi), tolak (reject). warehouse_qc_at menyimpan QC terakhir,
+     * jadi SPK yang di-QC ulang dihitung pada tanggal QC terakhirnya.
+     */
+    public static function qcBefore(Carbon $date): array
+    {
+        [$s, $e] = self::range($date);
+
+        $masuk = DB::selectOne("SELECT COUNT(DISTINCT work_order_id) AS n FROM work_order_logs
+            WHERE action = 'STATUS_CHANGE' AND step = 'DITERIMA' AND created_at BETWEEN ? AND ?", [$s, $e])->n;
+
+        $r = DB::selectOne("SELECT COUNT(*) AS sudah,
+                COALESCE(SUM(warehouse_qc_status = 'lolos' AND TRIM(COALESCE(warehouse_qc_notes, '')) = ''), 0) AS lolos,
+                COALESCE(SUM(warehouse_qc_status = 'lolos' AND TRIM(COALESCE(warehouse_qc_notes, '')) <> ''), 0) AS lolos_catatan,
+                COALESCE(SUM(warehouse_qc_status <> 'lolos'), 0) AS tolak
+            FROM work_orders WHERE deleted_at IS NULL AND warehouse_qc_at BETWEEN ? AND ?", [$s, $e]);
+
+        return [
+            'masuk' => (int) $masuk,
+            'sudah_qc' => (int) $r->sudah,
+            'lolos' => (int) $r->lolos,
+            'lolos_catatan' => (int) $r->lolos_catatan,
+            'tolak' => (int) $r->tolak,
+        ];
+    }
+
     /** Workshop Hijau: jumlah SPK yang menyelesaikan tiap pekerjaan pendukung pada tanggal itu. */
     public static function pendukung(Carbon $date): array
     {

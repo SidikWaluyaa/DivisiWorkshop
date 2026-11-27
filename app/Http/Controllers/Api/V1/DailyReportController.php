@@ -28,6 +28,8 @@ class DailyReportController extends Controller
         'komplain' => 'komplain',
         // Tahap 7: blok Workshop / Ringkasan WS
         'workshop' => 'workshop',
+        // Tahap 8: QC Before (QC Gatekeeper penerimaan gudang)
+        'qc_before' => 'qcBefore',
     ];
 
     public function index(Request $request): JsonResponse

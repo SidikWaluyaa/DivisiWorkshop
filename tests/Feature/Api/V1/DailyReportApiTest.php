@@ -181,7 +181,7 @@ it('menghitung semua blok report harian', function () {
     expect($d['tanggal'])->toBe('2026-11-19')
         ->and(array_keys($d))->toBe([
             'tanggal', 'dibuat_pada', 'cs', 'oto', 'tambah_jasa', 'qc_after', 'pendukung', 'gudang',
-            'followup', 'garansi', 'komplain', 'workshop',
+            'followup', 'garansi', 'komplain', 'workshop', 'qc_before',
         ]);
 
     $cs = $d['cs'];
@@ -549,4 +549,27 @@ it('menghitung blok workshop Tahap 7: masuk/keluar bulan berjalan, keluar harian
         ->and($ws['hutang']['QC'])->toBe(2)           // wGr1 + GR-
         ->and($ws['hutang']['total'])->toBe(4)
         ->and($ws['hutang']['diambil_pada'])->toBeString();
+});
+
+it('menghitung blok qc_before Tahap 8: masuk DITERIMA dan hasil QC Gatekeeper gudang', function () {
+    $qc = fn (string $status, ?string $catatan, string $at) => [
+        'warehouse_qc_status' => $status, 'warehouse_qc_notes' => $catatan, 'warehouse_qc_at' => $at,
+    ];
+    $w1 = drWo('UJI-QB-1', $qc('lolos', null, '2026-11-19 09:00:00'));
+    $w2 = drWo('UJI-QB-2', $qc('lolos', '   ', '2026-11-19 10:00:00'));                // spasi saja = tanpa catatan
+    drWo('UJI-QB-3', $qc('lolos', 'tali ori bawaan', '2026-11-19 11:00:00'));
+    drWo('UJI-QB-4', $qc('reject', 'sol jebol', '2026-11-19 12:00:00'));
+    drWo('UJI-QB-5', $qc('lolos', null, '2026-11-18 23:59:59'));                      // hari lain
+    drWo('UJI-QB-6', $qc('lolos', null, '2026-11-19 13:00:00') + ['deleted_at' => '2026-11-19 14:00:00']);
+    drWo('UJI-QB-7');                                                                     // belum QC
+
+    // Masuk = SPK berubah ke DITERIMA hari itu (distinct SPK)
+    drLog($w1, 'DITERIMA', 'STATUS_CHANGE', '2026-11-19 08:00:00');
+    drLog($w1, 'DITERIMA', 'STATUS_CHANGE', '2026-11-19 08:30:00');
+    drLog($w2, 'DITERIMA', 'STATUS_CHANGE', '2026-11-19 08:10:00');
+    drLog($w2, 'DITERIMA', 'STATUS_CHANGE', '2026-11-18 08:10:00');
+
+    $d = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson(DR_URL.'?date=2026-11-19')->assertOk()->json('data');
+
+    expect($d['qc_before'])->toBe(['masuk' => 2, 'sudah_qc' => 4, 'lolos' => 2, 'lolos_catatan' => 1, 'tolak' => 1]);
 });
