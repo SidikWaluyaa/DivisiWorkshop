@@ -573,3 +573,22 @@ it('menghitung blok qc_before Tahap 8: masuk DITERIMA dan hasil QC Gatekeeper gu
 
     expect($d['qc_before'])->toBe(['masuk' => 2, 'sudah_qc' => 4, 'lolos' => 2, 'lolos_catatan' => 1, 'tolak' => 1]);
 });
+
+it('menghitung gudang.before_rd Tahap 9: SPK R&D yang masuk DITERIMA hari itu', function () {
+    $rd1 = drWo('RD-2611-19-0001-AB');
+    $rd2 = drWo('S-2611-19-0002-AB', ['priority' => 'R&D']);
+    $rdGr = drWo('RD-2611-19-0003-AB-GR');                       // garansi, bukan R&D
+    $reg = drWo('S-2611-19-0004-AB', ['priority' => 'Reguler']);
+    $rdLain = drWo('RD-2611-18-0005-AB');
+
+    foreach ([$rd1, $rd1, $rd2, $rdGr, $reg] as $id) {
+        drLog($id, 'DITERIMA', 'STATUS_CHANGE', '2026-11-19 10:00:00');
+    }
+    drLog($rdLain, 'DITERIMA', 'STATUS_CHANGE', '2026-11-18 10:00:00');     // hari lain
+    drLog($rd2, 'ASSESSMENT', 'STATUS_CHANGE', '2026-11-19 11:00:00');      // step lain tidak dihitung dua kali
+
+    $g = $this->withHeader('X-API-KEY', 'test-secret-key')->getJson(DR_URL.'?date=2026-11-19')->assertOk()->json('data.gudang');
+
+    expect($g['before'])->toBe(4)
+        ->and($g['before_rd'])->toBe(2);
+});
