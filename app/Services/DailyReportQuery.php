@@ -162,6 +162,35 @@ class DailyReportQuery
         return ['after' => (int) $r->after_n, 'sudah_qc' => (int) $r->qc];
     }
 
+    /**
+     * QC Before (QC Gatekeeper menu Penerimaan → Diterima Warehouse, Report Harian Tahap 8).
+     * masuk = SPK yang berubah status ke DITERIMA hari itu (log STATUS_CHANGE, sama dengan gudang.before);
+     * sudah_qc = SPK yang di-QC gudang hari itu (warehouse_qc_at), dipecah: lolos (tanpa catatan QC gudang),
+     * lolos_catatan (lolos + catatan QC gudang terisi), tolak (reject). warehouse_qc_at menyimpan QC terakhir,
+     * jadi SPK yang di-QC ulang dihitung pada tanggal QC terakhirnya.
+     */
+    public static function qcBefore(Carbon $date): array
+    {
+        [$s, $e] = self::range($date);
+
+        $masuk = DB::selectOne("SELECT COUNT(DISTINCT work_order_id) AS n FROM work_order_logs
+            WHERE action = 'STATUS_CHANGE' AND step = 'DITERIMA' AND created_at BETWEEN ? AND ?", [$s, $e])->n;
+
+        $r = DB::selectOne("SELECT COUNT(*) AS sudah,
+                COALESCE(SUM(warehouse_qc_status = 'lolos' AND TRIM(COALESCE(warehouse_qc_notes, '')) = ''), 0) AS lolos,
+                COALESCE(SUM(warehouse_qc_status = 'lolos' AND TRIM(COALESCE(warehouse_qc_notes, '')) <> ''), 0) AS lolos_catatan,
+                COALESCE(SUM(warehouse_qc_status <> 'lolos'), 0) AS tolak
+            FROM work_orders WHERE deleted_at IS NULL AND warehouse_qc_at BETWEEN ? AND ?", [$s, $e]);
+
+        return [
+            'masuk' => (int) $masuk,
+            'sudah_qc' => (int) $r->sudah,
+            'lolos' => (int) $r->lolos,
+            'lolos_catatan' => (int) $r->lolos_catatan,
+            'tolak' => (int) $r->tolak,
+        ];
+    }
+
     /** Workshop Hijau: jumlah SPK yang menyelesaikan tiap pekerjaan pendukung pada tanggal itu. */
     public static function pendukung(Carbon $date): array
     {
@@ -539,6 +568,56 @@ class DailyReportQuery
             'pending' => (int) $r->pending,
             'diproses' => (int) $r->diproses,
             'selesai' => (int) $r->selesai,
+        ];
+    }
+
+    /** Status WIP aktif di Workshop untuk metrik Sisa Hutang SPK (posisi saat request). */
+    private const STATUS_HUTANG_WS = ['SORTIR', 'PRODUCTION', 'QC'];
+
+    /**
+     * Blok Workshop / Ringkasan WS (Tahap 7).
+     * Rentang bulan berjalan = tanggal 1 bulan $date 00:00:00 s.d. akhir hari $date 23:59:59 WIB.
+     * masuk_reguler_bulan & keluar_sol_upper_bulan mengecualikan BATAL, R&D, dan SPK garansi (-GR / GR-);
+     * is_warranty tidak dipakai karena menandakan hak garansi pada SPK reguler.
+     * hutang = WIP aktif saat request (non-R&D, status SORTIR/PRODUCTION/QC), pola sama dengan gudang.kontrol.
+     */
+    public static function workshop(Carbon $date): array
+    {
+        [$s, $e] = self::range($date);
+        $ms = $date->copy()->startOfMonth()->toDateTimeString();
+        $bukanGr = 'NOT ('.WarehouseMomQuery::gr('w')." OR w.spk_number LIKE 'GR-%')";
+        $reguler = "w.deleted_at IS NULL AND w.status <> 'BATAL' AND COALESCE(w.priority, '') <> 'R&D' AND $bukanGr";
+
+        $agregat = DB::selectOne("SELECT
+                (SELECT COUNT(*) FROM work_orders w WHERE $reguler AND w.entry_date BETWEEN ? AND ?) AS masuk_reguler_bulan,
+                (SELECT COUNT(*) FROM work_orders w WHERE $reguler AND w.prod_sol_completed_at BETWEEN ? AND ?) AS sol_bulan,
+                (SELECT COUNT(*) FROM work_orders w WHERE $reguler AND w.prod_upper_completed_at BETWEEN ? AND ?) AS upper_bulan,
+                (SELECT COUNT(*) FROM work_orders w WHERE w.deleted_at IS NULL AND w.status <> 'BATAL' AND w.prod_upper_completed_at BETWEEN ? AND ?) AS keluar_upper,
+                (SELECT COUNT(*) FROM work_orders w WHERE w.deleted_at IS NULL AND w.status <> 'BATAL' AND w.prod_sol_completed_at BETWEEN ? AND ?) AS keluar_sol",
+            [$ms, $e, $ms, $e, $ms, $e, $s, $e, $s, $e]
+        );
+
+        $hutang = array_fill_keys(self::STATUS_HUTANG_WS, 0);
+        $in = "'".implode("', '", self::STATUS_HUTANG_WS)."'";
+        foreach (DB::select("SELECT status, COUNT(*) AS n FROM work_orders
+                WHERE deleted_at IS NULL AND COALESCE(priority, '') <> 'R&D' AND status IN ($in)
+                GROUP BY status") as $r) {
+            $hutang[$r->status] = (int) $r->n;
+        }
+
+        return [
+            'masuk_reguler_bulan' => (int) $agregat->masuk_reguler_bulan,
+            'keluar_fisik_bulan' => self::sepatuKeluarWs($ms, $e),
+            'keluar_sol_upper_bulan' => (int) $agregat->sol_bulan + (int) $agregat->upper_bulan,
+            'keluar_upper' => (int) $agregat->keluar_upper,
+            'keluar_sol' => (int) $agregat->keluar_sol,
+            'hutang' => [
+                'diambil_pada' => now()->toDateTimeString(),
+                'SORTIR' => $hutang['SORTIR'],
+                'PRODUCTION' => $hutang['PRODUCTION'],
+                'QC' => $hutang['QC'],
+                'total' => $hutang['SORTIR'] + $hutang['PRODUCTION'] + $hutang['QC'],
+            ],
         ];
     }
 
