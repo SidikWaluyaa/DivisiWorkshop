@@ -263,7 +263,22 @@ class DailyReportQuery
                 'garansi' => (int) $intakeFisik['garansi'],
                 'rd' => (int) $intakeFisik['rd'],
             ],
+            // Tahap 9: bagian R&D dari `before` (SPK berubah ke DITERIMA hari itu), definisi R&D sama dengan Intake Fisik.
+            'before_rd' => self::beforeRd($date),
         ];
+    }
+
+    /** Jumlah SPK R&D (bukan garansi) yang berubah status ke DITERIMA pada tanggal itu; bagian dari `before`. */
+    private static function beforeRd(Carbon $date): int
+    {
+        [$s, $e] = self::range($date);
+        $rd = KamusMetrikQuery::rdSql('w');
+        $gr = WarehouseMomQuery::gr('w');
+
+        return (int) DB::selectOne("SELECT COUNT(DISTINCT l.work_order_id) AS n
+            FROM work_order_logs l JOIN work_orders w ON w.id = l.work_order_id
+            WHERE l.action = 'STATUS_CHANGE' AND l.step = 'DITERIMA' AND l.created_at BETWEEN ? AND ?
+              AND ($rd) AND NOT $gr", [$s, $e])->n;
     }
 
     /**
